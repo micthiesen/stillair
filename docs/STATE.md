@@ -38,10 +38,10 @@ and every V1-to-V2 test. Not hardware-gated.
 
 ## Candidates Not Chosen
 
-- **Send the CubeMars bearing-data email** (question list ready in [parts.md](parts.md) >
-  "Bearing-data request"). Five minutes of effort, starts the Gate 01 clock; do it anytime.
 - **Start the strata/slab paper trail** (request structural drawings; the Gate 06 email to
   the City). Cheap, long-lead, fully parallel — checklist in [install.md](install.md).
+  (The CubeMars bearing-data email was **sent 2026-07-27**; Gate 01 is awaiting their
+  reply — see [parts.md](parts.md).)
 - **rs-matter devkit spike** → commission into Apple Home, then a Fan endpoint to answer
   the AirflowDirection question. ESP32-C6 dev boards are already on hand, so this is
   startable any time.

@@ -33,6 +33,10 @@ drawing):
 
 ### Bearing-data request (Gate 01, researched 2026-07)
 
+**Status: sent to info@cubemars.com on 2026-07-27** (the question list below, plus written
+confirmation of the M4 face ownership/thread depths and allowable M4 installation torque).
+Awaiting reply.
+
 No public bearing or load data exists for the GL series (checked every storefront and
 CubeMars' guides; their technical-support page hosts full manuals for the AK actuator line
 but nothing for GL, and they do publish load ratings for actuators — so a direct ask is
