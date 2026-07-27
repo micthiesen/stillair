@@ -84,6 +84,16 @@ pub const SPEED_CARRIER_HZ: u32 = 200;
 /// target this is ~12 FG pulses, enough for a stable reading.
 pub const SPEED_ESTIMATE_WINDOW_MS: u64 = 1_000;
 
+/// Consecutive failed MCF status reads before the supervisor treats the drive as
+/// unreachable and stops. One failure is a transient worth retrying (and worth a bus
+/// recovery attempt); sustained silence means we are commanding something we can no longer
+/// interrogate. At the status-poll interval this is a little under a second.
+pub const BUS_FAILURES_BEFORE_FAULT: u32 = 5;
+
+/// How often the fault-status registers are read. Far slower than the pin sampling in the
+/// control loop, because the pins are the fast path and this is the diagnosis.
+pub const STATUS_POLL_MS: u64 = 200;
+
 // The layered-limit invariant, checked when the crate compiles rather than trusted: the
 // user maximum sits under the MCF's stored ceiling, which sits under the analog trip. Any
 // edit that inverts them fails the build instead of quietly removing a layer.

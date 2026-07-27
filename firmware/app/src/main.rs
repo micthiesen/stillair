@@ -36,19 +36,25 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embassy_time::{Duration, Instant, Timer};
 use esp_backtrace as _;
 use esp_hal::gpio::{DriveMode, Input, InputConfig, Level, Output, OutputConfig, Pull};
+use esp_hal::i2c::master::{Config as I2cConfig, I2c};
+use esp_hal::interrupt::Priority;
 use esp_hal::ledc::channel::ChannelIFace;
 use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{channel, timer, LSGlobalClkSource, Ledc, LowSpeed};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
+use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
 use stillair_core::config;
-use stillair_core::state::{Inputs, Supervisor};
+use stillair_core::mcf8316;
+use stillair_core::state::{Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 mod board;
+mod mcf;
 
 use board::{Board, FG_PULSES, HALL_PULSES};
+use mcf::Mcf;
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
@@ -64,6 +70,15 @@ static CONTROL_LOOP_BEAT: AtomicU32 = AtomicU32::new(0);
 
 static LEDC: StaticCell<Ledc<'static>> = StaticCell::new();
 static SPEED_TIMER: StaticCell<timer::Timer<'static, LowSpeed>> = StaticCell::new();
+
+/// The control loop, the heartbeat, and the tach counters run here, above everything else.
+///
+/// This split is structural rather than a convention to remember. Once the Matter/Wi-Fi
+/// tasks exist on the thread-mode executor, a hung network stack must degrade to the
+/// network-loss row of the failure table (the fan keeps its speed) — not starve the
+/// heartbeat and trip the watchdog, which would stop the fan. Establishing the higher
+/// priority *before* those tasks exist is the only way that stays true by construction.
+static CONTROL_EXECUTOR: StaticCell<InterruptExecutor<1>> = StaticCell::new();
 
 #[esp_rtos::main]
 async fn main(spawner: embassy_executor::Spawner) {
@@ -122,17 +137,41 @@ async fn main(spawner: embassy_executor::Spawner) {
         })
         .expect("SPEED channel must configure");
 
-    let board = Board::new(dir, arm, clear_n, speed, pgood, nfault, alarm);
+    let board = Board::new(
+        dir,
+        arm,
+        clear_n,
+        board::SpeedPwm::new(speed),
+        pgood,
+        nfault,
+        alarm,
+    );
 
-    spawner.spawn(fg_task(fg).unwrap());
-    spawner.spawn(hall_task(hall).unwrap());
-    spawner.spawn(heartbeat_task(heartbeat).unwrap());
-    spawner.spawn(control_task(board).unwrap());
+    // MCF configuration and diagnostics. 100 kHz: the device clock-stretches while it
+    // services its own interrupts, and there is nothing here worth hurrying.
+    let i2c = I2c::new(
+        peripherals.I2C0,
+        I2cConfig::default().with_frequency(Rate::from_khz(100)),
+    )
+    .expect("I2C0 must configure")
+    .with_sda(peripherals.GPIO0)
+    .with_scl(peripherals.GPIO1)
+    .into_async();
 
-    // TODO(phase C/D): Wi-Fi + Matter via rs-matter-embassy, and the tuning console.
-    // Both must run on a *lower*-priority executor than the control loop and heartbeat
-    // above, so a hung network stack degrades to "fan keeps its speed" rather than to a
-    // watchdog stop (docs/controls.md > "Firmware safety architecture").
+    // Everything that must keep running when the network does not.
+    let control = CONTROL_EXECUTOR
+        .init(InterruptExecutor::new(sw_int.software_interrupt1))
+        .start(Priority::Priority3);
+    control.spawn(fg_task(fg).unwrap());
+    control.spawn(hall_task(hall).unwrap());
+    control.spawn(heartbeat_task(heartbeat).unwrap());
+    control.spawn(control_task(board).unwrap());
+
+    // Diagnostics and (later) the network stack live on the thread-mode executor, below.
+    spawner.spawn(mcf_task(Mcf::new(i2c, mcf8316::DEFAULT_TARGET_ID)).unwrap());
+
+    // TODO(phase C/D): Wi-Fi + Matter via rs-matter-embassy, and the tuning console —
+    // spawned on `spawner`, never on `control`.
 }
 
 /// Drives the fan state machine. All the decisions live in `stillair-core`; this loop only
@@ -144,7 +183,11 @@ async fn control_task(mut board: Board) {
     let mut reported = supervisor.state();
 
     loop {
-        let inputs: Inputs = board.inputs();
+        let mut inputs: Inputs = board.inputs();
+        // Absent a fresh read this stays `Stale`, which the supervisor treats as carrying
+        // no information — neither evidence of a fault nor evidence of health.
+        inputs.mcf_status = mcf::STATUS.try_take().unwrap_or(StatusRead::Stale);
+
         for action in supervisor.poll(now(), &inputs) {
             board.apply(action);
         }
@@ -186,6 +229,54 @@ async fn heartbeat_task(mut heartbeat: Output<'static>) {
         }
         last_beat = beat;
         heartbeat.toggle();
+    }
+}
+
+/// Polls the MCF's fault-status registers and services fault-clear requests.
+///
+/// Deliberately on the lower-priority executor: I²C is slow, can hang, and is never on the
+/// path that keeps the fan safe. A bus that stops answering shows up to the supervisor as
+/// accumulating `BusError`s, which becomes a stop after
+/// [`config::BUS_FAILURES_BEFORE_FAULT`] — the drive is not commanded by something that can
+/// no longer interrogate it.
+#[embassy_executor::task]
+async fn mcf_task(mut mcf: Mcf) {
+    match mcf.probe().await {
+        Some(target) => log::info!("MCF8316D found at I2C target {target:#04x}"),
+        None => log::error!("no MCF8316D on the I2C bus; status reads will fail"),
+    }
+
+    loop {
+        if mcf::CLEAR_FAULT_REQUEST.signaled() {
+            mcf::CLEAR_FAULT_REQUEST.reset();
+            match mcf.clear_faults().await {
+                // Latched faults can take up to 200 ms to clear; the supervisor's
+                // ten-second safe-boot hold covers that with room to spare.
+                Ok(()) => log::info!("CLR_FLT issued"),
+                Err(error) => log::error!("CLR_FLT failed: {error:?}"),
+            }
+        }
+
+        match mcf.fault_status().await {
+            Ok(status) => {
+                if status.any() {
+                    log::warn!(
+                        "MCF fault status gate {:#010x} controller {:#010x} -> {:?}",
+                        status.gate,
+                        status.controller,
+                        status.condition()
+                    );
+                }
+                mcf::STATUS.signal(StatusRead::Fresh(status));
+            }
+            Err(error) => {
+                log::warn!("MCF status read failed: {error:?}");
+                mcf::STATUS.signal(StatusRead::BusError);
+                mcf.recover().await;
+            }
+        }
+
+        Timer::after(Duration::from_millis(config::STATUS_POLL_MS)).await;
     }
 }
 

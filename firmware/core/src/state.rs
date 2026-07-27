@@ -14,6 +14,7 @@
 use heapless::Vec;
 
 use crate::config;
+use crate::mcf8316::{FaultStatus, McfCondition};
 use crate::speed::{self, MilliRpm, Ramp, SpeedDuty};
 use crate::tach::Tach;
 use crate::time::Millis;
@@ -50,10 +51,17 @@ pub enum FanState {
 /// same response (permission revoked, speed zero, fresh command required).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FaultReason {
-    /// nFAULT asserted: MCF lock, overcurrent, blocked rotor, overtemperature.
+    /// nFAULT asserted but the status registers have not been read (or could not be), so
+    /// the cause is unknown. Once a status read lands, [`FaultReason::Mcf`] names it.
     McfFault,
-    /// ALARM asserted: a report-only MCF condition, treated as a stop regardless.
+    /// ALARM asserted with no decoded status behind it.
     McfAlarm,
+    /// A decoded MCF fault-status condition — undervoltage, thermal, lock, and so on.
+    Mcf(McfCondition),
+    /// The MCF has been unreachable over I²C for [`config::BUS_FAILURES_BEFORE_FAULT`]
+    /// consecutive attempts. Bus recovery is the caller's job; the supervisor's job is to
+    /// stop trusting a drive it can no longer interrogate.
+    BusUnreachable,
     /// 3.3 V PGOOD dropped while running.
     RailLoss,
     /// FG says the rotor is turning while the Hall channel is silent — the Hall pickup,
@@ -114,8 +122,26 @@ pub struct Inputs {
     pub mcf_fault: bool,
     /// ALARM asserted, active high.
     pub mcf_alarm: bool,
+    /// What the last attempt to read the MCF's fault-status registers produced.
+    pub mcf_status: StatusRead,
     pub fg_pulses: u32,
     pub hall_pulses: u32,
+}
+
+/// The outcome of a fault-status register read.
+///
+/// Distinguishing "not read this tick" from "read and clean" matters: the status registers
+/// are polled far more slowly than the pins are sampled, and a stale-but-clean read must not
+/// be mistaken for evidence that a freshly asserted nFAULT is spurious.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum StatusRead {
+    /// No read completed since the last poll. Carries no information either way.
+    #[default]
+    Stale,
+    /// Both registers read cleanly.
+    Fresh(FaultStatus),
+    /// The read failed. Repeated failures are themselves a fault.
+    BusError,
 }
 
 impl Default for Inputs {
@@ -125,6 +151,7 @@ impl Default for Inputs {
             pgood: true,
             mcf_fault: false,
             mcf_alarm: false,
+            mcf_status: StatusRead::Stale,
             fg_pulses: 0,
             hall_pulses: 0,
         }
@@ -158,6 +185,8 @@ pub struct Supervisor {
     last_duty: SpeedDuty,
     /// FG total at the moment the current start began, for start supervision.
     start_fg_mark: u64,
+    /// Consecutive failed status reads. Reset by any successful one.
+    bus_failures: u32,
 }
 
 impl Supervisor {
@@ -181,6 +210,7 @@ impl Supervisor {
             tach: Tach::new(inputs.fg_pulses, inputs.hall_pulses, now),
             last_duty: SpeedDuty::ZERO,
             start_fg_mark: 0,
+            bus_failures: 0,
         }
     }
 
@@ -255,6 +285,7 @@ impl Supervisor {
         let dt = now.since(self.last_poll);
         self.last_poll = now;
         self.tach.update(inputs.fg_pulses, inputs.hall_pulses, now);
+        self.observe_bus(inputs);
 
         let mut actions = Actions::new();
 
@@ -384,11 +415,26 @@ impl Supervisor {
     // -- helpers --------------------------------------------------------------------
 
     fn external_fault(&self, inputs: &Inputs) -> Option<FaultReason> {
+        // A decoded status outranks the pins: both nFAULT and ALARM say only "something",
+        // and the registers say what. This also catches the conditions that reach neither
+        // pin — MIN_VM undervoltage is reported but not actionable, and thermal shutdown
+        // auto-recovers by silicon design and so may clear nFAULT before we look.
+        if let StatusRead::Fresh(status) = inputs.mcf_status {
+            if let Some(condition) = status.condition() {
+                return Some(FaultReason::Mcf(condition));
+            }
+        }
         if inputs.mcf_fault {
             return Some(FaultReason::McfFault);
         }
         if inputs.mcf_alarm {
             return Some(FaultReason::McfAlarm);
+        }
+        // One failed read is a transient; the bus is allowed to be retried and recovered.
+        // Only sustained silence means the drive can no longer be interrogated, and a drive
+        // we cannot interrogate is one we must not keep commanding.
+        if self.bus_failures >= config::BUS_FAILURES_BEFORE_FAULT {
+            return Some(FaultReason::BusUnreachable);
         }
         // In SafeBoot a low rail is not yet a fault — it is exactly what SafeBoot is
         // waiting on, and staying put is the safe response.
@@ -396,6 +442,17 @@ impl Supervisor {
             return Some(FaultReason::RailLoss);
         }
         None
+    }
+
+    /// Track consecutive bus failures so `external_fault` can act on sustained ones.
+    fn observe_bus(&mut self, inputs: &Inputs) {
+        match inputs.mcf_status {
+            StatusRead::BusError => {
+                self.bus_failures = self.bus_failures.saturating_add(1);
+            }
+            StatusRead::Fresh(_) => self.bus_failures = 0,
+            StatusRead::Stale => {}
+        }
     }
 
     fn begin_start(&mut self, now: Millis, actions: &mut Actions) {
@@ -469,6 +526,7 @@ impl Supervisor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mcf8316::{controller_fault, gate_fault};
 
     /// A test bench that owns the clock, the simulated input pins, and a crude rotor.
     ///
@@ -589,6 +647,11 @@ mod tests {
             self.run_until(300_000, "target speed", |s| {
                 s.commanded() == MilliRpm::from_rpm(rpm)
             });
+        }
+
+        /// Make a fault-status read available to the next tick.
+        fn report_status(&mut self, status: FaultStatus) {
+            self.inputs.mcf_status = StatusRead::Fresh(status);
         }
 
         fn saw(&self, action: Action) -> bool {
@@ -1036,6 +1099,156 @@ mod tests {
         });
         bench.run_ms(10_000);
         assert_eq!(bench.supervisor.commanded(), MilliRpm::from_rpm(45));
+    }
+
+    #[test]
+    fn undervoltage_while_running_stops_the_fan() {
+        // DRV-09: windmilling BEMF back-feed can lift VM above the 18 V auto-recovery
+        // point and chatter the drive, so a MIN_VM report is a stop, not a wait — even
+        // though the MCF recovers from it on its own.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.take_log();
+
+        bench.report_status(FaultStatus::new(0, controller_fault::MTR_UNDER_VOLTAGE));
+        bench.tick();
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::Mcf(McfCondition::Undervoltage))
+        );
+        assert!(bench.saw(Action::ClearPermission));
+        assert!(bench.saw(Action::SetSpeedDuty(SpeedDuty::ZERO)));
+    }
+
+    #[test]
+    fn a_thermal_report_is_a_stop_even_though_shutdown_auto_recovers() {
+        // TSD auto-recovers by silicon design and cannot be latched, so firmware must not
+        // wait for a latch that will never hold.
+        for bit in [gate_fault::OTW, gate_fault::OTS] {
+            let mut bench = Bench::new();
+            bench.boot();
+            bench.run_at(40);
+            bench.report_status(FaultStatus::new(bit, 0));
+            bench.tick();
+            assert_eq!(
+                bench.supervisor.fault(),
+                Some(FaultReason::Mcf(McfCondition::Overtemperature)),
+                "gate bit {bit:#010x}"
+            );
+
+            // And it stays stopped once the thermal condition clears on its own.
+            bench.report_status(FaultStatus::default());
+            bench.run_ms(30_000);
+            assert_eq!(bench.supervisor.state(), FanState::Fault);
+        }
+    }
+
+    #[test]
+    fn a_motor_lock_report_stops_the_fan() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.report_status(FaultStatus::new(0, controller_fault::ABN_SPEED));
+        bench.tick();
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::Mcf(McfCondition::MotorLock))
+        );
+    }
+
+    #[test]
+    fn a_decoded_status_outranks_the_bare_fault_pin() {
+        // nFAULT says "something"; the registers say what. The owner needs the latter.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.inputs.mcf_fault = true;
+        bench.report_status(FaultStatus::new(gate_fault::OCP, 0));
+        bench.tick();
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::Mcf(McfCondition::Overcurrent))
+        );
+    }
+
+    #[test]
+    fn one_failed_status_read_is_tolerated_but_sustained_silence_is_not() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+
+        for _ in 0..(config::BUS_FAILURES_BEFORE_FAULT - 1) {
+            bench.inputs.mcf_status = StatusRead::BusError;
+            bench.tick();
+            assert_eq!(
+                bench.supervisor.state(),
+                FanState::Running,
+                "a transient bus error must not stop the fan"
+            );
+        }
+        // A successful read clears the count, so the fan survives an intermittent bus.
+        bench.report_status(FaultStatus::default());
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::Running);
+
+        for _ in 0..config::BUS_FAILURES_BEFORE_FAULT {
+            bench.inputs.mcf_status = StatusRead::BusError;
+            bench.tick();
+        }
+        assert_eq!(bench.supervisor.fault(), Some(FaultReason::BusUnreachable));
+        assert!(bench.saw(Action::ClearPermission));
+    }
+
+    #[test]
+    fn a_stale_status_neither_faults_nor_absolves() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+
+        // Stale carries no information: it must not clear a bus-failure count...
+        for _ in 0..config::BUS_FAILURES_BEFORE_FAULT {
+            bench.inputs.mcf_status = StatusRead::BusError;
+            bench.tick();
+            bench.inputs.mcf_status = StatusRead::Stale;
+            bench.tick();
+        }
+        assert_eq!(bench.supervisor.fault(), Some(FaultReason::BusUnreachable));
+    }
+
+    #[test]
+    fn a_stale_status_does_not_mask_a_freshly_asserted_fault_pin() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        // A clean read, then the pin asserts before the next read lands.
+        bench.report_status(FaultStatus::default());
+        bench.tick();
+        bench.inputs.mcf_status = StatusRead::Stale;
+        bench.inputs.mcf_fault = true;
+        bench.tick();
+        assert_eq!(bench.supervisor.fault(), Some(FaultReason::McfFault));
+    }
+
+    #[test]
+    fn a_reboot_while_powered_lands_off_and_never_resumes() {
+        // The rotor is still windmilling from before the reboot; 24 V never dropped.
+        let mut bench = Bench::new();
+        bench.rotor_follows = false;
+        bench.rotor = MilliRpm::from_rpm(80);
+        bench.inputs.fg_pulses = 12_345;
+        bench.inputs.hall_pulses = 617;
+        bench.supervisor = Supervisor::new(bench.now, &bench.inputs);
+
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS * 3);
+        // It pays the hold and settles in off, not in whatever it was doing before.
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::ZERO);
+        assert!(!bench.saw(Action::ArmPulse), "resumed after a reboot");
+
+        // And the windmilling rotor it woke up to does not become a start.
+        bench.run_ms(60_000);
+        assert!(!bench.saw(Action::ArmPulse));
     }
 
     #[test]

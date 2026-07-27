@@ -188,6 +188,200 @@ pub const fn value_from_bytes32(bytes: [u8; 4]) -> u32 {
     u32::from_le_bytes(bytes)
 }
 
+/// Bits of [`reg::GATE_DRIVER_FAULT_STATUS`] (§9.1.1, Table 9-3). Only the ones the
+/// supervisor acts on or reports are named; the rest are per-phase overcurrent detail that
+/// `OCP` already summarises.
+pub mod gate_fault {
+    /// Logic OR of every gate-driver fault bit.
+    pub const DRIVER_FAULT: u32 = 1 << 31;
+    pub const OCP: u32 = 1 << 28;
+    /// Supply (VM) overvoltage.
+    pub const OVP: u32 = 1 << 26;
+    /// Overtemperature *warning* — advisory in silicon, a stop for us.
+    pub const OTW: u32 = 1 << 23;
+    /// Overtemperature shutdown. Auto-recovers by silicon design and cannot be latched.
+    pub const OTS: u32 = 1 << 22;
+    pub const BUCK_OCP: u32 = 1 << 13;
+    pub const BUCK_UV: u32 = 1 << 12;
+    /// Charge-pump undervoltage.
+    pub const VCP_UV: u32 = 1 << 11;
+}
+
+/// Bits of [`reg::CONTROLLER_FAULT_STATUS`] (§9.1.2).
+pub mod controller_fault {
+    /// Logic OR of every controller fault bit.
+    pub const CONTROLLER_FAULT: u32 = 1 << 31;
+    pub const IPD_FREQ_FAULT: u32 = 1 << 29;
+    pub const IPD_T1_FAULT: u32 = 1 << 28;
+    pub const IPD_T2_FAULT: u32 = 1 << 27;
+    pub const MPET_IPD_FAULT: u32 = 1 << 25;
+    pub const MPET_BEMF_FAULT: u32 = 1 << 24;
+    /// Abnormal-speed motor lock.
+    pub const ABN_SPEED: u32 = 1 << 23;
+    /// Abnormal-BEMF motor lock.
+    pub const ABN_BEMF: u32 = 1 << 22;
+    /// No motor / loss of phase.
+    pub const NO_MTR: u32 = 1 << 21;
+    /// Summary of the motor-lock conditions.
+    pub const MTR_LCK: u32 = 1 << 20;
+    pub const LOCK_LIMIT: u32 = 1 << 19;
+    pub const HW_LOCK_LIMIT: u32 = 1 << 18;
+    /// Configurable undervoltage on VM — the windmill/back-feed case of DRV-09.
+    pub const MTR_UNDER_VOLTAGE: u32 = 1 << 17;
+    /// Configurable overvoltage on VM.
+    pub const MTR_OVER_VOLTAGE: u32 = 1 << 16;
+    pub const EEPROM_WRITE_LOCK: u32 = 1 << 11;
+    pub const EEPROM_READ_LOCK: u32 = 1 << 10;
+    /// CRC fault in an I²C packet — our own framing is wrong if this ever sets.
+    pub const I2C_CRC_FAULT: u32 = 1 << 6;
+    pub const EEPROM_ERR: u32 = 1 << 5;
+    pub const BOOT_STL_FAULT: u32 = 1 << 4;
+    /// The MCF's own watchdog timed out (the EXT_WDT path).
+    pub const WATCHDOG_FAULT: u32 = 1 << 3;
+    pub const CPU_RESET_FAULT: u32 = 1 << 2;
+    pub const WWDT_FAULT: u32 = 1 << 1;
+
+    /// Every condition that means "the rotor is not turning the way it was told to".
+    pub const ANY_LOCK: u32 = ABN_SPEED | ABN_BEMF | NO_MTR | MTR_LCK | LOCK_LIMIT | HW_LOCK_LIMIT;
+    /// Every condition that means "the start attempt itself failed".
+    pub const ANY_START: u32 =
+        IPD_FREQ_FAULT | IPD_T1_FAULT | IPD_T2_FAULT | MPET_IPD_FAULT | MPET_BEMF_FAULT;
+}
+
+/// A decoded snapshot of both fault-status registers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct FaultStatus {
+    pub gate: u32,
+    pub controller: u32,
+}
+
+/// What the MCF is complaining about, reduced to the distinctions the supervisor's response
+/// and the failure table actually turn on.
+///
+/// Ordered by how specific the diagnosis is, not by severity: every one of these produces
+/// the same response (speed zero, permission revoked, fresh command required), so the only
+/// job of this enum is to tell the owner what happened.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum McfCondition {
+    /// Bus undervoltage. Windmilling BEMF back-feed can lift VM above the auto-recovery
+    /// point and chatter the drive, which is why this is a stop and not a wait (DRV-09).
+    Undervoltage,
+    Overvoltage,
+    /// OTW or OTS. TSD auto-recovers by silicon design and cannot be latched, so firmware
+    /// treats any thermal report as a stop rather than trusting the latch.
+    Overtemperature,
+    Overcurrent,
+    /// Abnormal speed/BEMF, loss of phase, or a lock current limit.
+    MotorLock,
+    /// The start attempt failed (IPD or MPET).
+    StartFailed,
+    /// The MCF's own external-watchdog timeout fired.
+    McfWatchdog,
+    /// EEPROM error or lock — the stored configuration cannot be trusted.
+    Eeprom,
+    /// The MCF rejected one of our packets' CRC: our framing is wrong, not the motor.
+    ProtocolError,
+    /// A fault bit is set that none of the above covers.
+    Unclassified,
+}
+
+impl FaultStatus {
+    pub const fn new(gate: u32, controller: u32) -> Self {
+        Self { gate, controller }
+    }
+
+    /// True if either register reports anything at all.
+    pub const fn any(self) -> bool {
+        self.gate != 0 || self.controller != 0
+    }
+
+    /// Reduce the two registers to a single reportable condition.
+    ///
+    /// Order matters only for reporting. Supply problems come first because they explain
+    /// everything downstream of them — an undervoltage will also trip a lock, and naming
+    /// the lock would send the owner looking at the wrong thing.
+    pub const fn condition(self) -> Option<McfCondition> {
+        use controller_fault as cf;
+        use gate_fault as gf;
+
+        if !self.any() {
+            return None;
+        }
+        if self.controller & cf::MTR_UNDER_VOLTAGE != 0
+            || self.gate & (gf::BUCK_UV | gf::VCP_UV) != 0
+        {
+            return Some(McfCondition::Undervoltage);
+        }
+        if self.controller & cf::MTR_OVER_VOLTAGE != 0 || self.gate & gf::OVP != 0 {
+            return Some(McfCondition::Overvoltage);
+        }
+        if self.gate & (gf::OTW | gf::OTS) != 0 {
+            return Some(McfCondition::Overtemperature);
+        }
+        if self.gate & (gf::OCP | gf::BUCK_OCP) != 0 {
+            return Some(McfCondition::Overcurrent);
+        }
+        if self.controller & cf::ANY_LOCK != 0 {
+            return Some(McfCondition::MotorLock);
+        }
+        if self.controller & cf::ANY_START != 0 {
+            return Some(McfCondition::StartFailed);
+        }
+        if self.controller & (cf::WATCHDOG_FAULT | cf::WWDT_FAULT | cf::CPU_RESET_FAULT) != 0 {
+            return Some(McfCondition::McfWatchdog);
+        }
+        if self.controller & (cf::EEPROM_ERR | cf::EEPROM_WRITE_LOCK | cf::EEPROM_READ_LOCK) != 0 {
+            return Some(McfCondition::Eeprom);
+        }
+        if self.controller & cf::I2C_CRC_FAULT != 0 {
+            return Some(McfCondition::ProtocolError);
+        }
+        Some(McfCondition::Unclassified)
+    }
+}
+
+/// Longest payload: three control-word bytes, four data bytes, one CRC byte.
+pub const MAX_FRAME: usize = 8;
+
+/// The I²C payload for a register write, ready to hand to a bus that supplies the address
+/// byte itself.
+///
+/// `target` is the 7-bit address. When CRC is enabled the checksum covers `{target, 0}`
+/// followed by this payload, so the address byte is folded in here even though the bus
+/// transmits it separately.
+pub fn write_frame(
+    target: u8,
+    address: u16,
+    value: u32,
+    crc: bool,
+) -> heapless::Vec<u8, MAX_FRAME> {
+    let mut frame = heapless::Vec::new();
+    let control = ControlWord::reg32(Op::Write, address, crc);
+    // Capacity is MAX_FRAME by construction: 3 + 4 + 1.
+    let _ = frame.extend_from_slice(&control.bytes());
+    let _ = frame.extend_from_slice(&data_bytes32(value));
+    if crc {
+        let mut covered = heapless::Vec::<u8, { MAX_FRAME + 1 }>::new();
+        let _ = covered.push(target << 1);
+        let _ = covered.extend_from_slice(&frame);
+        let _ = frame.push(crc8(&covered));
+    }
+    frame
+}
+
+/// The bytes a read's CRC is computed over: `{target,0} ‖ control word ‖ {target,1} ‖ data`.
+///
+/// Note the address byte appears twice with different direction bits — the write that sends
+/// the control word, then the repeated-start read that collects the data.
+pub fn read_crc_input(target: u8, address: u16, data: [u8; 4]) -> heapless::Vec<u8, 9> {
+    let mut covered = heapless::Vec::new();
+    let _ = covered.push(target << 1);
+    let _ = covered.extend_from_slice(&ControlWord::reg32(Op::Read, address, true).bytes());
+    let _ = covered.push((target << 1) | 1);
+    let _ = covered.extend_from_slice(&data);
+    covered
+}
+
 /// Abstract access to the MCF's register space.
 ///
 /// Implemented over I²C on the target and by a fake in tests. Addresses and values are
@@ -323,5 +517,92 @@ mod tests {
         assert_eq!((DataLen::Bits16 as u8, DataLen::Bits16.bytes()), (0b00, 2));
         assert_eq!((DataLen::Bits32 as u8, DataLen::Bits32.bytes()), (0b01, 4));
         assert_eq!((DataLen::Bits64 as u8, DataLen::Bits64.bytes()), (0b10, 8));
+    }
+
+    #[test]
+    fn a_write_frame_is_control_word_then_lsb_first_data() {
+        // Table 7-12's packet again, this time assembled end to end without CRC.
+        let frame = write_frame(0x60, 0x080, 0x1234_ABCD, false);
+        assert_eq!(&frame[..], &[0x10, 0x00, 0x80, 0xCD, 0xAB, 0x34, 0x12]);
+    }
+
+    #[test]
+    fn a_crc_enabled_write_frame_appends_a_checksum_over_the_address_byte_too() {
+        let frame = write_frame(0x60, 0x080, 0x1234_ABCD, true);
+        assert_eq!(frame.len(), 8);
+        assert_eq!(&frame[..7], &[0x50, 0x00, 0x80, 0xCD, 0xAB, 0x34, 0x12]);
+        // The checksum must include the {target,0} byte the bus sends separately.
+        let expected = crc8(&[0xC0, 0x50, 0x00, 0x80, 0xCD, 0xAB, 0x34, 0x12]);
+        assert_eq!(frame[7], expected);
+        assert_ne!(
+            frame[7],
+            crc8(&[0x50, 0x00, 0x80, 0xCD, 0xAB, 0x34, 0x12]),
+            "address byte was omitted from the checksum"
+        );
+    }
+
+    #[test]
+    fn a_read_checksum_covers_the_address_byte_in_both_directions() {
+        let covered = read_crc_input(0x60, 0x080, [0xCD, 0xAB, 0x34, 0x12]);
+        assert_eq!(
+            &covered[..],
+            &[0xC0, 0xD0, 0x00, 0x80, 0xC1, 0xCD, 0xAB, 0x34, 0x12]
+        );
+    }
+
+    #[test]
+    fn a_clean_status_reports_no_condition() {
+        assert_eq!(FaultStatus::default().condition(), None);
+        assert!(!FaultStatus::default().any());
+    }
+
+    #[test]
+    fn supply_faults_outrank_the_locks_they_cause() {
+        // An undervoltage will also trip a lock; naming the lock would send the owner
+        // looking at the motor instead of the supply.
+        let status = FaultStatus::new(
+            gate_fault::DRIVER_FAULT,
+            controller_fault::CONTROLLER_FAULT
+                | controller_fault::MTR_UNDER_VOLTAGE
+                | controller_fault::MTR_LCK
+                | controller_fault::ABN_SPEED,
+        );
+        assert_eq!(status.condition(), Some(McfCondition::Undervoltage));
+    }
+
+    #[test]
+    fn each_documented_bit_group_decodes_to_its_own_condition() {
+        use controller_fault as cf;
+        use gate_fault as gf;
+        let cases = [
+            (0, cf::MTR_UNDER_VOLTAGE, McfCondition::Undervoltage),
+            (gf::OVP, 0, McfCondition::Overvoltage),
+            (gf::OTW, 0, McfCondition::Overtemperature),
+            (gf::OTS, 0, McfCondition::Overtemperature),
+            (gf::OCP, 0, McfCondition::Overcurrent),
+            (0, cf::NO_MTR, McfCondition::MotorLock),
+            (0, cf::ABN_BEMF, McfCondition::MotorLock),
+            (0, cf::HW_LOCK_LIMIT, McfCondition::MotorLock),
+            (0, cf::IPD_T1_FAULT, McfCondition::StartFailed),
+            (0, cf::MPET_BEMF_FAULT, McfCondition::StartFailed),
+            (0, cf::WATCHDOG_FAULT, McfCondition::McfWatchdog),
+            (0, cf::EEPROM_ERR, McfCondition::Eeprom),
+            (0, cf::I2C_CRC_FAULT, McfCondition::ProtocolError),
+        ];
+        for (gate, controller, expected) in cases {
+            let status = FaultStatus::new(gate, controller);
+            assert_eq!(
+                status.condition(),
+                Some(expected),
+                "gate {gate:#010x} controller {controller:#010x}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unrecognised_fault_bit_is_still_a_fault() {
+        // A summary bit alone, with no detail bit set, must not decode to "healthy".
+        let status = FaultStatus::new(gate_fault::DRIVER_FAULT, 0);
+        assert_eq!(status.condition(), Some(McfCondition::Unclassified));
     }
 }
