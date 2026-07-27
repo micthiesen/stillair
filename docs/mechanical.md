@@ -66,7 +66,8 @@ Simple plates, posts, and one turned spindle (full dimensions in [parts.md](part
 
 - **MP-100 ceiling plate** — Ø210 × 6 mm 304 stainless. Two 11 × 20 mm anchor slots on 130 mm
   centers, three Ø6.6 standoff holes on Ø150 PCD, Ø16.2 spindle opening, separate tether
-  opening, cable slot.
+  opening, and a P-clip strain-relief tapping pair at 15° (no cable slot — the supply is a
+  surface run entering at the housing rim; see [parts.md](parts.md) "Cable entry").
 - **ST-100 standoffs** — three Ø16 × 138 mm 6061-T6 posts, M6 × 1 tapped ≥12 mm both ends.
 - **MC-100 motor carrier** — Ø188 × 8 mm 6061-T6. Standoff holes on Ø150 PCD, 4 × Ø4.5 on the
   GL100 Ø60 PCD, Ø20.5 spindle clearance, tether pair, Hall mount, verified wire window.

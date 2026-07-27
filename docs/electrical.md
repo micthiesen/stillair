@@ -541,7 +541,7 @@ all antenna positions along the board clear 15 mm with ≥19 mm actual margin).
 
 Physical orientation (2026-07 review, pinning what the dossier left implicit): the board
 mounts vertically with **local x = 0 at the top (global Z25, near the plate)** and x = 78
-at the bottom (Z103, toward the motor) — J1/power lands near the MP-100 cable slot and the
+at the bottom (Z103, toward the motor) — J1/power lands near the 15° cable entry and the
 tach/safety zone near the Hall bracket. The EB-100 reserve envelope's extra width (110 vs
 78 mm, 80 vs 58 mm) must be allocated to the **inward (X35) side and split explicitly
 between the two board ends** — the worst board corner already sits at r93.8 against the

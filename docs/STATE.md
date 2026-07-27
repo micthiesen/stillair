@@ -26,7 +26,10 @@ redirected to the firmware/harness program at owner request).
   wiring details and unstated firmware assumptions.
 - **Mount work can start** (see [build.md](build.md) > "Mount build-first plan"): mockup
   first, then ST-100/SP-100/KD-100/BL-100/LS-100 are fully spec'd and motor-independent;
-  MP-100 waits on the cable-slot angle + ENC tab clocking decisions; the adapter filament
+  MP-100 is now released too (2026-07-27: ENC tab clocking locked at 45/105/165/225/285/345°,
+  clamshell split on the 135°–315° axis, and the mid-plate cable slot deleted in favour of a
+  15° rim entry + P-clip strain relief, after the supply was confirmed as a surface run and
+  plate rotation as free); the adapter filament
   qualification is the longest non-motor-gated path.
 - **Control plane locked**: Matter over Wi-Fi (rs-matter). Orders in; GL100 + parts en
   route; CubeMars bearing email sent 2026-07-27 (Gate 01 awaiting reply).

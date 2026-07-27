@@ -72,7 +72,9 @@ the GL100 transmits torque only through a non-structural coupling.
   for M6 flat-head screws.
 - Center spindle opening Ø16.2; top-face flange recess Ø34.2 × 3.1 deep.
 - Separate tether-anchor clearance at X0, Y−82: 14 × 22 mm.
-- Cable entry: 12 × 20 mm radiused slot, angle coordinated with the wall conduit.
+- Cable entry: **none in the plate** (the 12 × 20 mm slot was deleted 2026-07-27 — see
+  "Cable entry" below). Instead, two M4 × 0.7 tapped holes on 20 mm pitch in the underside
+  at r88, straddling the **15°** line, for a P-clip strain relief.
 - EB-100 mounting: two M3 × 0.5 tapped holes at X35, Y±15 from the underside; keep clear of
   ceiling anchors and spindle recess.
 - ENC-100 mounting: six M3 tapped holes at r96, **clocked 45°/105°/165°/225°/285°/345°**
@@ -266,11 +268,13 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   X35–93) face-on without disturbing the tether run at 270°. Rejected: 15°/195° puts the
   seam coplanar with the PCB so the board straddles it; 75°/255° passes within 15° of both
   the 90° standoff and the tether. The ENC-100 cable notch must sit entirely within one
-  half — never on the seam — which is a constraint on the MP-100 cable-slot angle.
+  half, never on the seam — satisfied by the 15° cable entry, 60° clear of the 315° seam.
 - Use UL94 V-0 polymer or qualify an equivalent enclosure fire test. Each clamshell half also
   gets an independent flexible metal lanyard rated at least 100 N to MP-100.
-- Provide at least 1200 mm² combined free vent area, a 14 × 8 mm cable notch, connector
-  access, and an RF window (nonmetallic, ≥15 mm spatial clearance to the antenna).
+- Provide at least 1200 mm² combined free vent area, connector access, and an RF window
+  (nonmetallic, ≥15 mm spatial clearance to the antenna).
+- Cable notch: 14 × 8 mm on the **15°** line, **open at the top rim** (not a closed hole) so
+  the removable half separates from a cable clamped to MP-100. See "Cable entry" above.
 - Housing ends at Z178, leaving 8.2 mm to the rotating hub. Nothing projects below Z200.
 
 ## Tether and design loads
@@ -335,7 +339,7 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 ## Fabrication defaults (2026-07 review — a fabricator will ask)
 
 - Default tolerance block: **ISO 2768-mK** for all dimensions not individually toleranced.
-- Internal corner radii on MP-100's anchor slots, tether clearance, and cable slot: **R2
+- Internal corner radii on MP-100's anchor slots and tether clearance: **R2
   minimum** (laser/waterjet cannot cut sharp internal corners; LS-100/BL-100 already
   specify theirs). The tether clearance slot's 14 mm dimension is **radial**, 22 mm
   tangential.
@@ -343,8 +347,36 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   acceptable; add anodize/passivation callouts at drawing release if desired.
 - The "housing ends at Z178 / nothing projects below Z200" rule is scoped to the **ENC-100
   housing assembly only** — the catcher (Z200.7) and blades obviously extend below it.
-- MP-100 cannot be cut until the **cable-slot angle** lands (site-measure how power reaches
-  the plate). ENC-100 tab clocking is no longer a blocker — locked below.
+- **MP-100 is released for fabrication as of 2026-07-27.** Both former blockers are gone:
+  ENC-100 tab clocking is locked below, and the cable-slot angle dissolved once the supply
+  was confirmed as a surface run (see "Cable entry").
+
+### Cable entry (locked 2026-07-27)
+
+Site fact: power reaches the fan as a **surface run** along the ceiling from the wall, not
+from a junction box above. That kills the mid-plate slot. MP-100's top face is clamped
+against the ceiling through a ~2.5 mm hard spacer, so no cable can reach a closed slot from
+above; the cable must pass the assembly at the outer rim, where the ENC-100 top edge
+(Ø212, r106) already carries its 14 × 8 mm notch.
+
+What the plate needs at that angle is **strain relief, not a hole**. The mains cable is
+clamped to MP-100 (permanent structure) via a P-clip on two M4 tapped holes; ENC-100's notch
+is clearance only. Clamping to the housing instead would put live wiring under load every
+time a clamshell half is dropped for service.
+
+**Angle: 15°**, with ENC-100's notch on the same line. Chosen for internal cleanliness, since
+free plate rotation means the whole feature pattern is clocked toward the conduit at install
+(the angle is an orientation choice on the ceiling, not a machining input):
+
+- 15° is the centre of the 345°/45° tab gap and the nearest clean window to J1 at the PCB's
+  top edge — a ~26 mm lateral run off the Y0 plane.
+- Clearance to the nearest anchor washer is ~21 mm at worst-case ±5 mm drill error.
+- Rejected: **135°** is geometrically cleanest but sits on the clamshell seam; **255°** comes
+  within 12.8 mm of the tether slot; **75°/315°** give ~19.5 mm and sit further from J1.
+
+The notch falls in the removable clamshell half (315°→135°). That is fine **provided the
+ENC-100 notch stays open at the top rim** — the half then separates radially from a cable
+that remains clamped to the plate. A closed hole here would trap the cable and is a defect.
 
 ### ENC-100 tab clocking (locked 2026-07-27)
 

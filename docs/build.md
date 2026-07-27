@@ -33,8 +33,9 @@ the bed.
   non-motor-gated path in the project.
 - **Stock to order now**: Ø210 × 6 mm 304 plate (or oversized blank), Ø16 6061 rod,
   **Ø38–40 mm** 17-4PH round bar (the SP-100 flange needs the diameter; not Ø16 bar).
-- **MP-100 waits on two paper decisions** (cable-slot angle, ENC tab clocking — see
-  parts.md "Fabrication defaults"), not on the motor.
+- **MP-100 is released** (2026-07-27): both paper decisions landed — ENC tab clocking at
+  45/105/165/225/285/345° and a 15° rim cable entry replacing the deleted mid-plate slot.
+  See parts.md "ENC-100 tab clocking" and "Cable entry". Never was motor-gated.
 - **MC-100/RH-100 partial strategy**: their motor-independent features (ODs, standoff
   holes, center clearances, tether holes, adapter stations, tach pockets) can be machined
   early, leaving the motor-pattern operations (Ø60/Ø50 PCD clocking, wire window, pilot OD)
