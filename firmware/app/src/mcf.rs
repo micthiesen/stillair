@@ -5,17 +5,21 @@
 //! checks the CRC coming back, and reports failure honestly so the supervisor can decide
 //! what a silent drive means.
 
+use core::cell::Cell;
 use core::sync::atomic::{AtomicU32, Ordering};
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_sync::signal::Signal;
 use embassy_time::{with_timeout, Duration, Timer};
 use esp_hal::i2c::master::{Error as I2cError, I2c};
 use esp_hal::Async;
+use stillair_core::console::Reply;
 use stillair_core::mcf8316::{
     self, reg, value_from_bytes32, verify_read, write_frame, CrcMismatch, FaultStatus, RegisterBus,
 };
+use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::state::StatusRead;
 
 /// Latest fault-status read, published by the I²C task and consumed by the control loop.
@@ -29,11 +33,50 @@ pub static STATUS: Signal<CriticalSectionRawMutex, StatusRead> = Signal::new();
 /// I²C task. Crossing tasks like this keeps the blocking-free control loop free of I²C.
 pub static CLEAR_FAULT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
+/// The standing verdict on the MCF's stored configuration.
+///
+/// A level rather than a `Signal`: the control loop reads it on every tick and must keep
+/// seeing the last verdict, not [`ConfigCheck::Pending`] on the ticks in between. It starts
+/// pending, which is what holds `SafeBoot` until the I²C task has actually looked.
+static VERDICT: CriticalSectionMutex<Cell<ConfigCheck>> =
+    CriticalSectionMutex::new(Cell::new(ConfigCheck::Pending));
+
+/// The latest configuration verdict, for the control loop.
+pub fn verdict() -> ConfigCheck {
+    VERDICT.lock(|cell| cell.get())
+}
+
+/// Record a verdict. Called by the boot-time check and by every configuration operation.
+pub fn publish_verdict(check: ConfigCheck) {
+    VERDICT.lock(|cell| cell.set(check));
+}
+
 /// A register access asked for by the console.
 #[derive(Debug, Clone, Copy)]
 pub enum Access {
     Read(u16),
-    Write { address: u16, value: u32 },
+    Write {
+        address: u16,
+        value: u32,
+    },
+    /// Re-run the configuration check.
+    ConfigCheck,
+    /// Write the golden image, then verify it.
+    ConfigApply,
+    /// Emit the whole EEPROM configuration block, one register per line.
+    ConfigDump,
+}
+
+/// What an [`Access`] produced.
+#[derive(Debug, Clone, Copy)]
+pub enum Answer {
+    /// A register's value, or the number of registers a dump emitted.
+    Value(u32),
+    Config {
+        check: ConfigCheck,
+        written: u16,
+        unchanged: u16,
+    },
 }
 
 /// Requests and replies carry a generation so a reply cannot be misattributed.
@@ -43,7 +86,7 @@ pub enum Access {
 /// satisfies it. The console would then report one register's value under another's name —
 /// exactly the kind of confident wrong answer a tuning harness must never give.
 static ACCESS_REQUEST: Signal<CriticalSectionRawMutex, (u32, Access)> = Signal::new();
-static ACCESS_REPLY: Signal<CriticalSectionRawMutex, (u32, Result<u32, &'static str>)> =
+static ACCESS_REPLY: Signal<CriticalSectionRawMutex, (u32, Result<Answer, &'static str>)> =
     Signal::new();
 static ACCESS_GENERATION: AtomicU32 = AtomicU32::new(0);
 
@@ -55,7 +98,10 @@ static ACCESS_LOCK: Mutex<CriticalSectionRawMutex, ()> = Mutex::new(());
 /// Read a register on behalf of the console. Times out rather than hanging: a wedged bus
 /// must not take the console down with it.
 pub async fn request_read(address: u16) -> Result<u32, &'static str> {
-    exchange(Access::Read(address)).await
+    match exchange(Access::Read(address)).await? {
+        Answer::Value(value) => Ok(value),
+        Answer::Config { .. } => Err("wrong answer for a register read"),
+    }
 }
 
 /// Write a register on behalf of the console.
@@ -63,7 +109,12 @@ pub async fn request_write(address: u16, value: u32) -> Result<(), &'static str>
     exchange(Access::Write { address, value }).await.map(|_| ())
 }
 
-async fn exchange(access: Access) -> Result<u32, &'static str> {
+/// Run a configuration operation on behalf of the console.
+pub async fn request_config(access: Access) -> Result<Answer, &'static str> {
+    exchange(access).await
+}
+
+async fn exchange(access: Access) -> Result<Answer, &'static str> {
     let _guard = ACCESS_LOCK.lock().await;
     let generation = ACCESS_GENERATION
         .fetch_add(1, Ordering::Relaxed)
@@ -71,7 +122,7 @@ async fn exchange(access: Access) -> Result<u32, &'static str> {
     ACCESS_REPLY.reset();
     ACCESS_REQUEST.signal((generation, access));
 
-    let deadline = Duration::from_millis(500);
+    let deadline = deadline_for(access);
     loop {
         match with_timeout(deadline, ACCESS_REPLY.wait()).await {
             // A reply from an abandoned earlier request: discard it and keep waiting for
@@ -83,20 +134,79 @@ async fn exchange(access: Access) -> Result<u32, &'static str> {
     }
 }
 
+/// How long to wait for an answer, by how much work the access is.
+///
+/// One deadline for all of them would have to be the longest, and a five-second wait for a
+/// single register read turns a wedged bus into a console that appears to have hung.
+fn deadline_for(access: Access) -> Duration {
+    match access {
+        Access::Read(_) | Access::Write { .. } => Duration::from_millis(500),
+        // Two dozen reads apiece.
+        Access::ConfigCheck | Access::ConfigDump => Duration::from_secs(5),
+        // Reads, writes and re-reads two dozen registers, and a configuration write is
+        // EEPROM-backed at roughly 750 ms each (`docs/controls.md`).
+        Access::ConfigApply => Duration::from_secs(60),
+    }
+}
+
 /// Service a pending console register access, if there is one.
 pub async fn service_access(mcf: &mut Mcf) {
     let Some((generation, access)) = ACCESS_REQUEST.try_take() else {
         return;
     };
     let reply = match access {
-        Access::Read(address) => mcf.read(address).await.map_err(describe),
-        Access::Write { address, value } => mcf
-            .write(address, value)
-            .await
-            .map(|()| 0)
-            .map_err(describe),
+        Access::Read(address) => mcf.read(address).await.map(Answer::Value).map_err(describe),
+        Access::Write { address, value } => {
+            let written = mcf.write(address, value).await.map_err(describe);
+            // A configuration write invalidates the standing verdict, so re-check rather
+            // than leaving the supervisor believing a "verified" that a bench write has just
+            // made untrue. Doing it here rather than trusting the operator to run `config
+            // check` is the point: the dangerous case is the one nobody remembers to check.
+            if written.is_ok() && mcf8316::is_configuration(address) {
+                publish_verdict(ConfigCheck::Pending);
+                publish_verdict(mcf_config::check(mcf, mcf_config::IMAGE).await);
+            }
+            written.map(|()| Answer::Value(0))
+        }
+        Access::ConfigCheck => {
+            let check = mcf_config::check(mcf, mcf_config::IMAGE).await;
+            publish_verdict(check);
+            Ok(Answer::Config {
+                check,
+                written: 0,
+                unchanged: 0,
+            })
+        }
+        Access::ConfigApply => {
+            let applied = mcf_config::apply(mcf, mcf_config::IMAGE).await;
+            // Whatever happened, the verdict now reflects the device rather than what it was
+            // before the apply.
+            let check = mcf_config::check(mcf, mcf_config::IMAGE).await;
+            publish_verdict(check);
+            Ok(Answer::Config {
+                check,
+                written: applied.map(|a| a.written).unwrap_or(0),
+                unchanged: applied.map(|a| a.unchanged).unwrap_or(0),
+            })
+        }
+        Access::ConfigDump => dump(mcf).await.map(Answer::Value).map_err(describe),
     };
     ACCESS_REPLY.signal((generation, reply));
+}
+
+/// Emit the whole EEPROM configuration block, one protocol line per register.
+///
+/// The lines go straight to the output queue rather than back through the reply channel:
+/// there are two dozen of them, and they are the raw material a golden image is captured
+/// from (`stillair config capture`), not an answer to be interpreted.
+async fn dump(mcf: &mut Mcf) -> Result<u32, BusError> {
+    let mut count = 0;
+    for (_, address) in reg::configuration() {
+        let value = mcf.read(address).await?;
+        crate::output::line(Reply::Register { address, value }.to_line());
+        count += 1;
+    }
+    Ok(count)
 }
 
 const fn describe(error: BusError) -> &'static str {

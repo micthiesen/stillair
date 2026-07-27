@@ -10,6 +10,7 @@ use embedded_hal::pwm::SetDutyCycle;
 use esp_hal::gpio::{Input, Level, Output};
 use esp_hal::ledc::{channel, LowSpeed};
 use stillair_core::config;
+use stillair_core::mcf_config::ConfigCheck;
 use stillair_core::state::{Action, Direction, Inputs, StatusRead};
 
 /// The SPEED-pin PWM channel, made movable between executors.
@@ -112,9 +113,10 @@ impl Board {
             pgood: self.pgood.is_high(),
             mcf_fault: self.nfault.is_low(),
             mcf_alarm: self.alarm.is_high(),
-            // Filled in by the control loop from the I2C task; the pins say nothing
-            // about it.
+            // Both filled in by the control loop from the I2C task; the pins say nothing
+            // about either.
             mcf_status: StatusRead::Stale,
+            config: ConfigCheck::Pending,
             fg_pulses: FG_PULSES.load(Ordering::Relaxed),
             hall_pulses: HALL_PULSES.load(Ordering::Relaxed),
         }

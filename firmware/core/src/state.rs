@@ -15,6 +15,7 @@ use heapless::Vec;
 
 use crate::config;
 use crate::mcf8316::{FaultStatus, McfCondition};
+use crate::mcf_config::{ConfigCheck, ConfigFault};
 use crate::speed::{self, MilliRpm, Ramp, SpeedDuty};
 use crate::tach::Tach;
 use crate::time::Millis;
@@ -72,6 +73,11 @@ pub enum FaultReason {
     NoRotation,
     /// The rotor would not go quiet, so the start could never be armed.
     NeverStopped,
+    /// The MCF's stored configuration is not the one this firmware is qualified against —
+    /// or the device says its own EEPROM is unusable. Every limit the supervisor layers on
+    /// top (the 180 RPM stored ceiling, latched fault responses, the external watchdog) lives
+    /// in that configuration, so running without it is running without them.
+    ConfigUnverified(ConfigFault),
 }
 
 /// Commands arriving from the Matter controller (or local control).
@@ -124,6 +130,10 @@ pub struct Inputs {
     pub mcf_alarm: bool,
     /// What the last attempt to read the MCF's fault-status registers produced.
     pub mcf_status: StatusRead,
+    /// The standing verdict on the MCF's stored configuration. Unlike [`Inputs::mcf_status`]
+    /// this is a level, not an event: it is produced once at boot (and again after anything
+    /// writes the configuration block) and holds until something changes it.
+    pub config: ConfigCheck,
     pub fg_pulses: u32,
     pub hall_pulses: u32,
 }
@@ -145,13 +155,14 @@ pub enum StatusRead {
 }
 
 impl Default for Inputs {
-    /// A healthy, stationary board.
+    /// A healthy, stationary board whose configuration has been checked and matches.
     fn default() -> Self {
         Self {
             pgood: true,
             mcf_fault: false,
             mcf_alarm: false,
             mcf_status: StatusRead::Stale,
+            config: ConfigCheck::Verified,
             fg_pulses: 0,
             hall_pulses: 0,
         }
@@ -190,6 +201,9 @@ pub struct Supervisor {
     /// When a status read last produced *any* verdict, success or failure. Distinguishes a
     /// quiet bus from a reader that has stopped running.
     last_status_at: Millis,
+    /// Latest configuration verdict, kept so telemetry can report it without the caller
+    /// having to carry the input through separately.
+    config: ConfigCheck,
 }
 
 impl Supervisor {
@@ -215,6 +229,7 @@ impl Supervisor {
             start_fg_mark: 0,
             bus_failures: 0,
             last_status_at: now,
+            config: inputs.config,
         }
     }
 
@@ -244,6 +259,13 @@ impl Supervisor {
 
     pub const fn direction(&self) -> Direction {
         self.applied_direction
+    }
+
+    /// The standing verdict on the MCF's stored configuration, for telemetry. Reported on
+    /// every frame rather than logged once at boot: a bench capture taken against an
+    /// unverified configuration should say so in the capture itself.
+    pub const fn config(&self) -> ConfigCheck {
+        self.config
     }
 
     /// The released minimum speed, the bottom of the Matter percent mapping. Raised (never
@@ -296,6 +318,7 @@ impl Supervisor {
         self.last_poll = now;
         self.tach.update(inputs.fg_pulses, inputs.hall_pulses, now);
         self.observe_bus(now, inputs);
+        self.config = inputs.config;
 
         let mut actions = Actions::new();
 
@@ -338,6 +361,34 @@ impl Supervisor {
         if let Some(reason) = self.mcf_fault_source(now, inputs) {
             self.enter_fault(now, reason, actions);
             return;
+        }
+        // "Stored configuration verified" — the last clause of the contract's safe-boot step,
+        // and the reason `SafeBoot` is a state rather than a delay. The check runs on the I²C
+        // task while the hold elapses, so by here it has normally already answered.
+        match inputs.config {
+            ConfigCheck::Failed(fault) => {
+                self.enter_fault(now, FaultReason::ConfigUnverified(fault), actions);
+                return;
+            }
+            // No verdict yet. Wait, but not forever: a supervisor sitting in `SafeBoot`
+            // reporting nothing is indistinguishable from a board that will not boot.
+            ConfigCheck::Pending => {
+                if now.since(self.state_entered)
+                    >= config::SAFE_BOOT_HOLD_MS + config::CONFIG_CHECK_GRACE_MS
+                {
+                    self.enter_fault(
+                        now,
+                        FaultReason::ConfigUnverified(ConfigFault::TimedOut),
+                        actions,
+                    );
+                }
+                return;
+            }
+            // `Unverified` proceeds deliberately: until a golden image has been captured
+            // from a real device there is nothing to compare against, and the harness has to
+            // be usable in order to capture one. It is carried in every telemetry frame so
+            // the distinction is never invisible.
+            ConfigCheck::Verified | ConfigCheck::Unverified => {}
         }
         self.transition(FanState::IdleOff, now);
     }
@@ -491,6 +542,12 @@ impl Supervisor {
             // waiting on, and staying put is the safe response.
             if !inputs.pgood {
                 return Some(FaultReason::RailLoss);
+            }
+            // A verdict can turn bad after boot: the console's `config apply` re-checks when
+            // it is done, and a write that did not stick lands here. Outside `SafeBoot` there
+            // is no hold left to wait through, so it is a fault immediately.
+            if let ConfigCheck::Failed(fault) = inputs.config {
+                return Some(FaultReason::ConfigUnverified(fault));
             }
         }
         None
@@ -779,6 +836,94 @@ mod tests {
         bench.inputs.pgood = true;
         bench.tick();
         assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn safe_boot_waits_for_a_configuration_verdict_then_proceeds() {
+        // The check runs concurrently with the hold on a real board, so this is the ordinary
+        // case: a verdict that lands late but within the grace window costs nothing.
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Pending;
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS + config::CONFIG_CHECK_GRACE_MS / 2);
+        assert_eq!(
+            bench.supervisor.state(),
+            FanState::SafeBoot,
+            "left SafeBoot without a verdict on the stored configuration"
+        );
+
+        bench.inputs.config = ConfigCheck::Verified;
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn a_verdict_that_never_arrives_faults_rather_than_hanging_in_safe_boot() {
+        // A supervisor parked in SafeBoot reporting nothing looks exactly like a board that
+        // will not boot; the whole point of a fault is that it says which.
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Pending;
+        bench.run_until(
+            config::SAFE_BOOT_HOLD_MS + config::CONFIG_CHECK_GRACE_MS * 3,
+            "Fault",
+            |s| s.state() == FanState::Fault,
+        );
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::ConfigUnverified(ConfigFault::TimedOut))
+        );
+    }
+
+    #[test]
+    fn a_failed_configuration_check_never_reaches_idle() {
+        // Every limit the supervisor layers on top of lives in that configuration, so a
+        // mismatch means the layers below it are unknown.
+        let fault = ConfigFault::Mismatch { address: 0x08A };
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Failed(fault);
+        bench.run_until(config::SAFE_BOOT_HOLD_MS + 5_000, "Fault", |s| {
+            s.state() == FanState::Fault
+        });
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::ConfigUnverified(fault))
+        );
+        assert!(bench.saw(Action::ClearPermission));
+
+        // And clearing it does not get past the gate either — a bad configuration does not
+        // heal on its own, so the fan stays down until the configuration is fixed.
+        bench.supervisor.command(Command::Off);
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS * 2);
+        assert_eq!(bench.supervisor.state(), FanState::Fault);
+    }
+
+    #[test]
+    fn an_unverified_configuration_runs_but_says_so() {
+        // Before a golden image has been captured there is nothing to compare against, and
+        // the harness has to work in order to capture one. The distinction must still be
+        // visible in telemetry rather than silently equal to "verified".
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Unverified;
+        bench.boot();
+        bench.run_at(40);
+        assert_eq!(bench.supervisor.config(), ConfigCheck::Unverified);
+        assert_ne!(bench.supervisor.config(), ConfigCheck::Verified);
+    }
+
+    #[test]
+    fn a_configuration_that_goes_bad_after_boot_stops_the_fan() {
+        // `config apply` re-checks when it finishes, so a write that did not stick shows up
+        // here. There is no hold left to wait through outside SafeBoot.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        let fault = ConfigFault::DeviceEeprom;
+        bench.inputs.config = ConfigCheck::Failed(fault);
+        bench.tick();
+        assert_eq!(
+            bench.supervisor.fault(),
+            Some(FaultReason::ConfigUnverified(fault))
+        );
+        assert!(bench.saw(Action::ClearPermission));
     }
 
     #[test]

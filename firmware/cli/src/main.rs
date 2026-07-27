@@ -18,6 +18,7 @@ use std::process::ExitCode;
 use std::time::Duration;
 
 use stillair_core::console;
+use stillair_core::mcf8316::reg;
 
 mod link;
 mod sim;
@@ -99,6 +100,8 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
         "stream" if !matches!(words.get(1), Some(&"on") | Some(&"off")) => {
             stream(link, &words[1..])
         }
+        // `config capture` is a host verb; check/apply/dump belong to the device.
+        "config" if words.get(1) == Some(&"capture") => capture(link),
         // Everything else goes to the device verbatim, so the CLI never has to grow a case
         // for a console command it does not need to interpret.
         _ => passthrough(link, &words.join(" ")),
@@ -152,6 +155,7 @@ fn usage() {
     eprintln!("  wait <state> [--for <secs>]   block until the fan reaches a state");
     eprintln!("  stream <hz> [--for <secs>]    telemetry as CSV on stdout");
     eprintln!("      (`stream on <hz>`/`stream off` pass through to the device instead)");
+    eprintln!("  config capture                print the device's config block as an IMAGE table");
     eprintln!("  script <file|->               run a sequence against one session");
     eprintln!();
     eprintln!("device commands (passed through):");
@@ -171,7 +175,11 @@ fn passthrough(link: &mut dyn Link, request: &str) -> Result<(), String> {
     // A device-reported failure is a failure of the command, and the exit code must say so
     // or a script will march happily past a step that did not happen.
     if field(&reply, "ok") == Some("false") {
+        // A configuration verdict carries `detail` rather than `error`; without the fallback
+        // a failed `config check` exits non-zero with the useless message "command failed",
+        // which is the one moment you want to be told what is actually wrong.
         return Err(field(&reply, "error")
+            .or_else(|| field(&reply, "detail"))
             .unwrap_or("command failed")
             .to_string());
     }
@@ -240,7 +248,7 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     let mut out = std::io::stdout().lock();
     writeln!(
         out,
-        "t_ms,state,fault,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir,dropped"
+        "t_ms,state,fault,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir,min_mrpm,config,dropped"
     )
     .map_err(|e| e.to_string())?;
 
@@ -256,7 +264,7 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             let column = |key: &str| field(&line, key).unwrap_or("").to_string();
             writeln!(
                 out,
-                "{},{},{},{},{},{},{},{},{}",
+                "{},{},{},{},{},{},{},{},{},{},{}",
                 column("t"),
                 column("state"),
                 column("fault"),
@@ -265,6 +273,8 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
                 column("hall_mrpm"),
                 column("duty"),
                 column("dir"),
+                column("min_mrpm"),
+                column("config"),
                 column("dropped"),
             )
             .map_err(|e| e.to_string())?;
@@ -276,6 +286,62 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     if frames == 0 {
         return Err(format!("no telemetry from {}", link.describe()));
     }
+    Ok(())
+}
+
+/// Read the device's EEPROM configuration block and print it as a `mcf_config::IMAGE` table.
+///
+/// This is the step that turns the boot-time configuration gate from machinery into a real
+/// check. Run it against a device that has been tuned and qualified, paste the output into
+/// `firmware/core/src/mcf_config.rs`, and from then on every boot verifies that the device in
+/// front of you is holding the configuration the fan was qualified with.
+///
+/// The expected register list comes from `stillair-core`, so a dump cut short by a bus error
+/// is a failure here rather than a silently short image — which would verify the registers it
+/// happened to receive and quietly ignore the rest.
+fn capture(link: &mut dyn Link) -> Result<(), String> {
+    let expected: Vec<(&str, u16)> = reg::configuration().collect();
+    link.send("config dump").map_err(|e| e.to_string())?;
+
+    let mut values: Vec<(String, u16, u32)> = Vec::new();
+    loop {
+        let line = link
+            .receive(REPLY_TIMEOUT)
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("no reply from {}", link.describe()))?;
+        if field(&line, "ok") == Some("false") {
+            return Err(field(&line, "error").unwrap_or("dump failed").to_string());
+        }
+        let (Some(address), Some(value)) = (field(&line, "addr"), field(&line, "value")) else {
+            break; // The closing `{"ok":true}`.
+        };
+        let address: u16 = address
+            .parse()
+            .map_err(|_| format!("bad address: {line}"))?;
+        let value: u32 = value.parse().map_err(|_| format!("bad value: {line}"))?;
+        let name = field(&line, "name").unwrap_or("").to_string();
+        values.push((name, address, value));
+    }
+
+    if values.len() != expected.len() {
+        return Err(format!(
+            "expected {} configuration registers, got {} — the dump was cut short and an \
+             image built from it would verify only the part that arrived",
+            expected.len(),
+            values.len()
+        ));
+    }
+    for ((_, wanted), (_, got, _)) in expected.iter().zip(&values) {
+        if wanted != got {
+            return Err(format!("expected register {wanted:#05x}, got {got:#05x}"));
+        }
+    }
+
+    println!("pub const IMAGE: &[Setting] = &[");
+    for (name, address, value) in values {
+        println!("    Setting::whole(\"{name}\", {address:#05x}, {value:#010x}),");
+    }
+    println!("];");
     Ok(())
 }
 

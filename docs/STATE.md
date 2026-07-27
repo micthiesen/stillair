@@ -69,6 +69,26 @@ redirected to the firmware/harness program at owner request).
   output (protocol *and* logs) now goes through one bounded queue drained by a single async
   writer; when the host stops reading, lines are dropped, counted, and the count is carried
   in every telemetry frame so a capture with a gap is identifiable as one.
+- **The stored-configuration gate is real now (2026-07-27).** `SafeBoot` no longer exits
+  until the I²C task has produced a verdict on the MCF's stored configuration, and a `failed`
+  verdict is a fault before or after boot. The image is a captured golden block of whole
+  32-bit register values rather than invented bit fields — `stillair … config capture` prints
+  it — and until one is captured the verdict is honestly `unverified`, which rides in every
+  telemetry frame and CSV row so a capture taken against an unqualified device says so. Any
+  `reg write` into the EEPROM block re-checks automatically. Details in
+  [controls.md](controls.md) > "Stored-configuration verification"; new rows CTL-08/09/10.
+- **The Matter FanControl mapping landed in `stillair-core`** (`matter.rs`, no rs-matter
+  dependency): `FanMode`, `PercentSetting`, `AirflowDirection` → supervisor commands, reusing
+  `speed::percent_to_rpm` rather than a second copy of the arithmetic. `pct <0-100>` on the
+  console drives the same path Apple Home will. **162 tests.**
+- **The firmware now runs on a real ESP32-C6 dev board (2026-07-27).** Flashed, booted, and
+  driven over USB serial JTAG with the CLI. It found a defect the simulator could not: the
+  I²C status-read warning fired every 200 ms against an absent MCF, flooding the bounded
+  output queue and evicting telemetry frames (`dropped` climbed 16 → 62 in fifteen seconds) —
+  exactly when the record matters most. Status logging is now transition-only; re-flashed and
+  confirmed `dropped: 0`. **The bare dev board cannot leave `SafeBoot`** (GPIO22 PGOOD floats
+  low, and floating-means-bad is the correct fail-safe reading); jumpering is documented in
+  [CLAUDE.md](../CLAUDE.md).
 - **Reviewers found real bugs in every phase, all fixed**: `duty_for` returned full scale
   at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
   have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
@@ -78,17 +98,48 @@ redirected to the firmware/harness program at owner request).
 
 ## Next
 
-**Phase D: rs-matter on the dev boards.** The last big external unknown — git deps, the
-`[patch.crates-io]` pin table, BLE commissioning, flash-backed persistence, and whether Apple
-Home surfaces `AirflowDirection` at all (the fallback is a second On/Off endpoint). Startable
-today on hardware in hand. Matter tasks go on the **thread-mode** executor, never on
-`control`; that separation already exists and must not be undone.
+**Finish the rs-matter integration in `app/`.** The mapping half is done and tested in
+`stillair-core`; what remains is the transport: `EmbassyWifiMatterStack` on the **thread-mode**
+executor (never on `control`), a FanControl handler chained onto the endpoint, BLE
+commissioning with the QR to the console, and `SeqMapKvBlobStore` persistence so a reboot does
+not re-commission. See "Phase D findings" below for the pin table and the two blockers already
+cleared.
 
-Still open and worth doing alongside it, because tuning cannot start without it:
-**apply and verify the initial MCF8316D register set at boot.** The console can now read and
-write registers by name, which is how the actual values get derived at the bench — but
-nothing writes a configuration at startup or verifies it by read-back, so SafeBoot's "stored
-configuration verified" clause remains aspirational.
+Then, once a real MCF8316D exists: **capture the golden image.** The gate is built and holds;
+`stillair --port … config capture` prints the table, and until it is filled in every frame
+honestly reports `config: unverified`.
+
+## Phase D findings (2026-07-27, from a build spike against the real crates)
+
+- **Our dependency versions already match rs-matter-embassy's own esp example exactly** —
+  esp-hal ~1.1, esp-rtos 0.3, esp-radio 0.18, esp-alloc 0.10, esp-println 0.17,
+  esp-backtrace 0.19, esp-bootloader-esp-idf 0.5, embassy-executor 0.10, embassy-time 0.5,
+  embassy-sync 0.8. No version skew to fight.
+- **But it pins every esp-\* crate to an unreleased esp-hal git rev**
+  (`esp-rs/esp-hal` rev `10e48dd74837bae4be663a7d1825d12875363727`) via `[patch.crates-io]`.
+  Adopting Matter means adopting that rev for the whole app crate, which is the real cost.
+- **`mbedtls` is not merely undesirable, it does not build here.** `mbedtls-rs-sys` drives
+  CMake at a riscv32-esp-elf C cross-compiler; Apple clang cannot target riscv32 and the
+  build dies in `CMakeTestCCompiler`. `rustcrypto` is rs-matter-embassy's *default* and the
+  examples opt out of it — so the pure-Rust preference in CLAUDE.md is now also the only
+  option that compiles without an ESP-IDF C toolchain.
+- The repo moved: `sysgrok/rs-matter-embassy` 301-redirects to **`ivmarkov/rs-matter-embassy`**.
+- The examples' `.cargo/config.toml` sets `build-std`, which is nightly-only; the build got
+  well past dependency compilation on **stable** regardless, so it appears not to be required.
+- **The C6 Wi-Fi example builds clean on stable with `rustcrypto`** (52 s once deps are
+  cached), so the toolchain question is closed and iteration is cheap.
+- rs-matter arrives via `rs-matter-stack` 0.1 from crates.io (not a git dep of its own).
+- **rs-matter 0.2.0 has no FanControl cluster and no Fan device type.** `src/dm/clusters/app/`
+  covers on_off, level_control, color_control, chime, camera and webrtc — nothing at 0x0202,
+  and `devices.rs` has no `DEV_TYPE_FAN`. `rs-matter-codegen` generates clusters from the
+  Matter IDL but is explicitly an internal build-time dependency, not a user-facing generator.
+  So the hand-written FanControl handler the dossier planned is **required**, not a
+  preference. `on_off.rs` is the template to follow: a `…Hooks` trait for device logic behind
+  a generated cluster shell.
+- Shape to copy from `light_wifi.rs`: statically allocated `EmbassyWifiMatterStack<BUMP_SIZE,
+  ()>` (~35–50 KB, `BUMP_SIZE` 20000, heap 100 KB), `EspWifiDriver::new(WIFI, BT)`,
+  `stack.run_coex(...)` with an `EmptyHandler.chain(EpClMatcher…)` per cluster plus a
+  `DescHandler` per endpoint, and `TrngSource` feeding a reseeding CSPRNG.
 
 ## Candidates Not Chosen
 

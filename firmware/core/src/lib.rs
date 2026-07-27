@@ -13,7 +13,9 @@
 
 pub mod config;
 pub mod console;
+pub mod matter;
 pub mod mcf8316;
+pub mod mcf_config;
 pub mod speed;
 pub mod state;
 pub mod tach;

@@ -176,10 +176,9 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
   expressible while `I2c` owns them. `Mcf::recover` resets the controller side only. The
   documented fallback is what actually protects us: repeated failures become
   `BusUnreachable`, which stops the fan and needs a power cycle.
-- **Register configuration is not applied yet.** The driver can read status and issue
-  CLR_FLT, but nothing writes the initial MCF8316D configuration from "Initial MCF8316D
-  configuration" above, and nothing verifies it by read-back at boot. Until it does,
-  SafeBoot's "stored configuration verified" clause is aspirational.
+- **No golden image has been captured yet**, so the boot-time configuration gate below
+  reports `unverified` rather than `verified`. The mechanism is real and the gate holds; what
+  is missing is a device to capture from. See "Stored-configuration verification" below.
 
 ### MCF8316D I²C wire format (verified 2026-07-27 against primary sources)
 
@@ -206,6 +205,58 @@ example packets byte for byte.
 - Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
 - Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
   first bring-up rather than trusting it.
+### Stored-configuration verification (2026-07-27)
+
+The last clause of the safe-boot step ("stored configuration verified") is enforced by
+`firmware/core/src/mcf_config.rs`, and it is why `SafeBoot` is a state rather than a delay.
+
+- **The image is a list of whole 32-bit register values, not named fields.** Bit-level field
+  layouts for the configuration block are deliberately not encoded in firmware — a wrong bit
+  position writes garbage into a motor controller, and the tables above are commissioning
+  seeds rather than transcribed silicon. A golden image sidesteps the question: capture the
+  whole EEPROM block off a device that has been tuned and qualified, commit those values, and
+  read-back-verify them at every boot forever after. A `mask` field covers the in-between
+  case, a field derived at the bench inside a register still being explored.
+- **Verified at boot, never written at boot.** The EEPROM discipline above (motor stopped,
+  device idle or faulted, 20k-cycle endurance) makes a power-up write path unacceptable, and
+  whether a configuration write lands in a volatile shadow or burns an EEPROM cycle is a
+  bench question, not an assumption. `config apply` therefore exists as a deliberate console
+  operation, gated on the fan being stopped; boot only reads.
+- **The device's own verdict outranks ours.** The check reads `CONTROLLER_FAULT_STATUS` first
+  and fails on `EEPROM_ERR` / `EEPROM_WRITE_LOCK` / `EEPROM_READ_LOCK`. The MCF CRCs its
+  EEPROM at boot; if that failed, no amount of read-back agreement from us redeems the block.
+- **Four verdicts, not a boolean.** `pending` holds `SafeBoot` (with a
+  `CONFIG_CHECK_GRACE_MS` timeout, because a supervisor parked in `SafeBoot` reporting
+  nothing is indistinguishable from a board that will not boot); `failed` is a fault, before
+  or after boot; `verified` proceeds. `unverified` — the device is healthy but **no image has
+  been captured yet** — also proceeds, because the harness has to be usable in order to
+  capture one, and it rides in every telemetry frame and CSV row so a capture taken against
+  an unverified configuration is identifiable as one six months later.
+- **A configuration write invalidates the verdict.** Any successful `reg write` into
+  `0x080..=0x0AE` re-runs the check automatically rather than leaving a stale `verified`
+  standing. During bench derivation against an empty image this is harmless; once an image
+  exists, deliberately diverging from it stops the fan, which is the point.
+- **Capturing the image is a bench step, not a code change**:
+  `stillair --port … config capture` prints a paste-ready table. The host knows how many
+  registers to expect (it shares `reg::configuration()` with the firmware), so a dump cut
+  short by a bus error fails rather than producing a silently partial image.
+
+### Matter cluster mapping (2026-07-27)
+
+`firmware/core/src/matter.rs` holds the FanControl (cluster 514) mapping — `FanMode`,
+`PercentSetting`, `AirflowDirection` — as plain host-tested Rust with **no rs-matter
+dependency**, for the same reason the state machine is sans-I/O: it is the part that can be
+wrong, and being wrong means the fan runs at a speed nobody asked for. The rs-matter handler
+in `app/` is transport around it.
+
+- The percentage arithmetic is `speed::percent_to_rpm`, not a second copy, so the Matter
+  slider and the SPEED-pin duty cannot disagree about what "60%" means.
+- `FanMode` On and Auto carry no speed and resume the last non-zero setting; Low/Medium/High
+  are 33/66/100%, and the reported mode's bucket boundaries sit midway between them so a mode
+  a controller writes reports back as itself.
+- `pct <0-100>` on the console drives this same path, so a tuning script exercises the
+  mapping Apple Home will use rather than only the RPM path that bypasses it.
+
 ### Fault reporting and bus health (2026-07-27)
 
 - **A decoded status outranks the pins.** `nFAULT` and `ALARM` each say only "something"; the

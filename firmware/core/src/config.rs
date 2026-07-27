@@ -94,6 +94,16 @@ pub const BUS_FAILURES_BEFORE_FAULT: u32 = 5;
 /// control loop, because the pins are the fast path and this is the diagnosis.
 pub const STATUS_POLL_MS: u64 = 200;
 
+/// How long past the safe-boot hold the supervisor will wait for a verdict on the MCF's
+/// stored configuration before treating the silence as a failed check.
+///
+/// The check runs on the I²C task, concurrently with the ten-second hold, and is a handful of
+/// register reads — so it has finished long before the hold ends unless something is wrong.
+/// The grace exists so a slow bus is not mistaken for a bad configuration; waiting forever is
+/// not an option, because a supervisor stuck in `SafeBoot` with no fault reported looks
+/// exactly like a board that will not boot.
+pub const CONFIG_CHECK_GRACE_MS: u64 = 5_000;
+
 /// How long the supervisor will run armed without *any* status verdict — success or
 /// failure — before treating the drive as unreachable.
 ///

@@ -37,9 +37,19 @@ it exits non-zero on failure, so a commissioning step is a shell command with an
 ```bash
 cd firmware && cargo build
 target/debug/stillair --sim script my-sequence.txt   # a sequence in ONE session
-target/debug/stillair --port /dev/tty.usbmodem1101 wait running --for 30
+target/debug/stillair --port /dev/cu.usbmodem2101 wait running --for 30
 target/debug/stillair --sim stream 10 --for 120 > sweep.csv
+target/debug/stillair --port /dev/cu.usbmodem2101 config capture   # golden image, paste-ready
 ```
+
+**Flashing the C6 dev board**: `espflash flash --port /dev/cu.usbmodem2101 --non-interactive
+firmware/app/target/riscv32imac-unknown-none-elf/debug/stillair`, then drive it with
+`--port`. The bare dev board **cannot leave `SafeBoot`**: GPIO22 (3.3 V PGOOD) floats low with
+nothing attached, and floating-means-bad is the correct fail-safe reading, so no internal
+pull-up is fitted. Jumper GPIO22 to 3V3 (and GPIO21 to 3V3 for nFAULT-idle-high, GPIO14 to GND
+for ALARM-idle-low) to exercise the state machine on bare silicon. Even then `Starting` faults
+with `NoRotation` after 15 s, because nothing generates FG edges — the simulator is still the
+place to exercise behaviour, and the board is the place to exercise I/O.
 
 **Use `script` for anything multi-step.** Each CLI invocation opens a fresh link, and against
 `--sim` a fresh link is a fresh simulator that has forgotten everything — so a two-command

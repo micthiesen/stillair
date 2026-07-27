@@ -156,6 +156,18 @@ pub mod reg {
     pub const CONFIG_FIRST: u16 = 0x080;
     pub const CONFIG_LAST: u16 = 0x0AE;
 
+    /// Every named register in the EEPROM-backed configuration block, in address order.
+    ///
+    /// This is the block a golden image is captured from (`crate::mcf_config`), so it is
+    /// derived from [`NAMED`] rather than listed a second time — a register that gained a
+    /// name but not a place in the capture would be silently unverified forever.
+    pub fn configuration() -> impl Iterator<Item = (&'static str, u16)> {
+        NAMED
+            .iter()
+            .copied()
+            .filter(|(_, address)| super::is_configuration(*address))
+    }
+
     /// Resolve a register name, case-insensitively.
     pub fn by_name(name: &str) -> Option<u16> {
         NAMED
@@ -848,6 +860,18 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn the_configuration_block_is_exactly_the_eeprom_range() {
+        let block: std::vec::Vec<_> = reg::configuration().collect();
+        assert_eq!(block.len(), 24, "the EEPROM block is 24 registers");
+        assert_eq!(block.first().unwrap().1, reg::CONFIG_FIRST);
+        assert_eq!(block.last().unwrap().1, reg::CONFIG_LAST);
+        assert!(block.windows(2).all(|pair| pair[0].1 < pair[1].1));
+        // And nothing outside it leaks in — a RAM register in a captured image would be
+        // verified against a value that changes while the motor runs.
+        assert!(block.iter().all(|(_, address)| is_configuration(*address)));
     }
 
     #[test]

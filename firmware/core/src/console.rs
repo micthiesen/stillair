@@ -15,6 +15,7 @@ use core::fmt::Write;
 use heapless::String;
 
 use crate::mcf8316::{reg, McfCondition};
+use crate::mcf_config::{ConfigCheck, ConfigFault};
 use crate::speed::{MilliRpm, SpeedDuty};
 use crate::state::{Direction, FanState, FaultReason};
 
@@ -36,6 +37,9 @@ pub enum Request {
     /// command, so this is a convenience rather than a way around the speed limits.
     /// (`RegWrite` is not so constrained — see its note.)
     Run(MilliRpm),
+    /// Command a Matter `PercentSetting`, 0–100. The same path Apple Home drives, so a
+    /// script can exercise the percent mapping rather than only the RPM one it bypasses.
+    Percent(u8),
     Stop,
     SetDirection(Direction),
     RegRead(u16),
@@ -51,8 +55,23 @@ pub enum Request {
     Stream(Option<u32>),
     /// Issue CLR_FLT. Counts as a fresh user command, exactly like a Matter command.
     ClearFault,
+    /// Operate on the MCF's stored configuration.
+    Config(ConfigOp),
     /// List the commands.
     Help,
+}
+
+/// What to do with the MCF's stored configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfigOp {
+    /// Re-run the boot-time verification and report the verdict.
+    Check,
+    /// Write every setting in the golden image the device does not already satisfy, then
+    /// verify by read-back. A bench operation: the device gates it on the fan being stopped.
+    Apply,
+    /// Read the whole EEPROM configuration block out, one register per line. This is how a
+    /// golden image gets captured off a tuned device.
+    Dump,
 }
 
 /// Why a request could not be understood. Reported back rather than ignored, so a script
@@ -105,6 +124,23 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
     } else if is(command, "run") {
         let rpm: u32 = parse_number(argument()?)?;
         Ok(Request::Run(MilliRpm::from_rpm(rpm)))
+    } else if is(command, "pct") {
+        let percent: u8 = parse_number(argument()?)?;
+        if percent > 100 {
+            return Err(ParseError::BadArgument);
+        }
+        Ok(Request::Percent(percent))
+    } else if is(command, "config") {
+        let operation = argument()?;
+        if is(operation, "check") {
+            Ok(Request::Config(ConfigOp::Check))
+        } else if is(operation, "apply") {
+            Ok(Request::Config(ConfigOp::Apply))
+        } else if is(operation, "dump") {
+            Ok(Request::Config(ConfigOp::Dump))
+        } else {
+            Err(ParseError::BadArgument)
+        }
     } else if is(command, "dir") {
         let which = argument()?;
         if is(which, "fwd") || is(which, "forward") {
@@ -190,6 +226,19 @@ pub struct Telemetry {
     pub measured_hall: MilliRpm,
     pub duty: SpeedDuty,
     pub direction: Direction,
+    /// The released minimum speed, the bottom of the Matter percent mapping.
+    ///
+    /// Reported because it is configuration rather than a constant: qualification raises it,
+    /// and "50%" means a different speed before and after that happens. A capture that does
+    /// not record it cannot be compared with one taken on the other side of a release.
+    pub released_min: MilliRpm,
+    /// The standing verdict on the MCF's stored configuration.
+    ///
+    /// In every frame rather than logged once at boot, because a tuning capture taken
+    /// against a device whose configuration was never verified means something different
+    /// from one taken against a qualified device, and six months later the CSV is all that
+    /// will be left to tell them apart.
+    pub config: ConfigCheck,
     /// Protocol lines discarded because the host was not reading fast enough.
     ///
     /// Carried in the frame rather than logged, so a capture with a gap in it is
@@ -209,7 +258,7 @@ impl Telemetry {
             line,
             "{PREFIX}{{\"type\":\"telemetry\",\"t\":{},\"state\":\"{}\",\"fault\":{},\
              \"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\"dir\":\"{}\",\
-             \"dropped\":{}}}",
+             \"min_mrpm\":{},\"config\":\"{}\",\"dropped\":{}}}",
             self.uptime_ms,
             state_name(self.state),
             OptionalFault(self.fault),
@@ -218,6 +267,8 @@ impl Telemetry {
             self.measured_hall.0,
             self.duty.0,
             direction_name(self.direction),
+            self.released_min.0,
+            self.config.as_str(),
             self.dropped,
         );
         line
@@ -236,6 +287,18 @@ pub enum Reply<'a> {
         value: u32,
     },
     Telemetry(Telemetry),
+    /// The outcome of a configuration check or apply.
+    ///
+    /// `ok` follows [`ConfigCheck::permits_operation`] rather than "the command executed",
+    /// so a script that runs `config check` before a test gets a non-zero exit when the
+    /// device is not holding the configuration the test assumes.
+    Config {
+        check: ConfigCheck,
+        /// Registers written by an apply. Zero for a check.
+        written: u16,
+        /// Registers an apply found already correct.
+        unchanged: u16,
+    },
     Error(&'a str),
 }
 
@@ -252,6 +315,19 @@ impl Reply<'_> {
                 )
             }
             Self::Telemetry(telemetry) => return telemetry.to_line(),
+            Self::Config {
+                check,
+                written,
+                unchanged,
+            } => write!(
+                line,
+                "{PREFIX}{{\"ok\":{},\"config\":\"{}\",\"detail\":{},\"addr\":{},\
+                 \"written\":{written},\"unchanged\":{unchanged}}}",
+                check.permits_operation(),
+                check.as_str(),
+                OptionalName(config_fault_name(*check)),
+                config_fault_address(*check).unwrap_or(0),
+            ),
             Self::Error(message) => {
                 write!(line, "{PREFIX}{{\"ok\":false,\"error\":\"{message}\"}}")
             }
@@ -264,7 +340,11 @@ impl Reply<'_> {
 pub const HELP: &[&str] = &[
     "state                     one telemetry snapshot",
     "run <rpm>                 command a speed (clamped to the released range)",
+    "pct <0-100>               command a Matter PercentSetting (0 = off)",
     "stop                      command off",
+    "config check              re-verify the MCF's stored configuration",
+    "config apply              write the golden image (only while stopped)",
+    "config dump               read the whole EEPROM configuration block",
     "dir fwd|rev               set direction (takes effect from a verified stop)",
     "reg read <name|addr>      read a 32-bit register",
     "reg write <name|addr> <v> write a 32-bit register",
@@ -291,6 +371,26 @@ pub const fn direction_name(direction: Direction) -> &'static str {
     }
 }
 
+/// The failure behind a verdict, or `None` when there is none.
+pub const fn config_fault_name(check: ConfigCheck) -> Option<&'static str> {
+    match check {
+        ConfigCheck::Failed(ConfigFault::DeviceEeprom) => Some("device_eeprom"),
+        ConfigCheck::Failed(ConfigFault::Mismatch { .. }) => Some("mismatch"),
+        ConfigCheck::Failed(ConfigFault::Unreadable { .. }) => Some("unreadable"),
+        ConfigCheck::Failed(ConfigFault::TimedOut) => Some("timed_out"),
+        ConfigCheck::Pending | ConfigCheck::Unverified | ConfigCheck::Verified => None,
+    }
+}
+
+/// Which register a verdict blames, when it blames one.
+pub const fn config_fault_address(check: ConfigCheck) -> Option<u16> {
+    match check {
+        ConfigCheck::Failed(ConfigFault::Mismatch { address })
+        | ConfigCheck::Failed(ConfigFault::Unreadable { address }) => Some(address),
+        _ => None,
+    }
+}
+
 pub const fn fault_name(fault: FaultReason) -> &'static str {
     match fault {
         FaultReason::McfFault => "mcf_fault",
@@ -301,6 +401,10 @@ pub const fn fault_name(fault: FaultReason) -> &'static str {
         FaultReason::HallImplausible => "hall_implausible",
         FaultReason::NoRotation => "no_rotation",
         FaultReason::NeverStopped => "never_stopped",
+        FaultReason::ConfigUnverified(ConfigFault::DeviceEeprom) => "config_device_eeprom",
+        FaultReason::ConfigUnverified(ConfigFault::Mismatch { .. }) => "config_mismatch",
+        FaultReason::ConfigUnverified(ConfigFault::Unreadable { .. }) => "config_unreadable",
+        FaultReason::ConfigUnverified(ConfigFault::TimedOut) => "config_timed_out",
     }
 }
 
@@ -327,6 +431,18 @@ impl core::fmt::Display for OptionalFault {
         match self.0 {
             None => formatter.write_str("null"),
             Some(fault) => write!(formatter, "\"{}\"", fault_name(fault)),
+        }
+    }
+}
+
+/// The same, for an already-resolved name.
+struct OptionalName(Option<&'static str>);
+
+impl core::fmt::Display for OptionalName {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self.0 {
+            None => formatter.write_str("null"),
+            Some(name) => write!(formatter, "\"{name}\""),
         }
     }
 }
@@ -453,6 +569,69 @@ mod tests {
         assert_eq!(parse("frobnicate"), Err(ParseError::UnknownCommand));
     }
 
+    #[test]
+    fn percent_commands_cover_the_matter_range_and_nothing_else() {
+        assert_eq!(parse("pct 0"), Ok(Request::Percent(0)));
+        assert_eq!(parse("pct 100"), Ok(Request::Percent(100)));
+        // Out of spec for the attribute; accepting it would command a speed no controller
+        // could have meant.
+        assert_eq!(parse("pct 101"), Err(ParseError::BadArgument));
+        assert_eq!(parse("pct 255"), Err(ParseError::BadArgument));
+        assert_eq!(parse("pct 256"), Err(ParseError::BadArgument));
+        assert_eq!(parse("pct"), Err(ParseError::MissingArgument));
+        assert_eq!(parse("pct half"), Err(ParseError::BadArgument));
+    }
+
+    #[test]
+    fn configuration_operations_parse() {
+        assert_eq!(parse("config check"), Ok(Request::Config(ConfigOp::Check)));
+        assert_eq!(parse("CONFIG Apply"), Ok(Request::Config(ConfigOp::Apply)));
+        assert_eq!(parse("config dump"), Ok(Request::Config(ConfigOp::Dump)));
+        assert_eq!(parse("config"), Err(ParseError::MissingArgument));
+        assert_eq!(parse("config erase"), Err(ParseError::BadArgument));
+    }
+
+    #[test]
+    fn a_configuration_reply_fails_the_command_when_the_device_may_not_run() {
+        // The property a commissioning script depends on: `config check` exits non-zero when
+        // the device is not holding the configuration the test that follows it assumes.
+        let failed = Reply::Config {
+            check: ConfigCheck::Failed(ConfigFault::Mismatch { address: 0x08A }),
+            written: 0,
+            unchanged: 0,
+        }
+        .to_line();
+        assert!(failed.contains("\"ok\":false"), "{failed}");
+        assert!(failed.contains("\"config\":\"failed\""), "{failed}");
+        assert!(failed.contains("\"detail\":\"mismatch\""), "{failed}");
+        assert!(failed.contains("\"addr\":138"), "{failed}");
+
+        for check in [ConfigCheck::Verified, ConfigCheck::Unverified] {
+            let line = Reply::Config {
+                check,
+                written: 3,
+                unchanged: 21,
+            }
+            .to_line();
+            assert!(line.contains("\"ok\":true"), "{line}");
+            assert!(line.contains("\"detail\":null"), "{line}");
+            assert!(line.contains("\"written\":3"), "{line}");
+            assert!(line.contains("\"unchanged\":21"), "{line}");
+        }
+    }
+
+    #[test]
+    fn an_unverified_configuration_is_distinguishable_in_a_capture() {
+        // The whole reason the verdict rides in the frame: a CSV recorded against a device
+        // whose configuration was never checked must not look like one recorded against a
+        // qualified device.
+        let mut telemetry = sample();
+        telemetry.config = ConfigCheck::Unverified;
+        assert!(telemetry.to_line().contains("\"config\":\"unverified\""));
+        telemetry.config = ConfigCheck::Verified;
+        assert!(telemetry.to_line().contains("\"config\":\"verified\""));
+    }
+
     fn sample() -> Telemetry {
         Telemetry {
             uptime_ms: 12_345,
@@ -463,6 +642,8 @@ mod tests {
             measured_hall: MilliRpm(60_100),
             duty: SpeedDuty(683),
             direction: Direction::Forward,
+            released_min: MilliRpm::from_rpm(35),
+            config: ConfigCheck::Verified,
             dropped: 0,
         }
     }
@@ -481,6 +662,8 @@ mod tests {
             "\"hall_mrpm\":60100",
             "\"duty\":683",
             "\"dir\":\"fwd\"",
+            "\"min_mrpm\":35000",
+            "\"config\":\"verified\"",
             "\"dropped\":0",
         ] {
             assert!(line.contains(field), "missing {field} in {line}");
@@ -508,6 +691,8 @@ mod tests {
             measured_hall: MilliRpm(u32::MAX),
             duty: SpeedDuty(u16::MAX),
             direction: Direction::Reverse,
+            released_min: MilliRpm(u32::MAX),
+            config: ConfigCheck::Unverified,
             dropped: u32::MAX,
         };
         let line = telemetry.to_line();
@@ -588,6 +773,10 @@ mod tests {
             FaultReason::Mcf(McfCondition::Eeprom),
             FaultReason::Mcf(McfCondition::ProtocolError),
             FaultReason::Mcf(McfCondition::Unclassified),
+            FaultReason::ConfigUnverified(ConfigFault::DeviceEeprom),
+            FaultReason::ConfigUnverified(ConfigFault::Mismatch { address: 0x080 }),
+            FaultReason::ConfigUnverified(ConfigFault::Unreadable { address: 0x080 }),
+            FaultReason::ConfigUnverified(ConfigFault::TimedOut),
         ];
         let names: std::collections::HashSet<_> = faults.iter().map(|f| fault_name(*f)).collect();
         assert_eq!(names.len(), faults.len());

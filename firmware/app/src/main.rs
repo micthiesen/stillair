@@ -49,6 +49,7 @@ use static_cell::StaticCell;
 use stillair_core::config;
 use stillair_core::console::Telemetry;
 use stillair_core::mcf8316;
+use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::speed;
 use stillair_core::state::{Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
@@ -206,6 +207,8 @@ async fn control_task(mut board: Board) {
         // Absent a fresh read this stays `Stale`, which the supervisor treats as carrying
         // no information — neither evidence of a fault nor evidence of health.
         inputs.mcf_status = mcf::STATUS.try_take().unwrap_or(StatusRead::Stale);
+        // A level, not an event: the last verdict stands until something changes it.
+        inputs.config = mcf::verdict();
 
         for action in supervisor.poll(now(), &inputs) {
             board.apply(action);
@@ -231,6 +234,8 @@ async fn control_task(mut board: Board) {
             measured_hall: supervisor.measured_hall(),
             duty: speed::duty_for(supervisor.commanded()),
             direction: supervisor.direction(),
+            released_min: supervisor.released_min(),
+            config: supervisor.config(),
             dropped: output::dropped(),
         });
 
@@ -277,6 +282,32 @@ async fn mcf_task(mut mcf: Mcf) {
         None => log::error!("no MCF8316D on the I2C bus; status reads will fail"),
     }
 
+    // The last clause of the contract's safe-boot step. `SafeBoot` is holding for ten seconds
+    // regardless, and this is a handful of register reads, so the check is free in wall-clock
+    // terms — but until it publishes a verdict the supervisor will not leave SafeBoot, which
+    // is what makes "stored configuration verified" a gate rather than a comment.
+    let verdict = mcf_config::check(&mut mcf, mcf_config::IMAGE).await;
+    match verdict {
+        ConfigCheck::Verified => log::info!("MCF stored configuration verified"),
+        ConfigCheck::Unverified => log::warn!(
+            "MCF stored configuration NOT verified: no golden image has been captured yet \
+             (`config dump` on a tuned device, then fill in mcf_config::IMAGE)"
+        ),
+        other => log::error!("MCF stored configuration check failed: {other:?}"),
+    }
+    mcf::publish_verdict(verdict);
+
+    // What the last poll reported, so a standing condition is logged once rather than five
+    // times a second.
+    //
+    // Found by running this on a bare dev board with no MCF on the bus: every failed read
+    // emitted a warning, and at a 200 ms poll that flooded the bounded output queue and
+    // evicted the telemetry frames saying what the fan was actually doing. A log that
+    // destroys the record during exactly the condition you are trying to diagnose is worse
+    // than no log. The supervisor gets every reading regardless — this only decides what a
+    // human is told.
+    let mut reported = None;
+
     loop {
         // `try_take` rather than `signaled()` + `reset()`: the control loop runs as a
         // higher-priority interrupt and can signal between those two calls, in which case
@@ -294,20 +325,31 @@ async fn mcf_task(mut mcf: Mcf) {
         // never has to wait a full poll interval for an answer.
         service_access(&mut mcf).await;
 
-        match mcf.fault_status().await {
+        let outcome = mcf.fault_status().await;
+        // A repeat of the previous verdict says nothing new; a different one always does.
+        let changed = reported != Some(outcome);
+        reported = Some(outcome);
+
+        match outcome {
             Ok(status) => {
-                if status.any() {
-                    log::warn!(
-                        "MCF fault status gate {:#010x} controller {:#010x} -> {:?}",
-                        status.gate,
-                        status.controller,
-                        status.condition()
-                    );
+                if changed {
+                    if status.any() {
+                        log::warn!(
+                            "MCF fault status gate {:#010x} controller {:#010x} -> {:?}",
+                            status.gate,
+                            status.controller,
+                            status.condition()
+                        );
+                    } else {
+                        log::info!("MCF status clean");
+                    }
                 }
                 mcf::STATUS.signal(StatusRead::Fresh(status));
             }
             Err(error) => {
-                log::warn!("MCF status read failed: {error:?}");
+                if changed {
+                    log::warn!("MCF status read failing: {error:?}");
+                }
                 mcf::STATUS.signal(StatusRead::BusError);
                 mcf.recover().await;
             }

@@ -5,11 +5,10 @@
 //! USB-serial-JTAG link, routes each request to whichever task owns the thing it asks
 //! about, and prints the reply.
 //!
-//! Replies go out through `esp-println`, deliberately: it takes a lock per call, so
-//! emitting a whole protocol line in one `println!` makes it atomic against log output from
-//! other tasks. That is what keeps a log line from landing in the middle of a JSON frame.
-//! The `@` prefix does the rest — a host tool reads `@` lines as protocol and passes
-//! everything else through as logs.
+//! Replies go out through [`crate::output`], the single bounded queue that every line — log
+//! or protocol — passes through. One writer is what keeps a log record from landing in the
+//! middle of a JSON frame, and the `@` prefix does the rest: a host tool reads `@` lines as
+//! protocol and passes everything else through as logs.
 
 use core::sync::atomic::{AtomicU32, Ordering};
 
@@ -21,7 +20,8 @@ use embedded_io_async::Read;
 use esp_hal::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
-use stillair_core::console::{self, Reply, Request, Telemetry};
+use stillair_core::console::{self, ConfigOp, Reply, Request, Telemetry};
+use stillair_core::matter;
 use stillair_core::state::{Command, FanState};
 
 use crate::mcf;
@@ -135,6 +135,14 @@ async fn dispatch(line: &str) {
             None => emit(&Reply::Error("control loop has not run yet")),
         },
         Request::Run(rpm) => command(Command::SetSpeed(rpm)),
+        // Routed through the same mapping the Matter handler uses, so a script exercises the
+        // percent path rather than a console-only imitation of it.
+        Request::Percent(percent) => match latest() {
+            Some(telemetry) => {
+                command(matter::command_for_percent(percent, telemetry.released_min))
+            }
+            None => emit(&Reply::Error("control loop has not run yet")),
+        },
         Request::Stop => command(Command::Off),
         Request::SetDirection(direction) => command(Command::SetDirection(direction)),
         // Any user command licenses a fault clear; `Off` is the one that cannot also start
@@ -158,6 +166,7 @@ async fn dispatch(line: &str) {
                 }
             }
         }
+        Request::Config(operation) => config(operation).await,
         Request::Help => {
             for text in console::HELP {
                 let mut help = console::Line::new();
@@ -166,6 +175,42 @@ async fn dispatch(line: &str) {
             }
             emit(&Reply::Ok);
         }
+    }
+}
+
+/// Run a configuration operation and report its outcome.
+async fn config(operation: ConfigOp) {
+    let access = match operation {
+        ConfigOp::Check => mcf::Access::ConfigCheck,
+        ConfigOp::Dump => mcf::Access::ConfigDump,
+        ConfigOp::Apply => {
+            // The same gate as a raw configuration write, for the same reasons: EEPROM
+            // discipline, and the fact that `MAX_SPEED` decides what every clamped duty
+            // means. `CONFIG_FIRST` stands in for the block as a whole.
+            if let Some(refusal) = refuse_write(stillair_core::mcf8316::reg::CONFIG_FIRST) {
+                emit(&Reply::Error(refusal));
+                return;
+            }
+            mcf::Access::ConfigApply
+        }
+    };
+
+    match mcf::request_config(access).await {
+        Ok(mcf::Answer::Config {
+            check,
+            written,
+            unchanged,
+        }) => emit(&Reply::Config {
+            check,
+            written,
+            unchanged,
+        }),
+        // A dump has already emitted one register line per register; this only closes it
+        // out. The host knows how many to expect — it shares `reg::configuration()` — so a
+        // dump cut short by a bus error is caught there rather than needing a count here,
+        // which would be indistinguishable from one more register line.
+        Ok(mcf::Answer::Value(_)) => emit(&Reply::Ok),
+        Err(error) => emit(&Reply::Error(error)),
     }
 }
 

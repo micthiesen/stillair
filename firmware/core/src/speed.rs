@@ -73,7 +73,11 @@ pub fn percent_to_rpm(percent: u8, released_min: MilliRpm) -> Option<MilliRpm> {
         return None;
     }
     let percent = u32::from(percent.min(100));
-    let min = released_min.0;
+    // Clamped rather than trusted. `Supervisor::set_released_min` already refuses a floor
+    // above the maximum, but this is public and is called from the Matter mapping, and an
+    // out-of-range floor here would return a speed *above* the user maximum instead of
+    // clamping to it — a limit that fails open.
+    let min = released_min.0.min(config::RPM_USER_MAX * 1_000);
     let span = (config::RPM_USER_MAX * 1_000).saturating_sub(min);
     Some(MilliRpm(min + (span * (percent - 1)) / 99))
 }
@@ -262,6 +266,24 @@ mod tests {
         let released = MilliRpm::from_rpm(45);
         assert_eq!(percent_to_rpm(1, released), Some(MilliRpm::from_rpm(45)));
         assert_eq!(percent_to_rpm(100, released), Some(MilliRpm::from_rpm(170)));
+    }
+
+    #[test]
+    fn a_degenerate_released_range_clamps_rather_than_failing_open() {
+        // A floor exactly at the maximum leaves no span to interpolate across; every
+        // percentage is then the single released speed.
+        let pinned = MilliRpm::from_rpm(config::RPM_USER_MAX);
+        assert_eq!(percent_to_rpm(1, pinned), Some(pinned));
+        assert_eq!(percent_to_rpm(100, pinned), Some(pinned));
+        assert_eq!(rpm_to_percent(pinned, pinned), 100);
+
+        // A floor *above* the maximum must not become a speed above the maximum — that
+        // would be a limit that fails open.
+        let absurd = MilliRpm::from_rpm(config::RPM_USER_MAX + 500);
+        for percent in 1..=100u8 {
+            let rpm = percent_to_rpm(percent, absurd).unwrap();
+            assert_eq!(rpm, MilliRpm::from_rpm(config::RPM_USER_MAX), "{percent}%");
+        }
     }
 
     #[test]

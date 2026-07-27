@@ -10,17 +10,60 @@
 //! a hundred-start sweep costs milliseconds. Every timestamp reported is simulated.
 
 use std::collections::VecDeque;
+use std::future::Future;
 use std::io;
+use std::pin::pin;
+use std::task::{Context, Poll, Waker};
 use std::time::Duration;
 
 use stillair_core::config;
-use stillair_core::console::{self, Reply, Request, Telemetry};
-use stillair_core::mcf8316::{reg, FaultStatus};
+use stillair_core::console::{self, ConfigOp, Reply, Request, Telemetry};
+use stillair_core::matter;
+use stillair_core::mcf8316::{reg, FaultStatus, RegisterBus};
+use stillair_core::mcf_config;
 use stillair_core::speed::{self, MilliRpm};
 use stillair_core::state::{Command, Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 use crate::link::Link;
+
+/// Drive a future that cannot actually await anything.
+///
+/// [`SimBus`] answers from a `Vec` and never yields, so one poll always resolves. This exists
+/// so the simulator runs the *real* `mcf_config` code rather than a second implementation of
+/// it that could agree with the tests while disagreeing with the firmware.
+fn block_on<F: Future>(future: F) -> F::Output {
+    let mut future = pin!(future);
+    match future
+        .as_mut()
+        .poll(&mut Context::from_waker(Waker::noop()))
+    {
+        Poll::Ready(value) => value,
+        Poll::Pending => panic!("the simulated register file must never pend"),
+    }
+}
+
+/// The simulator's register file, behind the same trait the I²C driver implements.
+struct SimBus<'a>(&'a mut Vec<(u16, u32)>);
+
+impl RegisterBus for SimBus<'_> {
+    type Error = core::convert::Infallible;
+
+    async fn read(&mut self, address: u16) -> Result<u32, Self::Error> {
+        Ok(self
+            .0
+            .iter()
+            .find(|(known, _)| *known == address)
+            .map(|(_, value)| *value)
+            .unwrap_or(0))
+    }
+
+    async fn write(&mut self, address: u16, value: u32) -> Result<(), Self::Error> {
+        self.0.retain(|(known, _)| *known != address);
+        self.0.push((address, value));
+        Ok(())
+    }
+}
 
 /// Control-loop period, matching the firmware's.
 const TICK_MS: u64 = 50;
@@ -54,7 +97,17 @@ impl Default for Simulator {
 impl Simulator {
     pub fn new() -> Self {
         let now = Millis::ZERO;
-        let inputs = Inputs::default();
+        let mut registers = Vec::new();
+        // Run the real boot-time check against the (empty) simulated register file. It
+        // reports `Unverified`, which is the truth: a simulator says nothing about what any
+        // register on a real MCF8316D contains, and every frame it emits will say so.
+        let inputs = Inputs {
+            config: block_on(mcf_config::check(
+                &mut SimBus(&mut registers),
+                mcf_config::IMAGE,
+            )),
+            ..Inputs::default()
+        };
         Self {
             supervisor: Supervisor::new(now, &inputs),
             now,
@@ -62,7 +115,7 @@ impl Simulator {
             rotor: MilliRpm::ZERO,
             fg_residual: 0,
             hall_residual: 0,
-            registers: Vec::new(),
+            registers,
             stream_period_ms: None,
             next_stream_at: Millis::ZERO,
             outbox: VecDeque::new(),
@@ -79,6 +132,8 @@ impl Simulator {
             measured_hall: self.supervisor.measured_hall(),
             duty: speed::duty_for(self.supervisor.commanded()),
             direction: self.supervisor.direction(),
+            released_min: self.supervisor.released_min(),
+            config: self.supervisor.config(),
             // Nothing can be dropped: the simulator hands lines straight to the caller.
             dropped: 0,
         }
@@ -146,6 +201,50 @@ impl Simulator {
             .unwrap_or(0)
     }
 
+    /// Configuration operations, run through the real `mcf_config` code against the
+    /// simulated register file.
+    fn config(&mut self, operation: ConfigOp) {
+        match operation {
+            ConfigOp::Dump => {
+                for (_, address) in reg::configuration() {
+                    let value = self.register(address);
+                    self.emit(&Reply::Register { address, value });
+                }
+                self.emit(&Reply::Ok);
+            }
+            ConfigOp::Check | ConfigOp::Apply => {
+                let mut written = 0;
+                let mut unchanged = 0;
+                if operation == ConfigOp::Apply {
+                    match block_on(mcf_config::apply(
+                        &mut SimBus(&mut self.registers),
+                        mcf_config::IMAGE,
+                    )) {
+                        Ok(applied) => {
+                            written = applied.written;
+                            unchanged = applied.unchanged;
+                        }
+                        Err(_) => {
+                            // A `SimBus` cannot fail, so this is unreachable in practice;
+                            // falling through to the check below reports whatever state the
+                            // register file is actually in rather than inventing one.
+                        }
+                    }
+                }
+                let check = block_on(mcf_config::check(
+                    &mut SimBus(&mut self.registers),
+                    mcf_config::IMAGE,
+                ));
+                self.inputs.config = check;
+                self.emit(&Reply::Config {
+                    check,
+                    written,
+                    unchanged,
+                });
+            }
+        }
+    }
+
     fn dispatch(&mut self, request: Request) {
         match request {
             Request::State => {
@@ -154,6 +253,12 @@ impl Simulator {
             }
             Request::Run(rpm) => {
                 self.supervisor.command(Command::SetSpeed(rpm));
+                self.emit(&Reply::Ok);
+            }
+            Request::Percent(percent) => {
+                let released_min = self.supervisor.released_min();
+                self.supervisor
+                    .command(matter::command_for_percent(percent, released_min));
                 self.emit(&Reply::Ok);
             }
             Request::Stop => {
@@ -187,6 +292,7 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
+            Request::Config(operation) => self.config(operation),
             Request::Help => {
                 for line in console::HELP {
                     eprintln!("{line}");
