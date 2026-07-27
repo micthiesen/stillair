@@ -76,7 +76,7 @@ release.
    stored configuration are verified.
 2. **Idle off**: output disabled and speed command zero.
 3. **Start**: set direction only while stopped, arm permission, release DRVOFF, ramp slowly.
-4. **Run**: maintain the last local speed when HomeKit or Wi-Fi disappears.
+4. **Run**: maintain the last local speed when the Matter controller or Wi-Fi disappears.
 5. **Normal stop**: ramp to zero and coast.
 6. **Reverse**: ramp to zero, verify near-zero FG and optical-tach behavior, coast, change
    DIR, then restart.
@@ -87,22 +87,43 @@ release.
 
 | Event | Required result |
 |---|---|
-| HomeKit or Wi-Fi unavailable | Continue at the last locally held speed and direction. |
+| Matter controller or Wi-Fi unavailable | Continue at the last locally held speed and direction. |
 | ESP32 hang | TPS3435 pulses WDO low after 1.6 s nominal; U5 clears permission and DRVOFF rises. WDO does not reset the ESP. |
 | MCF lock, overcurrent, or blocked rotor | MCF enters latched Hi-Z; supervisor reports the fault and requires a fresh command. |
 | Analog overspeed or 12 V tach-rail loss | Persistent hardware lock clears without ESP32 or MCF speed participation and requires a power cycle. |
 | Physical cutoff opened | Remove 24 V power and coast. |
-| Power restored | Remain off until a new HomeKit command and safe arm sequence. |
+| Power restored | Remain off until a new user command and safe arm sequence. |
 | Direction command while moving | Do not switch DIR until verified stopped. |
 
 ## Home integration
 
-- First release: local HAP/HomeKit over Wi-Fi.
-- Services: on/off, continuous target speed, and direction.
-- No cloud, account, presets, or internet dependency.
-- Expose actual RPM, stall, overtemperature, or controller fault only if straightforward.
-- The ESP32-C6 leaves an 802.15.4 path open, but Matter-over-Thread is not a first-release
-  requirement.
+- First release: **Matter over Wi-Fi** using
+  [rs-matter](https://github.com/project-chip/rs-matter) (pure-Rust, `no_std`, no-alloc, the
+  official project-chip implementation, Matter 1.6) with
+  [rs-matter-embassy](https://github.com/sysgrok/rs-matter-embassy) as the bare-metal Embassy
+  integration, controlled from Apple Home. This replaces the original HAP/HomeKit plan: no
+  maintained `no_std` HAP implementation exists, and Matter keeps the stack pure Rust while
+  getting Google/Alexa/Home Assistant support for free.
+- Device: Matter Fan device type (0x002B) with a hand-written FanControl (cluster 514)
+  handler — on/off, `PercentSetting` (continuous speed; Apple Home renders 0–100% fan speed
+  well), and `AirflowDirection` for reverse. Whether Apple Home surfaces AirflowDirection is
+  unconfirmed; the proven fallback is a second small On/Off endpoint ("reverse mode") that
+  flips direction. Expose actual RPM, stall, overtemperature, or controller fault only if
+  straightforward.
+- Commissioning: BLE (the `trouble` pure-Rust host over esp-radio) with the QR code printed
+  to serial. rs-matter's test attestation credentials are fine for a personal device — Apple
+  Home shows an "Uncertified Accessory" warning; add anyway. Use the flash-backed persistence
+  store so a reboot doesn't require re-commissioning.
+- A HomePod or Apple TV acts as the Matter hub for automations/remote access; iOS 18+ can
+  commission and locally control without one (useful on the bench).
+- No cloud, account, presets, or internet dependency. Network loss keeps the last local speed.
+- Integration notes: rs-matter-embassy is a **git dependency** (its crates.io release is a
+  placeholder); mirror its examples' `[patch.crates-io]` esp-hal pin table rather than
+  fighting version skew. Prefer the `rustcrypto` feature over the vendored-mbedtls default to
+  stay pure Rust. rs-matter has **no Matter OTA yet** — keep the UART/USB programming path
+  (J6/J7) accessible on the installed unit.
+- The ESP32-C6 leaves an 802.15.4 path open, and rs-matter-embassy supports Thread on C6, but
+  Matter-over-Thread is not a first-release requirement.
 
 ## Qualification
 

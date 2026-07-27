@@ -44,7 +44,7 @@ async fn main(spawner: embassy_executor::Spawner) {
 
     let peripherals = esp_hal::init(esp_hal::Config::default());
 
-    // Heap is only needed once the radio (Wi-Fi / HomeKit) comes online.
+    // Heap is only needed once the radio (Wi-Fi / Matter) comes online.
     esp_alloc::heap_allocator!(size: 72 * 1024);
 
     let timg0 = TimerGroup::new(peripherals.TIMG0);
@@ -59,7 +59,9 @@ async fn main(spawner: embassy_executor::Spawner) {
     //   - watchdog heartbeat output on GPIO19 (2 Hz, serviced on the falling edge)
     //   - SPEED PWM (GPIO2), DIR (GPIO3), ARM_PULSE (GPIO18), MCU_CLEAR_N
     //   - FG (GPIO20), nFAULT (GPIO21), PGOOD (GPIO22), WDO (GPIO23) inputs
-    //   - Wi-Fi + local HomeKit (esp-radio / embassy-net are already in the dep tree)
+    //   - Wi-Fi + Matter via rs-matter-embassy (git dep; see docs/controls.md > Home
+    //     integration for the pin/patch strategy). esp-radio / embassy-net are already in
+    //     the dep tree.
 
     spawner.spawn(supervisor_task().unwrap());
     spawner.spawn(heartbeat_task().unwrap());

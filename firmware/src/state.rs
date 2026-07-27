@@ -20,7 +20,7 @@ pub enum FanState {
     IdleOff,
     /// Direction set while stopped, permission armed, DRVOFF released, slow ramp.
     Starting,
-    /// Maintain the last local speed even if HomeKit/Wi-Fi disappears.
+    /// Maintain the last local speed even if the Matter controller/Wi-Fi disappears.
     Running,
     /// Ramp to zero and coast (never brake into the supply).
     Stopping,
@@ -31,7 +31,7 @@ pub enum FanState {
     Fault,
 }
 
-/// Commands arriving from HomeKit (or local control).
+/// Commands arriving from the Matter controller (or local control).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
     Off,

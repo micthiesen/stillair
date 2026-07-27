@@ -1,5 +1,9 @@
 # PCB handoff (V1 / V2 controller)
 
+> **Temporary**: the original schematic-block and placement-zone diagrams are still viewable at
+> https://stillair-fan-design.syas.chatgpt.site/electrical (requires ChatGPT auth). Remove this
+> link once the KiCad schematic is captured.
+
 Defines the V1 and V2 controller board for the CubeMars GL100 KV10. This is a circuit and
 layout brief, not a released design: capture and peer-review the final schematic in
 [`pcb/`](../pcb/) (KiCad), verify footprints, run ERC/DRC, and compare the MCF power stage
@@ -35,6 +39,34 @@ development features proven unnecessary.
   each hole; use 6–8 mm M3 standoffs and leave the holes isolated from circuit ground.
 - Keep V2 on the same outline and hole pattern. Do not shrink V2; the spare area buys thermal
   copper, probe access, connector clearance, and RF separation without changing the housing.
+
+**Open V2 option — horizontal donut board.** Once the housing exists, V2 may instead become an
+annular board mounted horizontally around the spindle, replacing the same-outline rule and the
+EB-100 bracket entirely. Geometry that makes it viable: between the plate underside (Z6) and
+the carrier top (Z144) the housing interior is a Ø194 cylinder that is empty except for the
+Ø16 spindle, the three Ø16 standoffs at r75, the tether run near Y−82, and the cable drop. The
+low-risk shape is ID Ø30–40 (generous non-contact clearance around the spindle) × OD ≤Ø130,
+entirely inside the standoff circle — ~12,500 mm², nearly 3× the rectangle — leaving a wide
+annular air path at the wall for the housing's ≥1200 mm² venting (a wider board with standoff
+slots needs its own vent slots instead). Mount on three M3 bosses tapped into the MC-100
+carrier top, which also puts J2 beside the motor's phase-lead window. Zones translate to
+angular separation: MCF power stage at one clock position, tach/analog 120–180° away.
+
+Open questions if pursued: RF first — the board sits sandwiched between the stainless plate
+above and the carrier/motor below, so the ESP module goes at the outer rim, antenna facing
+radially out through the plastic wall, clocked away from standoffs/tether, sitting mid-gap
+(Z ~60–90) to keep the 15 mm metal clearance; verify with a real RSSI check. Connectors face
+up/down, so all service means dropping the housing (acceptable for a dev-stripped V2).
+
+The real cost: the V1→V2 plan inherits V1's validated layout, and a donut V2 is a new layout —
+the layout-sensitive results (PCB-02 bus transients, TACH calibration/noise floor, thermal,
+RF) need a partial re-run instead of being inherited. Decide only after V1 bring-up and a
+housing prototype; V1 stays the rectangle regardless, and if the donut is chosen, delete
+EB-100 from the parts register rather than carrying both.
+
+**Fabrication**: boards will be ordered from JLCPCB. Whether JLCPCB also sources and
+assembles the components (PCBA) or the board is hand-populated is TBD; check part
+availability in the JLCPCB/LCSC catalog during KiCad capture so the decision stays open.
 
 ## SCH-01 24 V input
 
@@ -115,7 +147,8 @@ diagnostics. FG is not the independent overspeed channel.
 ## SCH-04 ESP32-C6 supervisor
 
 `ESP32-C6-MINI-1-H4` (4 MB in-package flash, −40 to 105 °C; preferred over the
-normal-temperature N4 variant). Supervision and HomeKit stay separate from commutation: the
+normal-temperature N4 variant). Supervision and the Matter bridge stay separate from
+commutation: the
 ESP configures the MCF through I²C and sends speed/direction commands; it never switches
 motor phases.
 
@@ -166,7 +199,7 @@ U6 persistent safety lock, second `SN74LVC1G74DCTR`:
 - `/PRE` from 3.3 V PGOOD (PGOOD low during power-up presets Q high/healthy).
 - `/CLR` receives `OVERSPEED_N` and `TACH_PGOOD_N` as active-low wired fault sources.
 - Q is `OS_LOCK_OK` and clears U5 when low.
-- There is no firmware or HomeKit reset path to U6. After overspeed or tach-rail loss, only a
+- There is no firmware or network-side reset path to U6. After overspeed or tach-rail loss, only a
   full low-voltage power cycle presets it healthy again, and U5 still requires a fresh user
   command afterward.
 
@@ -253,6 +286,11 @@ VM24 -> 47 Ω / 0.25 W -> TPS7A1601ADGNR -> +12V_TACH (12.049 V nominal)
   2.2, 3.3, and 6.8 µF. Final value selected by ripple and dynamic-trip testing.
 - Pin 4 to pin 3; pin 10 to pin 5; pin 5 is buffered VTACH. Pins 6, 7, 13, 14 no connection.
 - Nominal conversion after calibration: 13.175 mV/RPM.
+
+Supply note: the LM2907 is TI-active (verified 2026-07) but it is the last monolithic F-to-V
+family and stock is thin everywhere; buy spares with the V1 order. If supply ever dries up,
+the fallback is a discrete charge-pump + comparator redesign of this stage, not a drop-in
+(LM2917 variants change the input threshold architecture).
 
 ### TLV1701 trip stage
 

@@ -14,7 +14,7 @@ The design to take into CAD. All items below are **selected**.
 | Rotor | 44-inch maximum, three symmetric birch blades, 12° nominal pitch | 42 inches is the fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
 | Power | Mean Well GST60A24-P1J, 24 V / 60 W, 3 A source fuse | Only low voltage crosses the ceiling; a physical switch opens the positive conductor. |
-| Control | ESP32-C6, local HomeKit over Wi-Fi, continuous speed and reverse | Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
+| Control | ESP32-C6, local Matter over Wi-Fi (rs-matter, pure Rust), continuous speed and reverse, used from Apple Home | Replaces the original HomeKit/HAP plan (no maintained no_std HAP exists). Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
 | Duty | 35–170 RPM target range, 180 RPM driver limit, 200 RPM analog trip | Release the actual minimum only after repeatable startup and acoustic qualification. The analog path is an independent runaway backstop, not precision regulation. |
 | Appearance | Minimal light wood or white blades with consistent stainless hardware | No light; the white printed surface conduit is outside the fan design. |
 

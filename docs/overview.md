@@ -1,7 +1,8 @@
 # Stillair overview
 
 A quiet, low-profile 44-inch direct-drive ceiling fan for gentle overnight air mixing, with
-local-only HomeKit control and a minimal wood-and-white ceiling presence. This repo is the
+local-only Apple Home control (Matter over Wi-Fi) and a minimal wood-and-white ceiling
+presence. This repo is the
 canonical source for the whole project: planning docs, BOM, firmware, and (eventually) CAD
 drawings and the KiCad PCB. The full 3D model lives in OnShape; everything else lives here.
 
@@ -29,8 +30,9 @@ Direct drive, low voltage, simple structure:
 - **Drive**: TI MCF8316D sensorless FOC driver with integrated FETs, on a custom 78 × 58 mm
   four-layer controller PCB. The V1 board doubles as the development board (no TI evaluation
   module needed); V2 keeps the same outline and mounting holes.
-- **Supervisor**: ESP32-C6-MINI-1-H4 running local HomeKit over Wi-Fi. It configures the MCF
-  over I²C and commands speed/direction; it never switches motor phases.
+- **Supervisor**: ESP32-C6-MINI-1-H4 running Matter over Wi-Fi (rs-matter, pure Rust), used
+  from Apple Home. It configures the MCF over I²C and commands speed/direction; it never
+  switches motor phases.
 - **Power**: Mean Well GST60A24-P1J 24 V / 60 W certified supply, wall-side 3 A fuse and
   physical cutoff. Only low voltage crosses the ceiling.
 - **Safety**: independent one-pulse Hall tachometer → LM2907 → TLV1701 analog 200 RPM trip,

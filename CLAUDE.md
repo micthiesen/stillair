@@ -60,7 +60,11 @@ Keep these properties when changing anything; they come from the safety architec
 ## Firmware conventions
 
 - Bare-metal esp-hal 1.1 stack (no esp-idf): `esp-rtos` + Embassy, `esp-radio` for Wi-Fi,
-  `esp-println`/`log` for logging (`ESP_LOG` env), `esp-backtrace` panics.
+  `esp-println`/`log` for logging (`ESP_LOG` env), `esp-backtrace` panics. Pure Rust is the
+  point — never pull in esp-idf or other large C SDKs.
+- Control plane is **Matter over Wi-Fi via rs-matter + rs-matter-embassy** (git deps; mirror
+  their examples' `[patch.crates-io]` pins; prefer `rustcrypto` over mbedtls). Details and
+  the Apple Home mapping: docs/controls.md > "Home integration".
 - **Stable** Rust, target `riscv32imac-unknown-none-elf` (ESP32-C6 only — the
   ESP32-C6-MINI-1-H4 in the BOM; never other chips). Toolchain pinned in
   `firmware/rust-toolchain.toml`.
@@ -71,7 +75,11 @@ Keep these properties when changing anything; they come from the safety architec
   modules. Format with plain `cargo fmt`; lint with `cargo clippy`.
 - When updating deps, the esp-* crates version-bump in lockstep (esp-hal / esp-rtos /
   esp-radio / esp-println / esp-backtrace / esp-alloc / esp-bootloader-esp-idf); check the
-  MIGRATING docs in the esp-rs/esp-hal repo for breaking changes.
+  MIGRATING docs in the esp-rs/esp-hal repo for breaking changes. Heads-up: esp-radio has a
+  1.0.0 beta out; expect an API break when adopting it.
+- CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `clippy -D warnings`, and a
+  release build on every firmware push — clippy warnings fail the build there even though
+  they're soft locally.
 
 ## Project knowledge lives in the repo, not personal memory
 

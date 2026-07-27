@@ -1,5 +1,10 @@
 # Part specifications (CAD handoff)
 
+> **Temporary**: the original dimensioned drawing diagrams (assembly section, plate/carrier/hub
+> top views, blade plan, capture detail) are still viewable at
+> https://stillair-fan-design.syas.chatgpt.site/drawings (requires ChatGPT auth). Remove this
+> link once the OnShape model reproduces them.
+
 Dimensioned starting design for every fabricated part, one step before production drawings.
 Z = 0 at the finished ceiling, positive Z down (see [mechanical.md](mechanical.md) for the
 stack and coordinate system). Import the current CubeMars GL100 STEP and physically verify

@@ -43,7 +43,8 @@ minimum release basis and can be tightened after measured data exists. Highlight
 | Test | Acceptance limit |
 |---|---|
 | Cold start (100 starts/direction at 30/35/40 RPM, 23.3/24.0/24.7 V) | No retry, reverse kick, stall, click, or objectionable tonal sequence |
-| Sleep acoustics (8 h at 40/60/80 RPM, listened from bed) | No identifiable motor, controller, bearing, or structural tone; no hunting |
+| Sleep acoustics (motor-only + complete fan at 30/40/60/80/120/170 RPM, listened from bed) | No identifiable motor, controller, bearing, or structural tone at the released sleep speed |
+| Speed range (steady at 30/40/55/70/120/170 RPM) | Stable speed and acceptable current waveform; each low speed released only if all starts pass |
 | Hard limit (max command + command-path fault) | Motor controller never exceeds 180 RPM |
 | Rotor proof (external drive, 216 RPM × 2 min/direction, behind barrier) | No damage, loosening, deformation, balance shift, or contact |
 | Bus voltage (≥100 MHz probe at MCF pins during coast/cutoff/stall/reversal) | Peak ≤35 V, no 28 V OVP trip; otherwise redesign suppression |

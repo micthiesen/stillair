@@ -1,5 +1,9 @@
 # Mechanical design
 
+> **Temporary**: the original interactive envelope and stack diagrams are still viewable at
+> https://stillair-fan-design.syas.chatgpt.site/mechanical (requires ChatGPT auth). Remove this
+> link once the OnShape model reproduces them.
+
 A fixed assembly with explicit motor gates. The GL100 structure is dimensioned part by part in
 [parts.md](parts.md); this doc covers the envelope, the vertical stack, rotor geometry, and
 the independent retention paths. Only purchased-motor measurements, slab conditions, and

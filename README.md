@@ -2,7 +2,8 @@
 
 Custom 44-inch direct-drive ceiling fan for quiet overnight air mixing: CubeMars GL100 KV10
 gimbal motor, TI MCF8316D sensorless FOC on a custom controller board, ESP32-C6 supervisor
-with local-only HomeKit, and an independent analog overspeed backstop.
+with local-only Apple Home control via Matter (rs-matter), and an independent analog
+overspeed backstop.
 
 This repo is the canonical source for everything except the OnShape 3D model:
 
