@@ -29,7 +29,12 @@ use stillair_core::console::Line;
 
 /// Queue depth. Deep enough to ride out a brief stall at the highest useful telemetry rate,
 /// shallow enough that a host which has genuinely gone away is noticed quickly.
-const QUEUE: usize = 24;
+///
+/// The floor is set by `config dump`, which deliberately emits one line per configuration
+/// register — 24 of them plus an acknowledgement — back to back. At a depth of 24 a single
+/// interleaved telemetry frame would evict part of the dump, and the dump is the raw material
+/// a golden image is captured from.
+const QUEUE: usize = 48;
 
 static LINES: Channel<CriticalSectionRawMutex, Line, QUEUE> = Channel::new();
 

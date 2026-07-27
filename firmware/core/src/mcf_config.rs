@@ -207,36 +207,76 @@ pub struct Applied {
 /// Read-modify-write, so a masked setting cannot clobber the bits around it. This is a bench
 /// operation: callers must gate it on the motor being stopped (the console does), and it is
 /// deliberately not on the boot path.
-pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> Result<Applied, ConfigFault> {
+/// Returns the verdict rather than a `Result`, and it is the one this function's own read-back
+/// pass produced — so a caller that needs to publish it does not have to run a second full pass
+/// over the block to learn what this one already established.
+///
+/// **Known gap: EEPROM write completion is not polled.** `docs/controls.md` gives ~750 ms per
+/// configuration write *with completion polling*, and the mechanism for observing that
+/// completion has not been derived from silicon — inventing one here would be exactly the guess
+/// this module exists to avoid. With [`IMAGE`] empty the loop below writes nothing, so nothing
+/// is at risk today; whoever populates the image must confirm the read-back cannot race the
+/// device's internal commit, or a good write will report as a mismatch.
+pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, ConfigCheck) {
     let mut applied = Applied::default();
 
     for setting in image {
-        let read = bus
-            .read(setting.address)
-            .await
-            .map_err(|_| ConfigFault::Unreadable {
-                address: setting.address,
-            })?;
+        let read = match bus.read(setting.address).await {
+            Ok(read) => read,
+            Err(_) => {
+                let address = setting.address;
+                return (
+                    applied,
+                    ConfigCheck::Failed(ConfigFault::Unreadable { address }),
+                );
+            }
+        };
         if setting.matches(read) {
             applied.unchanged += 1;
             continue;
         }
-        bus.write(setting.address, setting.merge(read))
+        if bus
+            .write(setting.address, setting.merge(read))
             .await
-            .map_err(|_| ConfigFault::Mismatch {
-                address: setting.address,
-            })?;
+            .is_err()
+        {
+            let address = setting.address;
+            return (
+                applied,
+                ConfigCheck::Failed(ConfigFault::Mismatch { address }),
+            );
+        }
         applied.written += 1;
     }
 
     // Re-read everything rather than trusting the writes. `RegisterBus::write` promises
     // nothing about the value sticking, and a configuration that silently did not take is the
     // failure this whole module exists to make impossible.
-    match check(bus, image).await {
-        ConfigCheck::Verified | ConfigCheck::Unverified => Ok(applied),
-        ConfigCheck::Failed(fault) => Err(fault),
-        ConfigCheck::Pending => unreachable!("check never returns Pending"),
+    (applied, check(bus, image).await)
+}
+
+/// Write one register on an operator's behalf, re-verifying the image if it landed in the
+/// configuration block.
+///
+/// This is *behaviour*, not transport, which is why it lives in the core crate and is called
+/// identically by the firmware and the simulator. A bench write into `0x080..=0x0AE`
+/// invalidates whatever verdict was standing, and leaving a stale `Verified` in place
+/// afterwards would be a safety gate vouching for a configuration the device is no longer
+/// holding. Doing it automatically rather than trusting the operator to remember `config
+/// check` is the point — the dangerous case is the one nobody thinks to check.
+///
+/// `Ok(None)` means the address was outside the configuration block, so no verdict changed.
+pub async fn write_and_recheck<B: RegisterBus>(
+    bus: &mut B,
+    address: u16,
+    value: u32,
+    image: &[Setting],
+) -> Result<Option<ConfigCheck>, B::Error> {
+    bus.write(address, value).await?;
+    if !crate::mcf8316::is_configuration(address) {
+        return Ok(None);
     }
+    Ok(Some(check(bus, image).await))
 }
 
 #[cfg(test)]
@@ -452,7 +492,7 @@ mod tests {
             Setting::whole("B", B, 0x2222),
         ];
         let mut bus = FakeBus::with(&[(A, 0x1111), (B, 0)]);
-        let applied = block_on(apply(&mut bus, &image)).expect("apply");
+        let (applied, check) = block_on(apply(&mut bus, &image));
         assert_eq!(
             applied,
             Applied {
@@ -460,6 +500,7 @@ mod tests {
                 unchanged: 1
             }
         );
+        assert_eq!(check, ConfigCheck::Verified);
         assert_eq!(bus.writes, 1, "wrote a register that was already correct");
         assert_eq!(bus.registers[&B], 0x2222);
     }
@@ -468,7 +509,7 @@ mod tests {
     fn apply_preserves_the_bits_a_masked_setting_does_not_claim() {
         let image = [Setting::masked("A", A, 0x0000_FF00, 0x0000_AB00)];
         let mut bus = FakeBus::with(&[(A, 0x1234_56FF)]);
-        block_on(apply(&mut bus, &image)).expect("apply");
+        block_on(apply(&mut bus, &image));
         assert_eq!(bus.registers[&A], 0x1234_ABFF);
     }
 
@@ -479,9 +520,12 @@ mod tests {
         let image = [Setting::whole("A", A, 0x1111)];
         let mut bus = FakeBus::with(&[(A, 0)]);
         bus.write_ignored = Some(A);
+        let (applied, check) = block_on(apply(&mut bus, &image));
+        assert_eq!(applied.written, 1, "believed it had written the register");
         assert_eq!(
-            block_on(apply(&mut bus, &image)),
-            Err(ConfigFault::Mismatch { address: A })
+            check,
+            ConfigCheck::Failed(ConfigFault::Mismatch { address: A }),
+            "reported success for a write that did not stick"
         );
     }
 
@@ -493,13 +537,68 @@ mod tests {
         ];
         let mut bus = FakeBus::with(&[]);
         bus.write_fails = Some(A);
+        let (_, check) = block_on(apply(&mut bus, &image));
         assert_eq!(
-            block_on(apply(&mut bus, &image)),
-            Err(ConfigFault::Mismatch { address: A })
+            check,
+            ConfigCheck::Failed(ConfigFault::Mismatch { address: A })
         );
         assert!(
             !bus.registers.contains_key(&B),
             "kept configuring past a refused write"
+        );
+    }
+
+    #[test]
+    fn a_configuration_write_invalidates_a_standing_verdict() {
+        // The bench hazard this exists for: derive a bit field with `reg write`, walk away,
+        // and a `Verified` from before the write is still standing while the device holds
+        // something else entirely.
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus::with(&[(A, 0x1111)]);
+        assert_eq!(block_on(check(&mut bus, &image)), ConfigCheck::Verified);
+
+        let verdict = block_on(write_and_recheck(&mut bus, A, 0x2222, &image));
+        assert_eq!(
+            verdict,
+            Ok(Some(ConfigCheck::Failed(ConfigFault::Mismatch {
+                address: A
+            }))),
+            "a write that diverged from the image left the old verdict standing"
+        );
+        assert_eq!(
+            bus.registers[&A], 0x2222,
+            "the write itself must still land"
+        );
+    }
+
+    #[test]
+    fn a_write_outside_the_configuration_block_changes_no_verdict() {
+        // RAM registers are written constantly during tuning; re-verifying the EEPROM block
+        // on every one of them would be two dozen wasted reads apiece.
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus::with(&[(A, 0x1111)]);
+        let before = bus.reads;
+        assert_eq!(
+            block_on(write_and_recheck(&mut bus, reg::ALGO_CTRL1, 7, &image)),
+            Ok(None)
+        );
+        assert_eq!(
+            bus.reads, before,
+            "re-verified after a non-configuration write"
+        );
+        assert_eq!(bus.registers[&reg::ALGO_CTRL1], 7);
+    }
+
+    #[test]
+    fn a_failed_write_is_reported_rather_than_re_verified() {
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus {
+            write_fails: Some(A),
+            ..FakeBus::default()
+        };
+        assert_eq!(
+            block_on(write_and_recheck(&mut bus, A, 0x2222, &image)),
+            Err(())
         );
     }
 

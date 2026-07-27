@@ -179,6 +179,13 @@ async fn dispatch(line: &str) {
 }
 
 /// Run a configuration operation and report its outcome.
+///
+/// **`config apply` stalls the whole console for as long as it runs** (up to a minute against
+/// EEPROM), because `console_task` does not read the next line until `dispatch` returns. That
+/// is deliberate rather than overlooked: `refuse_write` confines an apply to `IdleOff`,
+/// `SafeBoot`, or `Fault`, so there is no spinning rotor to command during the stall and
+/// nothing a `stop` could usefully do. If responsiveness during an apply ever matters, this
+/// is the place to move off the line-reader task.
 async fn config(operation: ConfigOp) {
     let access = match operation {
         ConfigOp::Check => mcf::Access::ConfigCheck,

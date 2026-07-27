@@ -140,11 +140,19 @@ async fn exchange(access: Access) -> Result<Answer, &'static str> {
 /// single register read turns a wedged bus into a console that appears to have hung.
 fn deadline_for(access: Access) -> Duration {
     match access {
+        // A configuration write is EEPROM-backed at roughly 750 ms (`docs/controls.md`) —
+        // already past the plain-write budget on its own — and it is followed by a full
+        // re-verification pass over the block. Budgeting it as an ordinary write would report
+        // "register access timed out" for an operation that completed correctly, on exactly
+        // the bench workflow this feature exists for. An operator who believes that and
+        // retries burns another cycle of 20k-cycle EEPROM endurance.
+        Access::Write { address, .. } if mcf8316::is_configuration(address) => {
+            Duration::from_secs(10)
+        }
         Access::Read(_) | Access::Write { .. } => Duration::from_millis(500),
         // Two dozen reads apiece.
         Access::ConfigCheck | Access::ConfigDump => Duration::from_secs(5),
-        // Reads, writes and re-reads two dozen registers, and a configuration write is
-        // EEPROM-backed at roughly 750 ms each (`docs/controls.md`).
+        // Reads, writes and re-reads two dozen EEPROM-backed registers.
         Access::ConfigApply => Duration::from_secs(60),
     }
 }
@@ -156,17 +164,18 @@ pub async fn service_access(mcf: &mut Mcf) {
     };
     let reply = match access {
         Access::Read(address) => mcf.read(address).await.map(Answer::Value).map_err(describe),
+        // The re-verification that a configuration write implies lives in the core crate, so
+        // the simulator performs it identically and it is covered by host tests.
         Access::Write { address, value } => {
-            let written = mcf.write(address, value).await.map_err(describe);
-            // A configuration write invalidates the standing verdict, so re-check rather
-            // than leaving the supervisor believing a "verified" that a bench write has just
-            // made untrue. Doing it here rather than trusting the operator to run `config
-            // check` is the point: the dangerous case is the one nobody remembers to check.
-            if written.is_ok() && mcf8316::is_configuration(address) {
-                publish_verdict(ConfigCheck::Pending);
-                publish_verdict(mcf_config::check(mcf, mcf_config::IMAGE).await);
+            match mcf_config::write_and_recheck(mcf, address, value, mcf_config::IMAGE).await {
+                Ok(verdict) => {
+                    if let Some(verdict) = verdict {
+                        publish_verdict(verdict);
+                    }
+                    Ok(Answer::Value(0))
+                }
+                Err(error) => Err(describe(error)),
             }
-            written.map(|()| Answer::Value(0))
         }
         Access::ConfigCheck => {
             let check = mcf_config::check(mcf, mcf_config::IMAGE).await;
@@ -178,15 +187,14 @@ pub async fn service_access(mcf: &mut Mcf) {
             })
         }
         Access::ConfigApply => {
-            let applied = mcf_config::apply(mcf, mcf_config::IMAGE).await;
-            // Whatever happened, the verdict now reflects the device rather than what it was
-            // before the apply.
-            let check = mcf_config::check(mcf, mcf_config::IMAGE).await;
+            // `apply` verifies by read-back and hands back the verdict it produced, so there
+            // is no second pass here; the verdict already reflects the device as it now is.
+            let (applied, check) = mcf_config::apply(mcf, mcf_config::IMAGE).await;
             publish_verdict(check);
             Ok(Answer::Config {
                 check,
-                written: applied.map(|a| a.written).unwrap_or(0),
-                unchanged: applied.map(|a| a.unchanged).unwrap_or(0),
+                written: applied.written,
+                unchanged: applied.unchanged,
             })
         }
         Access::ConfigDump => dump(mcf).await.map(Answer::Value).map_err(describe),

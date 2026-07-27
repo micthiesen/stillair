@@ -215,26 +215,20 @@ impl Simulator {
             ConfigOp::Check | ConfigOp::Apply => {
                 let mut written = 0;
                 let mut unchanged = 0;
-                if operation == ConfigOp::Apply {
-                    match block_on(mcf_config::apply(
+                let check = if operation == ConfigOp::Apply {
+                    let (applied, check) = block_on(mcf_config::apply(
                         &mut SimBus(&mut self.registers),
                         mcf_config::IMAGE,
-                    )) {
-                        Ok(applied) => {
-                            written = applied.written;
-                            unchanged = applied.unchanged;
-                        }
-                        Err(_) => {
-                            // A `SimBus` cannot fail, so this is unreachable in practice;
-                            // falling through to the check below reports whatever state the
-                            // register file is actually in rather than inventing one.
-                        }
-                    }
-                }
-                let check = block_on(mcf_config::check(
-                    &mut SimBus(&mut self.registers),
-                    mcf_config::IMAGE,
-                ));
+                    ));
+                    written = applied.written;
+                    unchanged = applied.unchanged;
+                    check
+                } else {
+                    block_on(mcf_config::check(
+                        &mut SimBus(&mut self.registers),
+                        mcf_config::IMAGE,
+                    ))
+                };
                 self.inputs.config = check;
                 self.emit(&Reply::Config {
                     check,
@@ -286,9 +280,19 @@ impl Simulator {
                 // CLR_FLT is write-only and self-clearing on real silicon, so the model
                 // does not store it — otherwise a read-back would show a bit the device
                 // never holds.
-                if address != reg::ALGO_CTRL1 {
-                    self.registers.retain(|(known, _)| *known != address);
-                    self.registers.push((address, value));
+                if address == reg::ALGO_CTRL1 {
+                    self.emit(&Reply::Ok);
+                    return;
+                }
+                // The same core call the firmware makes, so a configuration write
+                // invalidates the verdict here exactly as it does on a board (CTL-10).
+                if let Ok(Some(check)) = block_on(mcf_config::write_and_recheck(
+                    &mut SimBus(&mut self.registers),
+                    address,
+                    value,
+                    mcf_config::IMAGE,
+                )) {
+                    self.inputs.config = check;
                 }
                 self.emit(&Reply::Ok);
             }

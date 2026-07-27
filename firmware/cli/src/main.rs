@@ -100,8 +100,11 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
         "stream" if !matches!(words.get(1), Some(&"on") | Some(&"off")) => {
             stream(link, &words[1..])
         }
-        // `config capture` is a host verb; check/apply/dump belong to the device.
+        // `config capture` is a host verb, and `config dump` needs host-side collection
+        // because it is the one device command whose reply is many lines rather than one.
+        // `config check` and `config apply` are single-reply and pass straight through.
         "config" if words.get(1) == Some(&"capture") => capture(link),
+        "config" if words.get(1) == Some(&"dump") => dump(link),
         // Everything else goes to the device verbatim, so the CLI never has to grow a case
         // for a console command it does not need to interpret.
         _ => passthrough(link, &words.join(" ")),
@@ -289,17 +292,16 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     Ok(())
 }
 
-/// Read the device's EEPROM configuration block and print it as a `mcf_config::IMAGE` table.
+/// Read the whole EEPROM configuration block off the device.
 ///
-/// This is the step that turns the boot-time configuration gate from machinery into a real
-/// check. Run it against a device that has been tuned and qualified, paste the output into
-/// `firmware/core/src/mcf_config.rs`, and from then on every boot verifies that the device in
-/// front of you is holding the configuration the fan was qualified with.
+/// `config dump` is the one device command that answers with many lines rather than one, so it
+/// cannot go through `passthrough`: that reads a single reply, so it would print the first
+/// register of twenty-four and exit zero, reporting a complete dump that never happened.
 ///
-/// The expected register list comes from `stillair-core`, so a dump cut short by a bus error
-/// is a failure here rather than a silently short image — which would verify the registers it
-/// happened to receive and quietly ignore the rest.
-fn capture(link: &mut dyn Link) -> Result<(), String> {
+/// The expected register list comes from `stillair-core`, the same source the firmware
+/// iterates, so a dump cut short by a bus error fails here rather than arriving silently
+/// short — and an image built from a short dump would verify only the part that turned up.
+fn read_config_block(link: &mut dyn Link) -> Result<Vec<(String, u16, u32)>, String> {
     let expected: Vec<(&str, u16)> = reg::configuration().collect();
     link.send("config dump").map_err(|e| e.to_string())?;
 
@@ -311,6 +313,11 @@ fn capture(link: &mut dyn Link) -> Result<(), String> {
             .ok_or_else(|| format!("no reply from {}", link.describe()))?;
         if field(&line, "ok") == Some("false") {
             return Err(field(&line, "error").unwrap_or("dump failed").to_string());
+        }
+        // A telemetry stream left running on the device would otherwise be mistaken for the
+        // closing acknowledgement and truncate the block.
+        if field(&line, "type") == Some("telemetry") {
+            continue;
         }
         let (Some(address), Some(value)) = (field(&line, "addr"), field(&line, "value")) else {
             break; // The closing `{"ok":true}`.
@@ -325,8 +332,8 @@ fn capture(link: &mut dyn Link) -> Result<(), String> {
 
     if values.len() != expected.len() {
         return Err(format!(
-            "expected {} configuration registers, got {} — the dump was cut short and an \
-             image built from it would verify only the part that arrived",
+            "expected {} configuration registers, got {} — the dump was cut short, and \
+             anything built from it would cover only the part that arrived",
             expected.len(),
             values.len()
         ));
@@ -336,9 +343,21 @@ fn capture(link: &mut dyn Link) -> Result<(), String> {
             return Err(format!("expected register {wanted:#05x}, got {got:#05x}"));
         }
     }
+    Ok(values)
+}
 
+/// Print the device's configuration block, one register per line.
+fn dump(link: &mut dyn Link) -> Result<(), String> {
+    for (name, address, value) in read_config_block(link)? {
+        println!("{address:#05x} {name:<24} {value:#010x}");
+    }
+    Ok(())
+}
+
+/// Print the device's configuration block as a paste-ready `mcf_config::IMAGE` table.
+fn capture(link: &mut dyn Link) -> Result<(), String> {
     println!("pub const IMAGE: &[Setting] = &[");
-    for (name, address, value) in values {
+    for (name, address, value) in read_config_block(link)? {
         println!("    Setting::whole(\"{name}\", {address:#05x}, {value:#010x}),");
     }
     println!("];");
@@ -374,6 +393,7 @@ fn flag(arguments: &[&str], name: &str) -> Result<Option<u64>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::VecDeque;
 
     #[test]
     fn flags_are_read_by_name() {
@@ -495,6 +515,57 @@ reg read ISD_CONFIG
         let path = std::env::temp_dir().join("stillair-script-comments.txt");
         std::fs::write(&path, "# just a comment\n\n   \nstop # trailing\n").unwrap();
         assert!(script(&mut sim, path.to_str().unwrap()).is_ok());
+    }
+
+    #[test]
+    fn a_config_dump_is_collected_whole_rather_than_one_line_deep() {
+        // `passthrough` reads exactly one reply. Routing `config dump` through it printed
+        // the first register of twenty-four and exited zero — a complete-looking dump that
+        // never happened, which is the failure mode this harness exists to not have.
+        let mut sim = Simulator::new();
+        let block = read_config_block(&mut sim).expect("a whole block");
+        assert_eq!(block.len(), reg::configuration().count());
+        assert_eq!(block.first().unwrap().1, reg::CONFIG_FIRST);
+        assert_eq!(block.last().unwrap().1, reg::CONFIG_LAST);
+    }
+
+    #[test]
+    fn a_short_config_dump_fails_rather_than_producing_a_partial_image() {
+        // A link that answers the dump with two registers and then the closing ack, as a
+        // bus error mid-block would. An image built from that would verify a quarter of the
+        // configuration and silently vouch for the rest.
+        struct ShortDump {
+            replies: VecDeque<String>,
+        }
+        impl Link for ShortDump {
+            fn send(&mut self, _: &str) -> std::io::Result<()> {
+                self.replies = [
+                    "{\"ok\":true,\"addr\":128,\"name\":\"ISD_CONFIG\",\"value\":1}",
+                    "{\"ok\":true,\"addr\":130,\"name\":\"REV_DRIVE_CONFIG\",\"value\":2}",
+                    "{\"ok\":true}",
+                ]
+                .iter()
+                .map(|line| line.to_string())
+                .collect();
+                Ok(())
+            }
+            fn receive(&mut self, _: Duration) -> std::io::Result<Option<String>> {
+                Ok(self.replies.pop_front())
+            }
+            fn describe(&self) -> String {
+                "short-dump".into()
+            }
+            fn elapsed(&self) -> Duration {
+                Duration::ZERO
+            }
+        }
+
+        let mut link = ShortDump {
+            replies: VecDeque::new(),
+        };
+        let error = read_config_block(&mut link).expect_err("a short dump must fail");
+        assert!(error.contains("cut short"), "{error}");
+        assert!(capture(&mut link).is_err());
     }
 
     #[test]
