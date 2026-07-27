@@ -70,8 +70,11 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    ceiling — cannot be added later) and the three ST-100 standoffs torqued via their
    ceiling-face M6 flat-heads (also inaccessible later), plus hard spacers. ~3 kg unit.
 2. After the scan clears the spots: mark via the plate or a template (the 11 × 20 slots
-   absorb ±4–5 mm), drill 3/8 in holes ≥70 mm **without the plate**, brush/blow clean per
-   the ESR.
+   absorb ±4–5 mm), drill **without the plate** using a 3/8 in carbide bit meeting ANSI
+   B212.15 in a rotary hammer (SDS-plus; bit nominal matches the anchor — never substitute
+   a 10 mm metric bit, the thread engagement assumes ANSI tolerance), depth-stopped at
+   ~75 mm (primaries) / ~95–100 mm (tether), then brush/blow clean per Simpson's
+   instructions.
 3. Offer up the plate unit; drive both primaries through washer + slot (socket/impact).
    **Length/stack budget**: the 3 in screws have 12.7 mm of fixture budget above the
    63.5 mm minimum embedment — plate 6 mm leaves ≤6.7 mm for washer + spacers combined.
