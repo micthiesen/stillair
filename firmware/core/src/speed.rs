@@ -24,12 +24,19 @@ impl MilliRpm {
     }
 
     /// Rounded to the nearest whole RPM, for logs and telemetry.
+    ///
+    /// Saturating, not wrapping: [`milli_rpm_from_pulses`] deliberately saturates a garbage
+    /// tach reading at `u32::MAX`, and rounding that must not wrap to 0 — a nonsense speed
+    /// reported as "stopped" is the one wrong answer this function can give.
     pub const fn whole_rpm(self) -> u32 {
-        (self.0 + 500) / 1_000
+        self.0.saturating_add(500) / 1_000
     }
 }
 
 /// Duty commanded on the MCF SPEED pin, in units of 1/[`config::SPEED_DUTY_FULL_SCALE`].
+///
+/// Always writable to the 11-bit duty register: [`duty_for`] never produces a value above
+/// [`config::SPEED_DUTY_MAX`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct SpeedDuty(pub u16);
 
@@ -43,11 +50,16 @@ impl SpeedDuty {
 /// stored 180 RPM ceiling. Speeds above that ceiling clamp rather than wrap; the MCF
 /// enforces the same limit independently, and the analog chain enforces 200 RPM above
 /// both.
+///
+/// The result is clamped to [`config::SPEED_DUTY_MAX`], one below full scale. Full scale
+/// is not a writable duty: an 11-bit register holds 0..=2047, and 2048 aliases to zero —
+/// the fan would stop at maximum command. The ceiling is exactly where that would happen,
+/// so the clamp belongs here rather than at each call site.
 pub fn duty_for(rpm: MilliRpm) -> SpeedDuty {
     let ceiling = config::RPM_MCF_LIMIT * 1_000;
     let clamped = rpm.0.min(ceiling);
     let duty = (u64::from(clamped) * u64::from(config::SPEED_DUTY_FULL_SCALE)) / u64::from(ceiling);
-    SpeedDuty(duty as u16)
+    SpeedDuty((duty as u16).min(config::SPEED_DUTY_MAX))
 }
 
 /// Matter `PercentSetting` → speed. 0 means Off (hence `None`); 1–100 maps linearly onto
@@ -187,12 +199,34 @@ mod tests {
         assert_eq!(duty_for(MilliRpm::ZERO), SpeedDuty(0));
         // 170 of 180 RPM = 94.4% of full scale.
         assert_eq!(duty_for(MilliRpm::from_rpm(170)), SpeedDuty(1934));
-        assert_eq!(duty_for(MilliRpm::from_rpm(180)), SpeedDuty(2048));
     }
 
     #[test]
-    fn duty_clamps_above_the_stored_ceiling_instead_of_wrapping() {
-        assert_eq!(duty_for(MilliRpm::from_rpm(500)), SpeedDuty(2048));
+    fn duty_never_reaches_the_value_that_would_alias_to_zero() {
+        // Full scale on an 11-bit register wraps to "stopped". The ceiling, anything above
+        // it, and the largest representable speed must all land on the writable maximum.
+        for rpm in [
+            MilliRpm::from_rpm(config::RPM_MCF_LIMIT),
+            MilliRpm::from_rpm(500),
+            MilliRpm(u32::MAX),
+        ] {
+            assert_eq!(duty_for(rpm), SpeedDuty(config::SPEED_DUTY_MAX), "{rpm:?}");
+        }
+    }
+
+    #[test]
+    fn every_speed_in_the_user_range_produces_a_writable_duty() {
+        for rpm in 0..=config::RPM_USER_MAX {
+            let duty = duty_for(MilliRpm::from_rpm(rpm));
+            assert!(duty.0 <= config::SPEED_DUTY_MAX, "{rpm} RPM -> {duty:?}");
+        }
+    }
+
+    #[test]
+    fn rounding_a_nonsense_speed_does_not_wrap_to_stopped() {
+        // `milli_rpm_from_pulses` saturates a garbage tach delta here; reporting that as
+        // 0 RPM would be worse than reporting it as absurd.
+        assert!(MilliRpm(u32::MAX).whole_rpm() > 0);
     }
 
     #[test]

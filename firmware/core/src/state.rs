@@ -212,8 +212,15 @@ impl Supervisor {
         self.released_min
     }
 
+    /// Raise (or restore) the released minimum. The value is itself clamped into
+    /// `[RPM_USER_MIN_TARGET, RPM_USER_MAX]` rather than trusted: a floor above the user
+    /// maximum would invert `clamp_speed`'s bounds, and `u32::clamp` panics when `min >
+    /// max` — a caller typo would take the control loop down.
     pub fn set_released_min(&mut self, released_min: MilliRpm) {
-        self.released_min = released_min;
+        self.released_min = MilliRpm(released_min.0.clamp(
+            config::RPM_USER_MIN_TARGET * 1_000,
+            config::RPM_USER_MAX * 1_000,
+        ));
         // A standing setting below a newly raised floor must come up with it, or a bare
         // `On` would resume a speed that is no longer released.
         self.desired.speed = self.clamp_speed(self.desired.speed);
@@ -408,8 +415,12 @@ impl Supervisor {
         self.fault = Some(reason);
         self.fault_ack = false;
         self.ramp.reset();
-        self.emit_duty(SpeedDuty::ZERO, actions);
+        // Revoke first, then zero the command. Ordering matters twice over: revoking
+        // permission alone already stops the drive regardless of what duty is on the SPEED
+        // pin, and putting the safety-critical action at the head of the buffer means it
+        // survives even if some future path overflows the rest.
         self.push(actions, Action::ClearPermission);
+        self.emit_duty(SpeedDuty::ZERO, actions);
         self.transition(FanState::Fault, now);
     }
 
@@ -443,9 +454,12 @@ impl Supervisor {
         )
     }
 
-    /// Actions are bounded by construction; a full buffer means the state machine emitted
-    /// more in one poll than any path is supposed to, so drop rather than panic on the
-    /// target and let the debug assertion catch it in tests.
+    /// Actions are bounded by construction: the largest burst any path emits is three
+    /// (direction + duty + arm, in `begin_start`) against a buffer of [`MAX_ACTIONS`], and
+    /// the host tests walk every path. A full buffer therefore means a code change went
+    /// past the audited maximum — the debug assertion catches that in test, and on the
+    /// target the action is dropped rather than panicking the control loop. Safety-critical
+    /// actions are pushed first so a drop can only ever lose a lower-stakes one.
     fn push(&mut self, actions: &mut Actions, action: Action) {
         let pushed = actions.push(action).is_ok();
         debug_assert!(pushed, "action buffer overflow: {action:?}");
@@ -473,6 +487,10 @@ mod tests {
         /// When false the Hall channel emits nothing, simulating the documented
         /// magnet/cable single-point failure.
         hall_alive: bool,
+        /// Control-loop period. Coarse by default so long-horizon tests stay fast, but
+        /// adjustable: a tick coarser than a timing threshold makes the branch guarding it
+        /// unreachable, which would let the test suite pass over dead code.
+        tick_ms: u64,
         fg_residual: u64,
         hall_residual: u64,
         log: std::vec::Vec<Action>,
@@ -494,6 +512,7 @@ mod tests {
                 rotor: MilliRpm::ZERO,
                 rotor_follows: true,
                 hall_alive: true,
+                tick_ms: Self::TICK_MS,
                 fg_residual: 0,
                 hall_residual: 0,
                 log: std::vec::Vec::new(),
@@ -502,8 +521,8 @@ mod tests {
 
         /// Advance one control tick, generating tach edges for the current rotor speed.
         fn tick(&mut self) -> Actions {
-            self.now = self.now.plus_ms(Self::TICK_MS);
-            let travel = u64::from(self.rotor.0) * Self::TICK_MS;
+            self.now = self.now.plus_ms(self.tick_ms);
+            let travel = u64::from(self.rotor.0) * self.tick_ms;
 
             self.fg_residual += travel * u64::from(config::FG_PULSES_PER_REV);
             self.inputs.fg_pulses = self
@@ -530,7 +549,7 @@ mod tests {
         }
 
         fn run_ms(&mut self, ms: u64) {
-            for _ in 0..(ms / Self::TICK_MS) {
+            for _ in 0..(ms / self.tick_ms) {
                 self.tick();
             }
         }
@@ -864,13 +883,126 @@ mod tests {
     }
 
     #[test]
-    fn losing_the_rail_while_running_is_a_fault_but_not_during_safe_boot() {
+    fn the_alarm_pin_stops_the_fan_and_requires_a_fresh_command() {
+        // ALARM carries the report-only conditions that never reach nFAULT — including the
+        // OTW/TSD thermal reports the failure table requires be treated as a stop.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.take_log();
+
+        bench.inputs.mcf_alarm = true;
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::Fault);
+        assert_eq!(bench.supervisor.fault(), Some(FaultReason::McfAlarm));
+        assert!(bench.saw(Action::ClearPermission));
+
+        bench.inputs.mcf_alarm = false;
+        bench.run_ms(30_000);
+        assert_eq!(
+            bench.supervisor.state(),
+            FanState::Fault,
+            "left Fault without a command"
+        );
+
+        bench.supervisor.command(Command::Off);
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+    }
+
+    #[test]
+    fn losing_the_rail_while_running_is_a_fault() {
         let mut bench = Bench::new();
         bench.boot();
         bench.run_at(40);
         bench.inputs.pgood = false;
         bench.tick();
         assert_eq!(bench.supervisor.fault(), Some(FaultReason::RailLoss));
+    }
+
+    #[test]
+    fn a_bare_on_resumes_the_last_non_zero_speed() {
+        // The constructor's default happens to equal the qualification minimum, so this
+        // has to use a distinctly different speed or a regression that reset the stored
+        // setting on Off would be invisible.
+        let resumed = 90;
+        assert_ne!(resumed, config::RPM_USER_MIN_TARGET);
+
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(resumed);
+        bench.supervisor.command(Command::Off);
+        bench.run_until(300_000, "IdleOff", |s| s.state() == FanState::IdleOff);
+
+        bench.supervisor.command(Command::On);
+        bench.run_until(300_000, "resumed speed", |s| {
+            s.commanded() == MilliRpm::from_rpm(resumed)
+        });
+    }
+
+    #[test]
+    fn raising_the_released_minimum_lifts_a_standing_setting_with_it() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(40)));
+        bench.supervisor.command(Command::Off);
+
+        // Qualification releases a higher floor than the standing 40 RPM setting.
+        bench.supervisor.set_released_min(MilliRpm::from_rpm(55));
+        bench.supervisor.command(Command::On);
+        bench.run_until(300_000, "the new floor", |s| {
+            s.commanded() == MilliRpm::from_rpm(55)
+        });
+    }
+
+    #[test]
+    fn a_released_minimum_above_the_user_maximum_is_refused_rather_than_inverting() {
+        // `clamp_speed` would panic on inverted bounds, taking the control loop down.
+        let mut bench = Bench::new();
+        bench
+            .supervisor
+            .set_released_min(MilliRpm::from_rpm(config::RPM_USER_MAX + 50));
+        assert_eq!(
+            bench.supervisor.released_min(),
+            MilliRpm::from_rpm(config::RPM_USER_MAX)
+        );
+        bench.boot();
+        bench.run_at(config::RPM_USER_MAX);
+    }
+
+    #[test]
+    fn the_arm_settle_delay_holds_the_speed_command_at_zero() {
+        // A tick coarser than ARM_SETTLE_MS would step straight over this branch, so the
+        // bench runs fine-grained here on purpose.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.tick_ms = 10;
+        assert!(bench.tick_ms < config::ARM_SETTLE_MS);
+        bench.take_log();
+
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(60)));
+        bench.run_until(1_000, "Starting", |s| s.state() == FanState::Starting);
+        let armed_at = bench.now;
+
+        let mut held = 0;
+        loop {
+            bench.tick();
+            if bench.now.since(armed_at) >= config::ARM_SETTLE_MS {
+                break;
+            }
+            assert_eq!(
+                bench.supervisor.commanded(),
+                MilliRpm::ZERO,
+                "ramped before the permission latch settled"
+            );
+            held += 1;
+        }
+        assert!(held > 0, "the settle branch was never actually exercised");
+        bench.run_until(5_000, "ramping", |s| !s.commanded().is_zero());
     }
 
     #[test]

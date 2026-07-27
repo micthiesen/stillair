@@ -72,6 +72,10 @@ pub const START_QUIET_TIMEOUT_MS: u64 = 120_000;
 /// resolution the 200 Hz carrier holds per TI's resolution table.
 pub const SPEED_DUTY_FULL_SCALE: u16 = 2_048;
 
+/// The largest duty that is actually *writable*. An 11-bit duty register holds 0..=2047;
+/// writing full scale aliases to zero, so a maximum command would stop the fan.
+pub const SPEED_DUTY_MAX: u16 = SPEED_DUTY_FULL_SCALE - 1;
+
 /// SPEED-pin PWM carrier, Hz. Must sit inside the `SPEED_RANGE_SEL` = 1h band
 /// (10–325 Hz); the register's default band would put this silently out of range.
 pub const SPEED_CARRIER_HZ: u32 = 200;

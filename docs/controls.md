@@ -165,7 +165,22 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
 - **The watchdog heartbeat is conditional, not merely bit-banged.** The control loop
   increments a beat counter on every completed poll and the heartbeat task refuses to toggle
   unless it advanced. A bit-banged-but-unconditional toggle would still feed the watchdog
-  through a hung control loop, which is the exact failure the watchdog exists to catch.
+  through a hung control loop, which is the exact failure the watchdog exists to catch. This
+  gating lives in the app crate (`firmware/app/src/main.rs`) and is therefore **not** covered
+  by a host test — unlike every other item in this section, it is verified only by CTL-02.
+
+### Known gaps in the current implementation
+
+- **Fault recovery does not work end-to-end yet.** `Action::ClearMcfFault` is a log line, not
+  an I²C write: the 24-bit control word is unimplemented pending datasheet verification. A
+  real latched MCF fault therefore survives the supervisor's fault-clear, and the restart
+  fails safe via the 15 s `NoRotation` timeout instead of recovering. Closing this is part of
+  bringing up the register path; DRV-08 cannot pass until then.
+- **Executor priority is not yet structural.** The control loop and heartbeat currently share
+  the default executor. Nothing violates the contract while Wi-Fi/Matter is absent, but the
+  higher-priority interrupt executor must exist *before* those tasks are spawned, not after —
+  otherwise a hung network task starves the heartbeat and turns network loss into a watchdog
+  stop, inverting the required behavior.
 
 ## Independent limits
 

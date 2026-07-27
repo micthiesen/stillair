@@ -33,47 +33,57 @@ redirected to the firmware/harness program at owner request).
   qualification is the longest non-motor-gated path.
 - **Control plane locked**: Matter over Wi-Fi (rs-matter). Orders in; GL100 + parts en
   route; CubeMars bearing email sent 2026-07-27 (Gate 01 awaiting reply).
-- Firmware scaffold compiles, CI-guarded; contract now includes stop criterion and
-  plausibility constants. **It is not testable**: one `no_std` binary crate with
-  `test = false` and `build.target` pinned to RISC-V, so `cargo test` cannot run at all
-  even though `state.rs` / `config.rs` / `mcf8316.rs` are pure logic.
 - **Owner direction (2026-07-27)**: only ESP32-C6 dev boards are on hand, so the near-term
   program is all of the firmware plus a motor-tuning/telemetry harness, built out *before*
-  the V1 board exists and driven by Claude Code once it does.
+  the V1 board exists and driven by Claude Code once it does. Phases: **A** core split
+  (done) → **B** full state machine → **C** tuning harness → **D** rs-matter → bring-up.
+- **Phase A landed (2026-07-27).** `firmware/` is now two crates: `stillair-core`
+  (`no_std`, zero esp-\* deps, sans-I/O — takes an injected `Millis` plus sampled `Inputs`,
+  returns `Action`s) and `firmware/app` (the C6 binary, its own workspace, its own target).
+  The supervisor state machine is real, not a stub: all seven states, the permission
+  lifecycle, the stopped criterion, FG/Hall plausibility, and the ramp, under 51 host tests
+  that run on a laptop in milliseconds — including the 10 s and 120 s holds. CI grew a
+  `core` job (fmt + clippy + **tests**) alongside `app` (fmt + clippy + release build).
+  Console framing decided: everything on USB-serial-JTAG, protocol lines are `@`-prefixed
+  newline-delimited JSON, one mutexed writer so logs cannot interleave mid-line.
+- **Five reviewers found real bugs in phase A, all fixed**: `duty_for` returned full scale
+  at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
+  have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
+  itself manufactures, and `set_released_min` could panic the control loop via inverted
+  `clamp` bounds. Four test gaps closed (ALARM path, bare-`On` resume, floor-raising, and
+  the arm-settle branch that a 100 ms bench tick stepped straight over).
 
 ## Next
 
-**Split `firmware/` into a host-testable core plus a target app, and land the first real
-state-machine slice on top of it.** A `stillair-core` crate (`no_std`, zero esp-\* deps)
-takes the state machine, MCF register encode/decode, speed mappings (percent↔RPM,
-duty↔RPM, FG↔RPM) and tach/plausibility logic behind narrow hardware traits with an
-injected clock; `app/` keeps the esp-hal wiring and the RISC-V target (root workspace on
-the host target, `exclude = ["app"]`, app carries its own `.cargo/config.toml`). Prove the
-boundary by implementing SafeBoot → IdleOff → Starting → Running against a fake platform,
-with host tests for the 10 s DRVOFF hold and the permission lifecycle.
+**Phase B: finish the state machine and the MCF register path.** Two strands. (1) Every
+remaining row of [controls.md](controls.md) > "Failure behavior" gets implemented and
+tested — I²C hang/9-clock recovery, MIN_VM undervoltage while running (DRV-09), thermal
+OTW/TSD, ESP-reboot-while-powered. (2) The MCF8316D 24-bit control word, which phase A
+deliberately left unimplemented rather than guessed: `RegisterBus` is abstract today, and
+until it is real, **fault recovery does not work end-to-end** (`ClearMcfFault` is a log
+line, so a latched MCF fault survives the supervisor's clear and the restart fails safe via
+the 15 s `NoRotation` timeout). Verify the encoding against the datasheet directly — a
+wrong bit position writes garbage into a motor controller. Not hardware-gated.
 
-Why this first: every other firmware candidate (full state machine, console protocol,
-simulator, CLI) needs this trait boundary, and a core with no esp-\* deps is immune to the
-`[patch.crates-io]` churn the rs-matter adoption will bring. Contract:
-[controls.md](controls.md) > "Required state behavior" + "Firmware safety architecture".
-Not hardware-gated.
-
-Rough order after that: full state machine (every failure-table row as a test) → tuning
-harness (device console + `tools/stillair` CLI + simulator) → rs-matter → real bring-up.
+Also in phase B, before Wi-Fi exists: move the control loop and heartbeat onto a
+higher-priority interrupt executor. It changes nothing today and must be structural *before*
+Matter tasks are spawned, or a hung network task starves the heartbeat and turns network
+loss into a watchdog stop — the exact inversion of the contract.
 
 ## Candidates Not Chosen
 
-- **Tuning + telemetry harness** — device-side line console (`reg read/write`, `run <rpm>`,
-  `dir`, `state`, `stream on <hz>` → CSV telemetry), a host CLI sharing `stillair-core` for
-  the protocol and register encoding, and a simulator implementing the same hardware traits
-  so the loop runs with no board. One CLI subcommand per `testing/test-matrix.csv` row with
-  machine-readable pass/fail is the Claude-Code-friendly part. Waits on the core split
-  (otherwise the protocol layer gets written twice). **Caveat to carry forward**: a
-  simulator validates the harness, never the sensorless tuning.
+- **Phase C, the tuning + telemetry harness** — device-side line console (`reg read/write`,
+  `run <rpm>`, `dir`, `state`, `stream on <hz>` → CSV telemetry), a host CLI sharing
+  `stillair-core` for the protocol and register encoding, and a simulator implementing the
+  same hardware boundary so the loop runs with no board. One CLI subcommand per
+  `testing/test-matrix.csv` row with machine-readable pass/fail is the Claude-Code-friendly
+  part. Waits on phase B: the console's most valuable command is register read/write, which
+  needs the control word. **Caveat to carry forward**: a simulator validates the harness,
+  never the sensorless tuning.
 - **rs-matter devkit spike** (dev boards on hand; answers the AirflowDirection question).
-  The one candidate worth running genuinely in parallel — shares nothing with the core
-  split, and it is the biggest external unknown (git deps, patch pinning, BLE
-  commissioning, flash persistence).
+  The one candidate worth running genuinely in parallel — shares nothing with the core, and
+  it is the biggest external unknown (git deps, patch pinning, BLE commissioning, flash
+  persistence).
 - **Capture the V1 controller schematic in KiCad** (`pcb/`), following
   [electrical.md](electrical.md) SCH-01–SCH-07 as amended by the review (delayed `/PRE`,
   Schmitt buffers, corrected FET orientation, LM2907 fixes, GPIO7/15, GPIO8/9 pull-ups,

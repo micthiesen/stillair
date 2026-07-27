@@ -94,12 +94,17 @@ impl Board {
                 // at 35 RPM. `SetDutyCycle` writes the raw 11-bit value the supervisor
                 // already works in.
                 //
-                // Clamped one below full scale: an 11-bit duty register holds 0..=2047, and
-                // writing 2048 would wrap to zero — the fan stopping at maximum command.
-                // The supervisor caps at 170 of 180 RPM so this cannot happen today; the
-                // clamp is here so it stays impossible if that cap ever moves.
+                // `duty_for` already clamps below full scale; clamping again against what
+                // the peripheral reports keeps the two from drifting apart if the timer is
+                // ever reconfigured to a different resolution.
                 let max = self.speed.max_duty_cycle().saturating_sub(1);
-                let _ = self.speed.set_duty_cycle(duty.0.min(max));
+                // Never silently dropped: the supervisor caches the last duty it emitted
+                // and will not re-send an unchanged value, so a swallowed failure would
+                // leave the SPEED pin at a stale duty — including a nonzero one on the
+                // stop and fault paths — with nothing to notice it.
+                if let Err(error) = self.speed.set_duty_cycle(duty.0.min(max)) {
+                    log::error!("SPEED duty write failed ({error:?}); pin may be stale");
+                }
             }
             Action::SetDirection(direction) => self.dir.set_level(match direction {
                 Direction::Forward => Level::Low,
