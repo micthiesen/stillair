@@ -31,6 +31,35 @@ drawing):
   inertia, and bearing-life basis for vertical-axis operation.
 - Do not use the Ø100/M2.5 pattern structurally until its ownership is physically confirmed.
 
+### Bearing-data request (Gate 01, researched 2026-07)
+
+No public bearing or load data exists for the GL series (checked every storefront and
+CubeMars' guides; their technical-support page hosts full manuals for the AK actuator line
+but nothing for GL, and they do publish load ratings for actuators — so a direct ask is
+precedented, via info@cubemars.com). What the research could bound:
+
+- The ~20–30 N axial hang (2–3 kg rotor) is almost certainly trivial: any plausible bearing
+  in a Ø106.8 × 34.2 housing with a Ø30 bore carries multi-kN catalog ratings.
+- The genuine unknowns are **overturning-moment capacity** (blade imbalance loads react as an
+  edge-load couple across whatever bearing spacing exists inside a 34.2 mm pancake) and
+  whether it's a single bearing or a spaced pair.
+- 35–170 RPM continuous duty is favorable for bearing fatigue life (few load cycles per unit
+  time).
+- Additional published data found: rotor inertia 2310 g·cm², IP45, −20 to 50 °C operating
+  range, Kv 9.3 RPM/V.
+
+Questions to send CubeMars: (1) bearing type/part number/quantity/axial spacing in the
+current GL100 revision; (2) continuous axial (thrust) rating, axis vertical; (3) continuous
+radial rating; (4) allowable overturning moment and its evaluation radius; (5) documented
+L10 life at 35–170 RPM under ~30 N axial; (6) precedent continuously-rotating hanging
+deployments (radar heads) and whether mass rode on the motor bearings; (7) whether they
+recommend an external thrust bearing for hanging loads; (8) whether a GL-series mechanical
+manual exists like the AK-series ones.
+
+Fallback if data never comes (this gives Gate 01's "independently rated bearing path"
+concrete shape): an external thrust/slew bearing carries the rotor weight and moment, and
+the GL100 transmits torque only through a non-structural coupling.
+
 ## MP-100 ceiling plate
 
 - Ø210 × 6.0 mm 304 stainless disk, flat within 0.30 mm, brushed and passivated.
@@ -46,10 +75,10 @@ drawing):
   clocked clear of standoffs, anchors, and cable entries after the clamshell split is frozen.
 - Hard metal spacers bypass any soft ceiling finish.
 
-Anchor gate: the slots accept nominal M10 or 3/8-inch hardware, but the exact anchor
-(candidate family: Hilti KB-TZ2) is not released until slab thickness, concrete condition,
-reinforcement, post-tensioning, the existing hole, permitted embedment, and spacing are
-verified.
+Anchor gate: the slots accept nominal M10 or 3/8-inch hardware. Selected candidate (2026-07,
+~7× tension margin in cracked concrete): Hilti KB-TZ2 3/8 in stainless at hef 2 in — full
+numbers, tether anchor, and the pre-drill verification checklist in
+[install.md](install.md). Not released until the slab is verified per that checklist.
 
 ## ST-100 carrier standoffs
 
@@ -132,6 +161,23 @@ Tach features:
 Three identical adapters per installed pitch set.
 
 - Qualified CF-PPA preferred; CF-PA12 only after equivalent testing.
+- **Filament selection (researched 2026-07)**: primary **Bambu Lab PPA-CF** (true PPA + CF;
+  168 MPa XY tensile, 208 MPa flexural, HDT 227 °C at 0.45 MPa, ~1.3% moisture saturation —
+  about 66% lower than standard PA6-CF). The project printer is a Bambu **X2D**, which
+  officially supports PPA-CF: its 300 °C nozzle runs the 280–310 °C band's lower-mid range
+  (Bambu's own profile territory), and the 65 °C actively heated chamber directly helps the
+  layer-adhesion/Z-strength concern that matters most for these parts. Procedure: dry 100–140 °C / 8–12 h before printing (never above 160 °C),
+  print 280–310 °C nozzle / 100–120 °C bed / full enclosure / <100 mm/s on PEI; anneal
+  120–140 °C for 6–12 h, but validate annealing on the actual adapter geometry in the
+  production orientation first — Bambu warns some geometries warp or lose toughness.
+  Backups: 3DXTech CarbonX CF-HTN (more chamber-forgiving) or Siraya Tech Fibreheart PPA-CF
+  (easiest to print, lowest strength; confirm its annealing procedure from the TDS). CF-PA12
+  only wins if every CF-PPA fails hot/humid conditioning.
+- **Why qualification is empirical**: no vendor or literature data exists for year-scale
+  creep, 10⁶-cycle fatigue of chopped-fiber filament, or Z-axis (layer-adhesion) strength —
+  every TDS reports XY coupons only. Witness coupons must therefore be printed in the actual
+  flat-on-hub-base production orientation, and the hot/humid sustained-load conditioning +
+  fatigue matrix below is the release evidence, not datasheet numbers.
 - Pitch 10°, 12°, or 14°, ±0.25°.
 - Approximate radial envelope r52–205.
 - Hub base y±25, at least 10 mm thick; the saddle widens to the blade chord and is at least

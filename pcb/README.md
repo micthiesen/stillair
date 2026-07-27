@@ -11,3 +11,30 @@ footprints/parts in the LCSC catalog where it doesn't compromise the design, so 
 option stays open). The Hall daughterboard (18 × 8 mm, DRV5033) is a second tiny board that
 should ride in the same order/panel. A possible V2 reshape to a horizontal donut board is
 noted in the handoff doc.
+
+## JLCPCB order config (researched 2026-07)
+
+- Standard 4-layer 1.6 mm with the order-form copper dropdown set to **2 oz outer / 1 oz
+  inner** (no canned JLC04161H stackup covers this combo — sanity-check the resulting
+  dielectric build in the quote tool). ENIG and the Ø3.2 NPTH holes are unrestricted.
+- **2 oz raises min trace/space to 0.15–0.16 mm** — check routing under the ESP module
+  fits. The common fallback for a ~2 A board is 1 oz outer with ≥1.5–2 mm pours, avoiding
+  the 2 oz penalty entirely; decide at capture.
+- MCF exposed-pad thermal vias: request **POFV (copper-filled/capped vias)**, drills
+  0.25–0.35 mm — a paid special process at 4 layers; budget it.
+- Ballpark: ~$80–150 for qty 5 bare boards with the above; 2 oz doesn't block PCBA.
+
+## Footprint/symbol sourcing (researched 2026-07)
+
+Clean pulls from KiCad official libs: ESP32-C6-MINI-1 (needs KiCad ≥8.0.9), GCT USB4105
+(note: **top-mount** — confirm against the housing), TC2030-NL, JST PH and SH/SRSS
+connectors, Coilcraft LPS4018, Panasonic EEU-FR (parametric CP_Radial), SMC TVS, SOIC-14,
+SOT-23 variants.
+
+Needs Ultra Librarian download + datasheet verification: **MCF8316D** (rectangular-body
+VQFN-40 RGF — KiCad's stock VQFN-40 is the wrong shape), **TPSM365R6** (RDN QFN-FCMOD).
+Hybrid cases: TPS7A1601A (KiCad footprint, UL symbol; check EP copper vs TI's land),
+SN74LVC1G74 DCT/SM8 (KiCad's generic SSOP-8 pad span is wider than TI's spec — use TI/UL's).
+All TI discrete symbols come from SnapEDA/UL (pinouts are part-specific). Molex: the ordered
+headers are the **right-angle** variants (43045-0200, 43650-0300) — use the horizontal
+footprints, not vertical.

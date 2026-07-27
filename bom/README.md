@@ -19,10 +19,17 @@ Notes:
 - Custom mechanics (MP-100 through ENC-100) are fabricated per
   [../docs/parts.md](../docs/parts.md) and only after the motor and slab gates clear.
 - Verify availability and price at order time.
+- **Purchasing split** (decided pre-repo, carried forward): DigiKey Canada for off-board
+  hardware, cable, connectors, and bring-up spares; Mouser for DigiKey stock gaps (the
+  TPSM365R6V3RDNR has been out of stock at DigiKey before); JLCPCB turnkey sourcing for
+  board-mounted parts when using their assembly — JLCPCB's overseas-consignment fees are
+  uneconomic for a prototype, so consignment is effectively off the table.
 - **JLCPCB path**: boards come from JLCPCB; PCBA vs hand-population is TBD. As of 2026-07
   every IC except the exact `MCF8316DULVRGFR` variant is in the LCSC catalog, but all as
-  Extended parts (per-part feeder fee), and LM2907M / TPS3435 stock is thin. The MCF either
-  gets consigned or swapped to the plain `MCF8316DVRGFR` after an equivalence check.
+  Extended parts (per-part feeder fee), and LM2907M / TPS3435 stock is thin. Since
+  consignment is uneconomic, the MCF choice for a PCBA run is: swap to the plain
+  `MCF8316DVRGFR` after an equivalence check, or hand-solder just that part on an otherwise
+  assembled board.
 - Tools (crimpers etc.), wall-box enclosure hardware, and test equipment are deliberately out
   of scope for this BOM.
 

@@ -6,7 +6,8 @@ An implementation contract, not firmware. Application code lives in
 ## Selected hardware
 
 - Motor: CubeMars GL100 KV10, 24 V, 20 pole pairs.
-- Controller: custom 78 × 58 mm V1/V2 board around MCF8316DULVRGFR (no TI evaluation module).
+- Controller: custom 78 × 58 mm V1/V2 board around MCF8316DVRGFR (no TI evaluation module;
+  swapped from the ULV variant 2026-07 — see [electrical.md](electrical.md) SCH-03).
 - Supervisor: ESP32-C6-MINI-1-H4 (same 4 MB capacity and footprint as N4, but −40 to 105 °C
   instead of −40 to 85 °C).
 - Supply: Mean Well GST60A24-P1J, 24 V / 2.5 A / 60 W.
@@ -21,9 +22,24 @@ constant, 102.4 V/krpm BEMF, and 20 pole pairs. For a star connection, begin wit
 translate its BEMF number into TI's phase-neutral peak convention, so treat 320
 mV/electrical-Hz as an unverified V1 commissioning guess.
 
-Run MPET on the purchased GL100 and scope line-to-line BEMF while manually spinning it. The
-measured R, L, and BEMF values replace the provisional register values before final EEPROM
-release.
+Enter R/L/Ke manually as the primary values (nonzero MOTOR_RES/MOTOR_IND/MOTOR_BEMF_CONST
+disables the corresponding MPET steps), and use MPET only as a cross-check **with the blades
+mounted** — MPET's known failure modes (garbage Ke, missing Kp/Ki) occur on unloaded motors,
+and the rotor is our load. Independently scope line-to-line BEMF while manually spinning.
+Measured values replace the provisional registers before final EEPROM release.
+
+**Headroom check during tuning**: at 170 RPM the BEMF is roughly 17 V against the 24 V bus —
+the tightest margin in the system with flux weakening disabled. A 20% error in the Ke
+convention (phase vs line) erases it, so pin the convention down against measured BEMF
+before releasing the top speed.
+
+**Low-speed feasibility (researched 2026-07)**: 35 RPM is 11.7 electrical Hz, and this
+motor's ~300 mV/electrical-Hz BEMF constant is 7–70× the MCF's entire handoff-threshold menu
+— closed-loop stability at the target minimum is comfortably in range (TI's "not ideal"
+territory starts around two orders of magnitude less signal). Expect the tuning effort to go
+into startup smoothness instead: align startup can kick the rotor backward; IPD startup
+avoids that (see the IPD retry caveat in electrical.md). App notes: SLLA665 (handoff),
+SLLU335 (gradual-startup recipes).
 
 ## Initial MCF8316D configuration
 
@@ -40,7 +56,16 @@ release.
 - Maximum VM: 28 V, latched. Minimum VM: 18 V, automatic recovery.
 - Disable flux weakening and overmodulation.
 - Enable AVS. Coast for normal stops; avoid deliberate regeneration into the desktop supply.
+  (With AVS on, deceleration rate is governed by AVS rather than CL_DEC — fine for a fan.)
 - Acceleration/deceleration: begin near 1.5 mechanical RPM/s.
+- Configure standby mode (DEV_MODE = 0b), not sleep: the SPEED pin doubles as WAKE, and in
+  sleep mode an idle-low SPEED pin kills I²C after SLEEP_ENTRY_TIME.
+- Set every configurable fault mode to latched Hi-Z (0h) and OCP_MODE to latched; the only
+  non-latchable path is IPD start-attempt retry (electrical.md).
+- EEPROM discipline: write only with the motor stopped and the device idle/faulted, VM ≥ 6 V
+  throughout, ~750 ms per write (poll completion), 20k-cycle endurance so never write on a
+  power-up path; an interrupted write is caught by CRC at next boot and EEP_FAULT_MODE = 0b
+  holds Hi-Z. The register map is D-generation-specific — never reuse A1/C dumps.
 
 ## Electrical control contract
 

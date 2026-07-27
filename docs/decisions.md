@@ -18,6 +18,27 @@ The design to take into CAD. All items below are **selected**.
 | Duty | 35–170 RPM target range, 180 RPM driver limit, 200 RPM analog trip | Release the actual minimum only after repeatable startup and acoustic qualification. The analog path is an independent runaway backstop, not precision regulation. |
 | Appearance | Minimal light wood or white blades with consistent stainless hardware | No light; the white printed surface conduit is outside the fan design. |
 
+## Why GL100 (vs GL80)
+
+The KV10 winding is naturally matched to slow direct drive: it trades 383 g and 11.9 mm of
+axial depth for a 2.9× higher torque constant than the GL80, reaching the target speed range
+with far less phase current (less copper heating, easier low-speed operating point).
+
+| Attribute | GL100 KV10 | GL80 KV30 | Advantage |
+|---|---|---|---|
+| Speed matching | KV10 · 223 RPM no-load at 24 V | KV30 · 450 RPM rated at 24 V | GL100 |
+| Torque constant | 1.030 N·m/A | 0.356 N·m/A | GL100 |
+| Est. current at 0.7–0.8 N·m load | 0.68–0.78 A + losses | 1.97–2.25 A + losses | GL100 |
+| Mass | 698 g | 315 g | GL80 |
+| Envelope | Ø106.8 × 34.2 mm | Ø87 × 22.3 mm | GL80 |
+
+GL100 ratings: 3.0 N·m rated at 130 RPM, 7.7 N·m peak, 223 RPM no-load, 20 pole pairs,
+Ø30 through-bore, 698 g, rotor inertia 2310 g·cm², IP45, −20 to 50 °C. Calculated operating
+point: 0.68–0.78 A torque current and 12.5–14.2 W mechanical at 170 RPM; roughly 18–25 W
+total input estimated (core/bearing losses unpublished). Do not confuse capability with
+requirement: the controller caps current at 1.5 A and disables flux weakening, so peak motor
+torque is not available in the installed fan.
+
 ## Release gates (before permanent installation)
 
 Six explicit gates. A failed gate has a named fallback; it must not be converted into an
@@ -35,6 +56,13 @@ undocumented assumption.
    proof speed, controlled imbalance behavior, and dynamic catcher/tether tests are signed off.
 6. **Installation approval** — any required permit, accepted certification mark, or field
    evaluation for a permanent custom appliance is resolved locally. *(Open gate.)*
+
+Install site for gates 4 and 6: **Vancouver, BC — 11-storey concrete condo built 2006**.
+Anchor selection (KB-TZ2 3/8 in stainless, ~7× margin), the pre-drill slab-verification
+checklist (treat the slab as post-tensioned until proven otherwise; the existing ceiling
+bolts are not load-rated evidence), and the approval path (strata approval required; no
+building/electrical permit expected; one confirming email to the City closes the
+product-approval question) are worked in [install.md](install.md).
 
 ## Accepted deviations
 

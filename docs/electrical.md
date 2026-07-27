@@ -119,7 +119,16 @@ Do not substitute a 36 V-rated regulator behind a TVS that may clamp near 39 V.
 
 ## SCH-03 MCF8316D power stage
 
-`MCF8316DULVRGFR`; follow TI's pinout and reference-layout loop geometry literally.
+`MCF8316DVRGFR`; follow TI's pinout and reference-layout loop geometry literally.
+
+Variant note (researched 2026-07): swapped from `MCF8316DULVRGFR`. Datasheet Table 4-1 shows
+the only differences are the UL 60730-1 recognition and an on-die Self Test Library (STL
+command/status bits) that requires MCU-driven BIST to mean anything; silicon, pinout,
+register map, and motor control are identical. This design's safety case is the external
+hardware chain, and the plain D is LCSC-stocked for JLCPCB assembly. Capture with the
+**D-generation pinout** — pins 36–39 (DACOUT1/DACOUT2/SOX/ALARM) differ from the A1, and the
+D register map differs from A1/C (use TI's C→D conversion tool mindset; never reuse A1
+register dumps or community drivers untranslated).
 
 - VM pins 9–11 to VM24. OUTA 13/14 → U, OUTB 16/17 → V, OUTC 19/20 → W.
 - PGND pins 12/15/18 joined locally. Exposed pad to AGND with a dense thermal-via array
@@ -159,23 +168,33 @@ motor phases.
 - USB-C native D−/D+ through 22 Ω, `TPD2EUSB30` ESD, 5.1 kΩ on CC1/CC2. VBUS is sense/test
   only and never powers the fan.
 
-Starting GPIO map (recheck all strap/boot behavior against the exact module before capture;
-keep GPIO4, 5, 8, 9, and 15 free of unreviewed pulls because of ESP32-C6 strap behavior):
+GPIO map, verified against the ESP32-C6-MINI-1 datasheet v1.5 (2026-07): every pin below is
+exposed on the module (the MINI-1 exposes GPIO0–9 and 12–23) and none is a strap pin. The C6
+straps are GPIO4, 5, 8, 9, and 15 — keep them free of unreviewed pulls. The original plan's
+GPIO14 NTC input was wrong (C6 ADC1 lives only on GPIO0–6; GPIO14 has no ADC), so the NTC
+moved to GPIO6 — a non-strap pin whose JTAG-default function (MTCK) is inactive unless
+deliberately re-fused.
 
 | GPIO | Signal | Note |
 |---|---|---|
 | 0 / 1 | SDA / SCL | MCF configuration bus |
 | 2 | SPEED PWM | |
 | 3 | DIR | |
-| 12 / 13 | USB D− / D+ | native USB |
-| 14 | NTC ADC | optional temperature |
-| 16 / 17 | UART TX / RX | |
+| 6 | NTC ADC | optional temperature; ADC1_CH6 |
+| 12 / 13 | USB D− / D+ | native USB (fixed-function pins) |
+| 14 | MCF ALARM | push-pull active-high fault companion to nFAULT (was spare) |
+| 16 / 17 | UART TX / RX | U0TXD / U0RXD defaults |
 | 18 | permission ARM_PULSE | hardware safety handshake |
 | 19 | watchdog heartbeat | hardware safety handshake |
 | 20 | MCF FG | |
 | 21 | MCF nFAULT | diagnostic |
 | 22 | 3.3 V PGOOD | diagnostic |
 | 23 | watchdog WDO | diagnostic |
+
+Two module caveats: ADC range/accuracy specs only apply to modules with packaging-label PW
+number ≥ PW-2023-06 (check the date code before trusting NTC accuracy); and only GPIO0–7
+have LP aliases, so deep-sleep wake sources, if ever wanted, must come from that range (the
+NTC on 6 and I²C on 0/1 qualify; GPIO18–23 cannot wake).
 
 ## SCH-05 hardware permission and watchdog
 
@@ -230,8 +249,20 @@ already powers up cleared and firmware cannot arm until its heartbeat is running
 active-low open-drain and asserts for 200 ms after a timeout; U5 converts that pulse into a
 held-off motor state. WDO clears motor permission but does not reset the ESP.
 
-The same 2 Hz square wave may feed the MCF rising-edge watchdog through a separate 100 Ω
-resistor. Test both consumers independently; do not merge their inputs after the resistors.
+Wire the same 2 Hz heartbeat into the MCF's **EXT_WD input (pin 32)** through a separate
+100 Ω resistor, with the EXT_WDT fault response configured to latched Hi-Z — a second
+zero-extra-parts "MCU died → motor Hi-Z" path inside the driver itself. Test both watchdog
+consumers independently; do not merge their inputs after the resistors.
+
+Also route the MCF's **ALARM output (pin 39** — push-pull, active-high, enabled via
+ALARM_PIN_EN**)** to the spare ESP GPIO14: it is an opposite-polarity companion to the
+open-drain nFAULT, so a stuck-low nFAULT line can't silently hide faults. Diagnostic only,
+like nFAULT.
+
+One IPD caveat for the fault matrix: if IPD startup (MTR_STARTUP = 10b) is used to avoid
+align reverse-kick, IPD faults are hard-wired retry (not latchable) — a failed *start
+attempt* re-attempts. This is distinct from a running-fault auto-restart; document it as
+accepted behavior or use align startup if even that is unacceptable.
 
 Firmware may arm only after all fault sources are healthy, configuration is complete, the
 requested speed is zero, watchdog service is live, and DRVOFF has remained high for at least
@@ -314,7 +345,10 @@ failure of the independent channel, so supervisory plausibility logic must stop 
 
 - MCF BRAKE: 10 kΩ pulldown to AGND when unused.
 - MCF DIR: 10 kΩ pulldown plus 100 Ω from the ESP.
-- MCF SPEED: 100 kΩ pulldown plus 100 Ω from the ESP.
+- MCF SPEED: 100 kΩ pulldown plus 100 Ω from the ESP. **Sleep gotcha**: SPEED doubles as the
+  WAKE pin; if it idles low past SLEEP_ENTRY_TIME in sleep mode, the device sleeps and stops
+  ACKing I²C. Configure standby mode (DEV_MODE = 0b, I²C stays alive) since our idle state
+  holds speed at zero — this masquerades as an I²C failure otherwise.
 - TPS7A1601 EN: filtered input; PG pulled to 3.3 V; DELAY 100 nF; NC open.
 - USB VBUS: high-value divider to an optional ESP sense input or a labeled test pad only; it
   never joins 3.3 V.
@@ -324,8 +358,8 @@ failure of the independent channel, so supervisory plausibility logic must stop 
 
 | Ref | Part | Pinout |
 |---|---|---|
-| J1 POWER | Molex Micro-Fit 43045-0200 | 1 RAW24, 2 0V |
-| J2 MOTOR | Molex Micro-Fit 43045-0300 | 1 U, 2 V, 3 W |
+| J1 POWER | Molex Micro-Fit 43045-0200 (dual-row, right-angle) | 1 RAW24, 2 0V |
+| J2 MOTOR | Molex Micro-Fit 43650-0300 (single-row, right-angle) | 1 U, 2 V, 3 W |
 | J3 HALL | JST B3B-PH-K-S | 1 3V3, 2 HALL_TACH, 3 AGND |
 | J4 TEMP | JST B2B-PH-K-S | 1 TEMP_SENSE, 2 AGND |
 | J5 I2C | JST-SH 4-pin | GND, 3V3, SDA, SCL |
@@ -390,6 +424,9 @@ V2 is not released until V1 passes:
 ## Primary references
 
 - MCF8316D datasheet: https://www.ti.com/lit/ds/symlink/mcf8316d.pdf
+- MCF83xx open-to-closed-loop handoff tuning (SLLA665): https://www.ti.com/lit/an/slla665/slla665.pdf
+- MCF8316A tuning guide (SLLU335, gradual-startup recipes): https://www.ti.com/lit/pdf/sllu335
+- TIDA-010951 24 V sensorless FOC fan reference design: https://www.ti.com/lit/ug/tiduf84/tiduf84.pdf
 - TPSM365R6: https://www.ti.com/lit/ds/symlink/tpsm365r6.pdf
 - TPS7A16: https://www.ti.com/lit/ds/symlink/tps7a16.pdf
 - TPS3435: https://www.ti.com/lit/ds/symlink/tps3435.pdf

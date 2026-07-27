@@ -5,22 +5,23 @@
 //! it never switches motor phases. The full behavioral contract lives in
 //! `docs/controls.md`; the board pinout lives in `docs/electrical.md` (SCH-04).
 //!
-//! GPIO map (starting assignment; recheck strap behavior before PCB capture):
+//! GPIO map (verified against the ESP32-C6-MINI-1 datasheet; no strap pins used):
 //!
-//! | GPIO    | Signal                  |
-//! |---------|-------------------------|
-//! | 0 / 1   | SDA / SCL (MCF I²C)     |
-//! | 2       | SPEED PWM               |
-//! | 3       | DIR                     |
-//! | 12 / 13 | USB D− / D+             |
-//! | 14      | NTC ADC (optional)      |
-//! | 16 / 17 | UART TX / RX            |
-//! | 18      | permission ARM_PULSE    |
-//! | 19      | watchdog heartbeat      |
-//! | 20      | MCF FG                  |
-//! | 21      | MCF nFAULT              |
-//! | 22      | 3.3 V PGOOD             |
-//! | 23      | watchdog WDO diagnostic |
+//! | GPIO    | Signal                       |
+//! |---------|------------------------------|
+//! | 0 / 1   | SDA / SCL (MCF I²C)          |
+//! | 2       | SPEED PWM                    |
+//! | 3       | DIR                          |
+//! | 6       | NTC ADC (optional, ADC1_CH6) |
+//! | 12 / 13 | USB D− / D+                  |
+//! | 14      | MCF ALARM (active-high)      |
+//! | 16 / 17 | UART TX / RX                 |
+//! | 18      | permission ARM_PULSE         |
+//! | 19      | watchdog heartbeat           |
+//! | 20      | MCF FG                       |
+//! | 21      | MCF nFAULT                   |
+//! | 22      | 3.3 V PGOOD                  |
+//! | 23      | watchdog WDO diagnostic      |
 
 #![no_std]
 #![no_main]

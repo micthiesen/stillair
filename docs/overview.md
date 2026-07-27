@@ -19,6 +19,7 @@ drawings and the KiCad PCB. The full 3D model lives in OnShape; everything else 
 | Wall clearance | 5.5 in per side at 44 in diameter |
 | Ceiling-to-blade gap | 8.0–8.2 in to nearest blade surface |
 | Blades | Three symmetric 9 mm birch, 12° nominal pitch |
+| Room | 55 in wide, 96 in ceiling, mattress top at 22 in; Vancouver, BC concrete condo |
 
 ## Architecture
 
@@ -73,5 +74,6 @@ Slab verification and the local installation-approval path are site-specific exe
 - [electrical.md](electrical.md) — PCB V1/V2 circuit and layout handoff
 - [controls.md](controls.md) — motor-control contract and required state behavior
 - [build.md](build.md) — build sequence, procurement gates, commissioning
+- [install.md](install.md) — anchors, slab verification, Vancouver approval path
 - [../bom/bom.csv](../bom/bom.csv) — BOM with purchase tracking
 - [../testing/test-matrix.csv](../testing/test-matrix.csv) — commissioning matrix with sign-off fields
