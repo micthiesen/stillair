@@ -1,0 +1,81 @@
+//! Fixed control limits from the design contract (`docs/controls.md`).
+//!
+//! These are firmware-side mirrors of independently enforced limits: the MCF8316D
+//! stores its own 180 RPM ceiling, and the analog tach chain trips at 200 RPM
+//! without any firmware participation. Firmware must never rely on itself as the
+//! only limit.
+
+/// Motor pole pairs (GL100 KV10).
+pub const POLE_PAIRS: u32 = 20;
+
+/// Qualification target user range, RPM. The released minimum may end up higher;
+/// it is gated on the full start + acoustic matrix (`testing/test-matrix.csv`).
+pub const RPM_USER_MIN_TARGET: u32 = 35;
+pub const RPM_USER_MAX: u32 = 170;
+
+/// Speed ceiling stored in the MCF8316D itself (mechanical RPM). Also the full-scale
+/// of the SPEED-pin duty mapping: commanded speed = duty × MAX_SPEED.
+pub const RPM_MCF_LIMIT: u32 = 180;
+
+/// Independent analog overspeed trip, nominal rising threshold (mechanical RPM).
+pub const RPM_ANALOG_TRIP: u32 = 200;
+
+/// Initial acceleration/deceleration ramp, thousandths of a mechanical RPM per second
+/// (= 1.5 RPM/s, per docs/controls.md). Expressed in integer milli-RPM because the
+/// ESP32-C6 is RV32IMAC with no hardware FPU — soft-float in the control loop buys
+/// nothing here.
+pub const RAMP_MILLI_RPM_PER_S: u32 = 1_500;
+
+/// DRVOFF must remain high this long after power-up or any permission-clearing
+/// fault before re-arming (TI safe-operation requirement).
+pub const SAFE_BOOT_HOLD_SECS: u64 = 10;
+pub const SAFE_BOOT_HOLD_MS: u64 = SAFE_BOOT_HOLD_SECS * 1_000;
+
+/// TPS3435 heartbeat rate on GPIO19. The watchdog services on the falling edge
+/// and times out after 1.6 s nominal. MUST be bit-banged by a task that attests
+/// control-loop liveness — never a free-running peripheral (docs/controls.md >
+/// "Firmware safety architecture").
+pub const WATCHDOG_HEARTBEAT_HZ: u32 = 2;
+
+/// "Verified stopped" criterion: no FG edge AND no Hall edge for this long after
+/// commanding zero speed (docs/controls.md).
+pub const STOPPED_QUIET_SECS: u64 = 5;
+pub const STOPPED_QUIET_MS: u64 = STOPPED_QUIET_SECS * 1_000;
+
+/// Running plausibility: stop the fan if FG is nonzero while the Hall channel
+/// stays quiet for this many revolutions (Hall-loss single-point backstop).
+pub const HALL_PLAUSIBILITY_REVS: u32 = 5;
+
+/// FG pulses per mechanical revolution, with `FG_DIV` = 1h (docs/electrical.md).
+pub const FG_PULSES_PER_REV: u32 = 20;
+
+/// The rotor Hall tach is deliberately one pulse per revolution — the same signal the
+/// analog overspeed chain integrates.
+pub const HALL_PULSES_PER_REV: u32 = 1;
+
+/// Settling time between arming the permission latch and commanding a nonzero speed.
+/// Covers the latch propagating to DRVOFF; not a datasheet number, just slack.
+pub const ARM_SETTLE_MS: u64 = 50;
+
+/// Firmware-defined start supervision: if the rotor shows no FG motion this long after
+/// the ramp begins, the start failed (permission never took, rotor jammed, or the
+/// analog lock is latched) and the supervisor faults rather than commanding into a
+/// dead drive. Derived requirement, not from TI.
+pub const START_TIMEOUT_MS: u64 = 15_000;
+
+/// A start is gated on both tach channels being quiet (the pre-arm plausibility rule).
+/// A windmilling rotor therefore delays a start; if it has not gone quiet within this
+/// long, report a service condition instead of waiting forever.
+pub const START_QUIET_TIMEOUT_MS: u64 = 120_000;
+
+/// Full scale of the SPEED-pin PWM duty command, in duty units. 11 bits is the
+/// resolution the 200 Hz carrier holds per TI's resolution table.
+pub const SPEED_DUTY_FULL_SCALE: u16 = 2_048;
+
+/// SPEED-pin PWM carrier, Hz. Must sit inside the `SPEED_RANGE_SEL` = 1h band
+/// (10–325 Hz); the register's default band would put this silently out of range.
+pub const SPEED_CARRIER_HZ: u32 = 200;
+
+/// Window over which FG pulses are integrated into a speed estimate. At the 35 RPM
+/// target this is ~12 FG pulses, enough for a stable reading.
+pub const SPEED_ESTIMATE_WINDOW_MS: u64 = 1_000;

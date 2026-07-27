@@ -1,0 +1,12 @@
+[package]
+name = "stillair-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+publish = false
+
+# No esp-* dependencies, deliberately: this crate builds and tests on the host so
+# the supervisor contract can be exercised without a board, and so the
+# `[patch.crates-io]` churn that comes with rs-matter-embassy cannot reach it.
+[dependencies]
+heapless = { version = "0.8", default-features = false }

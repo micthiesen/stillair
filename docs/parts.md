@@ -75,8 +75,9 @@ the GL100 transmits torque only through a non-structural coupling.
 - Cable entry: 12 × 20 mm radiused slot, angle coordinated with the wall conduit.
 - EB-100 mounting: two M3 × 0.5 tapped holes at X35, Y±15 from the underside; keep clear of
   ceiling anchors and spindle recess.
-- ENC-100 mounting: six M3 stationary attachment points equally distributed around r96,
-  clocked clear of standoffs, anchors, and cable entries after the clamshell split is frozen.
+- ENC-100 mounting: six M3 tapped holes at r96, **clocked 45°/105°/165°/225°/285°/345°**
+  (locked 2026-07-27; see "ENC-100 tab clocking" below for the margin table and the rejected
+  alternatives).
 - Hard metal spacers bypass any soft ceiling finish.
 
 Anchor gate: the slots accept nominal M10 or 3/8-inch hardware. Selected candidate (2026-07,
@@ -259,6 +260,13 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 - ENC-100 is a white two-part clamshell: Ø212 top, taper to Ø200 over 25 mm, Ø194 minimum
   inside, 178 mm tall, 3 mm walls and ribs, six M3 closure screws, and six M3 top tabs fixed
   to MP-100, three per half.
+- **Split plane locked (2026-07-27): the 135°–315° axis.** The removable half spans
+  315°→135° and carries tabs 345/45/105; the fixed half spans 135°→315° with tabs
+  165/225/285. Dropping the removable half exposes the whole PCB (vertical in the Y0 plane,
+  X35–93) face-on without disturbing the tether run at 270°. Rejected: 15°/195° puts the
+  seam coplanar with the PCB so the board straddles it; 75°/255° passes within 15° of both
+  the 90° standoff and the tether. The ENC-100 cable notch must sit entirely within one
+  half — never on the seam — which is a constraint on the MP-100 cable-slot angle.
 - Use UL94 V-0 polymer or qualify an equivalent enclosure fire test. Each clamshell half also
   gets an independent flexible metal lanyard rated at least 100 N to MP-100.
 - Provide at least 1200 mm² combined free vent area, a 14 × 8 mm cable notch, connector
@@ -335,10 +343,31 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   acceptable; add anodize/passivation callouts at drawing release if desired.
 - The "housing ends at Z178 / nothing projects below Z200" rule is scoped to the **ENC-100
   housing assembly only** — the catcher (Z200.7) and blades obviously extend below it.
-- MP-100 cannot be cut until two decisions land: the **cable-slot angle** (site-measure the
-  wall conduit route) and the **ENC-100 tab clocking** (a 45° phase offset — tabs at
-  45/105/165/225/285/345° — clears all keepouts with ≥20 mm margin; naive 30°-family
-  spacing lands a tab ~9 mm from a standoff).
+- MP-100 cannot be cut until the **cable-slot angle** lands (site-measure how power reaches
+  the plate). ENC-100 tab clocking is no longer a blocker — locked below.
+
+### ENC-100 tab clocking (locked 2026-07-27)
+
+Six M3 tapped holes at r96, clocked **45/105/165/225/285/345°**. Verified clearances,
+measured from the M3 hole edge (Ø3.4) to the nearest feature:
+
+| Keepout | Governing pair | Clearance |
+|---|---|---|
+| ST-100 standoff (Ø16 post at r75) | tab 105° vs standoff 90° | 20.8 mm |
+| Anchor washer (1 in OD, worst ±5 mm drill error) | tab 345° vs anchor at X+65 | ~19 mm |
+| Tether clearance slot (14 radial × 22 tangential at X0, Y−82) | tab 285° vs slot corner (11, −89) | **12.6 mm** |
+
+12.6 mm is the controlling number, not the ≥20 mm this doc previously claimed — the earlier
+figure checked the standoffs and anchors but not the tether slot. It is still ample in 6 mm
+304 plate; recorded so nobody re-derives it or trusts the wrong number.
+
+Rejected alternatives (same r96, same 60° spacing, different phase):
+
+- **30°-family** (30/90/…) — tabs land directly on all three standoffs: ~9 mm.
+- **0°-family** (0/60/…) — tab at 0° sits 6.6 mm from the anchor washer.
+- **20°-family** — tab at 260° sits 7.9 mm from the tether slot corner.
+- **15°-family** — mirrors the 45-family exactly (same 12.6 mm tether minimum); no gain, and
+  it does not admit a split plane that clears the PCB as cleanly.
 
 ## Fabricated-part register
 
