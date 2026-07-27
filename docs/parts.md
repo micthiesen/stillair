@@ -70,7 +70,10 @@ the GL100 transmits torque only through a non-structural coupling.
 - Two 11 × 20 mm radial anchor slots centered at X±65, Y0 (130 mm anchor centers).
 - Three Ø6.6 standoff holes on Ø150 PCD at 90°, 210°, 330°, countersunk from the ceiling face
   for M6 flat-head screws.
-- Center spindle opening Ø16.2; top-face flange recess Ø34.2 × 3.1 deep.
+- Center spindle opening Ø16.2; top-face flange recess Ø34.2 × 3.1 deep, cut as a **double-D
+  pocket**: two parallel flats **30.4 mm across** (+0.1/+0.2), normal to Y, giving 0.2 mm
+  clearance per side on SP-100's 30.0 mm flats. This keys the spindle against rotation so the
+  M12 castellated nut can be torqued from below with no counter-hold (2026-07-27).
 - Separate tether-anchor clearance at X0, Y−82: 14 × 22 mm.
 - Cable entry: **none in the plate** (the 12 × 20 mm slot was deleted 2026-07-27 — see
   "Cable entry" below). Instead, two M4 × 0.7 tapped holes on 20 mm pitch in the underside
@@ -122,11 +125,24 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 - Ø16 shank runs from Z3 to the disk shoulder at Z196.7.
 - M12 × 1.75 thread from Z196.7 to approximately Z218.
 - Ø3.2 cross-hole for a castellated nut and cotter.
-- **Anti-rotation feature (added 2026-07 review — as drawn there was nothing to counter-hold
-  while torquing the M12 nut)**: machine two parallel wrench flats on the flange OD (or a
-  single flat on the shank above the shoulder) and note the counter-hold in the assembly
-  procedure. Bench note: before ceiling install, nothing retains the spindle in the recess —
-  use a simple holding fixture (recess-up, spindle hanging through a hole) when torquing.
+- **Anti-rotation (dimensioned 2026-07-27; supersedes the 2026-07 review's wrench-flat
+  note)**: two parallel flats on the flange OD, **30.0 mm across flats** (−0.1/−0.2),
+  symmetric about the axis, cut through the full 3.0 mm flange thickness, flat faces normal
+  to Y. Flat depth 2.0 mm per side, chord width 16.0 mm; break the flat/OD corners.
+  MP-100's recess is a **matching double-D pocket** (see MP-100 above), so the plate keys
+  the spindle against rotation permanently and **no counter-hold is required** when torquing
+  the M12 nut. 30.0 mm is a standard wrench size, so the flats still take a wrench on the
+  bench.
+- Why keyed rather than wrenched: the flange is bench-assembled into a recess that opens
+  toward the ceiling, but the castellated nut goes on at install step 4, *after* the plate is
+  anchored — by then the flange is sandwiched against the slab and unreachable, and the only
+  exposed shank is the 2.5 mm capture gap. Wrench flats alone would have solved the bench
+  case and left the real one unsolved.
+- Load check (both trivial, recorded so the flats are not re-litigated): flats cost 6% of the
+  flange bearing annulus (701.7 → 658.5 mm², **1.9 MPa** at the 1.25 kN static proof); the
+  flat/pocket interface sees **13.9 MPa** reacting 20 N·m of nut torque across 2 × 48 mm².
+- Bench note: before ceiling install, nothing retains the spindle axially in the recess — use
+  a simple holding fixture (recess-up, spindle hanging through a hole) when handling.
 - The upper flange sits captive in MP-100 (the Ø34.2→Ø16.2 bore step is a real internal
   shoulder — retention is self-contained in the plate, not ceiling-dependent). The disk
   seats on the machined Z196.7 shoulder, so the capture gap is not set by loose washers.

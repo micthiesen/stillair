@@ -138,6 +138,35 @@ hardware guarantees silently depend on them)
   Hall stays quiet for N revolutions (N ≈ 5). This is the only backstop for the documented
   Hall-cable/magnet single-point failure.
 
+## Derived firmware requirements (2026-07-27, from implementing the above)
+
+Decisions the contract implied but did not state. Constants live in `firmware/core/src/config.rs`
+and each is covered by a host test in `firmware/core/src/state.rs`.
+
+- **Start supervision**: if the rotor produces no FG edge within `START_TIMEOUT_MS` (15 s) of
+  the ramp beginning, the start failed — permission never took, the rotor is jammed, or the
+  analog lock is latched — and the supervisor faults rather than commanding into a dead
+  drive. Not a TI requirement; without it a failed arm looks identical to a very slow start
+  forever.
+- **A windmilling rotor delays a start, it does not race it.** The pre-arm quiet rule and the
+  ISD/resync windmill-restart configuration read as being in tension; they are not. Firmware
+  waits for both channels to go quiet before arming, so a coasting rotor simply postpones the
+  start; ISD/resync covers the residual case where the rotor is still creeping below tach
+  resolution when the MCF is enabled. If the rotor never goes quiet within
+  `START_QUIET_TIMEOUT_MS` (120 s), that is a service condition, not a wait.
+- **Resuming mid-stop does not re-arm.** Turning the fan back on while it is ramping down is
+  a speed change, not a restart: permission has not been revoked yet, so the supervisor
+  returns to Running without the 10 s cost. A *reversal* is explicitly excluded — it must
+  reach a verified stop, because its whole purpose is to flip DIR from standstill.
+- **Speed resolution**: the SPEED-pin duty is written as the raw 11-bit value, not as whole
+  percent. Percent steps are 1.8 RPM against a range that starts at 35 RPM — too coarse to
+  tune. Duty is also clamped one below full scale, since an 11-bit register holds 0..=2047
+  and writing 2048 would wrap to zero (the fan stopping at maximum command).
+- **The watchdog heartbeat is conditional, not merely bit-banged.** The control loop
+  increments a beat counter on every completed poll and the heartbeat task refuses to toggle
+  unless it advanced. A bit-banged-but-unconditional toggle would still feed the watchdog
+  through a hung control loop, which is the exact failure the watchdog exists to catch.
+
 ## Independent limits
 
 - Qualification target user range: 35–170 RPM. Test 30, 35, and 40 RPM; release the minimum

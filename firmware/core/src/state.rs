@@ -267,7 +267,9 @@ impl Supervisor {
             FanState::IdleOff => self.poll_idle(now, &mut actions),
             FanState::Starting => self.poll_starting(now, dt, &mut actions),
             FanState::Running => self.poll_running(now, dt, &mut actions),
-            FanState::Stopping | FanState::Reversing => self.poll_winding_down(now, dt, &mut actions),
+            FanState::Stopping | FanState::Reversing => {
+                self.poll_winding_down(now, dt, &mut actions)
+            }
             FanState::Fault => unreachable!("handled above"),
         }
 
@@ -594,7 +596,10 @@ mod tests {
         bench.supervisor.command(Command::On);
         bench.run_ms(config::SAFE_BOOT_HOLD_MS - Bench::TICK_MS);
         assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
-        assert!(!bench.saw(Action::ArmPulse), "armed during the safe-boot hold");
+        assert!(
+            !bench.saw(Action::ArmPulse),
+            "armed during the safe-boot hold"
+        );
     }
 
     #[test]
@@ -637,7 +642,10 @@ mod tests {
         bench.supervisor.command(Command::On);
         bench.run_ms(20_000);
         assert_eq!(bench.supervisor.state(), FanState::IdleOff);
-        assert!(!bench.saw(Action::ArmPulse), "armed against a spinning rotor");
+        assert!(
+            !bench.saw(Action::ArmPulse),
+            "armed against a spinning rotor"
+        );
 
         bench.rotor = MilliRpm::ZERO;
         bench.run_until(config::STOPPED_QUIET_MS + 1_000, "Starting", |s| {
@@ -676,7 +684,9 @@ mod tests {
     fn the_ramp_rate_is_honoured_from_a_standing_start() {
         let mut bench = Bench::new();
         bench.boot();
-        bench.supervisor.command(Command::SetSpeed(MilliRpm::from_rpm(60)));
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(60)));
         bench.run_until(120_000, "60 RPM", |s| {
             s.commanded() == MilliRpm::from_rpm(60)
         });
@@ -745,7 +755,10 @@ mod tests {
         bench.supervisor.command(Command::On);
         bench.tick();
         assert_eq!(bench.supervisor.state(), FanState::Running);
-        assert!(!bench.saw(Action::ArmPulse), "re-armed a still-permitted drive");
+        assert!(
+            !bench.saw(Action::ArmPulse),
+            "re-armed a still-permitted drive"
+        );
     }
 
     #[test]
@@ -755,7 +768,9 @@ mod tests {
         bench.run_at(40);
         bench.take_log();
 
-        bench.supervisor.command(Command::SetDirection(Direction::Reverse));
+        bench
+            .supervisor
+            .command(Command::SetDirection(Direction::Reverse));
         bench.tick();
         assert_eq!(bench.supervisor.state(), FanState::Reversing);
         assert_eq!(
@@ -780,7 +795,10 @@ mod tests {
             .iter()
             .position(|a| *a == Action::ArmPulse)
             .expect("permission was never re-armed");
-        assert!(clear_at < dir_at, "DIR changed before permission was revoked");
+        assert!(
+            clear_at < dir_at,
+            "DIR changed before permission was revoked"
+        );
         assert!(dir_at < arm_at, "re-armed before DIR was set");
     }
 
@@ -789,7 +807,9 @@ mod tests {
         let mut bench = Bench::new();
         bench.boot();
         bench.run_at(40);
-        bench.supervisor.command(Command::SetDirection(Direction::Reverse));
+        bench
+            .supervisor
+            .command(Command::SetDirection(Direction::Reverse));
         bench.tick();
         assert_eq!(bench.supervisor.state(), FanState::Reversing);
 
@@ -820,7 +840,10 @@ mod tests {
         bench.inputs.mcf_fault = false;
         bench.run_ms(60_000);
         assert_eq!(bench.supervisor.state(), FanState::Fault);
-        assert!(!bench.saw(Action::ClearMcfFault), "cleared without a command");
+        assert!(
+            !bench.saw(Action::ClearMcfFault),
+            "cleared without a command"
+        );
 
         bench.supervisor.command(Command::Off);
         bench.tick();

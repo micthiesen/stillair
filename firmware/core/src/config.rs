@@ -79,3 +79,10 @@ pub const SPEED_CARRIER_HZ: u32 = 200;
 /// Window over which FG pulses are integrated into a speed estimate. At the 35 RPM
 /// target this is ~12 FG pulses, enough for a stable reading.
 pub const SPEED_ESTIMATE_WINDOW_MS: u64 = 1_000;
+
+// The layered-limit invariant, checked when the crate compiles rather than trusted: the
+// user maximum sits under the MCF's stored ceiling, which sits under the analog trip. Any
+// edit that inverts them fails the build instead of quietly removing a layer.
+const _: () = assert!(RPM_USER_MIN_TARGET < RPM_USER_MAX);
+const _: () = assert!(RPM_USER_MAX < RPM_MCF_LIMIT);
+const _: () = assert!(RPM_MCF_LIMIT < RPM_ANALOG_TRIP);

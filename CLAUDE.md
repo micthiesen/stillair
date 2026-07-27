@@ -13,14 +13,24 @@ open next step with `/next`.
 
 ## Quick reference
 
+`firmware/` is two crates on purpose. `stillair-core` holds the whole behavioral contract as
+sans-I/O logic with no esp-\* dependencies, so it builds and tests on the host; `firmware/app`
+is the ESP32-C6 binary and is its own workspace with its own target.
+
 ```bash
-cd firmware
-cargo build            # target/runner come from .cargo/config.toml
+cd firmware            # host workspace: the supervisor contract
+cargo test             # the tests that can actually fail for a behavioral reason
+cargo fmt && cargo clippy --all-targets
+
+cd firmware/app        # the C6 binary: target/runner from app/.cargo/config.toml
+cargo build
 cargo run              # flash + monitor via espflash (needs the board)
 ```
 
-**Always run `cargo fmt && cargo clippy && cargo build` (in `firmware/`) after firmware
-changes.** There are no tests yet; add them when logic appears.
+**After firmware changes run `cargo fmt && cargo clippy --all-targets && cargo test` in
+`firmware/`, and `cargo fmt && cargo clippy --all-targets && cargo build` in `firmware/app/`.**
+New behavior belongs in `stillair-core` with a test; `app/` should stay thin enough that
+nothing in it needs one.
 
 ## Always commit and push
 
@@ -40,7 +50,8 @@ This overrides the global draft-PR workflow.
 - `cad/` — fabrication outputs (DXF/STEP/print files) exported from OnShape when parts near
   release. The OnShape model itself is not in the repo.
 - `pcb/` — KiCad project for the 78 × 58 mm V1/V2 controller board (not started).
-- `firmware/` — Rust `no_std` ESP32-C6 supervisor firmware.
+- `firmware/` — Rust `no_std` supervisor firmware: `core/` (host-testable contract) and
+  `app/` (ESP32-C6 binary).
 
 ## Design invariants
 
@@ -73,13 +84,19 @@ Keep these properties when changing anything; they come from the safety architec
   overlay and document the mechanism here.
 - Strong types (enums per state, no boolean flags), no debug leftovers, small focused
   modules. Format with plain `cargo fmt`; lint with `cargo clippy`.
+- **Behavior goes in `stillair-core`, wiring goes in `app/`.** The core is sans-I/O: it takes
+  an injected `Millis` plus sampled `Inputs` and returns `Action`s, so every contract clause
+  is unit-testable without a board (including the 10 s holds). It must never gain an esp-\*
+  dependency — that independence is also what keeps it clear of the `[patch.crates-io]` churn
+  rs-matter-embassy will bring. Integer math only in the core: RV32IMAC has no FPU, so speeds
+  are milli-RPM `u32`, not `f32`.
 - When updating deps, the esp-* crates version-bump in lockstep (esp-hal / esp-rtos /
   esp-radio / esp-println / esp-backtrace / esp-alloc / esp-bootloader-esp-idf); check the
   MIGRATING docs in the esp-rs/esp-hal repo for breaking changes. Heads-up: esp-radio has a
   1.0.0 beta out; expect an API break when adopting it.
-- CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `clippy -D warnings`, and a
-  release build on every firmware push — clippy warnings fail the build there even though
-  they're soft locally.
+- CI (`.github/workflows/ci.yml`) has two jobs: `core` (fmt, clippy, **tests**) and `app`
+  (fmt, clippy, release build). Clippy warnings fail the build there even though they're soft
+  locally.
 
 ## Project knowledge lives in the repo, not personal memory
 

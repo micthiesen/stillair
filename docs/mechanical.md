@@ -108,7 +108,9 @@ Two secondary load paths:
 
 1. **Central catcher** (SP-100 + KD-100) protects against GL100 bearing/rotor retention
    failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z196.7 shoulder, M12
-   lower thread, Ø50 × 4 mm 316 catcher disk, castellated nut, and cotter. The spindle passes
+   lower thread, Ø50 × 4 mm 316 catcher disk, castellated nut, and cotter. The flange carries
+   two 30.0 mm across-flats keyed into a matching double-D pocket in MP-100, so the nut
+   torques from below with no counter-hold. The spindle passes
    through the GL100 Ø30 bore without normal contact (Ø20.5 hub aperture gives 2.25 mm radial
    gap per side; 2.5 ±0.5 mm axial gap to the disk). The M4 hub screws are 0.1–0.2 mm
    subflush; verify ≥2.0 mm worst-case clearance to every rotating surface. Static proof to

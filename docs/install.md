@@ -40,8 +40,9 @@ Titen HDs are through-fixture fasteners — the plate and anchors go up together
 head + washer clamps the plate; there is no set-stud-first step as with wedge anchors):
 
 1. **Bench-assemble the plate unit**: SP-100 spindle into its recess (opens toward the
-   ceiling — cannot be added later) and the three ST-100 standoffs torqued via their
-   ceiling-face M6 flat-heads (also inaccessible later), plus hard spacers. ~3 kg unit.
+   ceiling — cannot be added later), clocking its flange flats into the plate's double-D
+   pocket; and the three ST-100 standoffs torqued via their ceiling-face M6 flat-heads (also
+   inaccessible later), plus hard spacers. ~3 kg unit.
 2. Mark the drill spots via the plate or a template (the 11 × 20 slots absorb ±4–5 mm),
    drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 in a rotary
    hammer (SDS-plus; bit nominal matches the anchor — never substitute a 10 mm metric bit,
@@ -66,7 +67,9 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    plate).
 4. Stack from below: carrier (motor pre-bolted, wires through the window) onto the
    standoffs (M6 × 20 + wedge washers), hub + rotor onto the motor face, KD-100 +
-   castellated nut + cotter onto the spindle, then electronics and housing. Service
+   castellated nut + cotter onto the spindle (no counter-hold needed — the double-D pocket
+   keys the spindle; rotate the *nut* to align a castellation with the cotter hole), then
+   electronics and housing. Service
    reverses this from below; anchors are never touched.
 
 ## Sources

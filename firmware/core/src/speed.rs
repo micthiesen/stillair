@@ -98,14 +98,17 @@ pub fn milli_rpm_from_pulses(pulses: u32, window_ms: u64, pulses_per_rev: u32) -
 
 /// A rate-limited approach to a target speed.
 ///
-/// Accumulates elapsed time rather than converting each tick independently, so the ramp
-/// rate is honoured exactly regardless of how coarsely or irregularly the control loop
-/// polls — a 10 ms tick at 1.5 RPM/s would otherwise truncate to zero movement forever.
+/// Accumulates *travel* rather than converting each tick independently, so the ramp rate
+/// is honoured exactly regardless of how coarsely or irregularly the control loop polls: a
+/// 10 ms tick at 1.5 RPM/s would otherwise truncate to zero movement forever, and
+/// accumulating elapsed time instead loses a sub-millisecond remainder on every step,
+/// which compounds into a ramp that runs measurably fast.
 #[derive(Debug, Clone, Copy)]
 pub struct Ramp {
     current: MilliRpm,
     target: MilliRpm,
-    residual_ms: u64,
+    /// Thousandths of a milli-RPM still owed, carried between steps.
+    owed: u64,
 }
 
 impl Ramp {
@@ -113,7 +116,7 @@ impl Ramp {
         Self {
             current: MilliRpm::ZERO,
             target: MilliRpm::ZERO,
-            residual_ms: 0,
+            owed: 0,
         }
     }
 
@@ -137,24 +140,25 @@ impl Ramp {
     pub fn reset(&mut self) {
         self.current = MilliRpm::ZERO;
         self.target = MilliRpm::ZERO;
-        self.residual_ms = 0;
+        self.owed = 0;
     }
 
     /// Advance by `dt_ms` and return the new commanded speed.
     pub fn step(&mut self, dt_ms: u64) -> MilliRpm {
         if self.at_target() {
-            self.residual_ms = 0;
+            self.owed = 0;
             return self.current;
         }
-        self.residual_ms = self.residual_ms.saturating_add(dt_ms);
-        let step = (self.residual_ms * u64::from(config::RAMP_MILLI_RPM_PER_S)) / 1_000;
+        // `dt_ms × rate` is in thousandths of a milli-RPM. Emit the whole part and carry
+        // the remainder, so no fraction of the ramp is ever rounded away.
+        self.owed = self
+            .owed
+            .saturating_add(dt_ms.saturating_mul(u64::from(config::RAMP_MILLI_RPM_PER_S)));
+        let step = self.owed / 1_000;
         if step == 0 {
             return self.current;
         }
-        // Consume only the time the emitted step actually paid for, so truncation
-        // accumulates instead of being discarded.
-        let consumed = (step * 1_000) / u64::from(config::RAMP_MILLI_RPM_PER_S);
-        self.residual_ms = self.residual_ms.saturating_sub(consumed);
+        self.owed %= 1_000;
 
         let step = step.min(u64::from(u32::MAX)) as u32;
         self.current = if self.current < self.target {

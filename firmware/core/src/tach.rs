@@ -146,7 +146,10 @@ mod tests {
     fn silence_on_both_channels_is_verified_stopped() {
         let mut now = Millis::ZERO;
         let tach = Tach::new(0, 0, now);
-        assert!(!tach.is_quiet(now), "quiet cannot be true the instant we look");
+        assert!(
+            !tach.is_quiet(now),
+            "quiet cannot be true the instant we look"
+        );
         now = now.plus_ms(config::STOPPED_QUIET_MS - 1);
         assert!(!tach.is_quiet(now));
         now = now.plus_ms(1);

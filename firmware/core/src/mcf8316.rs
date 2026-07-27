@@ -11,7 +11,6 @@
 //! the bus stays abstract until then: [`RegisterBus`] speaks addresses and values, so
 //! everything built on top of it is already testable.
 
-use crate::config;
 use crate::speed::MilliRpm;
 
 /// Provisional register seeds (measured values win — see docs/controls.md).
@@ -44,7 +43,8 @@ pub fn max_speed_to_milli_rpm(max_speed: u16, pole_pairs: u32) -> MilliRpm {
 
 /// Inverse of [`max_speed_to_milli_rpm`], for deriving the register value from a limit.
 pub fn milli_rpm_to_max_speed(rpm: MilliRpm, pole_pairs: u32) -> u16 {
-    let numerator = u64::from(rpm.0) * u64::from(MAX_SPEED_PER_ELECTRICAL_HZ) * u64::from(pole_pairs);
+    let numerator =
+        u64::from(rpm.0) * u64::from(MAX_SPEED_PER_ELECTRICAL_HZ) * u64::from(pole_pairs);
     let denominator = 60 * 1_000;
     (numerator / denominator).min(u64::from(u16::MAX)) as u16
 }
@@ -71,6 +71,7 @@ pub trait RegisterBus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config;
 
     #[test]
     fn the_seeded_max_speed_is_the_documented_180_rpm_ceiling() {
@@ -84,13 +85,6 @@ mod tests {
         let register = milli_rpm_to_max_speed(limit, config::POLE_PAIRS);
         assert_eq!(register, seeds::MAX_SPEED);
         assert_eq!(max_speed_to_milli_rpm(register, config::POLE_PAIRS), limit);
-    }
-
-    #[test]
-    fn the_stored_ceiling_sits_between_the_user_max_and_the_analog_trip() {
-        // The layered-limit invariant, asserted rather than assumed.
-        assert!(config::RPM_USER_MAX < config::RPM_MCF_LIMIT);
-        assert!(config::RPM_MCF_LIMIT < config::RPM_ANALOG_TRIP);
     }
 
     #[test]
