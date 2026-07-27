@@ -74,11 +74,13 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    B212.15 in a rotary hammer (SDS-plus; bit nominal matches the anchor — never substitute
    a 10 mm metric bit, the thread engagement assumes ANSI tolerance), depth-stopped at
    ~75 mm (primaries) / ~95–100 mm (tether), then brush/blow clean per Simpson's
-   instructions. Tooling (2026-07): bit = Bosch HC4C2061 SDS-Plus Bulldog 3/8 × 4 × 6 in
-   (~$11, ANSI-marked, 101 mm usable — enough for all holes); drill = **rented SDS-plus
-   rotary hammer** (an impact driver cannot drill concrete — it has no axial percussion —
-   but the owner's M12 impact driver is the right tool for *driving* the anchors, via a
-   9/16 in socket).
+   instructions. Tooling (2026-07): drill = the owner's **M12 Fuel hammer drill (3404)** in
+   hammer mode with a **straight-shank** ANSI B212.15 carbide percussion bit — Makita
+   B-68812 3/8 × 6 in (verify ANSI marking and ≥100 mm flute length on arrival; SDS bits do
+   not fit a 3-jaw chuck). Expect slow going in tower slab: peck-drill to clear dust and
+   cool the tip; if a hole barely progresses, rent an SDS-plus rotary hammer instead of
+   forcing it. The M12 impact driver (no axial percussion — cannot drill) **drives** the
+   anchors via a 9/16 in socket.
 3. Offer up the plate unit; drive both primaries through washer + slot (socket/impact).
    **Length/stack budget**: the 3 in screws have 12.7 mm of fixture budget above the
    63.5 mm minimum embedment — plate 6 mm leaves ≤6.7 mm for washer + spacers combined.
