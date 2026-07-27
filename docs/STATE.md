@@ -37,7 +37,7 @@ redirected to the firmware/harness program at owner request).
   program is all of the firmware plus a motor-tuning/telemetry harness, built out *before*
   the V1 board exists and driven by Claude Code once it does. Phases: **A** core split
   (done) → **B** full state machine → **C** tuning harness → **D** rs-matter → bring-up.
-- **Phase A landed (2026-07-27).** `firmware/` is now two crates: `stillair-core`
+- **Phases A and B landed (2026-07-27).** `firmware/` is now two crates: `stillair-core`
   (`no_std`, zero esp-\* deps, sans-I/O — takes an injected `Millis` plus sampled `Inputs`,
   returns `Action`s) and `firmware/app` (the C6 binary, its own workspace, its own target).
   The supervisor state machine is real, not a stub: all seven states, the permission
@@ -46,7 +46,12 @@ redirected to the firmware/harness program at owner request).
   `core` job (fmt + clippy + **tests**) alongside `app` (fmt + clippy + release build).
   Console framing decided: everything on USB-serial-JTAG, protocol lines are `@`-prefixed
   newline-delimited JSON, one mutexed writer so logs cannot interleave mid-line.
-- **Five reviewers found real bugs in phase A, all fixed**: `duty_for` returned full scale
+- **Phase B**: the MCF8316D I²C wire format (derived from datasheet SLLSFX9A §7.6.2 and app
+  note SLLA662, with tests pinned byte-for-byte to TI's published example packets), a real
+  I²C driver with CRC verified on every read, decoded fault-status reporting from 0xE0/0xE2,
+  and the interrupt-executor split — control loop, heartbeat, and tach counters at
+  Priority3, diagnostics and future Matter tasks below them. **85 host tests.**
+- **Reviewers found real bugs in both phases, all fixed**: `duty_for` returned full scale
   at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
   have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
   itself manufactures, and `set_released_min` could panic the control loop via inverted
@@ -55,20 +60,25 @@ redirected to the firmware/harness program at owner request).
 
 ## Next
 
-**Phase B: finish the state machine and the MCF register path.** Two strands. (1) Every
-remaining row of [controls.md](controls.md) > "Failure behavior" gets implemented and
-tested — I²C hang/9-clock recovery, MIN_VM undervoltage while running (DRV-09), thermal
-OTW/TSD, ESP-reboot-while-powered. (2) The MCF8316D 24-bit control word, which phase A
-deliberately left unimplemented rather than guessed: `RegisterBus` is abstract today, and
-until it is real, **fault recovery does not work end-to-end** (`ClearMcfFault` is a log
-line, so a latched MCF fault survives the supervisor's clear and the restart fails safe via
-the 15 s `NoRotation` timeout). Verify the encoding against the datasheet directly — a
-wrong bit position writes garbage into a motor controller. Not hardware-gated.
+**Phase C: the tuning + telemetry harness.** Three parts, in this order.
 
-Also in phase B, before Wi-Fi exists: move the control loop and heartbeat onto a
-higher-priority interrupt executor. It changes nothing today and must be structural *before*
-Matter tasks are spawned, or a hung network task starves the heartbeat and turns network
-loss into a watchdog stop — the exact inversion of the contract.
+1. **Device console** on USB-serial-JTAG. Protocol lines are `@`-prefixed newline-delimited
+   JSON; human log lines never start with `@`, so a host tool parses `@` lines and passes the
+   rest through. All output must funnel through one mutexed writer or a log from another task
+   will interleave mid-line. Commands: `reg read/write`, `cfg apply`, `run <rpm>`, `stop`,
+   `dir`, `state`, `stream on <hz>` emitting CSV telemetry (t, commanded, FG rpm, Hall rpm,
+   state, fault, duty). Runs on the **thread-mode** executor, never on `control`.
+2. **Host CLI** (`tools/stillair`) sharing `stillair-core` for the protocol and register
+   encoding, with one subcommand per `testing/test-matrix.csv` row emitting machine-readable
+   pass/fail. This is the part that makes the harness Claude-Code-drivable.
+3. **Simulator** implementing the same boundary so the whole loop runs with no board.
+
+Also still open from phase B, and worth doing first because the console's most useful command
+depends on it: **apply and verify the initial MCF8316D configuration at boot** (the register
+set under "Initial MCF8316D configuration"). Until that exists, SafeBoot's "stored
+configuration verified" clause is aspirational.
+
+**Caveat to carry forward**: a simulator validates the harness, never the sensorless tuning.
 
 ## Candidates Not Chosen
 
