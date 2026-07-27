@@ -12,26 +12,53 @@ By-law 5563 — researched 2026-07; uncertainty is marked inline.
 Demand per primary anchor (two on 130 mm centers, from the design envelope of 1.25 kN
 vertical / 0.30 kN lateral / 60 N·m overturning / 8 N·m torque): ~1.09 kN tension,
 ~0.21 kN shear. True sustained dead tension is only ~25–40 N per anchor for a 5–8 kg
-assembly. Tether path requirement: ≥4.5 kN. All capacities below are design strengths in
-**cracked concrete at f'c 2500 psi** — the correct conservative assumption for a suspended
-slab soffit.
+assembly. Tether requirement: the calculated dynamic catch peak with ≥2× margin (order
+1–2 kN for the ~4–5 kg retained mass over 15–20 mm slack — see parts.md; the earlier
+"≥4.5 kN" was a dossier default, kept only as a free floor for the cable/fittings). All
+capacities below are design strengths in **cracked concrete at f'c 2500 psi** — the correct
+conservative assumption for a suspended slab soffit — from ICC-ES **ESR-2713** (Simpson
+Titen HD), which recognizes all these diameters for seismic SDC A–F.
 
-- **Primary anchors (selected candidate): Hilti KB-TZ2 3/8 in stainless, hef 2 in**
-  (hnom 2-1/2 in, ~70 mm hole). Design tension 8.6 kN; with the ~0.92 group factor at
-  130 mm spacing (below scr = 152 mm), **~7.9 kN vs 1.09 kN demand ≈ 7× margin** (shear
-  ~40×; still ~5× with the 0.75 seismic factor). Min slab 102 mm. Install torque 41 N·m.
-  Use heavy flat washers over the plate's 11 × 20 mm slots. No sustained-load or overhead
-  penalty applies to wedge anchors (that 0.55 factor is adhesive-bond-specific).
-- **Tether anchor: KB-TZ2 3/8 in at hef 2-1/2 in** (9.7 kN, 2.2× over 4.5 kN; needs
-  ≥127 mm slab) or hef 2 in (8.6 kN, 1.9×) if thickness is marginal. Keep ≥190 mm from the
-  primaries to avoid group interaction. Terminate in a forged shoulder eyebolt or rated eye
-  nut (never a bent-wire eye); proof-test in place per the existing test plan.
-- **Rejected alternatives**: KH-EZ/HUS-EZ screw anchors (ESR permits loosening max one turn
-  — not actually removable/reinstallable, and shallow-embedment cracked pullout is too weak
-  for the tether); HIT-HY 200 adhesive (approved overhead, but overhead *sustained* tension
-  triggers continuous special inspection, certified installers, the 0.55 sustained-bond
-  factor, and piston-plug injection — massive procedural overkill for a 60 N sustained
-  load; fallback only if scanning forces unusual geometry).
+Selection revised 2026-07 after owner cost research: Hilti KB-TZ2 was technically fine
+(~7× margin) but retail-absurd (pack pricing ~$2000); Simpson Titen HD screw anchors carry
+equivalent code recognition at ~$1–3/anchor. The owner's proposed 1/4 × 1-7/8 in
+(THDB25178H) was rejected on embedment arithmetic: through the 6 mm plate it reaches
+1.639 in against a 1.625 in ESR minimum (0.36 mm margin), and any hard spacer puts it
+below minimum — outside recognized capacity entirely.
+
+- **Primary anchors (selected): 2× Simpson Titen HD 3/8 × 3 in (`THD37300H`)** — design
+  tension 3.57 kN cracked (pullout-governed) vs 1.09 kN demand = **3.3× margin**; 70 mm
+  drilled hole; min slab 102 mm; 130 mm centers clear the 76 mm minimum spacing; reaches
+  full embedment through plate + 3 mm spacer with 3.7 mm to spare. Heavy flat washers over
+  the 11 × 20 mm slots. Install per Simpson's instructions (drill per ESR, socket/impact
+  drive — screw anchors have no set torque like wedge anchors). No sustained-load or
+  overhead penalty applies (the ACI 0.55 factor is adhesive-bond-specific).
+- **Tether anchor (default): Titen HD 3/8 × 4 in (`THD37400H`)** — 7.81 kN, covering both
+  load bases unconditionally (1.74× over even the legacy 4.5 kN floor); 89 mm hole; min
+  slab 127 mm. **Simplification path**: if the calculated/tested catch peak is ≤ ~1.7 kN
+  (likely per first principles), a third `THD37300H` (3.57 kN, ≥2× margin) covers it and
+  all three anchors become one part at one 70 mm hole depth. The shallowest
+  technically-passing option (1/4 × 3 in, 67 mm hole, 5.51 kN) is deliberately not chosen:
+  the single fall-arrest anchor is the wrong place for the catalog's smallest diameter to
+  save 22 mm of hole depth. Keep ≥190 mm from the primaries; terminate in a forged
+  shoulder eyebolt or rated eye nut (never a bent-wire eye); proof-test in place.
+- **Service rule**: Titen HDs are torqued once and never fully removed (ESR-2713 §4.3
+  permits a one-turn backout only; screw-formed concrete threads are a consumable
+  interface). The design already services at the carrier-to-standoff M6 joint from below —
+  the anchors and plate stay on the ceiling.
+- **Scope caveats**: ESR-2713 formally excludes shock/impact loading, so the tether's
+  arrest role technically outruns the paperwork — accepted on the static margins plus the
+  mandated off-ceiling dynamic catch test. The ESR is a US (ACI 318-19) document;
+  CSA A23.3 Annex D is methodologically near-identical, but a BC engineer should cite the
+  Canadian evaluation reference if a stamped submission is ever needed.
+- **Rejected alternatives**: HIT-HY 200 adhesive (overhead *sustained* tension triggers
+  continuous special inspection, certified installers, the 0.55 sustained-bond factor, and
+  piston-plug injection — overkill for a 60 N sustained load); Hilti KB-TZ2 wedge anchors
+  remain a technically sound fallback if Titen HD availability changes (wedge studs also
+  permit unlimited plate removal via the nuts, the one capability Titen HD lacks).
+- **Purchasing** (amazon.ca 2026-07; Canadian big-box doesn't stock online, no singles
+  exist): `THD37300H` 50-pack ≈ $60–66 CAD; `THD37400H` 50-pack ≈ $62 CAD. Total ≈ $60–128
+  for 3 anchors used.
 
 ## Pre-drill verification checklist (Gate 04)
 
@@ -46,7 +73,9 @@ slab soffit.
 3. **Scan deliverables**: slab thickness at the mount point; tendon/rebar positions with
    marked keep-outs; embedded electrical conduit (common in slab soffits); confirmation of
    solid slab.
-4. **Thickness vs anchor**: ≥102 mm for hef 2 in; ≥127 mm for hef 2-1/2 in.
+4. **Thickness vs anchor**: ≥102 mm for the 3/8 × 3 in primaries; ≥127 mm for the
+   3/8 × 4 in tether (drops to 102 mm if the simplification path applies). Drilled hole
+   depths for tendon clearance: 70 mm (primaries), 89 mm (deep tether).
 5. **Existing bolts**: identify but do not trust or reuse — type/embedment/condition are
    unknowable. Install new anchors offset from abandoned holes (rule of thumb ≥ one
    embedment depth, or fill old holes with high-strength repair mortar first; judgment rule,
@@ -54,8 +83,9 @@ slab soffit.
 6. **Rebar hit (non-PT)**: relocate the hole rather than cut. A PT tendon strike is the
    non-negotiable hazard — never drill an unscanned PT-suspect slab.
 7. Keep the cracked-concrete assumption for final selection.
-8. **Installation QA**: hammer-drill per the MPII, clean holes, torque-wrench to 41 N·m,
-   then the planned proof loads.
+8. **Installation QA**: hammer-drill to the ESR hole spec, clean holes, drive per Simpson's
+   installation instructions (socket/impact; no torque-set), never back out more than one
+   turn, then the planned proof loads.
 
 ## Approvals (Gate 06)
 

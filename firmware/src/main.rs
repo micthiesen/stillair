@@ -5,7 +5,9 @@
 //! it never switches motor phases. The full behavioral contract lives in
 //! `docs/controls.md`; the board pinout lives in `docs/electrical.md` (SCH-04).
 //!
-//! GPIO map (verified against the ESP32-C6-MINI-1 datasheet; no strap pins used):
+//! GPIO map (verified against the ESP32-C6-MINI-1 datasheet; GPIO15 is the only strap
+//! pin used — its JTAG-select strap is ignored with default eFuses and the external
+//! pull-up satisfies its no-float requirement):
 //!
 //! | GPIO    | Signal                       |
 //! |---------|------------------------------|

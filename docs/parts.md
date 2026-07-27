@@ -93,8 +93,10 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 - Bottom: **M6 × 20** A4-80 socket screws through MC-100 with wedge-locking washers
   (lengthened from M6 × 18 in the 2026-07 review: socket length is measured under the head,
   and a wedge-lock *pair* is ~3.5 mm, leaving only ~6.5 mm engagement at 18 mm — below the
-  1.5×D guideline for aluminum threads; 20 mm restores ~8.5–10 mm depending on the washer
-  stack, which must be stated on the drawing).
+  1.5×D guideline for aluminum threads; 20 mm restores ~8.5 mm with the pair, which is
+  **accepted at 1.4×D** given the tiny joint loads and the joint-analysis torque, with the
+  actual washer-stack thickness stated on the drawing; washer stacks ≤3 mm reach the full
+  9 mm guideline).
 
 ## MC-100 stationary motor carrier
 
@@ -266,7 +268,13 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 ## Tether and design loads
 
 - Separate anchor below the MP-100 tether clearance.
-- Complete tether path rated at least 4.5 kN with 15–20 mm slack.
+- Complete tether path rated **at least the calculated dynamic catch peak with ≥2× margin**,
+  15–20 mm slack. Provenance note (2026-07): the earlier "≥4.5 kN" was a dossier default,
+  not a derived requirement — first-principles for the ~4–5 kg retained mass over 20 mm on
+  a stiff cable path gives a peak on the order of 1–2 kN (stiffness-dominated; compute from
+  measured slack and validate with the mandated dynamic catch test). 4.5 kN remains a
+  reasonable free floor for the cable/fittings (1/8 in 7×19 breaks at ~7.6 kN); the anchor
+  is sized against the calculated peak.
 - Lower thimble and rated fitting engage both MC-100 Ø8.5 holes.
 - The tether retains carrier, motor, hub, rotor, and housing if the plate or all standoffs
   fail. It must not terminate only on MP-100.
@@ -274,7 +282,7 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   reaction torque.
 - Credible controller-bypass runaway/load case: **270 RPM** (raised from 250 in the 2026-07
   review: the 60 W supply bounds terminal runaway at ~260–270 RPM via the N³ aero-power
-  law, and the analog trip only guarantees lock below 240 RPM for bounded ramps — see
+  law, and the analog trip only guarantees lock by ~245 RPM for bounded ramps — see
   electrical.md's two-tier trip claim).
 - Guarded rotor proof: 216 RPM, two minutes per direction. Do not conduct this test over the
   bed. Use an external guarded drive; if the installed drive must be used, a written

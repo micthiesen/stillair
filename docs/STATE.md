@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-27** (13-agent design review integrated; all confirmed fixes
-applied to the docs).
+Last updated: **2026-07-27** (13-agent review + adversarial fix-verification pass both
+integrated; anchors re-selected to Simpson Titen HD after owner cost research).
 
 ## Now
 
@@ -50,6 +50,18 @@ pull-ups, 22 µF module bulk, NTC/VBUS circuits). Order config and footprint sou
   rotating-surface confirmation and the axial-length tolerance measurement).
 - **Blade adapter filament qualification** — startable as soon as PPA-CF is ordered;
   longest non-motor-gated path.
+
+- **The fix-verification pass caught two defective fixes** before capture: the
+  reverse-polarity FET "correction" had inverted a correct circuit (reverted, with a
+  do-not-fix-again note in electrical.md SCH-01) and the delayed-`/PRE` RC values couldn't
+  meet their own delay claim (resized 100 kΩ/10 µF with corner math; TPS7A16 DELAY cut to
+  10 nF; glitch-immunity claim rewritten honestly). Plus: `SPEED_RANGE_SEL` = 1h added,
+  BAT54H qty 6, TACH-01B quantified. Lesson: review fixes need the same adversarial
+  verification as the original design.
+- **Anchors re-selected (owner-driven)**: Simpson Titen HD 3/8 × 3 primaries + 3/8 × 4
+  tether (~$120 total vs ~$2000 Hilti retail), full ESR-2713 basis in
+  [install.md](install.md); owner's 1/4 × 1-7/8 proposal rejected on embedment arithmetic;
+  tether load re-based from the dossier's 4.5 kN default to the calculated dynamic peak.
 
 ## Learned Recently
 

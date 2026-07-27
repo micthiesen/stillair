@@ -84,10 +84,15 @@ before the Micro-Fit contacts.
 
 Reverse-polarity protection with `DMP6023LE-13` (−60 V P-channel MOSFET):
 
-- **Source to `RAW24`, drain to `VM24`** (corrected 2026-07 review: the dossier had D/S
-  reversed, which forward-biases the 2 A-rated body diode through every power-up inrush into
-  the 940 µF bank; the standard orientation keeps inrush in the 28 mΩ channel and the body
-  diode reverse-biased in normal operation).
+- **Drain to `RAW24`, source to `VM24`** — the dossier's original orientation, which is the
+  canonical P-FET reverse-protection circuit (TI SLVA139 class). Review history: a first
+  review pass "corrected" this to source-at-input, claiming body-diode inrush stress; an
+  adversarial verification pass then proved that swap wrong and it was reverted. In the
+  correct orientation the body diode conducts only for the sub-millisecond until the cap
+  bank reaches ~3 V and the channel enhances (charge through the diode ≈ 3 mC, far inside
+  surge ratings), and under reverse polarity the diode blocks. In the swapped orientation
+  reverse current flows freely through the body diode — no protection at all. Do not
+  "fix" this again.
 - Gate to AGND through 10 kΩ; gate to source through 100 kΩ.
 - `MMSZ5242B` 12 V zener, cathode at source and anode at gate. The zener is load-bearing,
   not optional: without it the divider drives Vgs to ≈ −22 V, past the ±20 V absolute
@@ -261,9 +266,16 @@ U5 permission latch, `SN74LVC1G74DCTR`:
 - Q through 1 kΩ to a `2N7002K` gate with 100 kΩ gate-source pulldown; MOSFET source to AGND,
   drain to MCF DRVOFF; DRVOFF 4.7 kΩ pull-up to MCF AVDD.
 - Feed 3.3 V PGOOD, TPS3435 WDO, `OS_LOCK_OK`, `MCU_CLEAR_N`, and the manual-clear button
-  into `/CLR` through individual BAT54H diodes (anode at `/CLR`). `MCU_CLEAR_N` is an ESP
-  open-drain output with 10 kΩ pull-up: firmware can revoke permission but cannot override
-  any fault.
+  into the `/CLR` wired-OR node through individual BAT54H diodes — anodes at the wired-OR
+  node (which feeds the `SN74LVC1G17` buffer, not the `/CLR` pin directly), cathodes at
+  each active-low source. Six BAT54H total including U6's `/PRE` discharge diode.
+  `MCU_CLEAR_N` is an ESP open-drain output with 10 kΩ pull-up: firmware can revoke
+  permission but cannot override any fault.
+- U6's own `/CLR` node (the OVERSPEED_N / TACH_PGOOD_N wire-OR) is deliberately
+  **unbuffered** despite its slow ~µs edges: U6's CLK is tied low, so the clock-vs-async
+  race that motivates the U5 Schmitt cannot occur, and slow-edge glitching on an async
+  clear only re-asserts the state it is already entering. Documented waiver, not an
+  oversight.
 
 U6 persistent safety lock, second `SN74LVC1G74DCTR`:
 
@@ -273,11 +285,24 @@ U6 persistent safety lock, second `SN74LVC1G74DCTR`:
   PGOOD), PGOOD releases ~5.5 ms after the 3.3 V rail while `TACH_PGOOD_N` on `/CLR` stays
   asserted for the TPS7A16's deliberate 60–120 ms DELAY, so `/PRE` released first, the
   '1G74 latched Q low, and with CLK grounded nothing could ever set it again — the fan
-  could never arm, and every power cycle replayed the race. Fix: PGOOD → RC (10 kΩ pull-up,
-  22 µF, ≥300 ms, comfortably past worst-case TPS7A16 delay plus the 12 V ramp) →
-  `SN74LVC1G17` Schmitt buffer → `/PRE`, with a discharge diode back to PGOOD so power-down
-  still asserts preset promptly. The long RC also closes a second hole: a brief PGOOD
-  glitch can no longer complete the delay and silently erase a latched fault.
+  could never arm, and every power cycle replayed the race. Fix: PGOOD → RC (**100 kΩ
+  pull-up, 10 µF** — the values matter; a first-pass 10 kΩ/22 µF could only deliver
+  ~115–195 ms against the Schmitt VT+ corners and did not close the race at datasheet
+  corners) → `SN74LVC1G17` Schmitt buffer → `/PRE`, with a discharge diode (anode at the RC
+  node, cathode at PGOOD) so power-down re-asserts preset promptly. Corner math: charging
+  from the ~0.35 V clamp, delay = 0.55–1.1 s across the LVC1G17 VT+ range (1.6–2.1 V) —
+  dwarfed by the 10 s safe boot. On the other side, **reduce the TPS7A16 DELAY cap from
+  100 nF to 10 nF** (~12 ms typical): its I_DELAY spec has no minimum, so the slow corner
+  is formally unbounded, and margin comes from the ~50× ratio rather than a bounded
+  worst case. PCB-03D still tests the ordering on real hardware.
+- Glitch behavior, stated honestly (a first-pass claim of ~300 ms glitch immunity was
+  wrong): `/PRE` *asserts* at the start of a PGOOD dip via the discharge diode — the RC
+  delays release, not assertion — so any dip longer than the ~ms diode-discharge time
+  presets U6 healthy. Prompt power-down assert and long glitch immunity are mutually
+  exclusive in this topology. Accepted because a PGOOD dip also clears U5 through its own
+  diode and a fresh user command plus the 10 s hold are still required before any restart;
+  the residual (a mid-coast brownout erasing the overspeed latch after the rotor has slowed)
+  is documented rather than defended.
 - `/CLR` receives `OVERSPEED_N` and `TACH_PGOOD_N` as active-low wired fault sources (both
   verified open-collector/open-drain, so the direct wire-OR is valid; no diodes needed).
 - Q is `OS_LOCK_OK` and clears U5 when low.
