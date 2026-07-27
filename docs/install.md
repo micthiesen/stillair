@@ -56,9 +56,10 @@ below minimum — outside recognized capacity entirely.
   piston-plug injection — overkill for a 60 N sustained load); Hilti KB-TZ2 wedge anchors
   remain a technically sound fallback if Titen HD availability changes (wedge studs also
   permit unlimited plate removal via the nuts, the one capability Titen HD lacks).
-- **Purchasing** (amazon.ca 2026-07; Canadian big-box doesn't stock online, no singles
-  exist): `THD37300H` 50-pack ≈ $60–66 CAD; `THD37400H` 50-pack ≈ $62 CAD. Total ≈ $60–128
-  for 3 anchors used.
+- **Purchasing**: ordered 2026-07 as singles from ohcanadasupply.ca (~$1.44/$1.53 each,
+  3× THD37300H + 2× THD37400H including spares, ~$7.50 total — a fresh anchor per redrill,
+  never reuse a driven one). Big-box Canada doesn't stock it online; amazon.ca sells
+  50-packs (~$60) as the fallback source.
 
 ## Pre-drill verification checklist (Gate 04)
 
