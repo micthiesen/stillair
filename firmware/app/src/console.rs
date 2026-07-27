@@ -21,7 +21,7 @@ use embedded_io_async::Read;
 use esp_hal::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
-use stillair_core::console::{self, ParseError, Reply, Request, Telemetry};
+use stillair_core::console::{self, Reply, Request, Telemetry};
 use stillair_core::state::Command;
 
 use crate::mcf;
@@ -165,9 +165,4 @@ fn command(command: Command) {
 
 fn emit(reply: &Reply<'_>) {
     esp_println::println!("{}", reply.to_line());
-}
-
-/// Reports a parse failure without a request. Used by the transport for framing errors.
-pub fn reject(error: ParseError) {
-    emit(&Reply::Error(error.as_str()));
 }
