@@ -44,7 +44,6 @@ pull-ups, 22 µF module bulk, NTC/VBUS circuits). Order config and footprint sou
 
 - **Mount mockup + first metal** (MDF/printed plate-standoff-carrier mockup; order plate/
   rod/17-4PH stock; fab ST-100/SP-100/KD-100). Owner-driven, fully parallel with KiCad.
-- **Strata/slab paper trail + City email** ([install.md](install.md)). Cheap, long-lead.
 - **rs-matter devkit spike** (dev boards on hand; answers the AirflowDirection question).
 - **Motor release checks** when the GL100 arrives (now includes the pilot-register
   rotating-surface confirmation and the axial-length tolerance measurement).

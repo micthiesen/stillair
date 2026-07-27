@@ -57,12 +57,9 @@ undocumented assumption.
 6. **Installation approval** — any required permit, accepted certification mark, or field
    evaluation for a permanent custom appliance is resolved locally. *(Open gate.)*
 
-Install site for gates 4 and 6: **Vancouver, BC — 11-storey concrete condo built 2006**.
-Anchor selection (KB-TZ2 3/8 in stainless, ~7× margin), the pre-drill slab-verification
-checklist (treat the slab as post-tensioned until proven otherwise; the existing ceiling
-bolts are not load-rated evidence), and the approval path (strata approval required; no
-building/electrical permit expected; one confirming email to the City closes the
-product-approval question) are worked in [install.md](install.md).
+Anchor selection and mounting sequence are worked in [install.md](install.md). Slab
+verification and any required approvals are owner-tracked outside this repo; gates 4 and 6
+close when the anchors are physically installed and the fan is permanently mounted.
 
 ## Accepted deviations
 

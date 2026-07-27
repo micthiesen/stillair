@@ -18,9 +18,9 @@ the bed.
 4. **Assemble and bench prove** — build on a level fixture, measure runout, balance the
    rotor, proof-speed it behind a barrier, verify central capture, then complete every
    control and fault test.
-5. **Verify the slab and install** — resolve the permanent-installation approval path,
-   identify and scan the slab, select the anchors, install the independent tether, then
-   repeat limited-speed commissioning away from the bed.
+5. **Verify the slab and install** — anchor selection and mounting sequence are in
+   [install.md](install.md); repeat limited-speed commissioning away from the bed once
+   mounted.
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
