@@ -257,6 +257,42 @@ in `app/` is transport around it.
 - `pct <0-100>` on the console drives this same path, so a tuning script exercises the
   mapping Apple Home will use rather than only the RPM path that bypasses it.
 
+### Matter implementation notes (2026-07-27, from building it)
+
+The stack runs on the ESP32-C6 and commissions over BLE; `firmware/app/src/matter.rs` is the
+endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision to.
+
+- **rs-matter generates the FanControl cluster from the CSA's own normative IDL** (attribute
+  IDs, enums, TLV, the `ClusterHandler` trait) but ships no *handler* for it, because a handler
+  is device logic. So the hand-written handler the dossier planned was required — but only the
+  logic, not the encoding, which is a far smaller and safer job than it sounded.
+- **Advertised features are only what the fan is**: `AIRFLOW_DIRECTION` and nothing else.
+  `MULTI_SPEED` would add a second, coarser speed axis fighting the percentage one; `ROCKING`
+  and `WIND` are mechanisms this fan does not have; `STEP` is a stepped-remote idiom.
+  Advertising a feature that cannot be honoured is how a controller ends up sending commands
+  that silently do nothing.
+- **`PercentSetting` is the controller's state, `PercentCurrent` is the fan's.** The setting
+  must read back as written while the ramp is still minutes away from it, or the slider springs
+  back under the user's finger; the current value comes from the tachometer. `FanMode` On and
+  Auto carry no speed, so they report the supervisor's standing target rather than an invented
+  number. `Smart` (deprecated) is accepted as a synonym for Auto.
+- **Subscribers are refreshed from the handler's `run` hook**, which `rs-matter` drives for
+  every handler in the chain, at a 2 s cadence. Only a write bumps a cluster's data version, so
+  without this a controller would show the speed it asked for and never the speed reached.
+- **The bridge is non-blocking in both directions**: writes `try_send` into the same bounded
+  channel the tuning console uses, reads come from the telemetry snapshot. A wedged Matter task
+  cannot block the supervisor, and a wedged supervisor cannot block Matter — which is the
+  network-loss row of the failure table holding by construction rather than by care.
+- **Persistence is flash-backed** (`SeqMapKvBlobStore` into the first NVS partition, found by
+  reading the partition table rather than by a hardcoded offset), so a power cut does not demand
+  re-commissioning from Apple Home.
+- **No Identify cluster.** The Fan device type nominally mandates it and a ceiling fan has
+  nothing to flash; rs-matter's own examples omit it too. Revisit if a controller objects.
+- Test attestation credentials, so Apple Home shows "Uncertified Accessory" and adds it anyway.
+- Measured on the C6 at first boot: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
+  100 KB heap, 2.19 MB image (53% of the partition). `BUMP_SIZE` is the number to raise if the
+  stack panics during initialisation.
+
 ### Fault reporting and bus health (2026-07-27)
 
 - **A decoded status outranks the pins.** `nFAULT` and `ALARM` each say only "something"; the

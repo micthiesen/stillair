@@ -43,7 +43,7 @@ use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{channel, timer, LSGlobalClkSource, Ledc, LowSpeed};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
-use esp_hal::usb_serial_jtag::UsbSerialJtag;
+use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
 use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
 use stillair_core::config;
@@ -56,6 +56,7 @@ use stillair_core::time::Millis;
 
 mod board;
 mod console;
+mod matter;
 mod mcf;
 mod output;
 
@@ -95,8 +96,10 @@ async fn main(spawner: embassy_executor::Spawner) {
 
     let peripherals = esp_hal::init(esp_hal::Config::default());
 
-    // Heap is only needed once the radio (Wi-Fi / Matter) comes online.
-    esp_alloc::heap_allocator!(size: 72 * 1024);
+    // Sized for Wi-Fi + BLE coexistence plus the ~4 KB of x509 work rs-matter's attestation
+    // path allocates. The supervisor itself allocates nothing — everything on the control
+    // path is statically sized — so this whole heap belongs to the radio and Matter.
+    esp_alloc::heap_allocator!(size: 100 * 1024);
 
     let timg0 = TimerGroup::new(peripherals.TIMG0);
     let sw_int =
@@ -186,8 +189,18 @@ async fn main(spawner: embassy_executor::Spawner) {
     spawner.spawn(console::console_task(usb_rx).unwrap());
     spawner.spawn(console::stream_task().unwrap());
 
-    // TODO(phase C/D): Wi-Fi + Matter via rs-matter-embassy, and the tuning console —
-    // spawned on `spawner`, never on `control`.
+    // Matter runs to the end of `main`, which *is* the thread-mode executor's own task —
+    // below the control loop's Priority3 interrupt executor by construction. Everything the
+    // fan needs to stay safe has already been spawned above and keeps running regardless of
+    // what the network stack does, which is the network-loss row of the failure table.
+    matter::run(
+        peripherals.RNG,
+        peripherals.ADC1,
+        peripherals.WIFI,
+        peripherals.BT,
+        peripherals.FLASH,
+    )
+    .await;
 }
 
 /// Drives the fan state machine. All the decisions live in `stillair-core`; this loop only
@@ -229,6 +242,7 @@ async fn control_task(mut board: Board) {
             uptime_ms: now().0,
             state: supervisor.state(),
             fault: supervisor.fault(),
+            target: supervisor.target(),
             commanded: supervisor.commanded(),
             measured_fg: supervisor.measured(),
             measured_hall: supervisor.measured_hall(),

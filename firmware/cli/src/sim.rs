@@ -127,6 +127,7 @@ impl Simulator {
             uptime_ms: self.now.0,
             state: self.supervisor.state(),
             fault: self.supervisor.fault(),
+            target: self.supervisor.target(),
             commanded: self.supervisor.commanded(),
             measured_fg: self.supervisor.measured(),
             measured_hall: self.supervisor.measured_hall(),

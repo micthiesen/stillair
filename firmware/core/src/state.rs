@@ -246,6 +246,13 @@ impl Supervisor {
         self.ramp.current()
     }
 
+    /// The standing speed *setting* — what the user last asked for, which the ramp is on its
+    /// way to and which a bare `On` resumes. Distinct from [`Supervisor::commanded`] for
+    /// minutes at a time on a 1.5 RPM/s ramp, and from [`Supervisor::measured`] always.
+    pub const fn target(&self) -> MilliRpm {
+        self.desired.speed
+    }
+
     /// The measured rotor speed, for `PercentCurrent` and telemetry.
     pub const fn measured(&self) -> MilliRpm {
         self.tach.measured()

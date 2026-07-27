@@ -89,6 +89,14 @@ redirected to the firmware/harness program at owner request).
   confirmed `dropped: 0`. **The bare dev board cannot leave `SafeBoot`** (GPIO22 PGOOD floats
   low, and floating-means-bad is the correct fail-safe reading); jumpering is documented in
   [CLAUDE.md](../CLAUDE.md).
+- **Phase D landed (2026-07-27): Matter runs on the board.** `firmware/app/src/matter.rs` is
+  a hand-written FanControl (514) handler over the cluster shell rs-matter generates from the
+  CSA IDL, chained onto a Fan (0x002B) endpoint, with BLE commissioning, Wi-Fi/BLE coexistence,
+  and flash-backed persistence into the NVS partition. Flashed and verified on the C6: QR and
+  pairing code printed, BLE advertising, `BasicInformation::StartUp` emitted — **and the
+  supervisor console still answered a telemetry request while all of it ran**, which is the
+  executor split holding in practice rather than on paper. Implementation notes and the
+  measured memory numbers are in [controls.md](controls.md) > "Matter implementation notes".
 - **Reviewers found real bugs in every phase, all fixed**: `duty_for` returned full scale
   at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
   have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
@@ -98,12 +106,11 @@ redirected to the firmware/harness program at owner request).
 
 ## Next
 
-**Finish the rs-matter integration in `app/`.** The mapping half is done and tested in
-`stillair-core`; what remains is the transport: `EmbassyWifiMatterStack` on the **thread-mode**
-executor (never on `control`), a FanControl handler chained onto the endpoint, BLE
-commissioning with the QR to the console, and `SeqMapKvBlobStore` persistence so a reboot does
-not re-commission. See "Phase D findings" below for the pin table and the two blockers already
-cleared.
+**Commission the fan in Apple Home and see what it renders.** The firmware is built, flashed,
+and advertising; what is unknown is now a UI question rather than an engineering one: whether
+Apple Home surfaces `AirflowDirection` at all, and whether a Fan device type without an
+Identify cluster is accepted. Pair with the code the console prints at boot. If reverse does
+not appear, the fallback is a second On/Off endpoint (docs/controls.md > "Home integration").
 
 Then, once a real MCF8316D exists: **capture the golden image.** The gate is built and holds;
 `stillair --port … config capture` prints the table, and until it is filled in every frame
@@ -129,13 +136,13 @@ honestly reports `config: unverified`.
 - **The C6 Wi-Fi example builds clean on stable with `rustcrypto`** (52 s once deps are
   cached), so the toolchain question is closed and iteration is cheap.
 - rs-matter arrives via `rs-matter-stack` 0.1 from crates.io (not a git dep of its own).
-- **rs-matter 0.2.0 has no FanControl cluster and no Fan device type.** `src/dm/clusters/app/`
-  covers on_off, level_control, color_control, chime, camera and webrtc — nothing at 0x0202,
-  and `devices.rs` has no `DEV_TYPE_FAN`. `rs-matter-codegen` generates clusters from the
-  Matter IDL but is explicitly an internal build-time dependency, not a user-facing generator.
-  So the hand-written FanControl handler the dossier planned is **required**, not a
-  preference. `on_off.rs` is the template to follow: a `…Hooks` trait for device logic behind
-  a generated cluster shell.
+- **rs-matter ships no FanControl *handler*, but it does generate the cluster.** An early read
+  of `src/dm/clusters/app/` (on_off, level_control, colour, chime, camera) suggested cluster
+  514 was absent entirely; it is not. `rs-matter-codegen` runs over the CSA's normative
+  `controller-clusters` IDL at build time and emits **every** cluster in it, FanControl
+  included — attribute IDs, enums, TLV encoding, and a `ClusterHandler` trait to implement.
+  What is missing is only the device logic, which is exactly the part that should be
+  hand-written. `devices.rs` genuinely has no `DEV_TYPE_FAN`, so 0x002B is declared locally.
 - Shape to copy from `light_wifi.rs`: statically allocated `EmbassyWifiMatterStack<BUMP_SIZE,
   ()>` (~35–50 KB, `BUMP_SIZE` 20000, heap 100 KB), `EspWifiDriver::new(WIFI, BT)`,
   `stack.run_coex(...)` with an `EmptyHandler.chain(EpClMatcher…)` per cluster plus a

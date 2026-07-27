@@ -106,9 +106,13 @@ Keep these properties when changing anything; they come from the safety architec
 - Bare-metal esp-hal 1.1 stack (no esp-idf): `esp-rtos` + Embassy, `esp-radio` for Wi-Fi,
   `esp-println`/`log` for logging (`ESP_LOG` env), `esp-backtrace` panics. Pure Rust is the
   point — never pull in esp-idf or other large C SDKs.
-- Control plane is **Matter over Wi-Fi via rs-matter + rs-matter-embassy** (git deps; mirror
-  their examples' `[patch.crates-io]` pins; prefer `rustcrypto` over mbedtls). Details and
-  the Apple Home mapping: docs/controls.md > "Home integration".
+- Control plane is **Matter over Wi-Fi via rs-matter + rs-matter-embassy** (git dep). The
+  `[patch.crates-io]` table in `app/Cargo.toml` pins **every** esp-\* crate to one esp-hal git
+  rev, mirrored from rs-matter-embassy's own esp example — they share generated metadata, so
+  it is all-or-nothing, and updating means taking a newer rev from that example rather than
+  bumping one entry. `rustcrypto` (the default), never `mbedtls`: mbedtls drives CMake at a
+  riscv32 C cross-compiler and does not build on macOS at all. Details and the Apple Home
+  mapping: docs/controls.md > "Home integration" and "Matter implementation notes".
 - **Stable** Rust, target `riscv32imac-unknown-none-elf` (ESP32-C6 only — the
   ESP32-C6-MINI-1-H4 in the BOM; never other chips). Toolchain pinned in
   `firmware/rust-toolchain.toml`.

@@ -17,7 +17,7 @@ use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_sync::channel::Channel;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Read;
-use esp_hal::usb_serial_jtag::UsbSerialJtagRx;
+use esp_hal::usb::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
 use stillair_core::console::{self, ConfigOp, Reply, Request, Telemetry};
@@ -47,7 +47,7 @@ pub fn publish(telemetry: Telemetry) {
     TELEMETRY_READY.store(true, Ordering::Relaxed);
 }
 
-fn latest() -> Option<Telemetry> {
+pub fn latest() -> Option<Telemetry> {
     TELEMETRY.lock(|cell| cell.get())
 }
 

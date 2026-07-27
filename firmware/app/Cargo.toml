@@ -19,6 +19,22 @@ bench = false
 [dependencies]
 stillair-core = { path = "../core" }
 
+# Matter over Wi-Fi, with BLE commissioning. A git dependency because its crates.io release
+# is a placeholder; `rustcrypto` (the default) rather than `mbedtls` keeps the build pure
+# Rust, and is also the only backend that compiles without an ESP-IDF C cross-compiler.
+rs-matter-embassy = { git = "https://github.com/ivmarkov/rs-matter-embassy", features = [
+  "esp",
+  "log",
+  "embassy-net",
+] }
+# rs-matter pulls a few libc symbols in through its x509 path.
+tinyrlibc = { version = "0.5", default-features = false, features = [
+  "memchr",
+  "utoa",
+  "strtoul",
+] }
+esp-storage = { version = "0.9", default-features = false, features = ["esp32c6"] }
+
 log = { version = "0.4", default-features = false }
 esp-println = { version = "0.17", default-features = false, features = [
   "esp32c6",
@@ -47,10 +63,16 @@ esp-bootloader-esp-idf = { version = "0.5", default-features = false, features =
 ] }
 esp-alloc = { version = "0.10", default-features = false, features = [
   "global-allocator",
+  # C-compatible malloc/free. esp-radio's BLE half is a C blob and will not link without
+  # them; it is a default feature we had switched off.
+  "compat",
+  "esp32c6",
 ] }
 esp-radio = { version = "0.18", default-features = false, features = [
   "esp32c6",
   "wifi",
+  "ble",
+  "unstable",
 ] }
 
 embassy-executor = { version = "0.10", default-features = false }
@@ -64,6 +86,7 @@ embassy-net = { version = "0.9", default-features = false, features = [
 ] }
 
 embedded-hal = { version = "1.0", default-features = false }
+embassy-embedded-hal = { version = "0.6", default-features = false }
 embedded-io-async = { version = "0.7", default-features = false }
 portable-atomic = { version = "1", default-features = false }
 heapless = { version = "0.8", default-features = false }
@@ -80,3 +103,19 @@ opt-level = "z"
 # WiFi radio firmware requires optimization to function correctly.
 [profile.dev.package.esp-radio]
 opt-level = 3
+
+# Mirrored from rs-matter-embassy's `examples/esp/Cargo.toml` rather than invented. Its esp
+# integration is written against this unreleased esp-hal revision, and the published 1.1
+# crates do not carry the APIs it uses. Every esp-* crate has to move together — they share
+# generated metadata — so this table is all-or-nothing, and updating it means taking a newer
+# rev from that example, not bumping one entry.
+[patch.crates-io]
+esp-hal = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-rtos = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-alloc = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-backtrace = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-println = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-radio = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-storage = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-bootloader-esp-idf = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }
+esp-metadata-generated = { git = "https://github.com/esp-rs/esp-hal", rev = "10e48dd74837bae4be663a7d1825d12875363727" }

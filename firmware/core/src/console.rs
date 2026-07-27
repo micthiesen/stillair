@@ -217,6 +217,10 @@ pub struct Telemetry {
     pub uptime_ms: u64,
     pub state: FanState,
     pub fault: Option<FaultReason>,
+    /// The standing speed setting — what was asked for. The ramp is on its way to it, so on a
+    /// 1.5 RPM/s ramp this leads `commanded` by minutes; recording all three is what makes a
+    /// capture show whether a slow arrival was the ramp or the motor.
+    pub target: MilliRpm,
     /// What the supervisor is commanding, after ramping and clamping.
     pub commanded: MilliRpm,
     /// Measured from FG, at 20 pulses/rev.
@@ -257,11 +261,12 @@ impl Telemetry {
         let _ = write!(
             line,
             "{PREFIX}{{\"type\":\"telemetry\",\"t\":{},\"state\":\"{}\",\"fault\":{},\
-             \"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\"dir\":\"{}\",\
-             \"min_mrpm\":{},\"config\":\"{}\",\"dropped\":{}}}",
+             \"tgt_mrpm\":{},\"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\
+             \"dir\":\"{}\",\"min_mrpm\":{},\"config\":\"{}\",\"dropped\":{}}}",
             self.uptime_ms,
             state_name(self.state),
             OptionalFault(self.fault),
+            self.target.0,
             self.commanded.0,
             self.measured_fg.0,
             self.measured_hall.0,
@@ -637,6 +642,7 @@ mod tests {
             uptime_ms: 12_345,
             state: FanState::Running,
             fault: None,
+            target: MilliRpm::from_rpm(60),
             commanded: MilliRpm::from_rpm(60),
             measured_fg: MilliRpm(59_800),
             measured_hall: MilliRpm(60_100),
@@ -657,6 +663,7 @@ mod tests {
             "\"t\":12345",
             "\"state\":\"running\"",
             "\"fault\":null",
+            "\"tgt_mrpm\":60000",
             "\"cmd_mrpm\":60000",
             "\"fg_mrpm\":59800",
             "\"hall_mrpm\":60100",
@@ -686,6 +693,7 @@ mod tests {
             uptime_ms: u64::MAX,
             state: FanState::Reversing,
             fault: Some(FaultReason::HallImplausible),
+            target: MilliRpm(u32::MAX),
             commanded: MilliRpm(u32::MAX),
             measured_fg: MilliRpm(u32::MAX),
             measured_hall: MilliRpm(u32::MAX),

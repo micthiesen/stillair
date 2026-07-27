@@ -23,7 +23,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embedded_io_async::Write as _;
-use esp_hal::usb_serial_jtag::UsbSerialJtagTx;
+use esp_hal::usb::usb_serial_jtag::UsbSerialJtagTx;
 use esp_hal::Async;
 use stillair_core::console::Line;
 
