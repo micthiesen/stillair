@@ -83,6 +83,10 @@ the GL100 transmits torque only through a non-structural coupling.
 - ENC-100 mounting: six M3 tapped holes at r96, **clocked 45°/105°/165°/225°/285°/345°**
   (locked 2026-07-27; see "ENC-100 tab clocking" below for the margin table and the rejected
   alternatives).
+- **All ten underside taps are blind: 4.0 mm thread depth, 5.0 mm drill depth**, leaving a
+  1.0 mm floor in the 6.0 mm plate (specified 2026-07-27). None break through — a
+  through-tapped hole lets an over-length screw protrude into the ceiling seating interface.
+  Cable-clamp tap centres in Cartesian, for CAD: **(87.03, 13.01)** and **(81.88, 32.25)**.
 - Hard metal spacers bypass any soft ceiling finish.
 
 Anchor gate: the slots accept nominal M10 or 3/8-inch hardware. Selected candidate (2026-07,
