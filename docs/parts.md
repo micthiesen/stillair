@@ -66,7 +66,14 @@ the GL100 transmits torque only through a non-structural coupling.
 
 ## MP-100 ceiling plate
 
+> **Status: ORDERED 2026-07-27** (JLCCNC, SUS304, brushed, qty 1, ~$130). Rev A files are
+> [`cad/MP-100_revA.step`](../cad/MP-100_revA.step) and
+> [`cad/MP-100_revA.pdf`](../cad/MP-100_revA.pdf) — the first custom part committed to metal.
+> Any change from here is a rev B, not an edit.
+
 - Ø210 × 6.0 mm 304 stainless disk, flat within 0.30 mm, brushed and passivated.
+  **Passivation is not on JLCCNC's finish list for 304** — the ordered part is brushed only.
+  304 self-passivates in air; do it with a citric-acid kit if the spec is to be met literally.
 - Two 11 × 20 mm radial anchor slots centered at X±65, Y0 (130 mm anchor centers).
 - Three Ø6.6 standoff holes on Ø150 PCD at 90°, 210°, 330°, countersunk from the ceiling face
   for M6 flat-head screws.

@@ -32,8 +32,9 @@ the bed.
   plate, KD-100 catcher disk, BL-100 blades, LS-100 spreaders. Start
   the BA adapter filament-qualification program immediately — it is the longest
   non-motor-gated path in the project.
-- **Stock to order now**: Ø210 × 6 mm 304 plate (or oversized blank), Ø16 6061 rod,
-  **Ø38–40 mm** 17-4PH round bar (the SP-100 flange needs the diameter; not Ø16 bar).
+- **Stock to order now**: Ø16 6061 rod, **Ø38–40 mm** 17-4PH round bar (the SP-100 flange
+  needs the diameter; not Ø16 bar). The Ø210 × 6 mm 304 plate is no longer needed as stock —
+  MP-100 was ordered finished from JLCCNC on 2026-07-27.
 - **MP-100 is released** (2026-07-27): both paper decisions landed — ENC tab clocking at
   45/105/165/225/285/345° and a 15° rim cable entry replacing the deleted mid-plate slot.
   See parts.md "ENC-100 tab clocking" and "Cable entry". Never was motor-gated.

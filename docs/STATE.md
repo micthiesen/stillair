@@ -24,13 +24,18 @@ redirected to the firmware/harness program at owner request).
   patterns are mutually consistent; the 3.3 V budget has 35% headroom; connector mating
   pairs verified. The dossier's architecture is sound — its errors were concentrated in
   wiring details and unstated firmware assumptions.
+- **MP-100 is ordered — the first custom part committed to metal (2026-07-27).** JLCCNC,
+  SUS304, brushed, qty 1, ~$130. Rev A STEP + PDF are in [`cad/`](../cad/) exactly as sent.
+  Getting there closed three paper decisions and one real defect: ENC tab clocking locked at
+  45/105/165/225/285/345° with the clamshell split on the 135°–315° axis; the mid-plate cable
+  slot **deleted** in favour of a 15° rim entry + P-clip strain relief once the supply was
+  confirmed as a surface run and plate rotation as free; SP-100's anti-rotation dimensioned as
+  a keyed double-D flange rather than wrench flats; and all ten taps standardised to M3 to
+  satisfy JLCCNC's blind-tap rule. **On arrival: check flatness with a straightedge before
+  drilling the ceiling** — JLC holds no form tolerances.
 - **Mount work can start** (see [build.md](build.md) > "Mount build-first plan"): mockup
-  first, then ST-100/SP-100/KD-100/BL-100/LS-100 are fully spec'd and motor-independent;
-  MP-100 is now released too (2026-07-27: ENC tab clocking locked at 45/105/165/225/285/345°,
-  clamshell split on the 135°–315° axis, and the mid-plate cable slot deleted in favour of a
-  15° rim entry + P-clip strain relief, after the supply was confirmed as a surface run and
-  plate rotation as free); the adapter filament
-  qualification is the longest non-motor-gated path.
+  first, then ST-100/SP-100/KD-100/BL-100/LS-100 are fully spec'd and motor-independent; the
+  adapter filament qualification is the longest non-motor-gated path.
 - **Control plane locked**: Matter over Wi-Fi (rs-matter). Orders in; GL100 + parts en
   route; CubeMars bearing email sent 2026-07-27 (Gate 01 awaiting reply).
 - **Owner direction (2026-07-27)**: only ESP32-C6 dev boards are on hand, so the near-term
