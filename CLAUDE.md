@@ -51,6 +51,17 @@ for ALARM-idle-low) to exercise the state machine on bare silicon. Even then `St
 with `NoRotation` after 15 s, because nothing generates FG edges — the simulator is still the
 place to exercise behaviour, and the board is the place to exercise I/O.
 
+**To debug Wi-Fi/Matter, capture the raw serial log** — the CLI only surfaces `@`-prefixed
+protocol lines, and everything interesting during commissioning is a plain log line:
+
+```bash
+nohup sh -c 'cat /dev/cu.usbmodem2101 > /tmp/pair.log' &   # only one reader at a time
+```
+
+Kill the capture before running `espflash` or the CLI; they contend for the port. Apple Home
+reports every commissioning failure as "Pairing Failed" regardless of cause, so this log is the
+only place the real reason appears.
+
 **Use `script` for anything multi-step.** Each CLI invocation opens a fresh link, and against
 `--sim` a fresh link is a fresh simulator that has forgotten everything — so a two-command
 sequence run as two invocations silently tests nothing.

@@ -315,6 +315,31 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 - Measured on the C6 at first boot: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
   100 KB heap, 2.19 MB image (53% of the partition). `BUMP_SIZE` is the number to raise if the
   stack panics during initialisation.
+- **Coexistence scanning is unreliable.** Two consecutive commissioning attempts scanned 4 and
+  then 1 network. If a join ever fails with `NoAccessPointFound` against an SSID that
+  definitely exists on 2.4 GHz, the lever is non-concurrent commissioning — `stack.run()`
+  instead of `run_coex()`, which drops BLE before joining Wi-Fi. It costs a larger `BUMP_SIZE`
+  (bigger futures) and reportedly breaks Alexa, so it stays unused until something needs it.
+
+### Building the Matter firmware (2026-07-27)
+
+- **Our dependency versions already match rs-matter-embassy's own esp example exactly** —
+  esp-hal ~1.1, esp-rtos 0.3, esp-radio 0.18, esp-alloc 0.10, esp-println 0.17,
+  esp-backtrace 0.19, esp-bootloader-esp-idf 0.5, embassy-executor 0.10, embassy-time 0.5,
+  embassy-sync 0.8. No version skew to fight; the cost is the `[patch.crates-io]` pin table
+  (see CLAUDE.md > "Firmware conventions"), which moves every esp-\* crate to an unreleased
+  esp-hal git rev.
+- Adopting that rev needed exactly one change in our own code: `usb_serial_jtag` moved under
+  `esp_hal::usb`.
+- **`esp-alloc`'s `compat` feature is mandatory**, not optional: esp-radio's BLE half is a C
+  blob that will not link without C-compatible `malloc`/`free`. It is a default feature, so a
+  `default-features = false` line silently removes it and the failure appears only at link.
+- The examples' `.cargo/config.toml` sets `build-std`, which is nightly-only. It is **not
+  required** — the whole tree builds on stable without it.
+- rs-matter arrives via `rs-matter-stack` from crates.io, not as a git dependency of its own.
+- The shape to copy from `light_wifi.rs`: a statically allocated `EmbassyWifiMatterStack`,
+  `EspWifiDriver::new(WIFI, BT)`, `stack.run_coex(...)` with an `EmptyHandler.chain(EpClMatcher…)`
+  per cluster plus a `DescHandler` per endpoint, and `TrngSource` feeding a reseeding CSPRNG.
 
 ### Fault reporting and bus health (2026-07-27)
 
