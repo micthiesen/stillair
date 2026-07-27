@@ -305,6 +305,13 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   the whole binary down, control loop included, and stops a fan that was running perfectly
   well — the opposite of the network-loss row. Losing Matter must lose only Matter.
 - Test attestation credentials, so Apple Home shows "Uncertified Accessory" and adds it anyway.
+- **Commission with the phone joined to a 2.4 GHz SSID.** Apple Home has no network picker: it
+  hands the device whatever network the phone is on, and the C6 has no 5 GHz radio. Handing it
+  a 5 GHz-only SSID fails with `NoAccessPointFound` / `NoNetworkInterface` and surfaces in the
+  app only as "Pairing Failed" — the device log is the only place the real cause appears. The
+  phone can return to 5 GHz afterwards; the fan keeps its own credentials.
+- Apple writes `DefaultOTAProviders` (OTA Requestor, cluster 0x2A) during setup and is content
+  with `UnsupportedCluster`, since rs-matter has no Matter OTA yet.
 - Measured on the C6 at first boot: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
   100 KB heap, 2.19 MB image (53% of the partition). `BUMP_SIZE` is the number to raise if the
   stack panics during initialisation.
@@ -381,11 +388,13 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   maintained `no_std` HAP implementation exists, and Matter keeps the stack pure Rust while
   getting Google/Alexa/Home Assistant support for free.
 - Device: Matter Fan device type (0x002B) with a hand-written FanControl (cluster 514)
-  handler — on/off, `PercentSetting` (continuous speed; Apple Home renders 0–100% fan speed
-  well), and `AirflowDirection` for reverse. Whether Apple Home surfaces AirflowDirection is
-  unconfirmed; the proven fallback is a second small On/Off endpoint ("reverse mode") that
-  flips direction. Expose actual RPM, stall, overtemperature, or controller fault only if
-  straightforward.
+  handler — on/off, `PercentSetting` (continuous speed), and `AirflowDirection` for reverse.
+  **Confirmed against Apple Home on real hardware (2026-07-27)**: it renders a continuous
+  0–100% speed slider, an on/off control, **and a reverse button** — so `AirflowDirection` is
+  surfaced and the second On/Off "reverse mode" endpoint that was held as a fallback is not
+  needed. A slider left at 61% arrived as a 116.8 RPM target, matching the documented linear
+  map onto [35, 170] exactly. Expose actual RPM, stall, overtemperature, or controller fault
+  only if straightforward.
 - Commissioning: BLE (the `trouble` pure-Rust host over esp-radio) with the QR code printed
   to serial. rs-matter's test attestation credentials are fine for a personal device — Apple
   Home shows an "Uncertified Accessory" warning; add anyway. Use the flash-backed persistence

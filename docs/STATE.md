@@ -97,6 +97,17 @@ redirected to the firmware/harness program at owner request).
   supervisor console still answered a telemetry request while all of it ran**, which is the
   executor split holding in practice rather than on paper. Implementation notes and the
   measured memory numbers are in [controls.md](controls.md) > "Matter implementation notes".
+- **Paired with Apple Home on real hardware (2026-07-27), and it renders what we hoped.**
+  A continuous 0–100% speed slider, on/off, **and a reverse button** — so `AirflowDirection`
+  is surfaced and the second On/Off endpoint held as a fallback is not needed. A slider at 61%
+  arrived at the supervisor as a 116.8 RPM target, which is the documented linear map onto
+  [35, 170] exactly: the whole Matter → core mapping → supervisor path is verified end to end
+  on silicon. The fan pairs but will not spin, correctly — no MCF8316D means `config: failed`
+  and `SafeBoot` refuses to start, which is the gate working.
+- **Commissioning gotcha worth remembering**: Apple Home has no network picker and hands the
+  device whatever SSID the phone is on. A 5 GHz-only SSID fails with `NoAccessPointFound` and
+  shows in the app only as "Pairing Failed"; the device log was the only place the real cause
+  appeared. Commission with the phone on 2.4 GHz.
 - **Reviewers found real bugs in every phase, all fixed**: `duty_for` returned full scale
   at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
   have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
@@ -106,11 +117,13 @@ redirected to the firmware/harness program at owner request).
 
 ## Next
 
-**Commission the fan in Apple Home and see what it renders.** The firmware is built, flashed,
-and advertising; what is unknown is now a UI question rather than an engineering one: whether
-Apple Home surfaces `AirflowDirection` at all, and whether a Fan device type without an
-Identify cluster is accepted. Pair with the code the console prints at boot. If reverse does
-not appear, the fallback is a second On/Off endpoint (docs/controls.md > "Home integration").
+**Capture the V1 controller schematic in KiCad** (`pcb/`). The firmware program A–D is done and
+proven on silicon, so the critical path to a working fan is now the board itself — every
+remaining firmware unknown (register values, the golden image, sensorless tuning, the analog
+trip calibration) is gated on having an MCF8316D to talk to. Follow
+[electrical.md](electrical.md) SCH-01–SCH-07 as amended by the review (delayed `/PRE`, Schmitt
+buffers, corrected FET orientation, LM2907 fixes, GPIO7/15, GPIO8/9 pull-ups, 22 µF module
+bulk, NTC/VBUS circuits); order config and footprint sourcing are in `pcb/README.md`.
 
 Then, once a real MCF8316D exists: **capture the golden image.** The gate is built and holds;
 `stillair --port … config capture` prints the table, and until it is filled in every frame
