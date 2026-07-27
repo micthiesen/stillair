@@ -382,6 +382,47 @@ pub fn read_crc_input(target: u8, address: u16, data: [u8; 4]) -> heapless::Vec<
     covered
 }
 
+/// The addresses to try when locating the device, most likely first.
+///
+/// `TARGET_ID` lives in EEPROM and only takes effect after a power cycle, so a board whose
+/// address was changed will not answer at the default. The sweep is the datasheet's own
+/// fallback. Pure and ordered so it can be checked without a bus.
+pub fn probe_candidates(current: u8) -> impl Iterator<Item = u8> {
+    // The general sweep covers the non-reserved range. Note the default address (0x01) is
+    // itself reserved and so falls outside it — which is exactly why it has to be tried
+    // explicitly up front rather than left to the sweep.
+    const FIRST: u8 = 0x08;
+    const LAST: u8 = 0x77;
+    let head = [current, DEFAULT_TARGET_ID];
+    let head_len = if current == DEFAULT_TARGET_ID { 1 } else { 2 };
+    head.into_iter()
+        .take(head_len)
+        .chain((FIRST..=LAST).filter(move |candidate| *candidate != current))
+}
+
+/// Check a read's CRC byte and unpack its value.
+///
+/// Lives here rather than in the transport so the compare-and-classify step — the part that
+/// decides whether a reply is trustworthy — is exercised by host tests, not only by a bus.
+pub fn verify_read(target: u8, address: u16, reply: [u8; 5]) -> Result<u32, CrcMismatch> {
+    let data = [reply[0], reply[1], reply[2], reply[3]];
+    let expected = crc8(&read_crc_input(target, address, data));
+    if expected != reply[4] {
+        return Err(CrcMismatch {
+            expected,
+            received: reply[4],
+        });
+    }
+    Ok(value_from_bytes32(data))
+}
+
+/// A reply whose checksum did not match what its bytes imply.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CrcMismatch {
+    pub expected: u8,
+    pub received: u8,
+}
+
 /// Abstract access to the MCF's register space.
 ///
 /// Implemented over I²C on the target and by a fake in tests. Addresses and values are
@@ -597,6 +638,169 @@ mod tests {
                 "gate {gate:#010x} controller {controller:#010x}"
             );
         }
+    }
+
+    #[test]
+    fn condition_precedence_holds_for_every_adjacent_pair() {
+        use controller_fault as cf;
+        use gate_fault as gf;
+        // Each case sets two groups at once and names the winner. Testing groups one at a
+        // time cannot detect a reordering — whichever branch matches is the only candidate.
+        let cases = [
+            (
+                0,
+                cf::MTR_UNDER_VOLTAGE | cf::MTR_OVER_VOLTAGE,
+                McfCondition::Undervoltage,
+            ),
+            (gf::OVP | gf::OTW, 0, McfCondition::Overvoltage),
+            (gf::OTW | gf::OCP, 0, McfCondition::Overtemperature),
+            (gf::OCP, cf::NO_MTR, McfCondition::Overcurrent),
+            (0, cf::MTR_LCK | cf::IPD_T1_FAULT, McfCondition::MotorLock),
+            (
+                0,
+                cf::IPD_T1_FAULT | cf::WATCHDOG_FAULT,
+                McfCondition::StartFailed,
+            ),
+            (
+                0,
+                cf::WATCHDOG_FAULT | cf::EEPROM_ERR,
+                McfCondition::McfWatchdog,
+            ),
+            (0, cf::EEPROM_ERR | cf::I2C_CRC_FAULT, McfCondition::Eeprom),
+        ];
+        for (gate, controller, expected) in cases {
+            assert_eq!(
+                FaultStatus::new(gate, controller).condition(),
+                Some(expected),
+                "gate {gate:#010x} controller {controller:#010x}"
+            );
+        }
+    }
+
+    #[test]
+    fn every_bit_in_a_group_decodes_to_that_group() {
+        use controller_fault as cf;
+        use gate_fault as gf;
+        // Exhaustive over the named bits, so an OR mistyped as an AND or a constant
+        // swapped between groups fails here rather than on the bench.
+        let groups: [(&[(u32, u32)], McfCondition); 7] = [
+            (
+                &[
+                    (0, cf::MTR_UNDER_VOLTAGE),
+                    (gf::BUCK_UV, 0),
+                    (gf::VCP_UV, 0),
+                ],
+                McfCondition::Undervoltage,
+            ),
+            (
+                &[(0, cf::MTR_OVER_VOLTAGE), (gf::OVP, 0)],
+                McfCondition::Overvoltage,
+            ),
+            (&[(gf::OTW, 0), (gf::OTS, 0)], McfCondition::Overtemperature),
+            (
+                &[(gf::OCP, 0), (gf::BUCK_OCP, 0)],
+                McfCondition::Overcurrent,
+            ),
+            (
+                &[
+                    (0, cf::ABN_SPEED),
+                    (0, cf::ABN_BEMF),
+                    (0, cf::NO_MTR),
+                    (0, cf::MTR_LCK),
+                    (0, cf::LOCK_LIMIT),
+                    (0, cf::HW_LOCK_LIMIT),
+                ],
+                McfCondition::MotorLock,
+            ),
+            (
+                &[
+                    (0, cf::IPD_FREQ_FAULT),
+                    (0, cf::IPD_T1_FAULT),
+                    (0, cf::IPD_T2_FAULT),
+                    (0, cf::MPET_IPD_FAULT),
+                    (0, cf::MPET_BEMF_FAULT),
+                ],
+                McfCondition::StartFailed,
+            ),
+            (
+                &[
+                    (0, cf::WATCHDOG_FAULT),
+                    (0, cf::WWDT_FAULT),
+                    (0, cf::CPU_RESET_FAULT),
+                ],
+                McfCondition::McfWatchdog,
+            ),
+        ];
+        for (bits, expected) in groups {
+            for (gate, controller) in bits {
+                assert_eq!(
+                    FaultStatus::new(*gate, *controller).condition(),
+                    Some(expected),
+                    "gate {gate:#010x} controller {controller:#010x}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn probe_tries_the_current_address_then_the_default_then_sweeps() {
+        let candidates: std::vec::Vec<u8> = probe_candidates(0x60).collect();
+        assert_eq!(&candidates[..3], &[0x60, DEFAULT_TARGET_ID, 0x08]);
+        assert_eq!(*candidates.last().unwrap(), 0x77);
+        // The current address is tried once, up front, not again mid-sweep.
+        assert_eq!(candidates.iter().filter(|c| **c == 0x60).count(), 1);
+        // Nothing reserved leaks into the sweep.
+        assert!(candidates[1..]
+            .iter()
+            .all(|c| *c == DEFAULT_TARGET_ID || (0x08..=0x77).contains(c)));
+    }
+
+    #[test]
+    fn probe_does_not_try_the_default_address_twice() {
+        let candidates: std::vec::Vec<u8> = probe_candidates(DEFAULT_TARGET_ID).collect();
+        assert_eq!(
+            candidates
+                .iter()
+                .filter(|c| **c == DEFAULT_TARGET_ID)
+                .count(),
+            1
+        );
+        assert_eq!(candidates[0], DEFAULT_TARGET_ID);
+    }
+
+    #[test]
+    fn a_read_with_a_good_checksum_yields_its_value() {
+        let data = [0xCD, 0xAB, 0x34, 0x12];
+        let crc = crc8(&read_crc_input(0x60, 0x080, data));
+        let reply = [data[0], data[1], data[2], data[3], crc];
+        assert_eq!(verify_read(0x60, 0x080, reply), Ok(0x1234_ABCD));
+    }
+
+    #[test]
+    fn a_read_with_a_bad_checksum_is_rejected_rather_than_returned() {
+        // The value is perfectly well-formed; only the checksum disagrees. Returning it
+        // anyway would hand corrupted state to a motor-control state machine.
+        let data = [0xCD, 0xAB, 0x34, 0x12];
+        let good = crc8(&read_crc_input(0x60, 0x080, data));
+        let reply = [data[0], data[1], data[2], data[3], good ^ 0xFF];
+        assert_eq!(
+            verify_read(0x60, 0x080, reply),
+            Err(CrcMismatch {
+                expected: good,
+                received: good ^ 0xFF,
+            })
+        );
+    }
+
+    #[test]
+    fn a_read_checksum_is_bound_to_its_address() {
+        // The same bytes read from a different register must not validate — otherwise a
+        // mis-addressed reply would be accepted as the register we asked for.
+        let data = [0xCD, 0xAB, 0x34, 0x12];
+        let crc = crc8(&read_crc_input(0x60, 0x0E0, data));
+        let reply = [data[0], data[1], data[2], data[3], crc];
+        assert!(verify_read(0x60, 0x0E0, reply).is_ok());
+        assert!(verify_read(0x60, 0x0E2, reply).is_err());
     }
 
     #[test]

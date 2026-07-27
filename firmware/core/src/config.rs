@@ -94,6 +94,15 @@ pub const BUS_FAILURES_BEFORE_FAULT: u32 = 5;
 /// control loop, because the pins are the fast path and this is the diagnosis.
 pub const STATUS_POLL_MS: u64 = 200;
 
+/// How long the supervisor will run armed without *any* status verdict — success or
+/// failure — before treating the drive as unreachable.
+///
+/// Counting failures alone is not enough: a reader that has stopped running altogether
+/// reports nothing, so the failure count never moves and total silence would be
+/// indistinguishable from "nothing new this tick". Ten poll intervals is generous enough to
+/// ride out a slow bus and short enough that a starved or dead reader is caught quickly.
+pub const STATUS_STALE_TIMEOUT_MS: u64 = STATUS_POLL_MS * 10;
+
 // The layered-limit invariant, checked when the crate compiles rather than trusted: the
 // user maximum sits under the MCF's stored ceiling, which sits under the analog trip. Any
 // edit that inverts them fails the build instead of quietly removing a layer.

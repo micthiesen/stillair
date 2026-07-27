@@ -11,7 +11,7 @@ use embassy_time::{Duration, Timer};
 use esp_hal::i2c::master::{Error as I2cError, I2c};
 use esp_hal::Async;
 use stillair_core::mcf8316::{
-    self, crc8, read_crc_input, reg, value_from_bytes32, write_frame, FaultStatus, RegisterBus,
+    self, reg, value_from_bytes32, verify_read, write_frame, CrcMismatch, FaultStatus, RegisterBus,
 };
 use stillair_core::state::StatusRead;
 
@@ -34,7 +34,7 @@ pub enum BusError {
     /// The device answered, but the CRC over its reply did not match. Treated as a failure
     /// rather than retried silently — a wrong checksum means either the bus is corrupting
     /// data or our framing is wrong, and neither should reach the state machine as truth.
-    Crc { expected: u8, received: u8 },
+    Crc(CrcMismatch),
 }
 
 impl From<I2cError> for BusError {
@@ -70,18 +70,17 @@ impl Mcf {
     /// EEPROM. A bare address ACK would be cheaper but proves less: this confirms the device
     /// speaks the control-word protocol, not merely that something is on the bus.
     pub async fn probe(&mut self) -> Option<u8> {
-        for candidate in [self.target, mcf8316::DEFAULT_TARGET_ID] {
+        let original = self.target;
+        for candidate in mcf8316::probe_candidates(original) {
             self.target = candidate;
             if self.read(reg::GATE_DRIVER_FAULT_STATUS).await.is_ok() {
                 return Some(candidate);
             }
         }
-        for candidate in 0x08..=0x77 {
-            self.target = candidate;
-            if self.read(reg::GATE_DRIVER_FAULT_STATUS).await.is_ok() {
-                return Some(candidate);
-            }
-        }
+        // Restore rather than leaving the last address tried in place. Otherwise a device
+        // that simply was not ready yet would be addressed at 0x77 for the rest of the
+        // power cycle, and every subsequent read would fail for the wrong reason.
+        self.target = original;
         None
     }
 
@@ -128,17 +127,12 @@ impl RegisterBus for Mcf {
             .write_read_async(self.target, &control, &mut reply[..len])
             .await?;
 
-        let data = [reply[0], reply[1], reply[2], reply[3]];
         if self.crc {
-            let expected = crc8(&read_crc_input(self.target, address, data));
-            if expected != reply[4] {
-                return Err(BusError::Crc {
-                    expected,
-                    received: reply[4],
-                });
-            }
+            // Verification lives in the core crate so the compare-and-classify step is
+            // covered by host tests rather than only by a real bus.
+            return verify_read(self.target, address, reply).map_err(BusError::Crc);
         }
-        Ok(value_from_bytes32(data))
+        Ok(value_from_bytes32([reply[0], reply[1], reply[2], reply[3]]))
     }
 
     async fn write(&mut self, address: u16, value: u32) -> Result<(), BusError> {

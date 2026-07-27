@@ -104,7 +104,7 @@ pub enum Action {
 }
 
 /// Room for the largest single-poll burst (direction + duty + arm, plus slack).
-const MAX_ACTIONS: usize = 6;
+pub const MAX_ACTIONS: usize = 6;
 
 /// Actions emitted by one [`Supervisor::poll`].
 pub type Actions = Vec<Action, MAX_ACTIONS>;
@@ -187,6 +187,9 @@ pub struct Supervisor {
     start_fg_mark: u64,
     /// Consecutive failed status reads. Reset by any successful one.
     bus_failures: u32,
+    /// When a status read last produced *any* verdict, success or failure. Distinguishes a
+    /// quiet bus from a reader that has stopped running.
+    last_status_at: Millis,
 }
 
 impl Supervisor {
@@ -211,6 +214,7 @@ impl Supervisor {
             last_duty: SpeedDuty::ZERO,
             start_fg_mark: 0,
             bus_failures: 0,
+            last_status_at: now,
         }
     }
 
@@ -285,7 +289,7 @@ impl Supervisor {
         let dt = now.since(self.last_poll);
         self.last_poll = now;
         self.tach.update(inputs.fg_pulses, inputs.hall_pulses, now);
-        self.observe_bus(inputs);
+        self.observe_bus(now, inputs);
 
         let mut actions = Actions::new();
 
@@ -295,13 +299,13 @@ impl Supervisor {
         }
 
         // Fault sources outrank every state transition below.
-        if let Some(reason) = self.external_fault(inputs) {
+        if let Some(reason) = self.external_fault(now, inputs) {
             self.enter_fault(now, reason, &mut actions);
             return actions;
         }
 
         match self.state {
-            FanState::SafeBoot => self.poll_safe_boot(now, inputs),
+            FanState::SafeBoot => self.poll_safe_boot(now, inputs, &mut actions),
             FanState::IdleOff => self.poll_idle(now, &mut actions),
             FanState::Starting => self.poll_starting(now, dt, &mut actions),
             FanState::Running => self.poll_running(now, dt, &mut actions),
@@ -318,10 +322,18 @@ impl Supervisor {
 
     /// Hold for the full TI window, then require healthy rails before proceeding. A rail
     /// that never comes good simply keeps us here, which is already the safe outcome.
-    fn poll_safe_boot(&mut self, now: Millis, inputs: &Inputs) {
-        if now.since(self.state_entered) >= config::SAFE_BOOT_HOLD_MS && inputs.pgood {
-            self.transition(FanState::IdleOff, now);
+    fn poll_safe_boot(&mut self, now: Millis, inputs: &Inputs, actions: &mut Actions) {
+        if now.since(self.state_entered) < config::SAFE_BOOT_HOLD_MS || !inputs.pgood {
+            return;
         }
+        // The hold is over, so an MCF fault that is still asserted has had the full ten
+        // seconds (and any CLR_FLT its 200 ms) to clear and has not. Report it once here
+        // rather than bouncing through Fault on every tick of the hold.
+        if let Some(reason) = self.mcf_fault_source(now, inputs) {
+            self.enter_fault(now, reason, actions);
+            return;
+        }
+        self.transition(FanState::IdleOff, now);
     }
 
     fn poll_idle(&mut self, now: Millis, actions: &mut Actions) {
@@ -414,7 +426,25 @@ impl Supervisor {
 
     // -- helpers --------------------------------------------------------------------
 
-    fn external_fault(&self, inputs: &Inputs) -> Option<FaultReason> {
+    /// Is the drive armed, or on its way to being disarmed? These are the states in which
+    /// losing sight of the MCF actually matters.
+    const fn armed(&self) -> bool {
+        matches!(
+            self.state,
+            FanState::Starting | FanState::Running | FanState::Stopping | FanState::Reversing
+        )
+    }
+
+    /// Fault sources that originate at the MCF, as opposed to at our own board.
+    ///
+    /// Kept separate from [`Supervisor::external_fault`] because [`FanState::SafeBoot`]
+    /// deliberately *suppresses* these and re-checks them once, at its exit. Evaluating them
+    /// every 50 ms through the hold would make a fault-clear impossible to land: CLR_FLT
+    /// takes up to 200 ms to take effect, so the fan would re-fault four ticks after the
+    /// user's command, silently consuming it and demanding another. Suppressing for the
+    /// hold gives the clear ten seconds to work, and a fault that survives that is a real
+    /// one worth reporting.
+    fn mcf_fault_source(&self, now: Millis, inputs: &Inputs) -> Option<FaultReason> {
         // A decoded status outranks the pins: both nFAULT and ALARM say only "something",
         // and the registers say what. This also catches the conditions that reach neither
         // pin — MIN_VM undervoltage is reported but not actionable, and thermal shutdown
@@ -436,21 +466,43 @@ impl Supervisor {
         if self.bus_failures >= config::BUS_FAILURES_BEFORE_FAULT {
             return Some(FaultReason::BusUnreachable);
         }
-        // In SafeBoot a low rail is not yet a fault — it is exactly what SafeBoot is
-        // waiting on, and staying put is the safe response.
-        if !inputs.pgood && self.state != FanState::SafeBoot {
-            return Some(FaultReason::RailLoss);
+        // Counting *failures* is not enough. If whatever performs the reads stops running
+        // at all — starved by a lower-priority task, deadlocked, panicked — no failure is
+        // ever reported and the count never moves, so total silence would look exactly like
+        // "nothing new since last tick". Time is the only thing that distinguishes them.
+        if self.armed() && now.since(self.last_status_at) >= config::STATUS_STALE_TIMEOUT_MS {
+            return Some(FaultReason::BusUnreachable);
         }
         None
     }
 
-    /// Track consecutive bus failures so `external_fault` can act on sustained ones.
-    fn observe_bus(&mut self, inputs: &Inputs) {
+    fn external_fault(&self, now: Millis, inputs: &Inputs) -> Option<FaultReason> {
+        if self.state != FanState::SafeBoot {
+            if let Some(reason) = self.mcf_fault_source(now, inputs) {
+                return Some(reason);
+            }
+            // In SafeBoot a low rail is not yet a fault — it is exactly what SafeBoot is
+            // waiting on, and staying put is the safe response.
+            if !inputs.pgood {
+                return Some(FaultReason::RailLoss);
+            }
+        }
+        None
+    }
+
+    /// Track bus health so the fault sources above can act on it.
+    fn observe_bus(&mut self, now: Millis, inputs: &Inputs) {
         match inputs.mcf_status {
             StatusRead::BusError => {
                 self.bus_failures = self.bus_failures.saturating_add(1);
+                self.last_status_at = now;
             }
-            StatusRead::Fresh(_) => self.bus_failures = 0,
+            StatusRead::Fresh(_) => {
+                self.bus_failures = 0;
+                self.last_status_at = now;
+            }
+            // Carries no information: it neither absolves a growing failure count nor
+            // counts as one. Only the clock notices sustained staleness.
             StatusRead::Stale => {}
         }
     }
@@ -545,6 +597,10 @@ mod tests {
         /// When false the Hall channel emits nothing, simulating the documented
         /// magnet/cable single-point failure.
         hall_alive: bool,
+        /// The simulated I2C status reader. Healthy and reporting a clean device by
+        /// default, because that is what the supervisor requires in order to stay armed —
+        /// an armed drive with no status verdict at all is a fault by design.
+        reader: Reader,
         /// Control-loop period. Coarse by default so long-horizon tests stay fast, but
         /// adjustable: a tick coarser than a timing threshold makes the branch guarding it
         /// unreachable, which would let the test suite pass over dead code.
@@ -556,6 +612,17 @@ mod tests {
 
     /// milli-RPM × ms × pulses-per-rev, per pulse.
     const PULSE_SCALE: u64 = 60_000 * 1_000;
+
+    /// What the simulated status-reading task is doing.
+    #[derive(Debug, Clone, Copy)]
+    enum Reader {
+        /// Running and reporting this status.
+        Ok(FaultStatus),
+        /// Running, but every read fails.
+        Failing,
+        /// Not running at all — publishes nothing, ever. Starved, deadlocked, or panicked.
+        Dead,
+    }
 
     impl Bench {
         const TICK_MS: u64 = 100;
@@ -570,6 +637,7 @@ mod tests {
                 rotor: MilliRpm::ZERO,
                 rotor_follows: true,
                 hall_alive: true,
+                reader: Reader::Ok(FaultStatus::default()),
                 tick_ms: Self::TICK_MS,
                 fg_residual: 0,
                 hall_residual: 0,
@@ -597,6 +665,17 @@ mod tests {
                     .wrapping_add((self.hall_residual / PULSE_SCALE) as u32);
                 self.hall_residual %= PULSE_SCALE;
             }
+
+            // The reader runs on its own, slower cadence, exactly as the real task does.
+            self.inputs.mcf_status = if self.now.0.is_multiple_of(config::STATUS_POLL_MS) {
+                match self.reader {
+                    Reader::Ok(status) => StatusRead::Fresh(status),
+                    Reader::Failing => StatusRead::BusError,
+                    Reader::Dead => StatusRead::Stale,
+                }
+            } else {
+                StatusRead::Stale
+            };
 
             let actions = self.supervisor.poll(self.now, &self.inputs);
             self.log.extend(actions.iter().copied());
@@ -649,9 +728,10 @@ mod tests {
             });
         }
 
-        /// Make a fault-status read available to the next tick.
+        /// Set what the simulated reader reports from now on. Persistent, like a latched
+        /// fault, rather than a single injected reading.
         fn report_status(&mut self, status: FaultStatus) {
-            self.inputs.mcf_status = StatusRead::Fresh(status);
+            self.reader = Reader::Ok(status);
         }
 
         fn saw(&self, action: Action) -> bool {
@@ -1112,7 +1192,9 @@ mod tests {
         bench.take_log();
 
         bench.report_status(FaultStatus::new(0, controller_fault::MTR_UNDER_VOLTAGE));
-        bench.tick();
+        bench.run_until(config::STATUS_POLL_MS * 3, "Fault", |s| {
+            s.state() == FanState::Fault
+        });
         assert_eq!(
             bench.supervisor.fault(),
             Some(FaultReason::Mcf(McfCondition::Undervoltage))
@@ -1130,7 +1212,9 @@ mod tests {
             bench.boot();
             bench.run_at(40);
             bench.report_status(FaultStatus::new(bit, 0));
-            bench.tick();
+            bench.run_until(config::STATUS_POLL_MS * 3, "Fault", |s| {
+                s.state() == FanState::Fault
+            });
             assert_eq!(
                 bench.supervisor.fault(),
                 Some(FaultReason::Mcf(McfCondition::Overtemperature)),
@@ -1150,7 +1234,9 @@ mod tests {
         bench.boot();
         bench.run_at(40);
         bench.report_status(FaultStatus::new(0, controller_fault::ABN_SPEED));
-        bench.tick();
+        bench.run_until(config::STATUS_POLL_MS * 3, "Fault", |s| {
+            s.state() == FanState::Fault
+        });
         assert_eq!(
             bench.supervisor.fault(),
             Some(FaultReason::Mcf(McfCondition::MotorLock))
@@ -1159,13 +1245,19 @@ mod tests {
 
     #[test]
     fn a_decoded_status_outranks_the_bare_fault_pin() {
-        // nFAULT says "something"; the registers say what. The owner needs the latter.
+        // Precedence *within one snapshot*: nFAULT says only "something", the registers say
+        // what. Driven directly rather than through the bench, because the reader's slower
+        // cadence would otherwise decide which arrives first.
         let mut bench = Bench::new();
         bench.boot();
         bench.run_at(40);
-        bench.inputs.mcf_fault = true;
-        bench.report_status(FaultStatus::new(gate_fault::OCP, 0));
-        bench.tick();
+
+        let inputs = Inputs {
+            mcf_fault: true,
+            mcf_status: StatusRead::Fresh(FaultStatus::new(gate_fault::OCP, 0)),
+            ..bench.inputs
+        };
+        bench.supervisor.poll(bench.now.plus_ms(50), &inputs);
         assert_eq!(
             bench.supervisor.fault(),
             Some(FaultReason::Mcf(McfCondition::Overcurrent))
@@ -1173,47 +1265,110 @@ mod tests {
     }
 
     #[test]
-    fn one_failed_status_read_is_tolerated_but_sustained_silence_is_not() {
+    fn fault_source_precedence_holds_for_every_adjacent_pair() {
+        // Each case sets two sources at once and names which must be reported. Without
+        // this, reordering the checks in `mcf_fault_source` would pass every other test.
+        let decoded = StatusRead::Fresh(FaultStatus::new(gate_fault::OTW, 0));
+        let cases = [
+            (
+                Inputs {
+                    mcf_status: decoded,
+                    mcf_alarm: true,
+                    ..Inputs::default()
+                },
+                FaultReason::Mcf(McfCondition::Overtemperature),
+                "decoded status over ALARM",
+            ),
+            (
+                Inputs {
+                    mcf_fault: true,
+                    mcf_alarm: true,
+                    ..Inputs::default()
+                },
+                FaultReason::McfFault,
+                "nFAULT over ALARM",
+            ),
+            (
+                Inputs {
+                    mcf_alarm: true,
+                    pgood: false,
+                    ..Inputs::default()
+                },
+                FaultReason::McfAlarm,
+                "ALARM over rail loss",
+            ),
+        ];
+
+        for (inputs, expected, what) in cases {
+            let mut bench = Bench::new();
+            bench.boot();
+            bench.run_at(40);
+            bench.supervisor.poll(bench.now.plus_ms(50), &inputs);
+            assert_eq!(bench.supervisor.fault(), Some(expected), "{what}");
+        }
+    }
+
+    #[test]
+    fn transient_bus_failures_are_tolerated_but_sustained_ones_are_not() {
         let mut bench = Bench::new();
         bench.boot();
         bench.run_at(40);
 
-        for _ in 0..(config::BUS_FAILURES_BEFORE_FAULT - 1) {
-            bench.inputs.mcf_status = StatusRead::BusError;
-            bench.tick();
-            assert_eq!(
-                bench.supervisor.state(),
-                FanState::Running,
-                "a transient bus error must not stop the fan"
-            );
-        }
-        // A successful read clears the count, so the fan survives an intermittent bus.
+        // Four failures out of the five it takes: the fan keeps running.
+        bench.reader = Reader::Failing;
+        bench.run_ms(config::STATUS_POLL_MS * (u64::from(config::BUS_FAILURES_BEFORE_FAULT) - 1));
+        assert_eq!(
+            bench.supervisor.state(),
+            FanState::Running,
+            "a transient bus error must not stop the fan"
+        );
+
+        // One good read resets the count, so an intermittent bus never accumulates.
         bench.report_status(FaultStatus::default());
-        bench.tick();
+        bench.run_ms(config::STATUS_POLL_MS * 2);
         assert_eq!(bench.supervisor.state(), FanState::Running);
 
-        for _ in 0..config::BUS_FAILURES_BEFORE_FAULT {
-            bench.inputs.mcf_status = StatusRead::BusError;
-            bench.tick();
-        }
+        bench.reader = Reader::Failing;
+        bench.run_until(config::STATUS_POLL_MS * 20, "Fault", |s| {
+            s.state() == FanState::Fault
+        });
         assert_eq!(bench.supervisor.fault(), Some(FaultReason::BusUnreachable));
         assert!(bench.saw(Action::ClearPermission));
     }
 
     #[test]
-    fn a_stale_status_neither_faults_nor_absolves() {
+    fn a_status_reader_that_stops_running_is_caught_by_time_not_by_failures() {
+        // The failure counter only moves when a read actually fails. A reader that is
+        // starved, deadlocked, or dead reports nothing at all, so silence must be caught
+        // by the clock or it looks exactly like "nothing new this tick" forever.
         let mut bench = Bench::new();
         bench.boot();
         bench.run_at(40);
 
-        // Stale carries no information: it must not clear a bus-failure count...
-        for _ in 0..config::BUS_FAILURES_BEFORE_FAULT {
-            bench.inputs.mcf_status = StatusRead::BusError;
-            bench.tick();
-            bench.inputs.mcf_status = StatusRead::Stale;
-            bench.tick();
-        }
+        bench.reader = Reader::Dead;
+        bench.run_ms(config::STATUS_STALE_TIMEOUT_MS / 2);
+        assert_eq!(
+            bench.supervisor.state(),
+            FanState::Running,
+            "faulted before the staleness deadline"
+        );
+
+        bench.run_until(config::STATUS_STALE_TIMEOUT_MS * 2, "Fault", |s| {
+            s.state() == FanState::Fault
+        });
         assert_eq!(bench.supervisor.fault(), Some(FaultReason::BusUnreachable));
+    }
+
+    #[test]
+    fn a_stale_tick_alone_never_faults_a_healthy_bus() {
+        // Most ticks are stale by construction — the reader is ten times slower than the
+        // control loop. Staleness between good reads must count for nothing.
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.run_ms(config::STATUS_STALE_TIMEOUT_MS * 5);
+        assert_eq!(bench.supervisor.state(), FanState::Running);
+        assert_eq!(bench.supervisor.fault(), None);
     }
 
     #[test]

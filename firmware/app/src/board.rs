@@ -9,15 +9,22 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embedded_hal::pwm::SetDutyCycle;
 use esp_hal::gpio::{Input, Level, Output};
 use esp_hal::ledc::{channel, LowSpeed};
+use stillair_core::config;
 use stillair_core::state::{Action, Direction, Inputs, StatusRead};
 
 /// The SPEED-pin PWM channel, made movable between executors.
 ///
-/// `Channel` is not `Send` because it holds a shared reference to the LEDC timer, which has
-/// interior mutability and so is not `Sync`. That bound is about *sharing*; what we do is
-/// *move*. The channel is configured once in `main`, handed to the control task exactly
-/// once at startup, and thereafter touched only by that task — no second owner and no
-/// concurrent access ever exist.
+/// `Channel` is not `Send` because it holds `&'static pac::ledc::RegisterBlock` — a PAC
+/// register block backed by `UnsafeCell`, and therefore not `Sync`, so a shared reference to
+/// it is not `Send`. (It also holds a reference to the timer, but that is not what the
+/// compiler objects to; verified by removing this impl and reading the error.)
+///
+/// That bound is about *sharing*; what we do is *move*. The LEDC block, the timer, and the
+/// channel are all configured in `main` on the thread-mode executor **before** the interrupt
+/// executor is started, so no higher-priority context exists yet during setup. The channel
+/// is then moved by value into the control task and touched only there. `StaticCell::init`
+/// makes a second timer reference impossible, and the borrow checker forbids reusing the
+/// timer binding after `configure` takes it.
 ///
 /// This is the one unsafe assertion in the firmware, and it is load-bearing: the duty write
 /// is on the safety path (it is how a stop and a fault reach the hardware), so it must live
@@ -47,6 +54,22 @@ const ARM_PULSE_US: u32 = 50;
 
 /// How long MCU_CLEAR_N is held low to revoke permission.
 const CLEAR_PULSE_US: u32 = 100;
+
+/// Worst-case blocking one `poll` can inflict on the interrupt executor: every action in a
+/// full buffer being a pulse. This runs at elevated priority and does not yield, so it
+/// delays the heartbeat toggle and both tach edge services for its duration.
+const MAX_BLOCKING_US: u32 = if ARM_PULSE_US > CLEAR_PULSE_US {
+    ARM_PULSE_US
+} else {
+    CLEAR_PULSE_US
+} * stillair_core::state::MAX_ACTIONS as u32;
+
+// The heartbeat half-period is the tightest thing this can eat into; anything approaching it
+// would start costing watchdog margin. Two orders of magnitude of headroom, checked at
+// compile time so growing a pulse width or the action buffer cannot silently erode it.
+/// Heartbeat half-period, in microseconds.
+const HEARTBEAT_HALF_PERIOD_US: u64 = 1_000_000 / (config::WATCHDOG_HEARTBEAT_HZ as u64 * 2);
+const _: () = assert!(MAX_BLOCKING_US as u64 * 100 < HEARTBEAT_HALF_PERIOD_US);
 
 /// Everything the supervisor drives or samples.
 pub struct Board {

@@ -171,12 +171,15 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
 
 ### Known gaps in the current implementation
 
-- **Fault recovery does not work end-to-end yet.** The wire format is now implemented and
-  pinned to TI's published example packets (`firmware/core/src/mcf8316.rs`), but nothing
-  implements `RegisterBus` over esp-hal I²C, so `Action::ClearMcfFault` is still a log line.
-  A real latched MCF fault therefore survives the supervisor's fault-clear, and the restart
-  fails safe via the 15 s `NoRotation` timeout instead of recovering. DRV-08 cannot pass
-  until the driver lands.
+- **Nine-clock I²C bus recovery is not implemented.** Freeing a bus a target is holding low
+  requires bit-banging SCL, which means taking the pins back from the peripheral; that is not
+  expressible while `I2c` owns them. `Mcf::recover` resets the controller side only. The
+  documented fallback is what actually protects us: repeated failures become
+  `BusUnreachable`, which stops the fan and needs a power cycle.
+- **Register configuration is not applied yet.** The driver can read status and issue
+  CLR_FLT, but nothing writes the initial MCF8316D configuration from "Initial MCF8316D
+  configuration" above, and nothing verifies it by read-back at boot. Until it does,
+  SafeBoot's "stored configuration verified" clause is aspirational.
 
 ### MCF8316D I²C wire format (verified 2026-07-27 against primary sources)
 
@@ -203,11 +206,25 @@ example packets byte for byte.
 - Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
 - Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
   first bring-up rather than trusting it.
-- **Executor priority is not yet structural.** The control loop and heartbeat currently share
-  the default executor. Nothing violates the contract while Wi-Fi/Matter is absent, but the
-  higher-priority interrupt executor must exist *before* those tasks are spawned, not after —
-  otherwise a hung network task starves the heartbeat and turns network loss into a watchdog
-  stop, inverting the required behavior.
+### Fault reporting and bus health (2026-07-27)
+
+- **A decoded status outranks the pins.** `nFAULT` and `ALARM` each say only "something"; the
+  fault-status registers (0xE0/0xE2) say what. Both are read every 200 ms and reduced to one
+  reportable condition. Supply faults deliberately outrank the locks they cause — an
+  undervoltage also trips a lock, and naming the lock sends the owner to the wrong subsystem.
+- **`SafeBoot` suppresses MCF fault sources and re-checks them once at its exit.** Evaluating
+  them throughout the hold makes a fault-clear impossible to land: CLR_FLT takes up to 200 ms,
+  so the fan would re-fault four control ticks after the user's command, silently consuming
+  it. Suppressing for the hold gives the clear the full ten seconds; a fault that survives
+  that is reported once. This also absorbs the MCF's own power-up transients.
+- **Losing sight of the drive is a fault, and there are two ways to lose it.** Five
+  consecutive failed reads is one. The other is silence: a reader that has stopped running
+  reports no failures at all, so the counter never moves and total starvation would look
+  exactly like "nothing new this tick". `STATUS_STALE_TIMEOUT_MS` catches that, but only
+  while armed — before arming there is nothing being commanded to protect.
+- **CRC is enabled on every transaction and verified on every read.** A mismatch is a
+  reported failure, never a silent retry: it means either the bus is corrupting data or our
+  framing is wrong, and neither may reach the state machine as truth.
 
 ## Independent limits
 

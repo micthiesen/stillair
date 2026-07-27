@@ -247,8 +247,10 @@ async fn mcf_task(mut mcf: Mcf) {
     }
 
     loop {
-        if mcf::CLEAR_FAULT_REQUEST.signaled() {
-            mcf::CLEAR_FAULT_REQUEST.reset();
+        // `try_take` rather than `signaled()` + `reset()`: the control loop runs as a
+        // higher-priority interrupt and can signal between those two calls, in which case
+        // the reset would silently discard a request the user explicitly made.
+        if mcf::CLEAR_FAULT_REQUEST.try_take().is_some() {
             match mcf.clear_faults().await {
                 // Latched faults can take up to 200 ms to clear; the supervisor's
                 // ten-second safe-boot hold covers that with room to spare.
