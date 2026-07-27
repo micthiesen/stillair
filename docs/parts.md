@@ -90,8 +90,11 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 12 mm deep at both ends.
 
 - Top: M6 × 16 A4-80 flat-head screws through MP-100, at least 9 mm engagement after countersink.
-- Bottom: M6 × 18 A4-80 socket screws through MC-100, approximately 10 mm engagement, with
-  locking washers.
+- Bottom: **M6 × 20** A4-80 socket screws through MC-100 with wedge-locking washers
+  (lengthened from M6 × 18 in the 2026-07 review: socket length is measured under the head,
+  and a wedge-lock *pair* is ~3.5 mm, leaving only ~6.5 mm engagement at 18 mm — below the
+  1.5×D guideline for aluminum threads; 20 mm restores ~8.5–10 mm depending on the washer
+  stack, which must be stated on the drawing).
 
 ## MC-100 stationary motor carrier
 
@@ -114,8 +117,14 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 - Ø16 shank runs from Z3 to the disk shoulder at Z196.7.
 - M12 × 1.75 thread from Z196.7 to approximately Z218.
 - Ø3.2 cross-hole for a castellated nut and cotter.
-- The upper flange sits captive in MP-100. The disk seats on the machined Z196.7 shoulder, so
-  the capture gap is not set by loose washers.
+- **Anti-rotation feature (added 2026-07 review — as drawn there was nothing to counter-hold
+  while torquing the M12 nut)**: machine two parallel wrench flats on the flange OD (or a
+  single flat on the shank above the shoulder) and note the counter-hold in the assembly
+  procedure. Bench note: before ceiling install, nothing retains the spindle in the recess —
+  use a simple holding fixture (recess-up, spindle hanging through a hole) when torquing.
+- The upper flange sits captive in MP-100 (the Ø34.2→Ø16.2 bore step is a real internal
+  shoulder — retention is self-contained in the plate, not ceiling-dependent). The disk
+  seats on the machined Z196.7 shoulder, so the capture gap is not set by loose washers.
 - The spindle passes through MC-100, the GL100 bore, and RH-100 without normal contact.
 
 ## RH-100 captured rotor hub
@@ -135,8 +144,15 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 Tach features:
 
 - One Ø6.10 × 3.15 blind pocket at r68, 30°, for a 6 × 3 mm axially magnetized N52 disk.
-- One 14 radial × 8 tangential × 0.8 mm 316 retaining cap, fixed by two radial M2 × 5 screws.
-- Identical pocket and cap at r68, 210°, with a brass counterweight (CW-100).
+- One 14 radial × 8 tangential × 0.8 mm 316 retaining cap, fixed by **two axial M2 × 5
+  screws through the cap's radial-end ears into tapped holes in the hub top face**
+  (reworded 2026-07 review: the previous "two radial screws" read as a screw-axis direction,
+  which is unbuildable — a 5 mm screw cannot reach r68 from the hub OD; "radial" describes
+  the ear positions).
+- Identical pocket and cap at r68, 210°, with a brass counterweight (CW-100). **CW-100 is
+  not a same-size slug**: a Ø6 × 3 brass copy is ~13% heavier than the magnet; trim to
+  ~Ø6 × 2.65 mm to match, and confirm the resulting ~0.5 mm bondline gap under the CW-side
+  cap is within the adhesive's rated thickness (non-structural).
 - Match complete retained masses within 0.01 g. Adhesive controls rattle only; it is not
   retention.
 
@@ -190,8 +206,11 @@ Three identical adapters per installed pitch set.
 - Hub face matches RH-100: four Ø5.5 holes and two Ø5.20 × 3.2 deep dowel sockets.
 - Use M5 × 30 A4-80 through-bolts, washers, and all-metal prevailing nuts at the hub.
 - Blade saddle centered on Z223.5, with a shallow root stop at r110.
-- Four Ø5.5 holes normal to the saddle at r135/r185, y±25. Use M5 × 35 A4-80 bolts and metal
-  load spreaders.
+- Four Ø5.5 holes normal to the saddle at r135/r185, y±25. Use M5 × 35 A4-80 bolts, metal
+  load spreaders, and **all-metal prevailing nuts** (same hardware class as the hub joint;
+  the callout was missing on this vibration-loaded joint). Pin an exact saddle thickness at
+  the bolt bosses in the adapter drawing (the "≥12 mm" floor alone cannot verify the 35 mm
+  bolt length).
 - Print flat on the hub base with dried filament, specified annealing, and solid material
   around holes and dowels.
 
@@ -253,7 +272,10 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   fail. It must not terminate only on MP-100.
 - Ceiling design envelope: 1.25 kN vertical, 0.30 kN lateral, 60 N·m overturning, 8 N·m
   reaction torque.
-- Credible controller-bypass runaway/load case: 250 RPM.
+- Credible controller-bypass runaway/load case: **270 RPM** (raised from 250 in the 2026-07
+  review: the 60 W supply bounds terminal runaway at ~260–270 RPM via the N³ aero-power
+  law, and the analog trip only guarantees lock below 240 RPM for bounded ramps — see
+  electrical.md's two-tier trip claim).
 - Guarded rotor proof: 216 RPM, two minutes per direction. Do not conduct this test over the
   bed. Use an external guarded drive; if the installed drive must be used, a written
   two-person temporary-limit-bypass procedure is required, followed by restoration and
@@ -294,6 +316,22 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 | Selected blade first-moment mismatch | ≤0.5% target |
 | Magnet/counterweight installed mass mismatch | ≤0.01 g |
 
+## Fabrication defaults (2026-07 review — a fabricator will ask)
+
+- Default tolerance block: **ISO 2768-mK** for all dimensions not individually toleranced.
+- Internal corner radii on MP-100's anchor slots, tether clearance, and cable slot: **R2
+  minimum** (laser/waterjet cannot cut sharp internal corners; LS-100/BL-100 already
+  specify theirs). The tether clearance slot's 14 mm dimension is **radial**, 22 mm
+  tangential.
+- Surface finish where not stated (ST-100, RH-100, SP-100, KD-100): machined finish
+  acceptable; add anodize/passivation callouts at drawing release if desired.
+- The "housing ends at Z178 / nothing projects below Z200" rule is scoped to the **ENC-100
+  housing assembly only** — the catcher (Z200.7) and blades obviously extend below it.
+- MP-100 cannot be cut until two decisions land: the **cable-slot angle** (site-measure the
+  wall conduit route) and the **ENC-100 tab clocking** (a 45° phase offset — tabs at
+  45/105/165/225/285/345° — clears all keepouts with ≥20 mm margin; naive 30°-family
+  spacing lands a tab ~9 mm from a standoff).
+
 ## Fabricated-part register
 
 | ID | Qty | Part | Baseline | Process |
@@ -321,7 +359,14 @@ Do not release motor-dependent metal until:
 - The current STEP is imported.
 - Rotating and stationary faces are identified.
 - Front and rear M4 depths are measured.
-- Bore diameters and bore ownership are established.
+- Bore diameters and bore ownership are established — **including confirming the RH-100
+  pilot register mates only to rotating surfaces** (2026-07 review: if the ~0.1 mm-clearance
+  pilot faces a stationary feature, a bearing failure binds there before the 2.25 mm
+  spindle float is used, defeating the clean-drop assumption behind the catcher).
+- **The GL100's axial body-length tolerance is measured and a derived tolerance stack for
+  the 2.5 ±0.5 mm capture gap (and the ≥2.0 mm worst-case screw clearance) is recorded** —
+  the ±0.5 is currently asserted, not derived; only ST-100 carries a stated tolerance in
+  the stack today.
 - The pilot diameter is derived from the physical motor.
 - The phase-wire exit is located.
 - Bearing ratings are obtained or accepted as documented residual risk.

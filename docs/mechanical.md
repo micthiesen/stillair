@@ -111,7 +111,8 @@ Two secondary load paths:
    through the GL100 Ø30 bore without normal contact (Ø20.5 hub aperture gives 2.25 mm radial
    gap per side; 2.5 ±0.5 mm axial gap to the disk). The M4 hub screws are 0.1–0.2 mm
    subflush; verify ≥2.0 mm worst-case clearance to every rotating surface. Static proof to
-   1.25 kN, then dynamically catch the final mass off-ceiling.
+   1.25 kN, then dynamically catch the final mass off-ceiling, including an off-axis/tilted
+   drop case (pure-axial is the optimistic assumption).
 2. **Whole-assembly tether** protects against the plate, standoffs, and primary anchors as a
    group. At least 4.5 kN complete-system rating, 15–20 mm slack, separate concrete anchor,
    and a rated two-hole fitting at MC-100. Calculate impact energy and dynamically catch the
@@ -131,7 +132,7 @@ Measure these before ordering motor-dependent metal:
 
 | Item | Value |
 |---|---|
-| Runaway load case | 250 RPM (calculation basis; never dynamically tested) |
+| Runaway load case | 270 RPM (calculation basis, raised from 250 in 2026-07 review — supply-power bound; never dynamically tested) |
 | Guarded rotor proof | 216 RPM × 2 min/direction |
 | Installed adapter proof | 500 N radial each |
 | Batch destructive test | >1.0 kN |

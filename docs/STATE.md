@@ -3,69 +3,63 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-27** (six-thread research round integrated: MCF variant, GPIO map,
-bearings, JLCPCB/KiCad, filament, Vancouver anchors/approvals).
+Last updated: **2026-07-27** (13-agent design review integrated; all confirmed fixes
+applied to the docs).
 
 ## Now
 
-- **Design de-risked substantially by desk research.** MCF swapped to plain
-  `MCF8316DVRGFR` (identical silicon; unlocks JLCPCB assembly); 35 RPM sensorless floor
-  confirmed comfortably feasible; GPIO map verified against the module datasheet (NTC moved
-  to GPIO6, ALARM added on GPIO14); EXT_WD wired into the safety story; anchors selected
-  with ~7× margin; Gate 06 reduced to strata approval + one confirming email to the City.
-  Homes: [electrical.md](electrical.md), [controls.md](controls.md),
-  [install.md](install.md).
-- **Control plane locked: Matter over Wi-Fi via rs-matter + rs-matter-embassy** (Apple
-  Home). Open product question: whether Apple Home renders `AirflowDirection` (fallback: a
-  second On/Off "reverse" endpoint). [controls.md](controls.md) > "Home integration".
-- **Procurement state**: wall-box chain, supply, connectors, cable, and the GL100 ordered
-  (connector order verified as the corrected single-row Micro-Fit parts). BOM carries LCSC
-  numbers, lifecycle notes, and the anchor candidates. LM2907 thin stock → buy spares with
-  the V1 order. Blade adapters: Bambu PPA-CF on the project's X2D
-  ([parts.md](parts.md)).
-- **Firmware scaffold compiles, CI-guarded.** No business logic; contract in
-  [controls.md](controls.md).
-- **Nothing fabricated.** Motor-dependent metal gates on measuring the purchased GL100; the
-  V1 PCB gates on KiCad capture; anchors gate on the slab scan.
+- **The full-design review is done and its fixes are in.** Thirteen reviewers (per-block
+  datasheet verification, end-to-end path traces, mount/rotor) found four circuit-level
+  blockers — all now fixed in [electrical.md](electrical.md): the U6 power-up preset race
+  (found independently by four agents; fixed with a delayed-`/PRE` RC + Schmitt), the
+  reversed reverse-polarity MOSFET, the LM2907 timing cap on the wrong node, and two
+  missing GPIO routes (MCU_CLEAR_N → GPIO15, HALL sense → GPIO7). The overspeed claim was
+  re-scoped to a two-tier guarantee (mechanical basis raised to 270 RPM), and the firmware
+  contract gained the load-bearing safety-architecture rules (bit-banged heartbeat,
+  executor priority, permission lifecycle with the 10 s restart cost, percent mapping) in
+  [controls.md](controls.md). Seven new test rows landed in `testing/test-matrix.csv`.
+- **What the review validated**: every MCF register hex is a correct D-generation encoding;
+  the analog trip arithmetic is right to three digits; the Z-stack and all mount hole
+  patterns are mutually consistent; the 3.3 V budget has 35% headroom; connector mating
+  pairs verified. The dossier's architecture is sound — its errors were concentrated in
+  wiring details and unstated firmware assumptions.
+- **Mount work can start** (see [build.md](build.md) > "Mount build-first plan"): mockup
+  first, then ST-100/SP-100/KD-100/BL-100/LS-100 are fully spec'd and motor-independent;
+  MP-100 waits on the cable-slot angle + ENC tab clocking decisions; the adapter filament
+  qualification is the longest non-motor-gated path.
+- **Control plane locked**: Matter over Wi-Fi (rs-matter). Orders in; GL100 + parts en
+  route; CubeMars bearing email sent 2026-07-27 (Gate 01 awaiting reply).
+- Firmware scaffold compiles, CI-guarded; contract now includes stop criterion and
+  plausibility constants.
 
 ## Next
 
 **Capture the V1 controller schematic in KiCad** (`pcb/`), following
-[electrical.md](electrical.md) SCH-01 through SCH-07 (now including EXT_WD, ALARM→GPIO14,
-DEV_MODE standby, and the D-generation pinout notes). Order config and footprint sourcing
-are pre-researched in `pcb/README.md`. It gates the V1 board order, which gates motor tuning
-and every V1-to-V2 test. Not hardware-gated.
+[electrical.md](electrical.md) SCH-01 through SCH-07 as amended by the review (delayed
+`/PRE`, Schmitt buffers, corrected FET orientation, LM2907 fixes, GPIO7/15, GPIO8/9
+pull-ups, 22 µF module bulk, NTC/VBUS circuits). Order config and footprint sourcing are in
+`pcb/README.md`. Not hardware-gated.
 
 ## Candidates Not Chosen
 
-- **Start the strata/slab paper trail** (request structural drawings; the Gate 06 email to
-  the City). Cheap, long-lead, fully parallel — checklist in [install.md](install.md).
-  (The CubeMars bearing-data email was **sent 2026-07-27**; Gate 01 is awaiting their
-  reply — see [parts.md](parts.md).)
-- **rs-matter devkit spike** → commission into Apple Home, then a Fan endpoint to answer
-  the AirflowDirection question. ESP32-C6 dev boards are already on hand, so this is
-  startable any time.
-- **Motor release checks** (faces, thread depths, bores, STEP import) as soon as the GL100
-  arrives — unblocks motor-dependent metal in CAD.
-- **OnShape modeling of motor-independent parts** (plate, standoffs, blades). Startable, off
-  the critical path.
+- **Mount mockup + first metal** (MDF/printed plate-standoff-carrier mockup; order plate/
+  rod/17-4PH stock; fab ST-100/SP-100/KD-100). Owner-driven, fully parallel with KiCad.
+- **Strata/slab paper trail + City email** ([install.md](install.md)). Cheap, long-lead.
+- **rs-matter devkit spike** (dev boards on hand; answers the AirflowDirection question).
+- **Motor release checks** when the GL100 arrives (now includes the pilot-register
+  rotating-surface confirmation and the axial-length tolerance measurement).
+- **Blade adapter filament qualification** — startable as soon as PPA-CF is ordered;
+  longest non-motor-gated path.
 
 ## Learned Recently
 
-- **MCF8316DVRGFR ≡ DULV minus UL paperwork; D silicon has no known errata; 35 RPM is easy
-  for this motor; EXT_WD/ALARM/SPEED-sleep/EEPROM rules** → [electrical.md](electrical.md)
-  SCH-03/05, [controls.md](controls.md).
-- **GPIO14 has no ADC on the C6** — map verified and corrected (NTC→GPIO6, ALARM→GPIO14) →
-  [electrical.md](electrical.md) SCH-04.
-- **No public GL-series bearing data; axial hang trivial, overturning moment is the real
-  ask; external thrust bearing is the fallback** → [parts.md](parts.md).
-- **KB-TZ2 3/8 in SS ~7× margin; adhesive anchors carry overhead-sustained penalties; strata
-  approval is the one hard requirement; cord-and-plug 24 V likely needs no permit** →
-  [install.md](install.md).
-- **JLCPCB 2 oz outer / ENIG orderable (trace/space 0.15 mm caveat, POFV vias paid); MCF +
-  TPSM365 footprints need Ultra Librarian, most others are in KiCad official libs** →
-  `pcb/README.md`.
-- **Bambu PPA-CF selected; creep/fatigue/Z data doesn't exist anywhere, so the empirical
-  qualification plan is the release evidence** → [parts.md](parts.md).
-- **The pre-repo research file survives at `~/.research/ceiling-fan.md`** (now banner-linked
-  here); it yielded the Micro-Fit connector correction and the purchasing split.
+- **Review round-up (2026-07-27)**: all findings, fixes, and residual-risk decisions →
+  [electrical.md](electrical.md) (SCH-01/02/03/04/05/06, PCB-02, two-tier trip),
+  [controls.md](controls.md) (config completeness, firmware safety architecture, new
+  failure rows), [parts.md](parts.md) (SP-100 flats, M6×20, magnet-cap rewording, CW-100
+  trim, fabrication defaults, new gates), [build.md](build.md) (mount build-first plan),
+  `testing/test-matrix.csv` (PCB-03C/D/E, TACH-04/05, CTL-04, DRV-09).
+- **A 1 pulse/rev tach cannot guarantee tight overspeed overshoot** against fast ramps; the
+  supply-power bound is the real backstop → electrical.md two-tier claim, 270 RPM basis.
+- **The dossier's failure mode is wiring/config detail, not architecture** — worth
+  remembering for any remaining unreviewed corners.

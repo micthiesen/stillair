@@ -35,7 +35,10 @@ pub enum FanState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
     Off,
+    /// FanMode On without a percent write: resume the last non-zero setting.
+    On,
     /// Target speed in mechanical RPM, clamped to the released user range.
+    /// Matter PercentSetting 1–100 maps linearly onto [released minimum, 170].
     SetSpeed(u32),
     SetDirection(Direction),
 }

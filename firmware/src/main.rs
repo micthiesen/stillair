@@ -13,8 +13,10 @@
 //! | 2       | SPEED PWM                    |
 //! | 3       | DIR                          |
 //! | 6       | NTC ADC (optional, ADC1_CH6) |
+//! | 7       | HALL_TACH sense (plausibility check input) |
 //! | 12 / 13 | USB D− / D+                  |
 //! | 14      | MCF ALARM (active-high)      |
+//! | 15      | MCU_CLEAR_N (open-drain out) |
 //! | 16 / 17 | UART TX / RX                 |
 //! | 18      | permission ARM_PULSE         |
 //! | 19      | watchdog heartbeat           |

@@ -84,15 +84,28 @@ before the Micro-Fit contacts.
 
 Reverse-polarity protection with `DMP6023LE-13` (−60 V P-channel MOSFET):
 
-- Drain to `RAW24`, source to `VM24`.
+- **Source to `RAW24`, drain to `VM24`** (corrected 2026-07 review: the dossier had D/S
+  reversed, which forward-biases the 2 A-rated body diode through every power-up inrush into
+  the 940 µF bank; the standard orientation keeps inrush in the 28 mΩ channel and the body
+  diode reverse-biased in normal operation).
 - Gate to AGND through 10 kΩ; gate to source through 100 kΩ.
-- `MMSZ5242B` 12 V zener, cathode at source and anode at gate.
+- `MMSZ5242B` 12 V zener, cathode at source and anode at gate. The zener is load-bearing,
+  not optional: without it the divider drives Vgs to ≈ −22 V, past the ±20 V absolute
+  maximum.
 
 On `VM24`:
 
 - `SMCJ24A`, cathode to VM24 and anode to PGND.
 - 2 × Panasonic `EEU-FR1H471`, 470 µF / 50 V low-ESR bulk (940 µF total).
 - 2 × 10 µF / 50 V X7R plus 100 nF / 50 V immediately beside the MCF VM/PGND current loop.
+
+TVS standoff note (2026-07 review): the GST60A24's tolerance is ±3%, so worst-case
+continuous output (24.72 V) slightly exceeds the SMCJ24A's 24 V standoff rating. This is
+**accepted deliberately**: minimum breakdown (~26.7 V) still clears it, and the "fix"
+(SMCJ26A) raises the maximum clamp to ~42 V — above the MCF's 40 V ceiling, which is the
+margin that actually matters. Fuse note: the ordered 3 A fast-blow has ~10× I²t margin
+against inrush at the full 20 ft cable run but shrinks toward ~1.4× on a short bench run;
+if bench nuisance-blows occur, substitute a 3 A time-delay fuse rather than uprating.
 
 **Mandatory V1 scope gate**: the SMCJ24A maximum published clamp is 38.9 V, only 1.1 V below
 the MCF8316D's 40 V absolute maximum. V1 must scope VM during insertion, cutoff, coast, stall
@@ -110,10 +123,18 @@ behavior shows the GST60 is inadequate.
 `TPSM365R6V3RDNR`, fixed 3.3 V / 600 mA, 65 V input:
 
 - Input: 2.2 µF / 100 V X7R plus 100 nF / 100 V.
-- Output: 2 × 22 µF / 10–16 V X7R.
+- Output: 2 × 22 µF X7R, **16–25 V rated in 1206/1210** — the datasheet floor is 40 µF
+  *effective*, and small-case 10 V parts derate below it at 3.3 V DC bias (TI's own BOM uses
+  25 V 1210).
 - CVCC: 1 µF / 16 V. BIAS: directly to the 3.3 V output.
+- **EN: tie to VM24** (or a UVLO divider) — the datasheet forbids floating it.
 - PGOOD: 10 kΩ pull-up to 3.3 V, routed into the permission-clear path.
-- Provide a MODE/SYNC selection jumper for PFM versus forced-PWM qualification.
+- MODE/SYNC selection via a 3-pad jumper to GND (auto/PFM, default) or 3.3 V (forced PWM) —
+  the pin must never float; an unpopulated 2-pad jumper is an invalid state.
+- Power budget (verified 2026-07): worst-case simultaneous 3.3 V load ≈ 391 mA (Wi-Fi TX
+  peak 382 mA dominates; BLE/Wi-Fi coex time-multiplexes and does not add) vs 600 mA rating
+  — adequate with ~35% headroom. J5/J7 export 3.3 V to bench tools; the headroom covers
+  typical probes.
 
 Do not substitute a 36 V-rated regulator behind a TVS that may clamp near 39 V.
 
@@ -137,10 +158,10 @@ register dumps or community drivers untranslated).
 | Connection | Starting value | Purpose |
 |---|---|---|
 | CP → VM | 1 µF, 16 V X7R | Charge-pump reservoir |
-| CPH ↔ CPL | 47 nF, 50 V X7R | Flying capacitor |
+| CPH ↔ CPL | 47 nF, **100 V** X7R | Flying capacitor (datasheet wants ≥2× VM; 50 V gave only 4% margin at nominal bus) |
 | AVDD → AGND | 1 µF, 10 V X7R | Analog rail bypass |
 | DVDD → DGND | 1 µF, ≥6.3 V X7R | Digital rail bypass |
-| SW_BK → FB_BK | 47 µH Coilcraft LPS4018-473MRB | MCF auxiliary buck |
+| SW_BK → FB_BK | 47 µH Coilcraft LPS4018-473MRB | MCF auxiliary buck. **Verify Isat ≥ 910 mA** (the buck OCP max) before capture — the LPS4018's saturation rating is likely below it; a same-value LPS5030/XAL40xx-class part closes the gap |
 | FB_BK → GND_BK | 22 µF, 10 V X7R | Buck output |
 | FG, nFAULT | 4.7 kΩ pull-ups to 3.3 V | Open-drain outputs |
 | SDA, SCL | 4.7 kΩ pull-ups to 3.3 V | Configuration bus |
@@ -150,8 +171,16 @@ register dumps or community drivers untranslated).
 CubeMars publishes 2.650 Ω line-to-line resistance and 2.350 mH inductance for the star
 motor: begin with phase-neutral 1.325 Ω and 1.175 mH. Full register seeds and the
 measured-data gate live in [controls.md](controls.md). FG cannot be divided to exactly one
-pulse per revolution for 20 pole pairs; divide by 10 for two pulses/revolution if useful for
-diagnostics. FG is not the independent overspeed channel.
+pulse per revolution for 20 pole pairs. **Configure FG_DIV = 1h (divide-by-1): 20
+pulses/revolution**, 11.7 Hz at 35 RPM — FG is contract-critical for stop verification and
+the FG-vs-Hall plausibility check, and /1 gives an order of magnitude better supervisory
+resolution and latency than the previously suggested /10. FG is not the independent
+overspeed channel.
+
+I²C note: the MCF is not a plain SMBus device — every transaction starts with a 24-bit
+control word (R/W, CRC enable, data length, memory section/page/address). No factory-default
+7-bit target address is explicitly stated in the datasheet (examples use 0x60); bus-scan at
+first bring-up rather than assuming.
 
 ## SCH-04 ESP32-C6 supervisor
 
@@ -161,7 +190,8 @@ commutation: the
 ESP configures the MCF through I²C and sends speed/direction commands; it never switches
 motor phases.
 
-- 10 µF + 100 nF at 3.3 V.
+- 22 µF + 100 nF at 3.3 V (bumped from 10 µF to match Espressif's reference design; Wi-Fi
+  TX bursts peak ~382 mA).
 - 10 kΩ + 1 µF on EN; reset and boot buttons.
 - 100 Ω series on SPEED, DIR, ARM_PULSE, and the watchdog heartbeat.
 - DNP isolation links on I²C.
@@ -178,23 +208,41 @@ deliberately re-fused.
 | GPIO | Signal | Note |
 |---|---|---|
 | 0 / 1 | SDA / SCL | MCF configuration bus |
-| 2 | SPEED PWM | |
+| 2 | SPEED PWM | 10–350 Hz carrier band (11-bit resolution) |
 | 3 | DIR | |
 | 6 | NTC ADC | optional temperature; ADC1_CH6 |
+| 7 | HALL_TACH sense | 3.3 V-domain Hall input for the FG-vs-Hall plausibility check (added 2026-07 review — the check was unimplementable without it); non-strap, JTAG-inactive by default |
 | 12 / 13 | USB D− / D+ | native USB (fixed-function pins) |
-| 14 | MCF ALARM | push-pull active-high fault companion to nFAULT (was spare) |
+| 14 | MCF ALARM | push-pull active-high fault companion to nFAULT |
+| 15 | MCU_CLEAR_N | open-drain out, 10 kΩ pull-up (added 2026-07 review — it had no pin). Strap reviewed: GPIO15's JTAG-select strap is ignored with default eFuses, and the pull-up satisfies "don't float" |
 | 16 / 17 | UART TX / RX | U0TXD / U0RXD defaults |
-| 18 | permission ARM_PULSE | hardware safety handshake |
-| 19 | watchdog heartbeat | hardware safety handshake |
-| 20 | MCF FG | |
+| 18 | permission ARM_PULSE | hardware safety handshake; software-sequenced pulse only |
+| 19 | watchdog heartbeat | hardware safety handshake; bit-banged only (see controls.md) |
+| 20 | MCF FG | FG_DIV = 1h, 20 pulses/rev |
 | 21 | MCF nFAULT | diagnostic |
 | 22 | 3.3 V PGOOD | diagnostic |
 | 23 | watchdog WDO | diagnostic |
 
-Two module caveats: ADC range/accuracy specs only apply to modules with packaging-label PW
-number ≥ PW-2023-06 (check the date code before trusting NTC accuracy); and only GPIO0–7
-have LP aliases, so deep-sleep wake sources, if ever wanted, must come from that range (the
-NTC on 6 and I²C on 0/1 qualify; GPIO18–23 cannot wake).
+Boot-strap hardware (2026-07 review): add a **10 kΩ pull-up to 3.3 V on GPIO8** — download
+boot requires GPIO8 = 1 while GPIO9 = 0, GPIO8 floats with no internal pull, and Espressif's
+own reference design adds this resistor; without it, flashing via J7 is unreliable. Add an
+external 10 kΩ pull-up on GPIO9 as well (the internal ~45 kΩ is weak for a motor board with
+an exposed header). Layout note: GPIO18 (ARM_PULSE) and GPIO19 (heartbeat) are adjacent —
+a solder bridge turns the heartbeat into an automatic re-arm clock; separate them in layout
+or route with care.
+
+NTC circuit (was unspecified): 10 kΩ 1% from 3.3 V to GPIO6, 10 kΩ NTC from GPIO6 to AGND,
+100 nF at the pin (Espressif's ADC filter recommendation), ADC at 11 dB attenuation
+(0–3300 mV, ±40 mV). VBUS sense divider (was unspecified): 100 kΩ / 100 kΩ to a test pad or
+ADC pin — 5.25 V max lands at 2.6 V, inside the 3.3 V limit.
+
+Two module caveats: ADC range/accuracy specs apply only to chips manufactured on/after
+shielding-case date code **212023** or modules assembled on/after bar-code D/C **2321**
+(corrected 2026-07 — the earlier "PW-2023-06" format was a dossier fabrication; check the
+real date code before trusting NTC accuracy). And only GPIO0–7 have LP aliases, so
+deep-sleep wake sources, if ever wanted, must come from that range (the NTC on 6, HALL on 7,
+and I²C on 0/1 qualify; GPIO18–23 cannot wake). J7 programming note: there is deliberately
+no on-board auto-reset network — the TC2030 jig must drive EN and BOOT (GPIO9) directly.
 
 ## SCH-05 hardware permission and watchdog
 
@@ -202,9 +250,14 @@ Firmware can enable the bridge; it cannot keep it enabled after a fault.
 
 U5 permission latch, `SN74LVC1G74DCTR`:
 
-- VCC 3.3 V; D to 3.3 V; `/PRE` 10 kΩ pull-up.
+- VCC 3.3 V; D to 3.3 V; **`/PRE` tied directly to VCC** (2026-07 review: through a
+  resistor, an open pull-up leaves `/PRE` floating and a subsequent fault's both-asserted
+  state would force Q *high* — the fault would enable drive).
 - CLK from ESP ARM_PULSE through 100 Ω with 100 kΩ pulldown.
-- `/CLR` 10 kΩ pull-up and 100 nF to ground.
+- `/CLR` 10 kΩ pull-up, **no capacitor** (2026-07 review: the previous 100 nF gave
+  millisecond edges, ~5 orders outside the LVC1G74's 10 ns/V input transition-rate spec — a
+  metastability window on safety logic). Buffer `/CLR` through an `SN74LVC1G17` Schmitt
+  gate so the slow diode-OR node presents a clean edge.
 - Q through 1 kΩ to a `2N7002K` gate with 100 kΩ gate-source pulldown; MOSFET source to AGND,
   drain to MCF DRVOFF; DRVOFF 4.7 kΩ pull-up to MCF AVDD.
 - Feed 3.3 V PGOOD, TPS3435 WDO, `OS_LOCK_OK`, `MCU_CLEAR_N`, and the manual-clear button
@@ -215,12 +268,24 @@ U5 permission latch, `SN74LVC1G74DCTR`:
 U6 persistent safety lock, second `SN74LVC1G74DCTR`:
 
 - VCC 3.3 V; D high; CLK low.
-- `/PRE` from 3.3 V PGOOD (PGOOD low during power-up presets Q high/healthy).
-- `/CLR` receives `OVERSPEED_N` and `TACH_PGOOD_N` as active-low wired fault sources.
+- **`/PRE` from *delayed* PGOOD** — a 2026-07 review fix for a confirmed dead-on-arrival
+  race (found independently by four reviewers): as originally drawn (`/PRE` from raw
+  PGOOD), PGOOD releases ~5.5 ms after the 3.3 V rail while `TACH_PGOOD_N` on `/CLR` stays
+  asserted for the TPS7A16's deliberate 60–120 ms DELAY, so `/PRE` released first, the
+  '1G74 latched Q low, and with CLK grounded nothing could ever set it again — the fan
+  could never arm, and every power cycle replayed the race. Fix: PGOOD → RC (10 kΩ pull-up,
+  22 µF, ≥300 ms, comfortably past worst-case TPS7A16 delay plus the 12 V ramp) →
+  `SN74LVC1G17` Schmitt buffer → `/PRE`, with a discharge diode back to PGOOD so power-down
+  still asserts preset promptly. The long RC also closes a second hole: a brief PGOOD
+  glitch can no longer complete the delay and silently erase a latched fault.
+- `/CLR` receives `OVERSPEED_N` and `TACH_PGOOD_N` as active-low wired fault sources (both
+  verified open-collector/open-drain, so the direct wire-OR is valid; no diodes needed).
 - Q is `OS_LOCK_OK` and clears U5 when low.
-- There is no firmware or network-side reset path to U6. After overspeed or tach-rail loss, only a
-  full low-voltage power cycle presets it healthy again, and U5 still requires a fresh user
-  command afterward.
+- There is no firmware or network-side reset path to U6. After overspeed or tach-rail loss,
+  only a genuine power cycle (long enough to discharge the `/PRE` RC) presets it healthy
+  again, and U5 still requires a fresh user command afterward. During a simultaneous
+  overspeed + brownout both async inputs assert (a nonstable '1G74 state); safety holds
+  because PGOOD independently clears U5 through its own diode.
 
 Do not connect MCF nFAULT directly to asynchronous `/CLR` until its DRVOFF/startup
 interaction is characterized. Keep it diagnostic and configure every configurable motor fault
@@ -250,9 +315,28 @@ active-low open-drain and asserts for 200 ms after a timeout; U5 converts that p
 held-off motor state. WDO clears motor permission but does not reset the ESP.
 
 Wire the same 2 Hz heartbeat into the MCF's **EXT_WD input (pin 32)** through a separate
-100 Ω resistor, with the EXT_WDT fault response configured to latched Hi-Z — a second
-zero-extra-parts "MCU died → motor Hi-Z" path inside the driver itself. Test both watchdog
-consumers independently; do not merge their inputs after the resistors.
+100 Ω resistor — a second zero-extra-parts "MCU died → motor Hi-Z" path inside the driver
+itself. Required registers (2026-07 review; without these the path silently doesn't exist):
+`EXT_WDT_EN` = 1, input mode = pin, **`EXT_WDT_CONFIG` = 1000 ms** (the tickle is the
+rising edge every 500 ms, so 500 ms is zero-margin and 100/200 ms fault instantly), and
+**`EXT_WDT_FAULT_MODE` = 1b** = latched Hi-Z — note this field's encoding is *inverted*
+relative to the other fault modes (0b = report-only). Test both watchdog consumers
+independently; do not merge their inputs after the resistors.
+
+Residual risks in the permission chain, documented deliberately (2026-07 review):
+
+- **WDO is a 200 ms pulse, not a latch**: pathological-but-alive firmware could re-arm 200 ms
+  after every watchdog trip (run/coast oscillation). Mitigated by the MCF EXT_WDT latched
+  Hi-Z (above) catching a truly stopped heartbeat, and by the firmware rules in controls.md
+  (bit-banged heartbeat, software-sequenced ARM_PULSE).
+- **Single-point failures that force drive enabled**: a drain-source-shorted 2N7002K (or a
+  DRVOFF-to-GND solder defect) holds DRVOFF low regardless of every latch; an open DRVOFF
+  pull-up leaves an undefined CMOS input; an open BAT54H silently disconnects one fault
+  source from `/CLR` (latent until demanded). Accepted as residual risk — the remaining
+  cover is the MCF's internal limits — with per-path verification rows in the test matrix.
+- Diode-OR low-level margin: worst-case source VOL + BAT54H VF stacks to ~0.6–0.75 V
+  against VIL 0.8 V; real currents sit near 0.4–0.5 V. Thin on paper, fine in practice;
+  re-check at temperature extremes during V1.
 
 Also route the MCF's **ALARM output (pin 39** — push-pull, active-high, enabled via
 ALARM_PIN_EN**)** to the spare ESP GPIO14: it is an opposite-polarity companion to the
@@ -310,13 +394,24 @@ VM24 -> 47 Ω / 0.25 W -> TPS7A1601ADGNR -> +12V_TACH (12.049 V nominal)
   10 kΩ and feeds pin 1 TACH+ through 100 Ω (optional 1 nF C0G to AGND). This level shift
   keeps 3.3 V from driving an unpowered LM2907.
 - Pin 11 TACH−: 6.0 V from a 10 kΩ / 10 kΩ divider on +12V_TACH, bypassed by 100 nF.
-- C1: 100 nF, 1% C0G, pins 2 to 3.
+- C1: 100 nF, 1% C0G, **pin 2 (CP1) to AGND** (corrected 2026-07 review: the dossier said
+  "pins 2 to 3", which dumps the ±180 µA pump current into the output filter node and voids
+  the K-factor/linearity specs — both TI application figures ground the timing cap).
 - Rscale: 562 kΩ 0.1% plus a 200 kΩ sealed ten-turn trimmer as a rheostat (wiper tied to one
-  end), adjusted to approximately 656.1 kΩ total.
-- C2: provisional 4.7 µF / 16 V X7R from pin 3 to AGND, with DNP alternatives for 0.47, 1.0,
-  2.2, 3.3, and 6.8 µF. Final value selected by ripple and dynamic-trip testing.
-- Pin 4 to pin 3; pin 10 to pin 5; pin 5 is buffered VTACH. Pins 6, 7, 13, 14 no connection.
-- Nominal conversion after calibration: 13.175 mV/RPM.
+  end), adjusted to approximately 656.1 kΩ total. Pin 3 carries only Rscale ∥ C2 to AGND.
+- C2: provisional **2.2 µF** / 16 V X7R from pin 3 to AGND (baseline moved from 4.7 µF by
+  the 2026-07 timing analysis — see the two-tier trip claim below), with DNP alternatives
+  for 0.47, 1.0, 3.3, 4.7, and 6.8 µF. Final value selected by ripple and dynamic-trip
+  testing.
+- Pin 4 to pin 3; pin 10 to pin 5; **10 kΩ emitter load from pin 5 to AGND** (added 2026-07
+  review: without it the follower has no pull-down path below the input clamp and
+  falling-speed response is unspecified). Pin 5 is buffered VTACH. **Pin 12 to AGND.**
+  Pins 6, 7, 13, 14 no connection.
+- Nominal conversion after calibration: 13.175 mV/RPM. (Exact threshold model: with the
+  open-collector output the rising trip computes to 199.6 RPM, not 200.0; the Rscale trim
+  absorbs the difference.)
+- 47 Ω dropper: rate **1 W** (an LDO current-limit fault dissipates up to ~7.5 W
+  transiently in a 0.25 W part; 1 W survives indefinitely at the limited current).
 
 Supply note: the LM2907 is TI-active (verified 2026-07) but it is the last monolithic F-to-V
 family and stock is thin everywhere; buy spares with the V1 order. If supply ever dries up,
@@ -333,13 +428,35 @@ the fallback is a discrete charge-pump + comparator redesign of this stage, not 
 - Nominal trip 200.0 RPM rising; raw comparator reset 180.2 RPM. U6 remains locked after raw
   reset until low-voltage power is cycled.
 
-Calibration and qualification: with the bridge disabled, inject a 0–3.3 V square wave into
-HALL_TACH, allow at least 20 seconds settling, adjust for trip at 3.333 Hz, and verify raw
-reset near 3.000 Hz. Then reproduce the fastest credible 170-to-runaway ramp with the final
-rotor inertia and require U6 to lock before 240 RPM; the 4.7 µF C2 is not released by steady
-calibration alone. Compare Hall pulses against MCF FG before every arm and while running: an
-open Hall cable or missing magnet looks like zero speed and is a documented single-point
-failure of the independent channel, so supervisory plausibility logic must stop the fan.
+**Two-tier trip claim** (re-scoped by the 2026-07 timing analysis — the original blanket
+"locked before 240 RPM" does not survive arithmetic): a 1 pulse/rev tach at 3.3 Hz updates
+every ~300 ms, and the C2 filter lag adds τ = Rscale·C2 (3.1 s at 4.7 µF, 1.4 s at 2.2 µF).
+
+- **Tier 1 — bounded ramps** (speed-limit failure with the 1.5 A current limit intact,
+  ~30 RPM/s worst case): the analog trip locks before ~245 RPM with C2 = 2.2 µF. This is
+  what the dynamic-latency test qualifies, with the ramp rate written into the acceptance
+  limit.
+- **Tier 2 — fast misconfiguration** (current limit also maxed, ~120 RPM/s): no realizable
+  C2 catches it inside 240 RPM (the 300 ms sampling delay alone eats 36 RPM). The bound is
+  physical: the 60 W supply caps terminal runaway at ~260–270 RPM (aero power ∝ N³), the
+  trip still fires and latches, and the mechanical design basis is raised to 270 RPM to
+  cover it. A V2 option if a hard guarantee is ever wanted: a retriggerable-monostable
+  period detector (any Hall period < 250 ms trips within one revolution, no averaging).
+
+Calibration: with the bridge disabled, inject a square wave into HALL_TACH **at a
+representative ~1–3% duty cycle, not 50%** (2026-07 review: the real magnet arc gives
+~4 ms pulses at 200 RPM, marginal against the LM2907 charge-pump slew at min-spec pump
+current — 50%-duty calibration masks it; also measure the actual Hall pulse width vs speed
+during commissioning). Allow at least 30 seconds settling, adjust for trip at 3.333 Hz, and
+verify raw reset near 3.000 Hz. Bench note: bladeless motor-only runs accelerate far faster
+than any filter can track — rely on MCF current/power limits, not the analog trip, when no
+rotor is fitted.
+
+Compare Hall pulses against MCF FG **on GPIO7** while running: an open Hall cable or
+missing magnet looks like zero speed and is a documented single-point failure of the
+independent channel, so supervisory plausibility logic must stop the fan (contract in
+controls.md; note the pre-arm check can only assert both-channels-quiet — sensor-loss
+detection necessarily happens in the running state).
 
 ## Unused pins and safe defaults
 
@@ -394,7 +511,17 @@ Guidance: keep bulk capacitors within 10–15 mm of the MCF power return; keep t
 loop compact; route Hall and VTACH over uninterrupted AGND away from OUTA/B/C and switch
 nodes. RF boundary: the ESP antenna sits at the board edge with the Espressif all-layer
 keepout; the printed housing provides a nonmetallic window and at least 15 mm spatial
-clearance to motor, hub, plate, wiring, and fasteners.
+clearance to motor, hub, plate, **carrier**, wiring, and fasteners (2026-07 geometry check:
+all antenna positions along the board clear 15 mm with ≥19 mm actual margin).
+
+Physical orientation (2026-07 review, pinning what the dossier left implicit): the board
+mounts vertically with **local x = 0 at the top (global Z25, near the plate)** and x = 78
+at the bottom (Z103, toward the motor) — J1/power lands near the MP-100 cable slot and the
+tach/safety zone near the Hall bracket. The EB-100 reserve envelope's extra width (110 vs
+78 mm, 80 vs 58 mm) must be allocated to the **inward (X35) side and split explicitly
+between the two board ends** — the worst board corner already sits at r93.8 against the
+Ø194 housing minimum (3.2 mm margin), so nothing (connectors, cable bends) may overhang the
+X93 edge, and the corner-margin tolerance stack must be carried in CAD.
 
 ## Test points
 

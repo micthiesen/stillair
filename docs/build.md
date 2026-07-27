@@ -22,6 +22,24 @@ the bed.
    identify and scan the slab, select the anchors, install the independent tether, then
    repeat limited-speed commissioning away from the bed.
 
+## Mount build-first plan (2026-07 review; supports incremental in-person building)
+
+- **Mock first, cheap**: an MDF or 3D-printed Ø210 disk + three printed/threaded-rod
+  Ø16 × 138 standoffs + a blank Ø188 disk, to feel the 254 mm drop in the room before any
+  stainless is cut.
+- **Fully spec'd and motor-independent — fab any time**: ST-100 standoffs, SP-100 spindle
+  (with the new wrench flats), KD-100 catcher disk, BL-100 blades, LS-100 spreaders. Start
+  the BA adapter filament-qualification program immediately — it is the longest
+  non-motor-gated path in the project.
+- **Stock to order now**: Ø210 × 6 mm 304 plate (or oversized blank), Ø16 6061 rod,
+  **Ø38–40 mm** 17-4PH round bar (the SP-100 flange needs the diameter; not Ø16 bar).
+- **MP-100 waits on two paper decisions** (cable-slot angle, ENC tab clocking — see
+  parts.md "Fabrication defaults"), not on the motor.
+- **MC-100/RH-100 partial strategy**: their motor-independent features (ODs, standoff
+  holes, center clearances, tether holes, adapter stations, tach pockets) can be machined
+  early, leaving the motor-pattern operations (Ø60/Ø50 PCD clocking, wire window, pilot OD)
+  as final ops after the GL100 is measured.
+
 ## Procurement gates
 
 - **Buy first**: CubeMars GL100 KV10, GST60A24 supply, and the fully populated 78 × 58 mm

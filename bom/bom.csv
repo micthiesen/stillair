@@ -10,7 +10,8 @@ Analog PCB,Texas Instruments,TPS7A1601ADGNR,1,60 V input adjustable 12 V tach-ra
 Safety PCB,Texas Instruments,TPS3435CAKAGDDFR,1,Independent 1.6 s MCU watchdog,Selected; fixed-time pinout C SOT-23-8,Not ordered,,https://www.ti.com/product/TPS3435/part-details/TPS3435CAKAGDDFR,LCSC C6339182; thin stock (39 units 2026-07) - re-verify before ordering
 Safety PCB,Texas Instruments,SN74LVC1G74DCTR,2,Permission latch plus power-cycle-only overspeed/tach lock,Selected,Not ordered,,https://www.ti.com/product/SN74LVC1G74,LCSC C840104
 Safety PCB,Diodes Inc,2N7002K-7,2,DRVOFF pull-down plus Hall-to-12 V level shift,Selected,Not ordered,,https://www.diodes.com/part/view/2N7002K,
-Safety PCB,Nexperia,BAT54H,4,Fault diode OR into asynchronous clear,Selected,Not ordered,,https://www.nexperia.com/product/BAT54H,
+Safety PCB,Nexperia,BAT54H,5,Fault diode OR into asynchronous clear plus U6 /PRE discharge diode,Selected (qty corrected 2026-07: five /CLR sources),Not ordered,,https://www.nexperia.com/product/BAT54H,
+Safety PCB,Texas Instruments,SN74LVC1G17DCKR,2,Schmitt buffers for U5 /CLR and the delayed U6 /PRE (2026-07 review fix),Selected,Not ordered,,https://www.ti.com/product/SN74LVC1G17,LCSC-stocked part family
 Overspeed,Texas Instruments,DRV5033FAQDBZR,1,Independent one-pulse Hall tachometer,Selected,Not ordered,,https://www.ti.com/product/DRV5033,LCSC C2869057
 Overspeed,Texas Instruments,LM2907M/NOPB,1 plus spares,14-pin SOIC frequency-to-voltage conversion,Selected and calibrate on V1; TI lifecycle Active (verified 2026-07),Not ordered,,https://www.ti.com/product/LM2907-N/part-details/LM2907M/NOPB,Last monolithic F-to-V family; thin stock everywhere (LCSC C2869731 ~15 units; DigiKey ~56) - buy spares with the V1 order; fallback if supply dries up is a discrete comparator + charge-pump redesign
 Overspeed,Texas Instruments,TLV1701AIDBVR,1,200 RPM nominal analog trip comparator,Selected,Not ordered,,https://www.ti.com/product/TLV1701,LCSC C130035

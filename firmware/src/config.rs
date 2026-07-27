@@ -27,5 +27,15 @@ pub const RAMP_RPM_PER_S: f32 = 1.5;
 pub const SAFE_BOOT_HOLD_SECS: u32 = 10;
 
 /// TPS3435 heartbeat rate on GPIO19. The watchdog services on the falling edge
-/// and times out after 1.6 s nominal.
+/// and times out after 1.6 s nominal. MUST be bit-banged by a task that attests
+/// control-loop liveness — never a free-running peripheral (docs/controls.md >
+/// "Firmware safety architecture").
 pub const WATCHDOG_HEARTBEAT_HZ: u32 = 2;
+
+/// "Verified stopped" criterion: no FG edge AND no Hall edge for this long after
+/// commanding zero speed (docs/controls.md).
+pub const STOPPED_QUIET_SECS: u32 = 5;
+
+/// Running plausibility: stop the fan if FG is nonzero while the Hall channel
+/// stays quiet for this many revolutions (Hall-loss single-point backstop).
+pub const HALL_PLAUSIBILITY_REVS: u32 = 5;
