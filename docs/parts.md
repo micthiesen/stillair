@@ -71,8 +71,10 @@ the GL100 transmits torque only through a non-structural coupling.
 - Three Ø6.6 standoff holes on Ø150 PCD at 90°, 210°, 330°, countersunk from the ceiling face
   for M6 flat-head screws.
 - Center spindle opening Ø16.2; top-face flange recess Ø34.2 × 3.1 deep, cut as a **double-D
-  pocket**: two parallel flats **30.4 mm across** (+0.1/+0.2), normal to Y, giving 0.2 mm
-  clearance per side on SP-100's 30.0 mm flats. This keys the spindle against rotation so the
+  pocket**: two parallel flats **30.4 mm across** (+0.3/−0.0), normal to Y, giving 0.2–0.35 mm
+  clearance per side on SP-100's 30.0 mm flats (band widened 2026-07-27 from +0.1/+0.2 so the
+  feature lands inside a shop's standard ±0.1 and needs no tight-tolerance surcharge; even at
+  the loose end the rotational slack is ~1.3°, irrelevant for anti-rotation). This keys the spindle against rotation so the
   M12 castellated nut can be torqued from below with no counter-hold (2026-07-27).
 - Separate tether-anchor clearance at X0, Y−82: 14 × 22 mm.
 - Cable entry: **none in the plate** (the 12 × 20 mm slot was deleted 2026-07-27 — see
@@ -83,9 +85,13 @@ the GL100 transmits torque only through a non-structural coupling.
 - ENC-100 mounting: six M3 tapped holes at r96, **clocked 45°/105°/165°/225°/285°/345°**
   (locked 2026-07-27; see "ENC-100 tab clocking" below for the margin table and the rejected
   alternatives).
-- **All ten underside taps are blind: 4.0 mm thread depth, 5.0 mm drill depth**, leaving a
-  1.0 mm floor in the 6.0 mm plate (specified 2026-07-27). None break through — a
-  through-tapped hole lets an over-length screw protrude into the ceiling seating interface.
+- **All ten underside taps are M3 × 0.5, blind: 3.5 mm thread depth, 5.0 mm drill depth**,
+  leaving a 1.0 mm floor in the 6.0 mm plate (specified 2026-07-27; thread cut from 4.0 mm
+  and the cable pair from M4 on 2026-07-27 to satisfy JLCCNC's blind-tap DFM rule, which
+  wants ≥ half the nominal diameter left unthreaded at the bottom — 3.5 + 1.5 in a 5.0 drill
+  meets it exactly for M3, where M4 would not). None break through — a through-tapped hole
+  lets an over-length screw protrude into the ceiling seating interface. One tap size across
+  all ten holes is also one tool and one setup.
   Cable-clamp tap centres in Cartesian, for CAD: **(87.03, 13.01)** and **(81.88, 32.25)**.
 - Hard metal spacers bypass any soft ceiling finish.
 
