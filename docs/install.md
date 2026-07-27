@@ -73,6 +73,12 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    absorb ±4–5 mm), drill 3/8 in holes ≥70 mm **without the plate**, brush/blow clean per
    the ESR.
 3. Offer up the plate unit; drive both primaries through washer + slot (socket/impact).
+   **Length/stack budget**: the 3 in screws have 12.7 mm of fixture budget above the
+   63.5 mm minimum embedment — plate 6 mm leaves ≤6.7 mm for washer + spacers combined.
+   Use standard-thickness washers (~2.5 mm) and only as much spacer as the finish demands
+   (≤~4 mm); if more shimming is needed, step up to a 3-1/2 in screw rather than thinning
+   the embedment. Drill ~75 mm for the primaries, ~95–100 mm for the 4 in tether ("too
+   deep" costs nothing; too-shallow driving stalls the screw proud of the plate).
 4. Stack from below: carrier (motor pre-bolted, wires through the window) onto the
    standoffs (M6 × 20 + wedge washers), hub + rotor onto the motor face, KD-100 +
    castellated nut + cotter onto the spindle, then electronics and housing. Service
