@@ -28,7 +28,8 @@ the bed.
   Ø16 × 138 standoffs + a blank Ø188 disk, to feel the 254 mm drop in the room before any
   stainless is cut.
 - **Fully spec'd and motor-independent — fab any time**: ST-100 standoffs, SP-100 spindle
-  (with the new wrench flats), KD-100 catcher disk, BL-100 blades, LS-100 spreaders. Start
+  (flange flats, thread end and cotter hole all dimensioned 2026-07-27), MP-100 ceiling
+  plate, KD-100 catcher disk, BL-100 blades, LS-100 spreaders. Start
   the BA adapter filament-qualification program immediately — it is the longest
   non-motor-gated path in the project.
 - **Stock to order now**: Ø210 × 6 mm 304 plate (or oversized blank), Ø16 6061 rod,

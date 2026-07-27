@@ -123,8 +123,38 @@ Three Ø16.0 × 138.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 t
 - One-piece 17-4PH H1150 stainless, passivated.
 - Ø16.0 shank; Ø34 × 3.0 upper flange; straightness 0.10 mm; concentricity 0.05 mm TIR.
 - Ø16 shank runs from Z3 to the disk shoulder at Z196.7.
-- M12 × 1.75 thread from Z196.7 to approximately Z218.
-- Ø3.2 cross-hole for a castellated nut and cotter.
+- M12 × 1.75 thread from Z196.7 to **Z218.0** (21.3 mm long), with the runout inside the
+  Z196.7 shoulder.
+- **Ø3.2 cotter cross-hole, centreline at Z213.2**, perpendicular to the flange flats.
+
+### SP-100 bottom-end stack (derived 2026-07-27)
+
+Both dimensions above were previously "approximately Z218" and an unlocated Ø3.2 hole, so
+the part could not be drawn. They derive from the retaining nut, fixed here as a **DIN 935
+M12 A4 castellated nut** (s 19.0, total height m 15.0, unslotted height m′ 10.0, six 3.2 mm
+slots) with an **ISO 1234 3.2 × 32 A4 split pin** (trim legs to suit). The nut installs
+bearing-face-up against KD-100, castellated crown downward.
+
+| Z, mm | Feature |
+|---:|---|
+| 196.7 | Ø16→M12 shoulder; thread starts. KD-100 clamps up against this face |
+| 196.7–200.7 | KD-100, 4.0 mm, its Ø13 bore over the thread |
+| 200.7 | Nut bearing face |
+| 200.7–210.7 | Nut unslotted body (m′ = 10.0) |
+| 210.7–215.7 | Castellated crown, 5.0 mm of slot depth |
+| **213.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
+| 218.0 | Thread ends, 2.3 mm (>1 pitch) below the nut face |
+
+- The hole is centred in the 5.0 mm slot band so the cotter has material both sides. Stack
+  tolerance (KD-100 thickness + shoulder position, ~±0.2 mm) shifts the band to 210.5–215.9
+  worst case; the Ø3.2 hole spans 211.6–214.8 and stays inside the band at both extremes.
+- Six castellations on a 1.75 mm pitch give **0.292 mm of axial adjustment per index step**,
+  so worst-case seating error after aligning a slot is 0.146 mm. Rotate the *nut* to find
+  alignment; the spindle is keyed and does not turn.
+- Cross-hole clocking is set perpendicular to the flange flats so the drawing is
+  deterministic; nothing depends on it (a castellated nut aligns to any hole angle).
+- Ø3.2 through a Ø12 thread leaves 4.4 mm of material each side. The nut hangs at r ≤ 11 in
+  free space — RH-100 ends at Z194.2 above it, and the adapters start at r52.
 - **Anti-rotation (dimensioned 2026-07-27; supersedes the 2026-07 review's wrench-flat
   note)**: two parallel flats on the flange OD, **30.0 mm across flats** (−0.1/−0.2),
   symmetric about the axis, cut through the full 3.0 mm flange thickness, flat faces normal
@@ -184,7 +214,9 @@ Tach features:
 - The Ø50 disk edge crosses the Ø50 motor-screw PCD, so the RH-100 screw heads must be
   subflush. Measure the running gap to the lowest rotating screw or surface, not only the
   nominal hub underside.
-- Retain with an M12 castellated nut and cotter through SP-100.
+- Retain with a DIN 935 M12 A4 castellated nut and an ISO 1234 3.2 × 32 A4 split pin through
+  SP-100's Z213.2 cross-hole; the nut clamps KD-100 up against the Z196.7 shoulder. Full
+  stack in "SP-100 bottom-end stack".
 - Static proof the complete disk, nut, spindle, and plate path to 1.25 kN.
 - There must be no normal-operation witness marks after maximum-speed and imbalance tests.
 
