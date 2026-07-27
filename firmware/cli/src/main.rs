@@ -251,7 +251,7 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     let mut out = std::io::stdout().lock();
     writeln!(
         out,
-        "t_ms,state,fault,tgt_mrpm,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir,min_mrpm,config,dropped"
+        "t_ms,state,fault,on,tgt_mrpm,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir,req_dir,min_mrpm,config,dropped"
     )
     .map_err(|e| e.to_string())?;
 
@@ -267,16 +267,18 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             let column = |key: &str| field(&line, key).unwrap_or("").to_string();
             writeln!(
                 out,
-                "{},{},{},{},{},{},{},{},{},{},{},{}",
+                "{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 column("t"),
                 column("state"),
                 column("fault"),
+                column("on"),
                 column("tgt_mrpm"),
                 column("cmd_mrpm"),
                 column("fg_mrpm"),
                 column("hall_mrpm"),
                 column("duty"),
                 column("dir"),
+                column("req_dir"),
                 column("min_mrpm"),
                 column("config"),
                 column("dropped"),

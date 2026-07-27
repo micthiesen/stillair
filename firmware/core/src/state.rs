@@ -249,8 +249,26 @@ impl Supervisor {
     /// The standing speed *setting* — what the user last asked for, which the ramp is on its
     /// way to and which a bare `On` resumes. Distinct from [`Supervisor::commanded`] for
     /// minutes at a time on a 1.5 RPM/s ramp, and from [`Supervisor::measured`] always.
+    ///
+    /// Retained across an `Off` — that is what makes a bare `On` a resume — so it is only
+    /// meaningful alongside [`Supervisor::commanded_on`].
     pub const fn target(&self) -> MilliRpm {
         self.desired.speed
+    }
+
+    /// Whether the user has asked for the fan to be on, independent of what it is doing about
+    /// it. A fan ramping up, a fan ramping down, and a fan held in `SafeBoot` are all "on"
+    /// by this measure if that is what was asked for.
+    pub const fn commanded_on(&self) -> bool {
+        self.desired.on
+    }
+
+    /// The direction the user has asked for, which [`Supervisor::direction`] only catches up
+    /// to after a full reversal (ramp to zero, verify stopped, flip, restart). Reporting the
+    /// applied direction as the *setting* would make a controller's toggle spring back for
+    /// the minute or more that reversal takes.
+    pub const fn requested_direction(&self) -> Direction {
+        self.desired.direction
     }
 
     /// The measured rotor speed, for `PercentCurrent` and telemetry.

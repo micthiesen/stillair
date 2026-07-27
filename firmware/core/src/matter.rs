@@ -17,6 +17,7 @@
 //! reaches it. The numeric attribute encodings below are from the Matter Application Cluster
 //! specification §4.4; the wire encoding of them is rs-matter's job.
 
+use crate::console::Telemetry;
 use crate::speed::{self, MilliRpm};
 use crate::state::{Command, Direction};
 
@@ -72,8 +73,10 @@ impl FanMode {
 /// integration"); the fallback is a second On/Off endpoint that flips direction. Either way
 /// it lands on the same [`Direction`], so the fallback is a wiring change in `app/` and not a
 /// behavioural one.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AirflowDirection {
+    /// The power-on direction, and the one every reported default falls back to.
+    #[default]
     Forward = 0,
     Reverse = 1,
 }
@@ -104,6 +107,51 @@ impl AirflowDirection {
             Direction::Reverse => Self::Reverse,
         }
     }
+}
+
+/// Everything the FanControl cluster reports, derived from one telemetry snapshot.
+///
+/// **Derived, never cached.** An earlier version of the handler kept its own copy of the
+/// requested state, reasoning that `PercentSetting` is the controller's rather than the fan's.
+/// That is true, but the controller is not its only source: the serial tuning console writes
+/// the same commands into the same channel, and a fault clears the request outright. A cache
+/// has no path back from either, so it would sit reporting "High" at a fan that faulted an
+/// hour ago — and re-reporting would only re-serve the stale value. Deriving makes the
+/// divergence unrepresentable, and puts the logic somewhere it can be tested without a radio.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Reported {
+    /// `PercentSetting`: what was asked for. Zero when the fan is off, because the standing
+    /// speed is retained across an Off so a bare `On` can resume it.
+    pub setting: u8,
+    /// `PercentCurrent`: what the tachometer measures, in every state. A fan ramping down
+    /// after an Off is still moving air for a minute or more, and reporting zero the instant
+    /// the command lands would claim it had stopped when it plainly has not.
+    pub current: u8,
+    /// The direction *asked for*. The applied direction lags a reversal by the whole
+    /// stop-verify-flip-restart sequence, and a toggle that springs back for a minute reads
+    /// as a device that ignored you.
+    pub direction: AirflowDirection,
+    /// Whether the fan is meant to be on at all.
+    pub on: bool,
+}
+
+/// Derive the reported attributes from a telemetry snapshot.
+pub fn reported(telemetry: &Telemetry) -> Reported {
+    Reported {
+        setting: if telemetry.on {
+            speed::rpm_to_percent(telemetry.target, telemetry.released_min)
+        } else {
+            0
+        },
+        current: speed::rpm_to_percent(telemetry.measured_fg, telemetry.released_min),
+        direction: AirflowDirection::from_direction(telemetry.requested_direction),
+        on: telemetry.on,
+    }
+}
+
+/// The `FanMode` to report for a snapshot.
+pub fn reported_mode(reported: Reported) -> FanMode {
+    mode_for(reported.on, reported.setting)
 }
 
 /// What a `PercentSetting` write becomes. 0 is Off, not a speed of zero.
@@ -152,9 +200,84 @@ pub fn mode_for(running: bool, percent: u8) -> FanMode {
 mod tests {
     use super::*;
     use crate::config;
+    use crate::state::FanState;
 
     fn min() -> MilliRpm {
         MilliRpm::from_rpm(config::RPM_USER_MIN_TARGET)
+    }
+
+    fn snapshot() -> Telemetry {
+        Telemetry {
+            uptime_ms: 0,
+            state: FanState::Running,
+            fault: None,
+            on: true,
+            target: MilliRpm::from_rpm(100),
+            commanded: MilliRpm::from_rpm(100),
+            measured_fg: MilliRpm::from_rpm(100),
+            measured_hall: MilliRpm::from_rpm(100),
+            duty: crate::speed::SpeedDuty(0),
+            direction: Direction::Forward,
+            requested_direction: Direction::Forward,
+            released_min: MilliRpm::from_rpm(config::RPM_USER_MIN_TARGET),
+            config: crate::mcf_config::ConfigCheck::Verified,
+            dropped: 0,
+        }
+    }
+
+    #[test]
+    fn a_stopped_fan_reports_off_however_it_was_stopped() {
+        // The bug this replaced a cache to prevent: a fault (or a `stop` typed at the serial
+        // console, which never goes through Matter at all) leaves the standing speed setting
+        // in place so a bare `On` can resume it. Reporting the setting as though it were the
+        // state would show "High" in Apple Home at a fan that faulted an hour ago.
+        let mut telemetry = snapshot();
+        telemetry.on = false;
+        telemetry.state = FanState::Fault;
+        telemetry.fault = Some(crate::state::FaultReason::NoRotation);
+        telemetry.measured_fg = MilliRpm::ZERO;
+
+        let reported = reported(&telemetry);
+        assert_eq!(reported.setting, 0);
+        assert!(!reported.on);
+        assert_eq!(reported_mode(reported), FanMode::Off);
+        // ...while the standing target is still there for a resume.
+        assert_eq!(telemetry.target, MilliRpm::from_rpm(100));
+    }
+
+    #[test]
+    fn a_fan_ramping_down_still_reports_the_air_it_is_moving() {
+        // `PercentCurrent` comes off the tachometer in every state. At 1.5 RPM/s a stop from
+        // 170 RPM takes nearly two minutes, and reporting 0 the instant the command lands
+        // would tell the user it had stopped while it was plainly still turning over the bed.
+        let mut telemetry = snapshot();
+        telemetry.on = false;
+        telemetry.state = FanState::Stopping;
+        telemetry.measured_fg = MilliRpm::from_rpm(150);
+
+        let reported = reported(&telemetry);
+        assert_eq!(reported.setting, 0, "the setting is off");
+        assert!(reported.current > 80, "but it is still moving air");
+    }
+
+    #[test]
+    fn a_reversal_reports_the_direction_asked_for_immediately() {
+        // A reversal ramps to zero, verifies stopped, flips DIR and restarts — a minute or
+        // more. Reporting the applied direction would spring the controller's toggle back.
+        let mut telemetry = snapshot();
+        telemetry.requested_direction = Direction::Reverse;
+        telemetry.direction = Direction::Forward;
+        assert_eq!(reported(&telemetry).direction, AirflowDirection::Reverse);
+    }
+
+    #[test]
+    fn a_speed_set_from_the_console_is_reported_to_matter() {
+        // The console writes into the same command channel Matter does. Anything that only
+        // tracked Matter's own writes would never see this.
+        let mut telemetry = snapshot();
+        telemetry.on = true;
+        telemetry.target = speed::percent_to_rpm(42, min()).unwrap();
+        assert_eq!(reported(&telemetry).setting, 42);
     }
 
     #[test]

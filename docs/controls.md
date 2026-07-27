@@ -271,14 +271,27 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   and `WIND` are mechanisms this fan does not have; `STEP` is a stepped-remote idiom.
   Advertising a feature that cannot be honoured is how a controller ends up sending commands
   that silently do nothing.
-- **`PercentSetting` is the controller's state, `PercentCurrent` is the fan's.** The setting
-  must read back as written while the ramp is still minutes away from it, or the slider springs
-  back under the user's finger; the current value comes from the tachometer. `FanMode` On and
-  Auto carry no speed, so they report the supervisor's standing target rather than an invented
-  number. `Smart` (deprecated) is accepted as a synonym for Auto.
+- **Every reported attribute is derived from supervisor telemetry, never cached in the
+  handler.** The first version kept a Matter-private copy of the requested state, on the
+  reasoning that `PercentSetting` is the controller's rather than the fan's. That is true, but
+  the controller is not its only source: the serial tuning console writes the same commands
+  into the same channel, and a fault clears the request outright. A cache has no path back
+  from either, so it would sit reporting "High" at a fan that faulted an hour ago, and
+  re-reporting would only re-serve the stale value. Deriving makes the divergence
+  unrepresentable. The derivation lives in `stillair-core` (`matter::reported`) so it is
+  host-tested — the app crate has no tests, which is precisely how the cache slipped through.
+- **`PercentSetting` is what was asked for; `PercentCurrent` is what the tachometer reads, in
+  every state.** A fan ramping down after an Off is still moving air for a minute or more, so
+  reporting zero the instant the command lands would claim it had stopped while it was plainly
+  still turning. Direction reports the *requested* value, because the applied one lags a
+  reversal by the whole stop-verify-flip-restart sequence and a toggle that springs back for a
+  minute reads as a device that ignored you. `Smart` (deprecated) is accepted as Auto.
 - **Subscribers are refreshed from the handler's `run` hook**, which `rs-matter` drives for
-  every handler in the chain, at a 2 s cadence. Only a write bumps a cluster's data version, so
-  without this a controller would show the speed it asked for and never the speed reached.
+  every handler in the chain, at a 2 s cadence, and it compares the *whole* reported snapshot
+  rather than only the measured speed. Only a write bumps a cluster's data version, so without
+  this a controller would show the speed it asked for and never the speed reached — and
+  watching only what Matter itself wrote would miss every console-issued command and every
+  fault.
 - **The bridge is non-blocking in both directions**: writes `try_send` into the same bounded
   channel the tuning console uses, reads come from the telemetry snapshot. A wedged Matter task
   cannot block the supervisor, and a wedged supervisor cannot block Matter — which is the
@@ -288,6 +301,9 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   re-commissioning from Apple Home.
 - **No Identify cluster.** The Fan device type nominally mandates it and a ceiling fan has
   nothing to flash; rs-matter's own examples omit it too. Revisit if a controller objects.
+- **A Matter startup failure degrades to local control rather than panicking.** A panic takes
+  the whole binary down, control loop included, and stops a fan that was running perfectly
+  well — the opposite of the network-loss row. Losing Matter must lose only Matter.
 - Test attestation credentials, so Apple Home shows "Uncertified Accessory" and adds it anyway.
 - Measured on the C6 at first boot: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
   100 KB heap, 2.19 MB image (53% of the partition). `BUMP_SIZE` is the number to raise if the

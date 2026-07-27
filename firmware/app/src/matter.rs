@@ -17,10 +17,7 @@
 //! from the telemetry snapshot the control loop republishes every tick. A wedged Matter task
 //! therefore cannot block the supervisor, and a wedged supervisor cannot block Matter.
 
-use core::cell::Cell;
-
 use embassy_embedded_hal::adapter::BlockingAsync;
-use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_time::{Duration, Timer};
 use esp_bootloader_esp_idf::partitions::{
     read_partition_table, DataPartitionSubType, PartitionType, PARTITION_TABLE_MAX_LEN,
@@ -56,8 +53,8 @@ use rs_matter_embassy::wireless::{EmbassyWifi, EmbassyWifiMatterStack};
 use static_cell::StaticCell;
 use stillair_core::config;
 use stillair_core::matter as mapping;
-use stillair_core::speed::{self, MilliRpm};
-use stillair_core::state::{Command, FanState};
+use stillair_core::speed::MilliRpm;
+use stillair_core::state::Command;
 
 use crate::console;
 
@@ -84,47 +81,47 @@ pub const DEV_TYPE_FAN: DeviceType = DeviceType {
     drev: 4,
 };
 
-/// The state Matter owns, as opposed to the state the supervisor owns.
+/// The FanControl attributes, derived from the supervisor rather than cached.
 ///
-/// `PercentSetting` is genuinely the controller's, not the fan's: it is what was *asked for*,
-/// and it must read back as written even while the ramp is still minutes away from it —
-/// otherwise the slider springs back under the user's finger. `PercentCurrent` is the fan's
-/// and comes from the tachometer. Conflating the two is the single most common way a Matter
-/// fan misbehaves in a controller UI.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Requested {
-    /// 0 means off. Matches the contract's "PercentSetting 0 = Off".
-    percent: u8,
-    direction: AirflowDirectionEnum,
-}
-
-impl Requested {
-    const fn new() -> Self {
-        Self {
-            // Power-on is always off regardless of any persisted attribute
-            // (`docs/controls.md` > "Boot never restores a running state"). Matter's
-            // StartUpOnOff semantics are deliberately not implemented.
-            percent: 0,
-            direction: AirflowDirectionEnum::Forward,
-        }
-    }
-}
-
+/// **There is deliberately no local copy of the requested state.** An earlier version kept
+/// one, on the reasoning that `PercentSetting` is the controller's state rather than the
+/// fan's. That is true, but the controller is not the only source of it: the serial tuning
+/// console writes the same commands into the same channel, and the supervisor itself clears
+/// the request on a fault or a stop. A Matter-private cache has no path back from any of
+/// those, so it would sit there reporting "High" at a fan that faulted an hour ago, and no
+/// amount of re-reporting would fix it — the re-report would serve the same stale value.
+///
+/// So the supervisor owns the intent (`target`, `commanded_on`, `requested_direction`) and
+/// this reads it. Divergence stops being something to keep in sync and becomes unrepresentable.
+/// The FanControl attributes, derived from the supervisor rather than cached.
+///
+/// **There is deliberately no local copy of the requested state.** An earlier version kept
+/// one, on the reasoning that `PercentSetting` is the controller's state rather than the
+/// fan's. That is true, but the controller is not the only source of it: the serial tuning
+/// console writes the same commands into the same channel, and the supervisor itself clears
+/// the request on a fault or a stop. A Matter-private cache has no path back from any of
+/// those, so it would sit there reporting "High" at a fan that faulted an hour ago, and no
+/// amount of re-reporting would fix it — the re-report would serve the same stale value.
+///
+/// So the supervisor owns the intent (`target`, `commanded_on`, `requested_direction`) and
+/// this reads it. Divergence stops being something to keep in sync and becomes unrepresentable.
 pub struct FanHandler {
     dataver: Dataver,
-    requested: CriticalSectionMutex<Cell<Requested>>,
 }
 
 impl FanHandler {
     pub const fn new(dataver: Dataver) -> Self {
-        Self {
-            dataver,
-            requested: CriticalSectionMutex::new(Cell::new(Requested::new())),
-        }
+        Self { dataver }
     }
 
-    fn requested(&self) -> Requested {
-        self.requested.lock(|cell| cell.get())
+    /// Everything reported to Matter, in one consistent snapshot.
+    ///
+    /// The derivation lives in `stillair-core` so it is host-tested; this is the read of the
+    /// telemetry the control loop republishes every tick.
+    fn reported(&self) -> mapping::Reported {
+        console::latest()
+            .map(|telemetry| mapping::reported(&telemetry))
+            .unwrap_or_default()
     }
 
     /// The bottom of the percent range, which qualification may raise. Taken from the
@@ -143,18 +140,6 @@ impl FanHandler {
         console::COMMANDS
             .try_send(command)
             .map_err(|_| Error::from(ErrorCode::Busy))
-    }
-
-    /// What the fan is actually doing, as a percentage. Zero whenever it is not running, so a
-    /// controller never shows a live speed for a stopped fan.
-    fn current_percent(&self) -> u8 {
-        let Some(telemetry) = console::latest() else {
-            return 0;
-        };
-        if !matches!(telemetry.state, FanState::Running | FanState::Starting) {
-            return 0;
-        }
-        speed::rpm_to_percent(telemetry.measured_fg, telemetry.released_min)
     }
 
     /// Re-report to subscribers when the fan's own state has moved.
@@ -208,12 +193,16 @@ impl Handler for FanCluster {
     /// displays changes faster than this, and every notification costs the network stack work
     /// it would rather spend on the commissioning path.
     async fn run(&self, ctx: impl HandlerContext) -> Result<(), Error> {
-        let mut reported = None;
+        let mut last = None;
         loop {
             Timer::after(NOTIFY_INTERVAL).await;
-            let current = self.0 .0.current_percent();
-            if reported != Some(current) {
-                reported = Some(current);
+            // The whole reported snapshot, not just the measured speed: the serial console
+            // writes the same commands into the same channel, and a fault clears the request
+            // outright. Watching only what Matter itself wrote would leave a controller
+            // showing a setting nobody holds any more.
+            let current = self.0 .0.reported();
+            if last != Some(current) {
+                last = Some(current);
                 self.0 .0.refresh(&ctx);
             }
         }
@@ -242,9 +231,7 @@ impl fan_control::ClusterHandler for FanHandler {
     }
 
     fn fan_mode(&self, _ctx: impl ReadContext) -> Result<FanModeEnum, Error> {
-        let requested = self.requested();
-        let running = requested.percent > 0;
-        Ok(match mapping::mode_for(running, requested.percent) {
+        Ok(match mapping::reported_mode(self.reported()) {
             mapping::FanMode::Off => FanModeEnum::Off,
             mapping::FanMode::Low => FanModeEnum::Low,
             mapping::FanMode::Medium => FanModeEnum::Medium,
@@ -260,15 +247,18 @@ impl fan_control::ClusterHandler for FanHandler {
     }
 
     fn percent_setting(&self, _ctx: impl ReadContext) -> Result<Nullable<u8>, Error> {
-        Ok(Nullable::some(self.requested().percent))
+        Ok(Nullable::some(self.reported().setting))
     }
 
     fn percent_current(&self, _ctx: impl ReadContext) -> Result<u8, Error> {
-        Ok(self.current_percent())
+        Ok(self.reported().current)
     }
 
     fn airflow_direction(&self, _ctx: impl ReadContext) -> Result<AirflowDirectionEnum, Error> {
-        Ok(self.requested().direction)
+        Ok(match self.reported().direction {
+            mapping::AirflowDirection::Forward => AirflowDirectionEnum::Forward,
+            mapping::AirflowDirection::Reverse => AirflowDirectionEnum::Reverse,
+        })
     }
 
     fn set_fan_mode(&self, _ctx: impl WriteContext, value: FanModeEnum) -> Result<(), Error> {
@@ -286,24 +276,10 @@ impl fan_control::ClusterHandler for FanHandler {
         let released_min = self.released_min();
         self.command(mapping::command_for_mode(mode, released_min))?;
 
-        // Keep `PercentSetting` consistent with the mode just written, or a controller that
-        // writes High and then reads the percentage back sees the previous one. `On` and
-        // `Auto` carry no percentage — they resume — so the stored setting is what they
-        // resume to and must not be overwritten.
-        // `On` and `Auto` carry no percentage: they resume whatever speed the supervisor is
-        // still holding. Report *that* rather than inventing a number, so the slider a
-        // controller draws after an On matches the speed the fan is actually heading for.
-        let resumed = console::latest()
-            .map(|telemetry| telemetry.target)
-            .unwrap_or(released_min);
-        self.requested.lock(|cell| {
-            let mut requested = cell.get();
-            requested.percent = match mode.percent() {
-                Some(percent) => percent,
-                None => speed::rpm_to_percent(resumed, released_min),
-            };
-            cell.set(requested);
-        });
+        // Nothing to store: `PercentSetting` and `FanMode` are both read back from the
+        // supervisor, so the command above *is* the state change. `On` and `Auto` carry no
+        // percentage and resume the supervisor's standing target, which the read path already
+        // reports.
         self.dataver.changed();
         Ok(())
     }
@@ -324,11 +300,6 @@ impl fan_control::ClusterHandler for FanHandler {
 
         let released_min = self.released_min();
         self.command(mapping::command_for_percent(percent, released_min))?;
-        self.requested.lock(|cell| {
-            let mut requested = cell.get();
-            requested.percent = percent;
-            cell.set(requested);
-        });
         self.dataver.changed();
         Ok(())
     }
@@ -348,11 +319,6 @@ impl fan_control::ClusterHandler for FanHandler {
         // the setting, not the state — and `docs/controls.md` records that the reversal cost
         // is deliberate.
         self.command(mapping::command_for_direction(direction))?;
-        self.requested.lock(|cell| {
-            let mut requested = cell.get();
-            requested.direction = value;
-            cell.set(requested);
-        });
         self.dataver.changed();
         Ok(())
     }
@@ -465,8 +431,17 @@ pub async fn run(
     // Flash-backed, not the examples' `DummyKvBlobStore`: without persistence every power
     // cut would demand re-commissioning from Apple Home, and this fan is wired to a ceiling.
     let mut partition_table = [0u8; PARTITION_TABLE_MAX_LEN];
-    let mut store = persistent_store(flash, &mut partition_table);
-    stack.startup(&crypto, &mut store).await.expect("startup");
+    let Some(mut store) = persistent_store(flash, &mut partition_table) else {
+        log::error!("no NVS partition; Matter will not start, the fan keeps local control");
+        return;
+    };
+    if let Err(error) = stack.startup(&crypto, &mut store).await {
+        // Deliberately not a panic. A panic takes the whole binary down, control loop
+        // included, and stops a fan that was running perfectly well — the opposite of the
+        // network-loss row of the failure table. Losing Matter must lose only Matter.
+        log::error!("Matter startup failed ({error:?}); the fan keeps local control");
+        return;
+    }
     let kv = stack.matter().kv(store);
 
     log::info!("Matter starting; commission via BLE (QR below)");
@@ -493,14 +468,12 @@ pub async fn run(
 /// Lifted from rs-matter-embassy's own persistent example rather than invented: where the
 /// commissioning state lives has to agree with the partition table `espflash` writes, and
 /// guessing at an offset would corrupt something else on the chip.
-fn persistent_store<'d>(flash: FLASH<'d>, buf: &mut [u8]) -> impl KvBlobStore + 'd {
+fn persistent_store<'d>(flash: FLASH<'d>, buf: &mut [u8]) -> Option<impl KvBlobStore + 'd> {
     let mut flash = FlashStorage::new(flash);
-    let table = read_partition_table(&mut flash, &mut buf[..PARTITION_TABLE_MAX_LEN])
-        .expect("a readable partition table");
+    let table = read_partition_table(&mut flash, &mut buf[..PARTITION_TABLE_MAX_LEN]).ok()?;
     let nvs = table
         .find_partition(PartitionType::Data(DataPartitionSubType::Nvs))
-        .expect("a searchable partition table")
-        .expect("an NVS partition to persist Matter state in");
+        .ok()??;
 
     let range = nvs.offset()..nvs.offset() + nvs.len();
     log::info!(
@@ -508,5 +481,5 @@ fn persistent_store<'d>(flash: FLASH<'d>, buf: &mut [u8]) -> impl KvBlobStore + 
         range.start,
         range.end
     );
-    SeqMapKvBlobStore::new(BlockingAsync::new(flash), range)
+    Some(SeqMapKvBlobStore::new(BlockingAsync::new(flash), range))
 }

@@ -217,6 +217,10 @@ pub struct Telemetry {
     pub uptime_ms: u64,
     pub state: FanState,
     pub fault: Option<FaultReason>,
+    /// Whether the user has asked for the fan to be on. Distinct from every speed field:
+    /// `target` is retained across an `Off` so a bare `On` can resume it, so the setting alone
+    /// cannot tell you whether the fan is meant to be running.
+    pub on: bool,
     /// The standing speed setting — what was asked for. The ramp is on its way to it, so on a
     /// 1.5 RPM/s ramp this leads `commanded` by minutes; recording all three is what makes a
     /// capture show whether a slow arrival was the ramp or the motor.
@@ -229,7 +233,10 @@ pub struct Telemetry {
     /// averaged in: the two disagreeing is a diagnosis, not noise to smooth away.
     pub measured_hall: MilliRpm,
     pub duty: SpeedDuty,
+    /// The direction actually latched on the DIR pin.
     pub direction: Direction,
+    /// The direction asked for, which `direction` only catches up to after a full reversal.
+    pub requested_direction: Direction,
     /// The released minimum speed, the bottom of the Matter percent mapping.
     ///
     /// Reported because it is configuration rather than a constant: qualification raises it,
@@ -261,17 +268,20 @@ impl Telemetry {
         let _ = write!(
             line,
             "{PREFIX}{{\"type\":\"telemetry\",\"t\":{},\"state\":\"{}\",\"fault\":{},\
-             \"tgt_mrpm\":{},\"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\
-             \"dir\":\"{}\",\"min_mrpm\":{},\"config\":\"{}\",\"dropped\":{}}}",
+             \"on\":{},\"tgt_mrpm\":{},\"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\
+             \"duty\":{},\"dir\":\"{}\",\"req_dir\":\"{}\",\"min_mrpm\":{},\"config\":\"{}\",\
+             \"dropped\":{}}}",
             self.uptime_ms,
             state_name(self.state),
             OptionalFault(self.fault),
+            self.on,
             self.target.0,
             self.commanded.0,
             self.measured_fg.0,
             self.measured_hall.0,
             self.duty.0,
             direction_name(self.direction),
+            direction_name(self.requested_direction),
             self.released_min.0,
             self.config.as_str(),
             self.dropped,
@@ -642,12 +652,14 @@ mod tests {
             uptime_ms: 12_345,
             state: FanState::Running,
             fault: None,
+            on: true,
             target: MilliRpm::from_rpm(60),
             commanded: MilliRpm::from_rpm(60),
             measured_fg: MilliRpm(59_800),
             measured_hall: MilliRpm(60_100),
             duty: SpeedDuty(683),
             direction: Direction::Forward,
+            requested_direction: Direction::Forward,
             released_min: MilliRpm::from_rpm(35),
             config: ConfigCheck::Verified,
             dropped: 0,
@@ -663,6 +675,7 @@ mod tests {
             "\"t\":12345",
             "\"state\":\"running\"",
             "\"fault\":null",
+            "\"on\":true",
             "\"tgt_mrpm\":60000",
             "\"cmd_mrpm\":60000",
             "\"fg_mrpm\":59800",
@@ -693,12 +706,14 @@ mod tests {
             uptime_ms: u64::MAX,
             state: FanState::Reversing,
             fault: Some(FaultReason::HallImplausible),
+            on: true,
             target: MilliRpm(u32::MAX),
             commanded: MilliRpm(u32::MAX),
             measured_fg: MilliRpm(u32::MAX),
             measured_hall: MilliRpm(u32::MAX),
             duty: SpeedDuty(u16::MAX),
             direction: Direction::Reverse,
+            requested_direction: Direction::Forward,
             released_min: MilliRpm(u32::MAX),
             config: ConfigCheck::Unverified,
             dropped: u32::MAX,
