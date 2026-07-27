@@ -22,7 +22,7 @@ use esp_hal::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
 use stillair_core::console::{self, Reply, Request, Telemetry};
-use stillair_core::state::Command;
+use stillair_core::state::{Command, FanState};
 
 use crate::mcf;
 
@@ -96,14 +96,22 @@ pub async fn console_task(mut rx: UsbSerialJtagRx<'static, Async>) {
 /// competes with, or delays, an incoming command.
 #[embassy_executor::task]
 pub async fn stream_task() {
+    let mut last_emitted: Option<u64> = None;
     loop {
         let hz = STREAM_HZ.load(Ordering::Relaxed);
         if hz == 0 {
             Timer::after(Duration::from_millis(100)).await;
             continue;
         }
+        // Emit only genuinely new snapshots. The control loop republishes at its own
+        // cadence, so a faster stream request would otherwise duplicate the same instant
+        // several times over — and a duplicate looks exactly like an independent sample in
+        // a CSV, which would misrepresent what was actually measured.
         if let Some(telemetry) = latest() {
-            emit(&Reply::Telemetry(telemetry));
+            if Some(telemetry.uptime_ms) != last_emitted {
+                last_emitted = Some(telemetry.uptime_ms);
+                emit(&Reply::Telemetry(telemetry));
+            }
         }
         Timer::after(Duration::from_hz(u64::from(hz))).await;
     }
@@ -140,16 +148,43 @@ async fn dispatch(line: &str) {
             Ok(value) => emit(&Reply::Register { address, value }),
             Err(error) => emit(&Reply::Error(error)),
         },
-        Request::RegWrite { address, value } => match mcf::request_write(address, value).await {
-            Ok(()) => emit(&Reply::Ok),
-            Err(error) => emit(&Reply::Error(error)),
-        },
+        Request::RegWrite { address, value } => {
+            if let Some(refusal) = refuse_write(address) {
+                emit(&Reply::Error(refusal));
+            } else {
+                match mcf::request_write(address, value).await {
+                    Ok(()) => emit(&Reply::Ok),
+                    Err(error) => emit(&Reply::Error(error)),
+                }
+            }
+        }
         Request::Help => {
-            for line in console::HELP {
-                esp_println::println!("{line}");
+            for text in console::HELP {
+                let mut help = console::Line::new();
+                let _ = core::fmt::Write::write_str(&mut help, text);
+                crate::output::line(help);
             }
             emit(&Reply::Ok);
         }
+    }
+}
+
+/// Why a register write must not happen right now, if it must not.
+///
+/// Raw register access is a bench capability that sits outside every supervisor safeguard —
+/// `run` is clamped, `reg write` is not. Two of those registers decide what a clamped duty
+/// actually means (`MAX_SPEED`) or how faults are handled at all (`FAULT_CONFIG*`), so
+/// writing them under a spinning rotor could defeat the layered limits from the outside.
+/// The configuration block is also EEPROM-backed, and the datasheet requires writes happen
+/// only with the motor stopped and the device idle or faulted.
+fn refuse_write(address: u16) -> Option<&'static str> {
+    if !stillair_core::mcf8316::is_configuration(address) {
+        return None;
+    }
+    match latest().map(|telemetry| telemetry.state) {
+        Some(FanState::IdleOff | FanState::SafeBoot | FanState::Fault) => None,
+        Some(_) => Some("configuration registers are writable only while stopped"),
+        None => Some("state unknown; refusing a configuration write"),
     }
 }
 
@@ -164,5 +199,5 @@ fn command(command: Command) {
 }
 
 fn emit(reply: &Reply<'_>) {
-    esp_println::println!("{}", reply.to_line());
+    crate::output::line(reply.to_line());
 }

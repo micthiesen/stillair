@@ -150,6 +150,12 @@ pub mod reg {
         ("THETA_EST", 0x786),
     ];
 
+    /// The EEPROM-backed configuration block. Writes here are persistent, endurance-limited
+    /// (20k cycles), and are what the safety architecture's fault handling is made of — so
+    /// callers gate them on the motor being stopped.
+    pub const CONFIG_FIRST: u16 = 0x080;
+    pub const CONFIG_LAST: u16 = 0x0AE;
+
     /// Resolve a register name, case-insensitively.
     pub fn by_name(name: &str) -> Option<u16> {
         NAMED
@@ -283,6 +289,11 @@ pub const fn data_bytes32(value: u32) -> [u8; 4] {
 /// Decode four data bytes read back from the device, LSB first.
 pub const fn value_from_bytes32(bytes: [u8; 4]) -> u32 {
     u32::from_le_bytes(bytes)
+}
+
+/// Is this a persistent, EEPROM-backed configuration register?
+pub const fn is_configuration(address: u16) -> bool {
+    address >= reg::CONFIG_FIRST && address <= reg::CONFIG_LAST
 }
 
 /// Bits of [`reg::GATE_DRIVER_FAULT_STATUS`] (§9.1.1, Table 9-3). Only the ones the

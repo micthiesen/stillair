@@ -56,6 +56,7 @@ use stillair_core::time::Millis;
 mod board;
 mod console;
 mod mcf;
+mod output;
 
 use board::{Board, FG_PULSES, HALL_PULSES};
 use mcf::{service_access, Mcf};
@@ -86,7 +87,10 @@ static CONTROL_EXECUTOR: StaticCell<InterruptExecutor<1>> = StaticCell::new();
 
 #[esp_rtos::main]
 async fn main(spawner: embassy_executor::Spawner) {
-    esp_println::logger::init_logger_from_env();
+    // Not `esp_println::logger`: every line, log or protocol, goes through one queue and
+    // one async writer. See `output.rs` for why printing from a critical section is not an
+    // option once telemetry streams.
+    output::init(log::LevelFilter::Info);
 
     let peripherals = esp_hal::init(esp_hal::Config::default());
 
@@ -174,10 +178,10 @@ async fn main(spawner: embassy_executor::Spawner) {
     // Diagnostics, the tuning console, and (later) the network stack live on the
     // thread-mode executor, below the control loop.
     spawner.spawn(mcf_task(Mcf::new(i2c, mcf8316::DEFAULT_TARGET_ID)).unwrap());
-    let usb_rx = UsbSerialJtag::new(peripherals.USB_DEVICE)
+    let (usb_rx, usb_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
         .into_async()
-        .split()
-        .0;
+        .split();
+    spawner.spawn(output::writer_task(usb_tx).unwrap());
     spawner.spawn(console::console_task(usb_rx).unwrap());
     spawner.spawn(console::stream_task().unwrap());
 
@@ -227,6 +231,7 @@ async fn control_task(mut board: Board) {
             measured_hall: supervisor.measured_hall(),
             duty: speed::duty_for(supervisor.commanded()),
             direction: supervisor.direction(),
+            dropped: output::dropped(),
         });
 
         CONTROL_LOOP_BEAT.fetch_add(1, Ordering::Relaxed);

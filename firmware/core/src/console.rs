@@ -32,12 +32,17 @@ pub type Line = String<LINE_CAPACITY>;
 pub enum Request {
     /// One-shot telemetry snapshot.
     State,
-    /// Command a speed in whole RPM. Subject to the same clamping as any other command —
-    /// the console is a convenience, never a way around the limits.
+    /// Command a speed in whole RPM. Clamped by the supervisor exactly like a Matter
+    /// command, so this is a convenience rather than a way around the speed limits.
+    /// (`RegWrite` is not so constrained — see its note.)
     Run(MilliRpm),
     Stop,
     SetDirection(Direction),
     RegRead(u16),
+    /// Raw register access, deliberately outside every supervisor safeguard: it is how
+    /// configuration gets *derived* at the bench, so it cannot be limited to values the
+    /// firmware already knows. The device gates writes to the persistent configuration
+    /// block on the motor being stopped; nothing else is checked.
     RegWrite {
         address: u16,
         value: u32,
@@ -185,6 +190,13 @@ pub struct Telemetry {
     pub measured_hall: MilliRpm,
     pub duty: SpeedDuty,
     pub direction: Direction,
+    /// Protocol lines discarded because the host was not reading fast enough.
+    ///
+    /// Carried in the frame rather than logged, so a capture with a gap in it is
+    /// identifiable *from the capture*. A CSV that is quietly short looks exactly like a
+    /// complete one, and a harness that cannot tell you it lost data is a harness that
+    /// lies by omission.
+    pub dropped: u32,
 }
 
 impl Telemetry {
@@ -196,7 +208,8 @@ impl Telemetry {
         let _ = write!(
             line,
             "{PREFIX}{{\"type\":\"telemetry\",\"t\":{},\"state\":\"{}\",\"fault\":{},\
-             \"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\"dir\":\"{}\"}}",
+             \"cmd_mrpm\":{},\"fg_mrpm\":{},\"hall_mrpm\":{},\"duty\":{},\"dir\":\"{}\",\
+             \"dropped\":{}}}",
             self.uptime_ms,
             state_name(self.state),
             OptionalFault(self.fault),
@@ -205,6 +218,7 @@ impl Telemetry {
             self.measured_hall.0,
             self.duty.0,
             direction_name(self.direction),
+            self.dropped,
         );
         line
     }
@@ -254,7 +268,7 @@ pub const HELP: &[&str] = &[
     "dir fwd|rev               set direction (takes effect from a verified stop)",
     "reg read <name|addr>      read a 32-bit register",
     "reg write <name|addr> <v> write a 32-bit register",
-    "stream on <hz>|off        continuous telemetry, 1-100 Hz",
+    "stream on <hz>|off        continuous telemetry, 1-100 Hz (deduped to the control rate)",
     "fault clear               issue CLR_FLT (counts as a fresh user command)",
 ];
 
@@ -449,6 +463,7 @@ mod tests {
             measured_hall: MilliRpm(60_100),
             duty: SpeedDuty(683),
             direction: Direction::Forward,
+            dropped: 0,
         }
     }
 
@@ -466,6 +481,7 @@ mod tests {
             "\"hall_mrpm\":60100",
             "\"duty\":683",
             "\"dir\":\"fwd\"",
+            "\"dropped\":0",
         ] {
             assert!(line.contains(field), "missing {field} in {line}");
         }
@@ -492,6 +508,7 @@ mod tests {
             measured_hall: MilliRpm(u32::MAX),
             duty: SpeedDuty(u16::MAX),
             direction: Direction::Reverse,
+            dropped: u32::MAX,
         };
         let line = telemetry.to_line();
         assert!(line.ends_with('}'), "truncated at {} bytes", line.len());

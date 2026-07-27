@@ -79,6 +79,8 @@ impl Simulator {
             measured_hall: self.supervisor.measured_hall(),
             duty: speed::duty_for(self.supervisor.commanded()),
             direction: self.supervisor.direction(),
+            // Nothing can be dropped: the simulator hands lines straight to the caller.
+            dropped: 0,
         }
     }
 

@@ -94,7 +94,11 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
     drain(link);
     match words[0] {
         "wait" => wait(link, &words[1..]),
-        "stream" => stream(link, &words[1..]),
+        // `stream on 10` / `stream off` are the device's own syntax and must reach it; the
+        // host verb is `stream <hz>`, distinguished by its argument being a number.
+        "stream" if !matches!(words.get(1), Some(&"on") | Some(&"off")) => {
+            stream(link, &words[1..])
+        }
         // Everything else goes to the device verbatim, so the CLI never has to grow a case
         // for a console command it does not need to interpret.
         _ => passthrough(link, &words.join(" ")),
@@ -147,6 +151,7 @@ fn usage() {
     eprintln!("host commands:");
     eprintln!("  wait <state> [--for <secs>]   block until the fan reaches a state");
     eprintln!("  stream <hz> [--for <secs>]    telemetry as CSV on stdout");
+    eprintln!("      (`stream on <hz>`/`stream off` pass through to the device instead)");
     eprintln!("  script <file|->               run a sequence against one session");
     eprintln!();
     eprintln!("device commands (passed through):");
@@ -180,7 +185,7 @@ fn passthrough(link: &mut dyn Link, request: &str) -> Result<(), String> {
 /// has to wait for it.
 fn wait(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     let wanted = arguments.first().ok_or("wait needs a state name")?;
-    let seconds = flag(arguments, "--for").unwrap_or(60);
+    let seconds = flag(arguments, "--for")?.unwrap_or(60);
 
     link.send("stream on 20").map_err(|e| e.to_string())?;
     // Deadlines run on the link's clock, not ours: against the simulator "30 seconds" means
@@ -227,14 +232,17 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
         .ok_or("stream needs a rate in Hz")?
         .parse()
         .map_err(|_| "stream rate must be a number")?;
-    let seconds = flag(arguments, "--for").unwrap_or(10);
+    let seconds = flag(arguments, "--for")?.unwrap_or(10);
 
     link.send(&format!("stream on {hz}"))
         .map_err(|e| e.to_string())?;
 
     let mut out = std::io::stdout().lock();
-    writeln!(out, "t_ms,state,fault,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir")
-        .map_err(|e| e.to_string())?;
+    writeln!(
+        out,
+        "t_ms,state,fault,cmd_mrpm,fg_mrpm,hall_mrpm,duty,dir,dropped"
+    )
+    .map_err(|e| e.to_string())?;
 
     let deadline = link.elapsed() + Duration::from_secs(seconds);
     let step = Duration::from_millis(250);
@@ -248,7 +256,7 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             let column = |key: &str| field(&line, key).unwrap_or("").to_string();
             writeln!(
                 out,
-                "{},{},{},{},{},{},{},{}",
+                "{},{},{},{},{},{},{},{},{}",
                 column("t"),
                 column("state"),
                 column("fault"),
@@ -257,6 +265,7 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
                 column("hall_mrpm"),
                 column("duty"),
                 column("dir"),
+                column("dropped"),
             )
             .map_err(|e| e.to_string())?;
             frames += 1;
@@ -278,9 +287,22 @@ fn stop_stream(link: &mut dyn Link) {
 }
 
 /// Read a `--flag <number>` out of the argument list.
-fn flag(arguments: &[&str], name: &str) -> Option<u64> {
-    let index = arguments.iter().position(|argument| *argument == name)?;
-    arguments.get(index + 1)?.parse().ok()
+///
+/// Three outcomes, deliberately distinct: absent, present and valid, present and broken. A
+/// mistyped `--for 36000o` must not silently become the default — a capture that was meant
+/// to run for ten hours and quietly ran for ten seconds still exits zero, and the truncated
+/// CSV looks like a complete one.
+fn flag(arguments: &[&str], name: &str) -> Result<Option<u64>, String> {
+    let Some(index) = arguments.iter().position(|argument| *argument == name) else {
+        return Ok(None);
+    };
+    let value = arguments
+        .get(index + 1)
+        .ok_or_else(|| format!("{name} needs a value"))?;
+    value
+        .parse()
+        .map(Some)
+        .map_err(|_| format!("{name} needs a number, got {value:?}"))
 }
 
 #[cfg(test)]
@@ -290,10 +312,17 @@ mod tests {
     #[test]
     fn flags_are_read_by_name() {
         let arguments = ["10", "--for", "120"];
-        assert_eq!(flag(&arguments, "--for"), Some(120));
-        assert_eq!(flag(&arguments, "--missing"), None);
-        assert_eq!(flag(&["--for"], "--for"), None, "a flag with no value");
-        assert_eq!(flag(&["--for", "x"], "--for"), None, "a non-numeric value");
+        assert_eq!(flag(&arguments, "--for"), Ok(Some(120)));
+        assert_eq!(flag(&arguments, "--missing"), Ok(None));
+    }
+
+    #[test]
+    fn a_broken_flag_value_is_an_error_not_a_silent_default() {
+        assert!(flag(&["--for"], "--for").is_err(), "a flag with no value");
+        assert!(flag(&["--for", "36000o"], "--for").is_err(), "a typo");
+        // And it reaches the caller rather than being swallowed into the default.
+        let mut sim = Simulator::new();
+        assert!(stream(&mut sim, &["20", "--for", "x"]).is_err());
     }
 
     #[test]
@@ -322,6 +351,15 @@ mod tests {
         let result = wait(&mut sim, &["running", "--for", "20"]);
         assert!(result.is_err(), "wait should have timed out");
         assert!(result.unwrap_err().contains("timed out"));
+    }
+
+    #[test]
+    fn the_device_stream_syntax_is_not_swallowed_by_the_host_verb() {
+        // `stream off` is a device command; routing it to the host handler would fail with
+        // "stream rate must be a number" even though the help text advertises it.
+        let mut sim = Simulator::new();
+        assert!(step(&mut sim, &["stream", "off"]).is_ok());
+        assert!(step(&mut sim, &["stream", "on", "10"]).is_ok());
     }
 
     #[test]

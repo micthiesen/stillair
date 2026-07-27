@@ -5,6 +5,8 @@
 //! checks the CRC coming back, and reports failure honestly so the supervisor can decide
 //! what a silent drive means.
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_sync::signal::Signal;
@@ -34,8 +36,16 @@ pub enum Access {
     Write { address: u16, value: u32 },
 }
 
-static ACCESS_REQUEST: Signal<CriticalSectionRawMutex, Access> = Signal::new();
-static ACCESS_REPLY: Signal<CriticalSectionRawMutex, Result<u32, &'static str>> = Signal::new();
+/// Requests and replies carry a generation so a reply cannot be misattributed.
+///
+/// Without it, a request that hits its timeout leaves its transaction still in flight; the
+/// lock is released, a second request starts waiting, and the first request's late reply
+/// satisfies it. The console would then report one register's value under another's name —
+/// exactly the kind of confident wrong answer a tuning harness must never give.
+static ACCESS_REQUEST: Signal<CriticalSectionRawMutex, (u32, Access)> = Signal::new();
+static ACCESS_REPLY: Signal<CriticalSectionRawMutex, (u32, Result<u32, &'static str>)> =
+    Signal::new();
+static ACCESS_GENERATION: AtomicU32 = AtomicU32::new(0);
 
 /// Guards the request/reply pair so two callers cannot interleave and read each other's
 /// answers. There is only ever one console, but a mutex costs nothing and makes that a
@@ -55,17 +65,27 @@ pub async fn request_write(address: u16, value: u32) -> Result<(), &'static str>
 
 async fn exchange(access: Access) -> Result<u32, &'static str> {
     let _guard = ACCESS_LOCK.lock().await;
+    let generation = ACCESS_GENERATION
+        .fetch_add(1, Ordering::Relaxed)
+        .wrapping_add(1);
     ACCESS_REPLY.reset();
-    ACCESS_REQUEST.signal(access);
-    match with_timeout(Duration::from_millis(500), ACCESS_REPLY.wait()).await {
-        Ok(reply) => reply,
-        Err(_) => Err("register access timed out"),
+    ACCESS_REQUEST.signal((generation, access));
+
+    let deadline = Duration::from_millis(500);
+    loop {
+        match with_timeout(deadline, ACCESS_REPLY.wait()).await {
+            // A reply from an abandoned earlier request: discard it and keep waiting for
+            // ours rather than reporting it as ours.
+            Ok((answered, _)) if answered != generation => continue,
+            Ok((_, reply)) => return reply,
+            Err(_) => return Err("register access timed out"),
+        }
     }
 }
 
 /// Service a pending console register access, if there is one.
 pub async fn service_access(mcf: &mut Mcf) {
-    let Some(access) = ACCESS_REQUEST.try_take() else {
+    let Some((generation, access)) = ACCESS_REQUEST.try_take() else {
         return;
     };
     let reply = match access {
@@ -76,7 +96,7 @@ pub async fn service_access(mcf: &mut Mcf) {
             .map(|()| 0)
             .map_err(describe),
     };
-    ACCESS_REPLY.signal(reply);
+    ACCESS_REPLY.signal((generation, reply));
 }
 
 const fn describe(error: BusError) -> &'static str {

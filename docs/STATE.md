@@ -56,7 +56,20 @@ redirected to the firmware/harness program at owner request).
   I²C driver with CRC verified on every read, decoded fault-status reporting from 0xE0/0xE2,
   and the interrupt-executor split — control loop, heartbeat, and tach counters at
   Priority3, diagnostics and future Matter tasks below them. **85 host tests.**
-- **Reviewers found real bugs in both phases, all fixed**: `duty_for` returned full scale
+- **Phase C landed (2026-07-27): the tuning harness.** A console protocol in core
+  (plain-text requests, `@`-prefixed JSON replies), a device console task, and
+  `firmware/cli` building `stillair` — which drives either a board (`--port`) or an
+  in-process simulator (`--sim`) running the real `Supervisor` in simulated time. All 24
+  EEPROM config registers and 38 RAM registers are addressable by name. **126 tests.**
+  Usage and the `script` caveat are in [CLAUDE.md](../CLAUDE.md) > "Driving the fan".
+- **The phase C review found a critical one**: `esp_println` takes a lock that clears the
+  *global* interrupt-enable bit and then busy-waits when the USB FIFO is full — so streaming
+  telemetry to a host that stopped reading could stall the Priority3 control loop and
+  heartbeat, i.e. exactly invert the contract the executor split exists to enforce. All
+  output (protocol *and* logs) now goes through one bounded queue drained by a single async
+  writer; when the host stops reading, lines are dropped, counted, and the count is carried
+  in every telemetry frame so a capture with a gap is identifiable as one.
+- **Reviewers found real bugs in every phase, all fixed**: `duty_for` returned full scale
   at the MCF ceiling (2048 into an 11-bit register aliases to zero — maximum command would
   have *stopped* the fan), `whole_rpm()` overflowed on the saturated tach value the crate
   itself manufactures, and `set_released_min` could panic the control loop via inverted
@@ -65,25 +78,17 @@ redirected to the firmware/harness program at owner request).
 
 ## Next
 
-**Phase C: the tuning + telemetry harness.** Three parts, in this order.
+**Phase D: rs-matter on the dev boards.** The last big external unknown — git deps, the
+`[patch.crates-io]` pin table, BLE commissioning, flash-backed persistence, and whether Apple
+Home surfaces `AirflowDirection` at all (the fallback is a second On/Off endpoint). Startable
+today on hardware in hand. Matter tasks go on the **thread-mode** executor, never on
+`control`; that separation already exists and must not be undone.
 
-1. **Device console** on USB-serial-JTAG. Protocol lines are `@`-prefixed newline-delimited
-   JSON; human log lines never start with `@`, so a host tool parses `@` lines and passes the
-   rest through. All output must funnel through one mutexed writer or a log from another task
-   will interleave mid-line. Commands: `reg read/write`, `cfg apply`, `run <rpm>`, `stop`,
-   `dir`, `state`, `stream on <hz>` emitting CSV telemetry (t, commanded, FG rpm, Hall rpm,
-   state, fault, duty). Runs on the **thread-mode** executor, never on `control`.
-2. **Host CLI** (`tools/stillair`) sharing `stillair-core` for the protocol and register
-   encoding, with one subcommand per `testing/test-matrix.csv` row emitting machine-readable
-   pass/fail. This is the part that makes the harness Claude-Code-drivable.
-3. **Simulator** implementing the same boundary so the whole loop runs with no board.
-
-Also still open from phase B, and worth doing first because the console's most useful command
-depends on it: **apply and verify the initial MCF8316D configuration at boot** (the register
-set under "Initial MCF8316D configuration"). Until that exists, SafeBoot's "stored
-configuration verified" clause is aspirational.
-
-**Caveat to carry forward**: a simulator validates the harness, never the sensorless tuning.
+Still open and worth doing alongside it, because tuning cannot start without it:
+**apply and verify the initial MCF8316D register set at boot.** The console can now read and
+write registers by name, which is how the actual values get derived at the bench — but
+nothing writes a configuration at startup or verifies it by read-back, so SafeBoot's "stored
+configuration verified" clause remains aspirational.
 
 ## Candidates Not Chosen
 
