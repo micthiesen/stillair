@@ -42,8 +42,9 @@ and every V1-to-V2 test. Not hardware-gated.
   "Bearing-data request"). Five minutes of effort, starts the Gate 01 clock; do it anytime.
 - **Start the strata/slab paper trail** (request structural drawings; the Gate 06 email to
   the City). Cheap, long-lead, fully parallel — checklist in [install.md](install.md).
-- **rs-matter devkit spike** on a bare ESP32-C6 devkit → commission into Apple Home, then a
-  Fan endpoint to answer the AirflowDirection question. Needs a devkit in hand.
+- **rs-matter devkit spike** → commission into Apple Home, then a Fan endpoint to answer
+  the AirflowDirection question. ESP32-C6 dev boards are already on hand, so this is
+  startable any time.
 - **Motor release checks** (faces, thread depths, bores, STEP import) as soon as the GL100
   arrives — unblocks motor-dependent metal in CAD.
 - **OnShape modeling of motor-independent parts** (plate, standoffs, blades). Startable, off
