@@ -171,11 +171,38 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
 
 ### Known gaps in the current implementation
 
-- **Fault recovery does not work end-to-end yet.** `Action::ClearMcfFault` is a log line, not
-  an I²C write: the 24-bit control word is unimplemented pending datasheet verification. A
-  real latched MCF fault therefore survives the supervisor's fault-clear, and the restart
-  fails safe via the 15 s `NoRotation` timeout instead of recovering. Closing this is part of
-  bringing up the register path; DRV-08 cannot pass until then.
+- **Fault recovery does not work end-to-end yet.** The wire format is now implemented and
+  pinned to TI's published example packets (`firmware/core/src/mcf8316.rs`), but nothing
+  implements `RegisterBus` over esp-hal I²C, so `Action::ClearMcfFault` is still a log line.
+  A real latched MCF fault therefore survives the supervisor's fault-clear, and the restart
+  fails safe via the 15 s `NoRotation` timeout instead of recovering. DRV-08 cannot pass
+  until the driver lands.
+
+### MCF8316D I²C wire format (verified 2026-07-27 against primary sources)
+
+Derived from datasheet **SLLSFX9A** §7.6.2 (Tables 7-10 through 7-14) and app note
+**SLLA662** §2. Encoded in `firmware/core/src/mcf8316.rs`, with tests reproducing TI's own
+example packets byte for byte.
+
+- Every transaction opens by *writing* a 24-bit control word, so the I²C direction bit in
+  the first byte is always 0 — even for a register read, which then issues a repeated start.
+- Control word: `OP_R/W` CW23 (read = 1, write = 0), `CRC_EN` CW22, `DLEN` CW21:20
+  (00 = 16-bit, 01 = 32-bit, 10 = 64-bit), `MEM_SEC` CW19:16, `MEM_PAGE` CW15:12, `MEM_ADDR`
+  CW11:0. All externally addressable memory (EEPROM and RAM) is `MEM_SEC` = `MEM_PAGE` = 0h;
+  every other value is reserved.
+- **Byte order is mixed and is the easiest thing here to get backwards**: the control word
+  goes out most-significant byte first, the data bytes least-significant byte first.
+- CRC-8, when enabled: CCITT polynomial 0x07, init 0xFF, MSB-first per byte. A write covers
+  `{target,0} ‖ control word ‖ data`; a read also includes `{target,1}` before the data.
+  Verification vector: input byte 0x12 → 0x8D.
+- Registers the supervisor uses: `GATE_DRIVER_FAULT_STATUS` 0xE0, `CONTROLLER_FAULT_STATUS`
+  0xE2, `ALGO_STATUS` 0xE4, `ALGO_CTRL1` 0xEA. All 32-bit.
+- `CLR_FLT` is `ALGO_CTRL1` bit 29, written together with `CLR_FLT_RETRY_COUNT` bit 28 —
+  value `0x30000000`. Both are write-only and self-clearing, so read-back proves nothing,
+  and a latched fault can take **up to 200 ms** to clear (the 10 s safe-boot hold covers it).
+- Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
+- Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
+  first bring-up rather than trusting it.
 - **Executor priority is not yet structural.** The control loop and heartbeat currently share
   the default executor. Nothing violates the contract while Wi-Fi/Matter is absent, but the
   higher-priority interrupt executor must exist *before* those tasks are spawned, not after —
