@@ -61,6 +61,29 @@ below minimum — outside recognized capacity entirely.
   never reuse a driven one). Big-box Canada doesn't stock it online; amazon.ca sells
   50-packs (~$60) as the fallback source.
 
+## Mounting sequence
+
+Titen HDs are through-fixture fasteners — the plate and anchors go up together (the screw
+head + washer clamps the plate; there is no set-stud-first step as with wedge anchors):
+
+1. **Bench-assemble the plate unit**: SP-100 spindle into its recess (opens toward the
+   ceiling — cannot be added later) and the three ST-100 standoffs torqued via their
+   ceiling-face M6 flat-heads (also inaccessible later), plus hard spacers. ~3 kg unit.
+2. After the scan clears the spots: mark via the plate or a template (the 11 × 20 slots
+   absorb ±4–5 mm), drill 3/8 in holes ≥70 mm **without the plate**, brush/blow clean per
+   the ESR.
+3. Offer up the plate unit; drive both primaries through washer + slot (socket/impact).
+4. Stack from below: carrier (motor pre-bolted, wires through the window) onto the
+   standoffs (M6 × 20 + wedge washers), hub + rotor onto the motor face, KD-100 +
+   castellated nut + cotter onto the spindle, then electronics and housing. Service
+   reverses this from below; anchors are never touched.
+
+**Open item — tether termination**: a Titen HD ends in a plain hex head, so the wedge-era
+"rated eye nut on the stud" plan no longer applies. Either clamp a **rated pad-eye/anchor
+plate** under the THD37400H head, or substitute Simpson's **Titen HD rod-hanger (internally
+threaded coupler) variant** and thread in a forged 3/8-16 shoulder eyebolt. Decide before
+the tether hole is drilled; the tether path rating must include this fitting.
+
 ## Pre-drill verification checklist (Gate 04)
 
 1. **Slab type is the gating unknown.** PT flat plates are common in 2000s Lower Mainland
