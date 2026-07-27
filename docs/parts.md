@@ -297,6 +297,10 @@ Qualification:
 
 ## BL-100 wooden blades
 
+> **Proposed replacement (2026-07-27, not yet accepted): BP-100 printed blade with CF-rod
+> spar — see [blade-v2.md](blade-v2.md).** If accepted, BL-100, LS-100, and the BA pitch
+> family are superseded; RH-100 is unaffected.
+
 Cut and finish four, select three, keep one spare.
 
 - 9 mm Baltic birch plywood, thickness ±0.25 mm, planform ±0.50 mm, holes ±0.15 mm.
