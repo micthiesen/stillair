@@ -56,9 +56,16 @@ pub fn milli_rpm_to_max_speed(rpm: MilliRpm, pole_pairs: u32) -> u16 {
     (numerator / denominator).min(u64::from(u16::MAX)) as u16
 }
 
-/// Register offsets used by the supervisor. These are `MEM_ADDR` values; all of them sit in
-/// `MEM_SEC` = 0h / `MEM_PAGE` = 0h, the only section external users may touch
-/// (datasheet §7.6.2.1). Every one is a 32-bit register.
+/// Register offsets. These are `MEM_ADDR` values; all of them sit in `MEM_SEC` = 0h /
+/// `MEM_PAGE` = 0h, the only section external users may touch (datasheet §7.6.2.1). Every
+/// one is a 32-bit register.
+///
+/// Addresses come from the datasheet's register-map summaries (§8 for the EEPROM
+/// configuration block, §9 for the RAM block). **Bit-level field layouts are deliberately
+/// not encoded here** beyond the fault-status and `ALGO_CTRL1` bits that firmware acts on:
+/// those were read field by field, and the rest have not been. Configuration is written as
+/// whole 32-bit values whose meaning is derived at the bench with the console, not from
+/// guesses committed to source.
 pub mod reg {
     /// Gate-driver fault status (§9.1.1).
     pub const GATE_DRIVER_FAULT_STATUS: u16 = 0x0E0;
@@ -68,6 +75,96 @@ pub mod reg {
     pub const ALGO_STATUS: u16 = 0x0E4;
     /// Device control, home of `CLR_FLT` (§9.3.1).
     pub const ALGO_CTRL1: u16 = 0x0EA;
+
+    /// Every register the console can name, so tuning reads like `reg read VM_VOLTAGE`
+    /// rather than `reg read 0x47c`.
+    ///
+    /// The EEPROM block (0x80–0xAE) is the configuration surface; the RAM block is where
+    /// the interesting live values are — bus and phase currents, VM, the speed feedbacks,
+    /// and the ISD/IPD state machines that sensorless startup tuning turns on.
+    pub const NAMED: &[(&str, u16)] = &[
+        // Configuration (EEPROM), §8.
+        ("ISD_CONFIG", 0x080),
+        ("REV_DRIVE_CONFIG", 0x082),
+        ("MOTOR_STARTUP1", 0x084),
+        ("MOTOR_STARTUP2", 0x086),
+        ("CLOSED_LOOP1", 0x088),
+        ("CLOSED_LOOP2", 0x08A),
+        ("CLOSED_LOOP3", 0x08C),
+        ("CLOSED_LOOP4", 0x08E),
+        ("FAULT_CONFIG1", 0x090),
+        ("FAULT_CONFIG2", 0x092),
+        ("REF_PROFILES1", 0x094),
+        ("REF_PROFILES2", 0x096),
+        ("REF_PROFILES3", 0x098),
+        ("REF_PROFILES4", 0x09A),
+        ("REF_PROFILES5", 0x09C),
+        ("REF_PROFILES6", 0x09E),
+        ("INT_ALGO_1", 0x0A0),
+        ("INT_ALGO_2", 0x0A2),
+        ("PIN_CONFIG", 0x0A4),
+        ("DEVICE_CONFIG1", 0x0A6),
+        ("DEVICE_CONFIG2", 0x0A8),
+        ("PERI_CONFIG1", 0x0AA),
+        ("GD_CONFIG1", 0x0AC),
+        ("GD_CONFIG2", 0x0AE),
+        // Status and control (RAM), §9.
+        ("GATE_DRIVER_FAULT_STATUS", GATE_DRIVER_FAULT_STATUS),
+        ("CONTROLLER_FAULT_STATUS", CONTROLLER_FAULT_STATUS),
+        ("ALGO_STATUS", ALGO_STATUS),
+        ("ALGO_CTRL1", ALGO_CTRL1),
+        ("ALGORITHM_STATE", 0x18E),
+        ("FG_SPEED_FDBK", 0x194),
+        ("EEPROM_FAULT_STATUS", 0x24C),
+        ("BUS_CURRENT", 0x40C),
+        ("PHASE_CURRENT_A", 0x444),
+        ("PHASE_CURRENT_B", 0x446),
+        ("PHASE_CURRENT_C", 0x448),
+        ("IMAG_SQR", 0x46A),
+        ("CSA_GAIN_FEEDBACK", 0x46C),
+        ("VM_VOLTAGE", 0x47C),
+        ("PHASE_VOLTAGE_VA", 0x484),
+        ("PHASE_VOLTAGE_VB", 0x486),
+        ("PHASE_VOLTAGE_VC", 0x488),
+        ("IALPHA", 0x4DC),
+        ("IBETA", 0x4DE),
+        ("VALPHA", 0x4E0),
+        ("VBETA", 0x4E2),
+        ("ID", 0x4EC),
+        ("IQ", 0x4EE),
+        ("VD", 0x4F0),
+        ("VQ", 0x4F2),
+        ("IQ_REF_ROTOR_ALIGN", 0x52A),
+        ("SPEED_REF_OPEN_LOOP", 0x540),
+        ("IQ_REF_OPEN_LOOP", 0x550),
+        ("SPEED_REF_CLOSED_LOOP", 0x5D2),
+        ("ID_REF_CLOSED_LOOP", 0x612),
+        ("IQ_REF_CLOSED_LOOP", 0x614),
+        ("ISD_STATE", 0x6AE),
+        ("ISD_SPEED", 0x6B8),
+        ("IPD_STATE", 0x6EA),
+        ("IPD_ANGLE", 0x72E),
+        ("ED", 0x772),
+        ("EQ", 0x774),
+        ("SPEED_FDBK", 0x782),
+        ("THETA_EST", 0x786),
+    ];
+
+    /// Resolve a register name, case-insensitively.
+    pub fn by_name(name: &str) -> Option<u16> {
+        NAMED
+            .iter()
+            .find(|(known, _)| known.eq_ignore_ascii_case(name))
+            .map(|(_, address)| *address)
+    }
+
+    /// Reverse lookup, for labelling a raw address in output.
+    pub fn name_of(address: u16) -> Option<&'static str> {
+        NAMED
+            .iter()
+            .find(|(_, known)| *known == address)
+            .map(|(name, _)| *name)
+    }
 }
 
 /// Value written to [`reg::ALGO_CTRL1`] to clear latched faults.

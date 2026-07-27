@@ -1,0 +1,16 @@
+[package]
+name = "stillair-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+publish = false
+
+# The host half of the tuning harness. Shares `stillair-core` with the firmware so the
+# protocol, the register map, and the limits cannot drift between the two ends of the link.
+[[bin]]
+name = "stillair"
+path = "src/main.rs"
+
+[dependencies]
+stillair-core = { path = "../core" }
+serialport = { version = "4", default-features = false }

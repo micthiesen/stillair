@@ -12,6 +12,7 @@
 #![cfg_attr(not(test), no_std)]
 
 pub mod config;
+pub mod console;
 pub mod mcf8316;
 pub mod speed;
 pub mod state;

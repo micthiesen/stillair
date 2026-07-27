@@ -43,18 +43,22 @@ use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{channel, timer, LSGlobalClkSource, Ledc, LowSpeed};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
+use esp_hal::usb_serial_jtag::UsbSerialJtag;
 use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
 use stillair_core::config;
+use stillair_core::console::Telemetry;
 use stillair_core::mcf8316;
+use stillair_core::speed;
 use stillair_core::state::{Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 mod board;
+mod console;
 mod mcf;
 
 use board::{Board, FG_PULSES, HALL_PULSES};
-use mcf::Mcf;
+use mcf::{service_access, Mcf};
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
@@ -167,8 +171,15 @@ async fn main(spawner: embassy_executor::Spawner) {
     control.spawn(heartbeat_task(heartbeat).unwrap());
     control.spawn(control_task(board).unwrap());
 
-    // Diagnostics and (later) the network stack live on the thread-mode executor, below.
+    // Diagnostics, the tuning console, and (later) the network stack live on the
+    // thread-mode executor, below the control loop.
     spawner.spawn(mcf_task(Mcf::new(i2c, mcf8316::DEFAULT_TARGET_ID)).unwrap());
+    let usb_rx = UsbSerialJtag::new(peripherals.USB_DEVICE)
+        .into_async()
+        .split()
+        .0;
+    spawner.spawn(console::console_task(usb_rx).unwrap());
+    spawner.spawn(console::stream_task().unwrap());
 
     // TODO(phase C/D): Wi-Fi + Matter via rs-matter-embassy, and the tuning console —
     // spawned on `spawner`, never on `control`.
@@ -183,6 +194,10 @@ async fn control_task(mut board: Board) {
     let mut reported = supervisor.state();
 
     loop {
+        while let Ok(command) = console::COMMANDS.try_receive() {
+            supervisor.command(command);
+        }
+
         let mut inputs: Inputs = board.inputs();
         // Absent a fresh read this stays `Stale`, which the supervisor treats as carrying
         // no information — neither evidence of a fault nor evidence of health.
@@ -202,6 +217,17 @@ async fn control_task(mut board: Board) {
                 supervisor.fault()
             );
         }
+
+        console::publish(Telemetry {
+            uptime_ms: now().0,
+            state: supervisor.state(),
+            fault: supervisor.fault(),
+            commanded: supervisor.commanded(),
+            measured_fg: supervisor.measured(),
+            measured_hall: supervisor.measured_hall(),
+            duty: speed::duty_for(supervisor.commanded()),
+            direction: supervisor.direction(),
+        });
 
         CONTROL_LOOP_BEAT.fetch_add(1, Ordering::Relaxed);
         Timer::after(CONTROL_TICK).await;
@@ -259,6 +285,10 @@ async fn mcf_task(mut mcf: Mcf) {
             }
         }
 
+        // Console register accesses are serviced between status polls, so a tuning session
+        // never has to wait a full poll interval for an answer.
+        service_access(&mut mcf).await;
+
         match mcf.fault_status().await {
             Ok(status) => {
                 if status.any() {
@@ -278,7 +308,11 @@ async fn mcf_task(mut mcf: Mcf) {
             }
         }
 
-        Timer::after(Duration::from_millis(config::STATUS_POLL_MS)).await;
+        // Split so a console access is picked up promptly rather than at the poll edge.
+        for _ in 0..4 {
+            service_access(&mut mcf).await;
+            Timer::after(Duration::from_millis(config::STATUS_POLL_MS / 4)).await;
+        }
     }
 }
 

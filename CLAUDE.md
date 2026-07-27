@@ -13,12 +13,13 @@ open next step with `/next`.
 
 ## Quick reference
 
-`firmware/` is two crates on purpose. `stillair-core` holds the whole behavioral contract as
-sans-I/O logic with no esp-\* dependencies, so it builds and tests on the host; `firmware/app`
-is the ESP32-C6 binary and is its own workspace with its own target.
+`firmware/` is three crates on purpose. `stillair-core` holds the whole behavioral contract as
+sans-I/O logic with no esp-\* dependencies, so it builds and tests on the host; `firmware/cli`
+is the host-side tuning harness; `firmware/app` is the ESP32-C6 binary and is its own
+workspace with its own target.
 
 ```bash
-cd firmware            # host workspace: the supervisor contract
+cd firmware            # host workspace: core + cli
 cargo test             # the tests that can actually fail for a behavioral reason
 cargo fmt && cargo clippy --all-targets
 
@@ -26,6 +27,28 @@ cd firmware/app        # the C6 binary: target/runner from app/.cargo/config.tom
 cargo build
 cargo run              # flash + monitor via espflash (needs the board)
 ```
+
+## Driving the fan (the tuning harness)
+
+`firmware/cli` builds `stillair`, which speaks the console protocol to either a board
+(`--port`) or an in-process simulator (`--sim`). Everything it prints is machine-readable and
+it exits non-zero on failure, so a commissioning step is a shell command with an exit code.
+
+```bash
+cd firmware && cargo build
+target/debug/stillair --sim script my-sequence.txt   # a sequence in ONE session
+target/debug/stillair --port /dev/tty.usbmodem1101 wait running --for 30
+target/debug/stillair --sim stream 10 --for 120 > sweep.csv
+```
+
+**Use `script` for anything multi-step.** Each CLI invocation opens a fresh link, and against
+`--sim` a fresh link is a fresh simulator that has forgotten everything — so a two-command
+sequence run as two invocations silently tests nothing.
+
+**The simulator validates the harness, never the motor.** It runs the real `Supervisor`
+against a toy rotor with simulated time, so protocol/CLI/CSV/pass-fail logic are all
+exercised without hardware. It says nothing about sensorless startup, acoustics, or whether
+any register value is correct.
 
 **After firmware changes run `cargo fmt && cargo clippy --all-targets && cargo test` in
 `firmware/`, and `cargo fmt && cargo clippy --all-targets && cargo build` in `firmware/app/`.**

@@ -236,6 +236,12 @@ impl Supervisor {
         self.tach.measured()
     }
 
+    /// The independent Hall estimate. Reported alongside [`Supervisor::measured`] rather
+    /// than blended into it: the two disagreeing is the Hall-loss diagnosis.
+    pub const fn measured_hall(&self) -> MilliRpm {
+        self.tach.measured_hall()
+    }
+
     pub const fn direction(&self) -> Direction {
         self.applied_direction
     }

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core"]
+members = ["core", "cli"]
 # `app` is the ESP32-C6 binary. It is deliberately its own workspace so that this
 # one keeps the host as its default target and `cargo test` here Just Works;
 # `app/.cargo/config.toml` pins the RISC-V target for builds run from `app/`.

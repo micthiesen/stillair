@@ -6,8 +6,9 @@
 //! what a silent drive means.
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::mutex::Mutex;
 use embassy_sync::signal::Signal;
-use embassy_time::{Duration, Timer};
+use embassy_time::{with_timeout, Duration, Timer};
 use esp_hal::i2c::master::{Error as I2cError, I2c};
 use esp_hal::Async;
 use stillair_core::mcf8316::{
@@ -25,6 +26,65 @@ pub static STATUS: Signal<CriticalSectionRawMutex, StatusRead> = Signal::new();
 /// Raised by the control loop when the supervisor emits `ClearMcfFault`, serviced by the
 /// I²C task. Crossing tasks like this keeps the blocking-free control loop free of I²C.
 pub static CLEAR_FAULT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+
+/// A register access asked for by the console.
+#[derive(Debug, Clone, Copy)]
+pub enum Access {
+    Read(u16),
+    Write { address: u16, value: u32 },
+}
+
+static ACCESS_REQUEST: Signal<CriticalSectionRawMutex, Access> = Signal::new();
+static ACCESS_REPLY: Signal<CriticalSectionRawMutex, Result<u32, &'static str>> = Signal::new();
+
+/// Guards the request/reply pair so two callers cannot interleave and read each other's
+/// answers. There is only ever one console, but a mutex costs nothing and makes that a
+/// property of the code rather than of the wiring.
+static ACCESS_LOCK: Mutex<CriticalSectionRawMutex, ()> = Mutex::new(());
+
+/// Read a register on behalf of the console. Times out rather than hanging: a wedged bus
+/// must not take the console down with it.
+pub async fn request_read(address: u16) -> Result<u32, &'static str> {
+    exchange(Access::Read(address)).await
+}
+
+/// Write a register on behalf of the console.
+pub async fn request_write(address: u16, value: u32) -> Result<(), &'static str> {
+    exchange(Access::Write { address, value }).await.map(|_| ())
+}
+
+async fn exchange(access: Access) -> Result<u32, &'static str> {
+    let _guard = ACCESS_LOCK.lock().await;
+    ACCESS_REPLY.reset();
+    ACCESS_REQUEST.signal(access);
+    match with_timeout(Duration::from_millis(500), ACCESS_REPLY.wait()).await {
+        Ok(reply) => reply,
+        Err(_) => Err("register access timed out"),
+    }
+}
+
+/// Service a pending console register access, if there is one.
+pub async fn service_access(mcf: &mut Mcf) {
+    let Some(access) = ACCESS_REQUEST.try_take() else {
+        return;
+    };
+    let reply = match access {
+        Access::Read(address) => mcf.read(address).await.map_err(describe),
+        Access::Write { address, value } => mcf
+            .write(address, value)
+            .await
+            .map(|()| 0)
+            .map_err(describe),
+    };
+    ACCESS_REPLY.signal(reply);
+}
+
+const fn describe(error: BusError) -> &'static str {
+    match error {
+        BusError::Transfer(_) => "i2c transfer failed",
+        BusError::Crc(_) => "reply failed its checksum",
+    }
+}
 
 /// Why a register access failed.
 #[derive(Debug, Clone, Copy, PartialEq)]
