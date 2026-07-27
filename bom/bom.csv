@@ -1,0 +1,37 @@
+Subsystem,Manufacturer,Part number,Qty,Purpose,Design status,Purchase status,Order ref,Source
+Drive,CubeMars,GL100 KV10,1,24 V direct-drive motor,Selected; face ownership fastener depth and bearing gates open,Ordered (RobotShop),RM-CUBE-00P,https://www.cubemars.com/product/gl100-kv10-gimbal-motor.html
+Power,Mean Well,GST60A24-P1J,1,24 V 2.5 A 60 W certified desktop supply,Selected; 90 W fallback only if measured capacity test fails,Ordered (DigiKey),1866-2152-ND,https://www.meanwell.com/Upload/PDF/GST60A/GST60A-SPEC.PDF
+Power,Qualtek,AC30UNA-R,1,AC line cord for the 24 V supply,Selected,Ordered (DigiKey),993-AC30UNA-R-ND,
+Motor PCB,Texas Instruments,MCF8316DULVRGFR,1,Sensorless FOC driver with integrated FETs,Selected for PCB V1,Not ordered,,https://www.ti.com/product/MCF8316D
+Control PCB,Espressif,ESP32-C6-MINI-1-H4,1,Local HomeKit supervisor rated -40 to 105 C,Selected over N4 normal-temperature variant,Not ordered,,https://www.espressif.com/en/module/esp32-c6-mini-1-en
+Control PCB,Texas Instruments,TPSM365R6V3RDNR,1,65 V input fixed 3.3 V 600 mA module,Selected,Not ordered,,https://www.ti.com/product/TPSM365R6
+Analog PCB,Texas Instruments,TPS7A1601ADGNR,1,60 V input adjustable 12 V tach-rail regulator,Selected,Not ordered,,https://www.ti.com/product/TPS7A16
+Safety PCB,Texas Instruments,TPS3435CAKAGDDFR,1,Independent 1.6 s MCU watchdog,Selected; fixed-time pinout C SOT-23-8,Not ordered,,https://www.ti.com/product/TPS3435/part-details/TPS3435CAKAGDDFR
+Safety PCB,Texas Instruments,SN74LVC1G74DCTR,2,Permission latch plus power-cycle-only overspeed/tach lock,Selected,Not ordered,,https://www.ti.com/product/SN74LVC1G74
+Safety PCB,Diodes Inc,2N7002K-7,2,DRVOFF pull-down plus Hall-to-12 V level shift,Selected,Not ordered,,https://www.diodes.com/part/view/2N7002K
+Safety PCB,Nexperia,BAT54H,4,Fault diode OR into asynchronous clear,Selected,Not ordered,,https://www.nexperia.com/product/BAT54H
+Overspeed,Texas Instruments,DRV5033FAQDBZR,1,Independent one-pulse Hall tachometer,Selected,Not ordered,,https://www.ti.com/product/DRV5033
+Overspeed,Texas Instruments,LM2907M/NOPB,1,14-pin SOIC frequency-to-voltage conversion,Selected and calibrate on V1,Not ordered,,https://www.ti.com/product/LM2907-N/part-details/LM2907M/NOPB
+Overspeed,Texas Instruments,TLV1701AIDBVR,1,200 RPM nominal analog trip comparator,Selected,Not ordered,,https://www.ti.com/product/TLV1701
+Overspeed,Bourns,3296W-1-204LF,1,200 kOhm 10-turn V1 trip calibration,Selected for V1,Not ordered,,https://www.bourns.com/products/series/3296
+Overspeed,Nexperia,BAT54S,1,VTACH comparator-input rail clamps,Selected,Not ordered,,https://www.nexperia.com/product/BAT54S
+Overspeed,Generic,6x3 mm axially magnetized N52 disc,1,One-pulse rotor magnet,Mechanically captive; field qualify,Not ordered,,
+Protection,Diodes Inc,DMP6023LE-13,1,60 V P-MOS reverse polarity protection,Selected,Not ordered,,https://www.diodes.com/part/view/DMP6023LE
+Protection,Littelfuse,SMCJ24A,1,24 V bus transient backstop,Mandatory scoped-bus V1 gate,Not ordered,,https://www.littelfuse.com/products/overvoltage-protection/tvs-diodes/surface-mount/smcj/smcj24a
+Power PCB,Panasonic,EEU-FR1H471,2,470 uF 50 V low-ESR bus bulk,Selected,Not ordered,,https://industrial.panasonic.com/ww/products/pt/aluminum-cap-lead/models/EEUFR1H471
+Power PCB,Coilcraft,LPS4018-473MRB,1,47 uH MCF auxiliary buck inductor,Selected for V1,Not ordered,,https://www.coilcraft.com/en-us/products/power/shielded-inductors/lps/lps4018/
+Wall box,Switchcraft,721A,1,2.1 mm 5 A DC input jack for P1J plug,Selected,Ordered (DigiKey),SC3508-ND,https://www.switchcraft.com/dc-power-jack-0-084-2-1mm-pin-solder-lugs-termination/721a/
+Wall box,Littelfuse,0FHA0200Z,1,Covered inline ATO fuse holder,Selected,Ordered (DigiKey),F3209-ND,https://www.digikey.ca/en/products/detail/littelfuse-commercial-vehicle-products/0FHA0200Z/2516485
+Wall box,Littelfuse,0287003.H,2,3 A source fuse plus spare,Selected; verify nuisance-free startup,Ordered (DigiKey),0287003.H-ND,https://www.digikey.ca/en/products/detail/littelfuse-inc/0287003-H/3104042
+Wall box,E-Switch,300SP1J1BLKM2QE,1,5 A 28 VDC hard cutoff,Selected,Ordered (DigiKey),EG4311-ND,https://www.digikey.ca/en/products/detail/e-switch/300SP1J1BLKM2QE/668609
+Cable,Belden,5300UE 18/2,Measure,CMR FT4 wall-to-ceiling 24 V feed; total source-to-board run at most 20 ft or use 16 AWG plus rated 18 AWG pigtail splice,Selected,Ordered (DigiKey; by the foot),135-5300UE008500-DS-ND,https://catalog.belden.com/techdata/EN/5300UE_techdata.pdf
+PCB connector,Molex,43045-0200,1,Two-circuit Micro-Fit board header for power,Selected,Ordered (DigiKey),WM1813-ND,https://www.molex.com/en-us/products/part-detail/430450200
+PCB connector,Molex,43045-0300,1,Three-circuit Micro-Fit board header for phases,Selected,Ordered (DigiKey),WM1861-ND,https://www.molex.com/en-us/products/part-detail/430450300
+Cable connector,Molex,43025-0200,1,Two-circuit Micro-Fit mating receptacle for power,Selected,Ordered (DigiKey),WM1783-ND,https://www.molex.com/en-us/products/part-detail/430250200
+Cable connector,Molex,43025-0300,1,Three-circuit Micro-Fit mating receptacle for phases,Selected,Ordered (DigiKey),WM1846-ND,https://www.molex.com/en-us/products/part-detail/430250300
+Cable contact,Molex,43030-0038,5 plus spares,Micro-Fit female crimp contact for 18 AWG leads,Selected for the 18 AWG power and phase pigtails,Ordered (DigiKey),WM13070CT-ND,https://www.molex.com/en-us/products/part-detail/430300038
+PCB connector,JST,B3B-PH-K-S,1,Three-pin Hall daughterboard interface,Selected,Not ordered,,https://www.jst-mfg.com/product/index.php?series=199
+PCB connector,JST,B2B-PH-K-S,1,Two-pin optional temperature interface,Selected,Not ordered,,https://www.jst-mfg.com/product/index.php?series=199
+PCB connector,GCT,USB4105-GF-A,1,Native USB-C data interface,V1 development,Not ordered,,https://gct.co/connector/usb4105
+Retention,Generic certified assembly,1/8 in 7x19 304 SS lanyard,1,Independent safety tether,Specify complete rating at least 4.5 kN,Not ordered,,https://www.e-rigging.com/one-eighth-inch-7x19-type-304-stainless-steel-wire-rope
+Custom mechanics,Per docs/parts.md,MP-100 through ENC-100,1 set,Plate carrier hub capture adapters blades housing,Release only after motor and slab gates,Not ordered; blocked on gates,,../docs/parts.md

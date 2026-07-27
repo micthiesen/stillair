@@ -1,0 +1,27 @@
+{
+  "project": "stillair",
+  "peers": {
+    "omni-notify": {
+      "path": "../omni-notify",
+      "notes": "Source of the sync skill bootstrap. No other shared resources yet."
+    },
+    "unseamless-coop": {
+      "path": "../unseamless-coop",
+      "notes": "Source of the next/wrap session-continuity skills. That project runs an orchestrator/worker fleet; this one is solo."
+    }
+  },
+  "resources": [
+    {
+      "path": ".claude/skills/next/",
+      "peers": ["unseamless-coop"],
+      "mode": "judgment",
+      "notes": "Shared shape only (gather ground truth -> enumerate candidates -> recommend -> record in docs/STATE.md). unseamless-coop's version adds fleet/worker spawning and rig batching; this version is solo and points at docs/decisions.md + docs/build.md instead of ROADMAP.md. Port procedure improvements, never the fleet/rig steps."
+    },
+    {
+      "path": ".claude/skills/wrap/",
+      "peers": ["unseamless-coop"],
+      "mode": "judgment",
+      "notes": "Shared shape only (sweep learnings -> decide next -> rewrite STATE.md wholesale -> commit -> sign off). unseamless-coop's version has fleet/rig teardown rules; this version is solo with its own learning-routing table."
+    }
+  ]
+}

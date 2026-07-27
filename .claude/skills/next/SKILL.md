@@ -1,0 +1,71 @@
+---
+name: next
+description: >
+  Decide what the project's next step should be. Reads docs/STATE.md, the release gates in
+  docs/decisions.md, the build sequence in docs/build.md, and recent git history, enumerates 2-4
+  candidate next steps with a gating analysis (what each unblocks, size, risk), recommends one, and
+  records the decision + runners-up in docs/STATE.md. Use when unsure what to work on next, when
+  the previous Next step completed, or from /wrap when concluding a session. TRIGGER on "what's
+  next", "what should we do next", "pick the next step", "/next".
+user_invocable: true
+---
+
+# Next (Decide The Next Step)
+
+Turn "what should we do now?" from an open-ended re-derivation into a short, recorded decision.
+The output is always two things: a **recommendation with its why**, and an **updated
+`docs/STATE.md`** so the decision survives this session.
+
+## 1. Gather Ground Truth (Cheap, Parallel)
+
+- Read [`docs/STATE.md`](../../../docs/STATE.md) — the previous Next and the candidates not chosen
+  (your shortlist starts here).
+- Read the gating structure: [`docs/decisions.md`](../../../docs/decisions.md) (release gates) and
+  [`docs/build.md`](../../../docs/build.md) (build sequence + procurement gates). Check
+  [`bom/bom.csv`](../../../bom/bom.csv) purchase status if a candidate depends on parts.
+- `git log --oneline` since STATE's "Last updated" date — what actually landed since the decision
+  was recorded.
+
+Don't re-read the deep spec docs unless a candidate genuinely hinges on a detail; the point of
+STATE.md is that you shouldn't have to.
+
+**STATE.md candidates can be stale.** Before starting a "build this charted thing" step,
+`git grep`/`git log` to confirm it isn't already done — fix the stale entry as part of the
+decision.
+
+## 2. Enumerate Candidates (2–4)
+
+For each candidate, one tight block:
+
+- **What it is** — one sentence, concrete enough to start.
+- **What it unblocks** — its place in the gating chain (release gates, build phases). Unblocking
+  the critical path outranks polish.
+- **Hardware-gated or not** — needs a purchased part in hand, a fabricated part, or bench access
+  → note the gate. Pure docs/CAD/KiCad/firmware work is always startable.
+- **Size + risk** — rough effort, and the biggest unknown that could sink it.
+
+## 3. Recommend One
+
+Pick with these biases, in order:
+
+1. **Unblock the critical path.** Work that advances STATE's Now/Next beats work that widens the
+   surface.
+2. **De-risk the biggest unknown early.** A cheap probe that could invalidate a plan beats
+   building on the unproven plan (this project's gates encode exactly this: measure the motor
+   before machining, scope the bus before trusting the TVS).
+3. **Parallelize the independent.** The recommendation can be "start X AND kick off Y in the
+   background" — candidates aren't mutually exclusive.
+
+State the recommendation in two sentences: what, and why it beats the runner-up. For a genuinely
+contentious or expensive direction (a pivot, a multi-week bet), escalate to `/devils-advocate`
+before recording it.
+
+## 4. Record It
+
+Rewrite `docs/STATE.md`:
+
+- **Next** — the chosen step, its two-line why, the doc pointer, and any hardware gate.
+- **Candidates Not Chosen** — the runners-up and the one-line reason each waits. This is what
+  makes the *next* run of this skill cheap.
+
+Commit if mid-session; leave it for `/wrap` if wrapping anyway.
