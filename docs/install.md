@@ -86,7 +86,10 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    63.5 mm minimum embedment — plate 6 mm leaves ≤6.7 mm for washer + spacers combined.
    Use standard-thickness washers (~2.5 mm) and only as much spacer as the finish demands
    (≤~4 mm); if more shimming is needed, step up to a 3-1/2 in screw rather than thinning
-   the embedment. Drill ~75 mm for the primaries, ~95–100 mm for the 4 in tether ("too
+   the embedment. Hardware (2026-07): Prime-Line 9080006 USS 3/8 × 1 in OD zinc washers —
+   one under each head, one as the hard spacer per anchor (2.5 mm covers the ~1–2 mm
+   ceiling texture plus any slightly-proud countersunk M6 heads on the plate's ceiling
+   face); stack = 11 mm of the 12.7 mm budget. Drill ~75 mm for the primaries, ~95–100 mm for the 4 in tether ("too
    deep" costs nothing; too-shallow driving stalls the screw proud of the plate).
 4. Stack from below: carrier (motor pre-bolted, wires through the window) onto the
    standoffs (M6 × 20 + wedge washers), hub + rotor onto the motor face, KD-100 +
