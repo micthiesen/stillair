@@ -26,6 +26,11 @@ const P = 0.40;  // camber position
 const T = 0.07;  // thickness
 const N = 30;    // points per surface
 
+// camber-line height at 30% chord: sections anchor to the spar by this point,
+// NOT the chord line — the cambered section's material sits above its chord
+// line, so a rod on the chord line would run outside the blade entirely
+const YC30 = M / P ^ 2 * (2 * P * 0.3 - 0.3 ^ 2);
+
 annotation { "Feature Type Name" : "BP-100 airfoil sections" }
 export const bp100Sections = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
@@ -44,7 +49,7 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
             const anchor = vector(s.ys, s.zr) * millimeter;
             const u = vector(-cos(tw), -sin(tw));    // chordwise, LE -> TE
             const v = vector(-sin(tw), cos(tw));     // thickness-wise, toward ceiling
-            const le = anchor + 0.3 * c * vector(cos(tw), sin(tw));
+            const le = anchor + 0.3 * c * vector(cos(tw), sin(tw)) - (YC30 * c) * v;
             const gapRel = definition.teGap / c;
 
             var upper = [];

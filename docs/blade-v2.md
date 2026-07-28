@@ -38,7 +38,10 @@ geometry, aero intent, and the OnShape build path.
 Blade-local frame used by this doc and the Part Studio: **origin on the rotor axis at the
 blade pitch plane, X radial outboard, Z up toward the ceiling, Y toward the leading edge.**
 Project Z (ceiling-down) = 223.5 − Z_local. The spar/pitch axis is the X axis; every section
-is anchored to it at its 30%-chord point. Twist rotates the LE toward the ceiling (+Z_local).
+is anchored to it at its **camber-line point above 30% chord** (0.05625 c above the chord
+line — anchoring by the chord-line point itself would put the straight rod *below* the
+cambered section's skin, outside the material; caught 2026-07-27). Twist rotates the LE
+toward the ceiling (+Z_local).
 
 ## Station table
 
@@ -79,13 +82,15 @@ custom FeatureScript (enter 6407) and keep this table as the fallback / cross-ch
 
 ## Spar and segmentation
 
-- **Spar**: one Ø3 × 400 mm pultruded CF rod, **cut to 358 mm**, occupying a Ø3.4 mm channel
-  on the spar axis from r112 to r470. Outboard of r470 the section gets too thin for
-  ≥1 mm channel walls; the unsupported tip span carries trivial load. Adhesive bond along the
-  full channel at assembly.
+- **Spar**: one Ø3 × 400 mm pultruded CF rod, **cut to 318 mm**, occupying a Ø3.4 mm channel
+  on the spar axis from r112 to r430. Two effects end the channel there: the section thins
+  outboard, and the proplet run-in (Z-raise starting at the r500 station) lifts the lofted
+  material off the straight spar line — at r440 the lower wall is 1.0 mm and by r470 it is
+  zero. Walls are ≥1.2 mm over the full r112–r430 span. The unsupported tip span carries
+  trivial load. Adhesive bond along the full channel at assembly.
 - **Two segments**, joined at r330 (near max chord, deepest glue face):
   - **Segment A** r110→r330 (220 mm) including the root fitting.
-  - **Segment B** r330→r558.8 (229 mm) with the channel blind-ended at r470.
+  - **Segment B** r330→r558.8 (229 mm) with the channel blind-ended at r430.
   - **Joint**: a single flat scarf plane through (r330, y0), rotated 30° about the Z axis so
     the seam runs diagonally across the chord (~130 mm seam, ~2.4× the glue area of a butt
     joint). The rod crosses the joint and self-aligns it; the non-normal plane keys the two
@@ -102,9 +107,10 @@ The blade slims toward the root; the structure is a boss under the airfoil, dire
 rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
 
 - **Pad**: underside flat at **Z_local −16.5** (project Z240.0), footprint r118–r192,
-  y +18 to −40, R8 perimeter transitions blending into the airfoil body. At r110 the airfoil's
-  own lower surface reaches Z239.5, so the pad is nearly flush at the root and proud further
-  out.
+  y +18 to −40, R8 perimeter transitions blending into the airfoil body. Within that
+  footprint the airfoil's lower surface reaches Z239.0, so the pad is ~1 mm proud at worst;
+  the root TE (outside the footprint, aft of y−40) droops below the pad plane, which is fine
+  as long as the adapter plate stays inside the footprint.
 - **Bolts**: four Ø5.5 vertical through-holes at **r130/r180, y +10/−30** (two rows parallel
   to the spar, straddling it; the old y±25 pattern no longer fits the slim root — this
   pattern is the adapter's to match, RH-100 is untouched). Top side: hex-nut pockets for M5
@@ -121,9 +127,13 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
 Computed from the station table with twist about the 30% anchor (script:
 [`cad/bp100_envelope_check.py`](../cad/bp100_envelope_check.py), rerun if stations change):
 
-- Upper surface worst case Z211.6 (r250) — inside the ≥Z203.2 ceiling-gap floor; the raised
-  tip reaches Z211.8.
-- Lower surface worst case Z242.1 (r250); root pad Z240.0 + below-pad hardware ≤ Z254 ✓.
+- Upper surface worst case Z215.0 (tip micro-station; Z218.1 at r250) — inside the ≥Z203.2
+  ceiling-gap floor with margin.
+- Lower surface worst case Z248.5 (r250) ≤ Z254 ✓. Within the root-pad footprint the lower
+  surface only reaches Z239.0, so the pad underside stays at Z240.0 (+ below-pad hardware
+  ≤ Z254 ✓); the root TE droops to Z243.7–247.1 *outside* the pad footprint, so the flat
+  adapter must not extend past the pad footprint aft of y−40.
+- Rod channel walls 1.24 mm (r110) to 2.75 mm (r250), ≥1.2 mm over the whole r112–r430 span.
 - Tip radius exactly 558.8 (44.0 in) — do not exceed.
 - Estimated mass ~130–150 g per blade in foaming PLA + 5 g rod, vs ~320 g birch — roughly
   halves rotor mass and stored energy; hub/catcher specs unchanged (they were sized for the
@@ -136,10 +146,14 @@ Computed from the station table with twist about the 30% anchor (script:
 2. **Part Studio**, blade-local frame (origin = rotor axis at pitch plane, X radial, Z to
    ceiling). Sketch `spar` on Top: construction line (110, 0) → (558.8, 0).
 3. **Station planes**: offset planes from Right at each station radius (8 planes).
-4. **Sections**: on each plane, the NACA 4-series custom feature — code 6407, chord and
-   twist (+`PITCH_OFFSET`) per table, rotation about the 30%-chord point, that point placed
-   at (y = anchor-shift, z = Z-raise), LE toward +Y, upper surface toward +Z. Fallback: spline
-   the 31-point table into a station sketch, then scale/rotate/translate per station.
+4. **Sections**: the custom FeatureScript
+   [`cad/bp100_sections.fs`](../cad/bp100_sections.fs) (paste into a Feature Studio in the
+   blade document, then insert "BP-100 airfoil sections" in the Part Studio). It generates
+   all 8 station sketches from its built-in copy of the station table — scaled, twisted
+   about the camber-line anchor, dropped to the Z223.5 pitch plane — with *Pitch offset*
+   (the `PITCH_OFFSET` variant knob) and *TE thickness* (default 0.6 mm, printable blunt TE)
+   as dialog inputs. Steps 1–3 are then optional scaffolding: the feature computes its own
+   planes; keep the manual station planes only as references for the split and root pad.
 5. **Main loft**: sections r110 → r500, no end conditions. Verify with curvature combs /
    zebra; if the mid-span looks starved between r250 and r330, add LE/TE guide splines
    through the section endpoints rather than extra stations.
@@ -151,10 +165,10 @@ Computed from the station table with twist about the 30% anchor (script:
 8. **Holes**: four Ø5.5 through-all at r130/r180 × y+10/−30; hex pockets on the top exit
    faces; Ø15 × 2 balance pocket in the pad underside.
 9. **Spar channel**: sketch Ø`ROD_D` on the r112 station plane centered on the spar axis,
-   extrude-remove to r470.
+   extrude-remove to r430.
 10. **Split**: plane through (330, 0, 0) rotated 30° about Z; Split part → segments A and B.
     Offset B's joint face −0.10 mm (Move Face) for glue clearance.
-11. **Checks**: section > measure wall at r420–r470 around the channel (≥1.0 mm), verify
+11. **Checks**: section > measure wall at r400–r430 around the channel (≥1.0 mm), verify
     Z_local extremes against the envelope numbers above, mass properties per segment.
 12. **Export**: STL per segment (A root-face down, B joint-face down), into `cad/` as
     `BP-100_segA` / `BP-100_segB` once accepted; print 4 blade sets, select 3, keep a spare,

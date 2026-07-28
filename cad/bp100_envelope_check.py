@@ -1,8 +1,20 @@
-"""NACA 6407 coordinates + per-station blade numbers for the BP-100 redesign."""
+"""Re-check BP-100 envelope with sections anchored by the camber point at 30% chord."""
 
 import math
 
-M, P, T = 0.06, 0.40, 0.07  # camber, camber pos, thickness
+M, P, T = 0.06, 0.40, 0.07
+YC30 = M / P**2 * (2 * P * 0.30 - 0.30**2)  # camber-line height at x/c = 0.30
+
+stations = [  # r, chord, twist deg, y-shift, z-raise
+    (110, 78, 17.0, 0, 0),
+    (180, 100, 15.0, 0, 0),
+    (250, 118, 13.0, 0, 0),
+    (330, 112, 11.5, 0, 0),
+    (420, 94, 10.0, 0, 0),
+    (500, 76, 9.0, 0, 3),
+    (556, 40, 8.5, -6, 6),
+    (557.5, 14, 8.5, -10, 8),
+]
 
 
 def camber(x):
@@ -17,75 +29,76 @@ def camber(x):
 
 def thickness(x):
     return (
-        T
-        / 0.2
-        * (
-            0.2969 * math.sqrt(x)
-            - 0.1260 * x
-            - 0.3516 * x**2
-            + 0.2843 * x**3
-            - 0.1036 * x**4  # closed trailing edge
-        )
+        T / 0.2
+        * (0.2969 * math.sqrt(x) - 0.1260 * x - 0.3516 * x**2 + 0.2843 * x**3 - 0.1036 * x**4)
     )
 
 
-# cosine spacing, 16 points per surface
-n = 16
-xs = [0.5 * (1 - math.cos(math.pi * i / (n - 1))) for i in range(n)]
+def section_pts(c, tw, ys, zr):
+    """Draped section points in plane coords (h toward LE, v toward ceiling)."""
+    th = math.radians(tw)
+    u = (-math.cos(th), -math.sin(th))
+    v = (-math.sin(th), math.cos(th))
+    le = (
+        ys + 0.3 * c * math.cos(th) - YC30 * c * v[0],
+        zr + 0.3 * c * math.sin(th) - YC30 * c * v[1],
+    )
+    pts = []
+    n = 40
+    for i in range(n):
+        x = 0.5 * (1 - math.cos(math.pi * i / (n - 1)))
+        yc, dyc = camber(x)
+        yt = thickness(x)
+        a = math.atan(dyc)
+        for sgn in (1, -1):
+            px = x - sgn * yt * math.sin(a)
+            py = yc + sgn * yt * math.cos(a)
+            pts.append(
+                (le[0] + px * c * u[0] + py * c * v[0], le[1] + px * c * u[1] + py * c * v[1])
+            )
+    return pts
 
-upper, lower = [], []
-for x in xs:
-    yc, dyc = camber(x)
-    yt = thickness(x)
-    th = math.atan(dyc)
-    upper.append((x - yt * math.sin(th), yc + yt * math.cos(th)))
-    lower.append((x + yt * math.sin(th), yc - yt * math.cos(th)))
 
-print("NACA 6407 normalized (x/c, y/c), TE->LE upper then LE->TE lower:")
-pts = list(reversed(upper)) + lower[1:]
-for x, y in pts:
-    print(f"  {x:7.4f}, {y:8.4f}")
-
-# per-station table
-stations = [  # r, chord, twist deg
-    (110, 78, 17.0),
-    (180, 100, 15.0),
-    (250, 118, 13.0),
-    (330, 112, 11.5),
-    (420, 94, 10.0),
-    (500, 76, 9.0),
-    (556, 40, 8.5),
-]
-print("\nstation table: r, c, twist, t_max mm, LE offset (+0.3c), TE offset (-0.7c),")
-print("vertical extent about pitch axis (Z up +, mm), Z_upper/Z_lower abs (center Z223.5)")
-for r, c, tw in stations:
-    tmax = T * c
-    le, te = 0.30 * c, -0.70 * c
-    rad = math.radians(tw)
-    # crude vertical extents: rotate section pts about 30% chord point
-    zmin = zmax = 0.0
-    for x, y in pts:
-        dx = (x - 0.30) * c
-        dy = y * c
-        z = -dx * math.sin(rad) + dy * math.cos(rad)  # LE rotates up
-        zmin, zmax = min(zmin, z), max(zmax, z)
+print(f"camber offset yc(0.30) = {YC30:.5f} c\n")
+print("station extents (v = up toward ceiling, project Z = 223.5 - v):")
+for r, c, tw, ys, zr in stations:
+    pts = section_pts(c, tw, ys, zr)
+    vmax = max(p[1] for p in pts)
+    vmin = min(p[1] for p in pts)
     print(
-        f"  r{r:5.0f}  c={c:5.1f}  tw={tw:4.1f}  t={tmax:4.1f}  LE=+{le:5.1f}  TE={te:6.1f}"
-        f"  up {zmax:5.1f} / dn {zmin:6.1f}  ->  Z {223.5 - zmax:5.1f} / {223.5 - zmin:5.1f}"
+        f"  r{r:6.1f}: up {vmax:6.1f} / dn {vmin:6.1f}  ->  Z {223.5 - vmax:6.1f} / {223.5 - vmin:6.1f}"
     )
 
-# rod channel wall check: 3.4 mm channel at 30% chord (near max thickness)
-print("\nrod channel wall at Ø3.4, rod ends r470:")
-for r, c, tw in stations:
-    if r > 470:
-        continue
-    # thickness at x=0.30
-    yt = thickness(0.30) * c
-    wall = (2 * yt - 3.4) / 2
-    print(f"  r{r:5.0f}: section depth {2*yt:4.1f} mm, wall {wall:4.2f} mm/side")
+# rod wall check: channel Ø3.4 centered at origin of each station's plane coords
+print("\nrod fit (distance from origin to nearest surface point must exceed 1.7 + wall):")
+for r, c, tw, ys, zr in stations[:6]:
+    pts = section_pts(c, tw, ys, zr)
+    # min distance from origin to the section outline (sampled)
+    d = min(math.hypot(px, pv) for px, pv in pts)
+    print(f"  r{r:6.1f}: nearest surface {d:5.2f} mm from spar axis -> wall {d - 1.7:5.2f} mm")
 
-# tip speed / Re sanity
-for rpm in (60, 170):
-    v = 2 * math.pi * 0.5588 * rpm / 60
-    re = v * 0.118 / 1.5e-5
-    print(f"\n{rpm} RPM: tip speed {v:.1f} m/s, Re at max chord ~{re:,.0f}")
+# raise interpolation kills the lower wall outboard; find where wall hits 1.0 mm
+print("\ninterpolated wall along candidate rod span (linear station interp):")
+import bisect
+
+rs = [s[0] for s in stations]
+for r in (420, 430, 440, 450, 460, 470):
+    i = bisect.bisect_right(rs, r) - 1
+    r0, c0, t0, y0, z0 = stations[i]
+    r1, c1, t1, y1, z1 = stations[min(i + 1, len(stations) - 1)]
+    f = 0 if r1 == r0 else (r - r0) / (r1 - r0)
+    c = c0 + f * (c1 - c0)
+    tw = t0 + f * (t1 - t0)
+    ys = y0 + f * (y1 - y0)
+    zr = z0 + f * (z1 - z0)
+    pts = section_pts(c, tw, ys, zr)
+    d = min(math.hypot(px, pv) for px, pv in pts)
+    print(f"  r{r}: wall {d - 1.7:5.2f} mm (raise {zr:.2f})")
+
+# pad region: lowest surface point with horizontal coord in the pad footprint
+print("\npad-region lower surface (h in [-40, +18]), stations r110/r180 + r192 interp:")
+for r, c, tw, ys, zr in [stations[0], stations[1]]:
+    pts = section_pts(c, tw, ys, zr)
+    vmin = min(pv for ph, pv in pts if -40 <= ph <= 18)
+    vall = min(pv for ph, pv in pts)
+    print(f"  r{r}: min v in footprint {vmin:6.1f} (full-section min {vall:6.1f}) -> Z {223.5 - vmin:.1f}")
