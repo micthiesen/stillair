@@ -16,13 +16,13 @@ const STATIONS = [
     { r : 420,   c : 94,  tw : 10.0, ys : 0,   zr : 0 },
     { r : 500,   c : 76,  tw : 9.0,  ys : 0,   zr : 3 },
     { r : 556,   c : 40,  tw : 8.5,  ys : -6,  zr : 6 },
-    { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : 8 },
-    // root closure: rounds the r110 end's plan-view corners via a second
-    // small loft. Appended LAST so the earlier stations keep their sketch
-    // ids (the main loft references them by id).
-    { r : 105.5, c : 66,  tw : 17.0, ys : 0,   zr : 0 },
-    { r : 101.5, c : 30,  tw : 17.0, ys : 0,   zr : 0 }
+    { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : 8 }
 ];
+// Root-corner treatment: NOT extra loft stations (a closure loft tangent to a
+// still-growing chord bulges outward — tried and rejected 2026-07-27). The
+// r110 end's plan-view corners are instead trimmed by a vertical
+// extrude-remove in the Part Studio, which rounds the planform without any
+// vertical rounding.
 
 const Z_CENTER = -223.5; // blade pitch plane, mm below the ceiling (world origin)
 

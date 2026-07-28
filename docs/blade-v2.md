@@ -125,12 +125,14 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
 - **Balance pocket**: Ø15 × 2 mm blind pocket in the pad underside near (r155, y−10) for
   stick-on trim weights, concealed by the adapter plate. First-moment matching spec (≤0.5%)
   carries over from BL-100.
-- **Root closure** (added 2026-07-27): two extra stations at r105 (c 61) and r102.5 (c 27),
-  same twist/anchor, elliptical chord shrink — lofted from the r110 end face (tangent to
-  adjacent faces) as a second small loft. This rounds the plan-view LE/TE corners at the hub
-  end while leaving a small flat end face (no vertical rounding). In the FS station array
-  these sit *last* so earlier sketch ids stay stable. With the slim root the old printed
-  "root stop" ledge is replaced by the pad/adapter interface itself.
+- **Root corners** (settled 2026-07-27): the r110 end face keeps its flat airfoil section;
+  its plan-view LE/TE corners are trimmed by a small-radius **vertical extrude-remove**
+  (radius per taste — vertical cut faces, no vertical rounding, same idea as BL-100's old
+  R20 corners). A closure *loft* was tried first and rejected: tangent continuation off a
+  chord that is still growing outboard bulges the planform before it can close. The trim
+  stays clear of the channel (starts r112, mid-chord) and the pad (starts r118). With the
+  slim root the old printed "root stop" ledge is replaced by the pad/adapter interface
+  itself.
 
 ## Envelope compliance (checked 2026-07-27)
 
@@ -180,8 +182,8 @@ Computed from the station table with twist about the 30% anchor (script:
     Offset B's joint face −0.10 mm (Move Face) for glue clearance.
 11. **Checks**: section > measure wall at r400–r430 around the channel (≥1.0 mm), verify
     Z_local extremes against the envelope numbers above, mass properties per segment.
-12. **Export**: STL per segment (both print joint-face down, leaning ~30° — the root
-    closure rounded away A's formerly-flat root face), into `cad/` as
+12. **Export**: STL per segment (A prints root-face down or joint-face down, B joint-face
+    down, leaning ~30° when on the scarf), into `cad/` as
     `BP-100_segA` / `BP-100_segB` once accepted; print 4 blade sets, select 3, keep a spare,
     per the BL-100 practice.
 
