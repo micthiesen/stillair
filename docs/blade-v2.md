@@ -125,8 +125,12 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
 - **Balance pocket**: Ø15 × 2 mm blind pocket in the pad underside near (r155, y−10) for
   stick-on trim weights, concealed by the adapter plate. First-moment matching spec (≤0.5%)
   carries over from BL-100.
-- The r110 root end face is a clean rounded closure of the airfoil — with the slim root the
-  old printed "root stop" ledge is replaced by the pad/adapter interface itself.
+- **Root closure** (added 2026-07-27): two extra stations at r105 (c 61) and r102.5 (c 27),
+  same twist/anchor, elliptical chord shrink — lofted from the r110 end face (tangent to
+  adjacent faces) as a second small loft. This rounds the plan-view LE/TE corners at the hub
+  end while leaving a small flat end face (no vertical rounding). In the FS station array
+  these sit *last* so earlier sketch ids stay stable. With the slim root the old printed
+  "root stop" ledge is replaced by the pad/adapter interface itself.
 
 ## Envelope compliance (checked 2026-07-27)
 
