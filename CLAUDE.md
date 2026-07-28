@@ -33,6 +33,12 @@ blade build, 2026-07):
 - **FS gotchas that bit us**: sketch ids derive from array position, so append new stations
   at the array *end* and edit values in place — reordering breaks downstream feature
   references. `pbpaste`-verify after every `pbcopy`.
+- **Provisional dimensions live in a Variable Studio, vendor models are reference-only.**
+  Any number parts.md marks provisional or motor-gated (pilot OD, GL100 axial length, wire
+  window clocking, Hall gap …) becomes a named variable (`#pilotOD`), so a bench measurement
+  is a one-line edit that regenerates the stack. Imported vendor STEPs (GL100) are visual/
+  interface reference — never boolean against them or hang mates on faces that a re-import
+  would replace.
 - **Cross-check computed geometry with a host-side script** (`cad/*_check.py` pattern) before
   Michael models it; rerun when the numbers change. The camber-line-vs-chord-line rod miss
   was caught by a question, not the script — extend the script when a new class of claim

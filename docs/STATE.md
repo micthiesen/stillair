@@ -46,8 +46,12 @@ deferred** — they depend on everything else settling. Per-session working styl
 Order (each step is the reference geometry for the one after):
 
 1. **Import the official GL100 STEP** (links at the top of [parts.md](parts.md)) — every
-   motor interface clocks off it. Motor-derived dimensions stay provisional until the
-   physical release gates close.
+   motor interface clocks off it, but treat it as *reference-only* (it gets superseded by
+   physical measurement; don't boolean against it or mate structurally to its faces). At the
+   same time create a **Variable Studio** holding every provisional/motor-gated number
+   (`#pilotOD` 29.8, `#gl100Len` 34.2, wire-window clocking, Hall gap …) and dimension
+   MC-100/RH-100 sketches from the variables — a bench measurement then lands as a one-line
+   edit. Working style: [CLAUDE.md](../CLAUDE.md) > "Building in OnShape together".
 2. **SP-100 spindle** — revolve + 30.0 AF double-D flats + Ø3.2 cross-hole; fully
    dimensioned in parts.md. Seat its flange in MP-100's double-D pocket; this establishes
    the centerline stack (Z196.7 shoulder, thread to Z218).
