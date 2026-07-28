@@ -34,8 +34,11 @@ blade replaces blade + adapter; all docs swept.)
   segmentation kept at r330, rod cut 374. Spec: [blade-v2.md](blade-v2.md). The BA-00
   filament research + qualification now target the root print
   ([parts.md](parts.md) > "Blade root-joint qualification").
-- **RH-100 was restyled by the owner to a three-arm spoke plate** (interfaces unchanged;
-  verify tach-pocket material in the waists at drawing time — [parts.md](parts.md)).
+- **RH-100 was restyled by the owner to a three-arm spoke plate**, which forced the tach
+  redesign: **three identical stations at r76 on the arm centerlines** (one N52 magnet, two
+  mass-matched brass slugs — balanced by three-fold symmetry, one Hall pulse/rev); sensing
+  radius and MC-100 bracket holes moved r68 → r76 ([parts.md](parts.md),
+  [mechanical.md](mechanical.md), [electrical.md](electrical.md)).
 - **MP-100 is ordered** (JLCCNC, SUS304; check flatness on arrival). Mount work can start;
   CubeMars bearing email (Gate 01) still awaiting reply.
 
@@ -50,9 +53,10 @@ sourcing in `pcb/README.md`. Once a real MCF8316D exists: capture the golden ima
 (`stillair --port … config capture`).
 
 Small model remainders, do opportunistically (tracked, not blocking): re-export
-`cad/BP-100.step` (committed STEP is v2 geometry), model the four RH-100→blade M4/M5 hub
-screws if wanted for visuals, and the step-9 clearance extras (BR-100 Hall bracket, magnet
-caps, EB-100 + horizontal PCB envelope).
+`cad/BP-100.step` (committed STEP is v2 geometry), the unmodeled hub screws (M4 flat-heads
+below RH-100, M5 blade bolts) if wanted for visuals, and the step-9 clearance extras
+(BR-100 Hall bracket at the new r76 line, MR-100 caps + M2 taps, EB-100 + horizontal PCB
+envelope).
 
 ## Candidates Not Chosen
 

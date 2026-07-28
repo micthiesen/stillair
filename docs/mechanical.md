@@ -67,7 +67,10 @@ r ≤ 11) is above the lowest blade surface, so the blades set the assembly's lo
 - Rotor axis: X0, Y0.
 - Blade centerlines: 0°, 120°, 240°.
 - Standoff centerlines: 90°, 210°, 330°.
-- Hall magnet: r68 at 30°. Counterweight: r68 at 210°.
+- Tach stations: r76 on the three arm/blade-station lines, one per arm — one N52 magnet
+  + two mass-matched brass slugs, balanced by three-fold symmetry (moved from
+  r68 @ 30°/210° in the 2026-07-28 RH-100 spoke restyle). The stationary Hall sensor
+  line stays 30°, sensing radius r76.
 - Phase-lead window: r45.6 at 315° (clocked 2026-07-27 from the GL100 STEP: pad-to-bolt-hole
   offset is a fixed 44.43°, bolt holes on the axes, so the pad lands on ~45° diagonals; 315°
   keeps the Hall corridor at 30° clear and shortens the phase-lead run to the PCB side).

@@ -132,7 +132,8 @@ moved with it, see [electrical.md](electrical.md).)
   from above.
 - Center clearance Ø20.5.
 - Two Ø8.5 tether holes at X±7, Y−76.
-- Two Hall-bracket M3 holes on 12 mm pitch near r63, angle 30°.
+- Two Hall-bracket M3 holes on 12 mm pitch near r71, angle 30° (moved with the tach
+  sensing radius r68 → r76, 2026-07-28).
 - Nominal phase-lead window 20 × 12 R3; final location from the STEP and physical motor.
 - Use four M4 × 12 A4-80 screws. The counterbore produces approximately 5.5 mm motor-thread
   engagement against the official 6.0 mm maximum. Verify first.
@@ -206,9 +207,9 @@ bearing-face-up against KD-100, castellated crown downward.
 - **Restyled 2026-07-28 (owner, in OnShape)**: no longer a full disk — a three-arm spoke
   plate, arms on the 0/120/240 station lines out to r100 with sculpted concave waists
   between. All interfaces unchanged (center bore, Ø50 PCD, pilot, stations); final outline
-  lives in the OnShape model and exports at drawing release. **Verify at drawing time that
-  the waists keep material around the r68 tach pockets at 30°/210°** (they sit mid-waist)
-  and their M2 cap taps; flatness/TIR specs apply to what remains.
+  lives in the OnShape model and exports at drawing release (the restyle prompted moving
+  the tach stations onto the arms — see "Tach features"); flatness/TIR specs apply to what
+  remains.
 - Center hole Ø20.5.
 - Four Ø4.5 holes on Ø50 PCD with 90° countersinks from the underside for ISO 10642 M4 × 10
   A4-80 flat-head screws. Install heads 0.1–0.2 mm subflush. Nominal motor engagement is
@@ -224,18 +225,23 @@ bearing-face-up against KD-100, castellated crown downward.
 
 Tach features:
 
-- One Ø6.10 × 3.15 blind pocket at r68, 30°, for a 6 × 3 mm axially magnetized N52 disk.
-- One 14 radial × 8 tangential × 0.8 mm 316 retaining cap, fixed by **two axial M2 × 5
-  screws through the cap's radial-end ears into tapped holes in the hub top face**
-  (reworded 2026-07 review: the previous "two radial screws" read as a screw-axis direction,
-  which is unbuildable — a 5 mm screw cannot reach r68 from the hub OD; "radial" describes
-  the ear positions).
-- Identical pocket and cap at r68, 210°, with a brass counterweight (CW-100). **CW-100 is
-  not a same-size slug**: a Ø6 × 3 brass copy is ~13% heavier than the magnet; trim to
-  ~Ø6 × 2.65 mm to match, and confirm the resulting ~0.5 mm bondline gap under the CW-side
-  cap is within the adhesive's rated thickness (non-structural).
-- Match complete retained masses within 0.01 g. Adhesive controls rattle only; it is not
-  retention.
+- **Three identical stations, one per arm (moved 2026-07-28)**: Ø6.10 × 3.15 blind
+  pockets in the top face at **r76 on the three arm/station centerlines** (0/120/240). The
+  spoke restyle removed material at the old 30°/210° waist positions, and an
+  opposite-the-magnet counterweight can never sit on an arm — so instead one station holds
+  the 6 × 3 mm axially magnetized N52 disk and the other two hold brass slugs trimmed to
+  the same installed mass: three equal masses at 120° spacing balance by symmetry, and the
+  Hall still sees exactly one magnet per revolution (brass is non-magnetic). r76 centers
+  between the r66/r86 dowel holes on the arm centerline (10 mm clear of each).
+- Each station: a 14 radial × 8 tangential × 0.8 mm 316 retaining cap (MR-100 ×3), fixed by
+  **two axial M2 × 5 screws through the cap's radial-end ears into tapped holes in the hub
+  top face** (reworded 2026-07 review: "radial" describes the ear positions, not the screw
+  axis).
+- **CW slugs are not same-size copies**: a Ø6 × 3 brass copy is ~13% heavier than the
+  magnet; trim to ~Ø6 × 2.65 mm to match, and confirm the resulting ~0.5 mm bondline gap
+  under the slug-side caps is within the adhesive's rated thickness (non-structural).
+- Match complete retained masses within 0.01 g across all three stations. Adhesive controls
+  rattle only; it is not retention.
 
 ## KD-100 catcher disk
 
@@ -254,7 +260,9 @@ Tach features:
 
 - 0.8–1.0 mm 304 stainless Z-bracket with a folded return flange.
 - Two 3.4 × 8 mm adjustment slots on 12 mm pitch at MC-100 (±2 mm adjustment).
-- DRV5033 sensing face downward at r68 on the 30° line.
+- DRV5033 sensing face downward at **r76** on the 30° line (moved with the tach stations
+  2026-07-28; BR-100 and the MC-100 bracket holes were both undesigned, so the move was
+  free).
 - Nominal sensing-face-to-magnet-cap gap 2.5 mm; qualify 1.5–4.0 mm.
 - Sensor face is approximately Z106.9 (hub top Z110.2 − 0.8 mm cap − 2.5 mm gap;
   re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
@@ -497,8 +505,8 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
 | KD-100 | 1 | Catcher disk | Ø50 × 4, 316 SS | Laser + machine |
 | BR-100 | 1 | Hall bracket | 0.8–1.0 mm 304 SS | Laser + bend |
-| MR-100 | 2 | Magnet / counterweight cap | 14 × 8 × 0.8, 316 SS | Laser |
-| CW-100 | 1 | Matched counterweight | Brass, mass-trimmed | Turn + trim |
+| MR-100 | 3 | Magnet / slug retaining cap | 14 × 8 × 0.8, 316 SS | Laser |
+| CW-100 | 2 | Matched balance slugs | Brass, mass-trimmed | Turn + trim |
 | BL-100 | 4 | Wood blade | 9 mm Baltic birch | CNC router |
 | LS-100 | 6 | Load spreader | 65 × 15 × 2, 6061 | Laser/waterjet |
 | EB-100 | 1 | PCB bracket | 1.5 mm 5052 or print | Bend or print |
