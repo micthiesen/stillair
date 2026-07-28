@@ -32,7 +32,15 @@ blade build, 2026-07):
   may fail and need radius negotiation, up-to-next extrudes, anything you'd tune by eye).
 - **FS gotchas that bit us**: sketch ids derive from array position, so append new stations
   at the array *end* and edit values in place — reordering breaks downstream feature
-  references. `pbpaste`-verify after every `pbcopy`.
+  references. Bare map keys collide with in-scope variable names (`{ r : r }` fails; quote
+  them). `pbpaste`-verify after every `pbcopy`.
+- **Lofts between dissimilar profiles want FS-generated guide curves.** A loft from a flat
+  face to a spline section twists, and manual loft connections don't fix it; guide splines
+  through *exact* section interpolation points do (smoothstep easing off flat faces so they
+  leave tangent; dense samples wherever the shape changes fast, or the fit spline
+  overshoots corners). And one guided loft through all stations beats two lofts meeting at
+  a station — the seam always creases the silhouette. See the root/span guide features in
+  `cad/bp100_sections.fs` (2026-07-28, BP-100 v3).
 - **Provisional dimensions live in a Variable Studio, vendor models are reference-only.**
   Any number parts.md marks provisional or motor-gated (pilot OD, GL100 axial length, wire
   window clocking, Hall gap …) becomes a named variable (`#pilotOD`), so a bench measurement

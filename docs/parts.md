@@ -203,6 +203,12 @@ bearing-face-up against KD-100, castellated crown downward.
 ## RH-100 captured rotor hub
 
 - Ø200 × 8.0 mm 6061-T6, flat within 0.08 mm and OD concentric to pilot within 0.05 mm TIR.
+- **Restyled 2026-07-28 (owner, in OnShape)**: no longer a full disk — a three-arm spoke
+  plate, arms on the 0/120/240 station lines out to r100 with sculpted concave waists
+  between. All interfaces unchanged (center bore, Ø50 PCD, pilot, stations); final outline
+  lives in the OnShape model and exports at drawing release. **Verify at drawing time that
+  the waists keep material around the r68 tach pockets at 30°/210°** (they sit mid-waist)
+  and their M2 cap taps; flatness/TIR specs apply to what remains.
 - Center hole Ø20.5.
 - Four Ø4.5 holes on Ø50 PCD with 90° countersinks from the underside for ISO 10642 M4 × 10
   A4-80 flat-head screws. Install heads 0.1–0.2 mm subflush. Nominal motor engagement is
