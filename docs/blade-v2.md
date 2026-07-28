@@ -110,11 +110,17 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
   y +18 to −40, R8 perimeter transitions blending into the airfoil body. Within that
   footprint the airfoil's lower surface reaches Z239.0, so the pad is ~1 mm proud at worst;
   the root TE (outside the footprint, aft of y−40) droops below the pad plane, which is fine
-  as long as the adapter plate stays inside the footprint.
+  as long as the adapter plate stays inside the footprint. Pad corners R8 in plan; the
+  boss-to-skin blend fillet is R2–R3 as fits (the pad runs nearly flush at the root, so R8
+  cannot — corrected 2026-07-27), or omitted: the face is hidden by the adapter.
 - **Bolts**: four Ø5.5 vertical through-holes at **r130/r180, y +10/−30** (two rows parallel
   to the spar, straddling it; the old y±25 pattern no longer fits the slim root — this
   pattern is the adapter's to match, RH-100 is untouched). Top side: hex-nut pockets for M5
-  all-metal prevailing nuts, sunk normal to Z. Hardware from below should be flat/low-head;
+  all-metal prevailing nuts (8.2 mm across flats), cut normal to Z with **per-row floors** —
+  front row (y+10) floor at Z_local −4 (project Z227.5), aft row (y−30) floor at Z_local −12
+  (project Z235.5), because the root twist drops the TE-side skin ~5–7 mm below the pitch
+  axis and a single floor plane leaves the aft pockets hanging above the blade
+  (found in CAD 2026-07-27). Aft nuts sit flush to ≤1 mm proud of the local skin. Hardware from below should be flat/low-head;
   everything below Z240 (plate + heads) has 14 mm of budget to the Z254 floor.
 - **Balance pocket**: Ø15 × 2 mm blind pocket in the pad underside near (r155, y−10) for
   stick-on trim weights, concealed by the adapter plate. First-moment matching spec (≤0.5%)
