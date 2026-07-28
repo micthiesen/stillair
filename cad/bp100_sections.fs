@@ -1,30 +1,34 @@
 FeatureScript 1560;
 import(path : "onshape/std/geometry.fs", version : "1560.0");
 
-// BP-100 blade sections (see docs/blade-v2.md).
-// Generates all 8 NACA 6407 station sketches from the built-in station table:
-// scaled to chord, twisted LE-up about the 30%-chord point (which sits on the
-// spar axis at y = ys, z = zr), on a computed plane at each radius.
+// BP-100 v3 blade sections (see docs/blade-v2.md).
+// v3: the blade root is an integrated flat mounting rectangle (r52-96, modeled
+// manually in the Part Studio) that bolts straight to RH-100 — no adapter.
+// This feature generates the 8 NACA 6407 airfoil station sketches from the
+// built-in table; a manual transition loft joins the rectangle's outboard end
+// (r96) to the first station (r120).
 // Frame: X radial outboard, Y toward the LE, Z up toward the ceiling.
+// The pitch/rod plane depth is a dialog input — drive it with the Variable
+// Studio expression (#hubBottom + 6 mm) so stack changes regenerate the blade.
 
-// radius, chord, twist (deg), anchor y-shift, z-raise — all mm
+// radius, chord, twist (deg), anchor y-shift, z-raise — all mm.
+// zr is now NEGATIVE outboard: the proplet flips DOWNWARD in v3 — with the
+// hugger ceiling gap the old tip-up rake sat exactly in the intake throat at
+// the rotor perimeter; drooping it moves the tip vortex away from the ceiling
+// and opens the throat (2026-07-27).
 const STATIONS = [
-    { r : 110,   c : 78,  tw : 17.0, ys : 0,   zr : 0 },
+    { r : 120,   c : 81,  tw : 16.7, ys : 0,   zr : 0 },
     { r : 180,   c : 100, tw : 15.0, ys : 0,   zr : 0 },
     { r : 250,   c : 118, tw : 13.0, ys : 0,   zr : 0 },
     { r : 330,   c : 112, tw : 11.5, ys : 0,   zr : 0 },
     { r : 420,   c : 94,  tw : 10.0, ys : 0,   zr : 0 },
-    { r : 500,   c : 76,  tw : 9.0,  ys : 0,   zr : 3 },
-    { r : 556,   c : 40,  tw : 8.5,  ys : -6,  zr : 6 },
-    { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : 8 }
+    { r : 500,   c : 76,  tw : 9.0,  ys : 0,   zr : -3 },
+    { r : 556,   c : 40,  tw : 8.5,  ys : -6,  zr : -6 },
+    { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : -8 }
 ];
-// Root-corner treatment: NOT extra loft stations (a closure loft tangent to a
-// still-growing chord bulges outward — tried and rejected 2026-07-27). The
-// r110 end's plan-view corners are instead trimmed by a vertical
-// extrude-remove in the Part Studio, which rounds the planform without any
-// vertical rounding.
-
-const Z_CENTER = -223.5; // blade pitch plane, mm below the ceiling (world origin)
+// Root-corner closure lofts stay rejected (tangent off a growing chord bulges
+// outward — 2026-07-27); in v3 the root simply IS the rectangle, so there is
+// nothing to close.
 
 const M = 0.06;  // max camber
 const P = 0.40;  // camber position
@@ -36,10 +40,14 @@ const N = 30;    // points per surface
 // line, so a rod on the chord line would run outside the blade entirely
 const YC30 = M / P ^ 2 * (2 * P * 0.3 - 0.3 ^ 2);
 
+const PITCH_BOUNDS = { (millimeter) : [50, 124.2, 400] } as LengthBoundSpec;
+
 annotation { "Feature Type Name" : "BP-100 airfoil sections" }
 export const bp100Sections = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
+        annotation { "Name" : "Pitch plane depth" }
+        isLength(definition.pitchZ, PITCH_BOUNDS);
         annotation { "Name" : "Pitch offset" }
         isAngle(definition.pitchOffset, { (degree) : [-6, 0, 6] } as AngleBoundSpec);
         annotation { "Name" : "TE thickness" }
@@ -93,7 +101,8 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
             for (var p in pts2d)
                 sketchPts = append(sketchPts, le + (p[0] * c) * u + (p[1] * c) * v);
 
-            const pl = plane(vector(s.r, 0, Z_CENTER) * millimeter, vector(1, 0, 0), vector(0, 1, 0));
+            const pl = plane(vector(s.r * millimeter, 0 * millimeter, -definition.pitchZ),
+                             vector(1, 0, 0), vector(0, 1, 0));
             var sk = newSketchOnPlane(context, id + ("station" ~ toString(i)), { "sketchPlane" : pl });
             skFitSpline(sk, "foil", { "points" : sketchPts });
             skLineSegment(sk, "te", { "start" : sketchPts[size(sketchPts) - 1], "end" : sketchPts[0] });
@@ -102,27 +111,31 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
         }
     });
 
-// Cuts the Ø3.4 spar-rod channel along the pitch axis. Insert AFTER the loft
-// (and tip fillet); the r112 start leaves a 2 mm cap inside the root, and the
-// r430 end is where the proplet run-in starts lifting the loft off the straight
-// rod line (see docs/blade-v2.md, "Spar and segmentation").
+// Cuts the Ø3.4 spar-rod channel along the pitch axis. Insert AFTER the lofts
+// (rectangle + transition + main + tip). v3 span r56-430: starts inside the
+// root rectangle (4 mm cap to its r52 inner arc) and ends where the DOWNWARD
+// proplet run-in drops the loft off the straight rod line (wall dies ~r460;
+// see cad/bp100_envelope_check.py). Rod cut length 374 from 400 mm stock.
+// Set "Pitch plane depth" to the same expression as the sections feature.
 annotation { "Feature Type Name" : "BP-100 spar channel" }
 export const bp100SparChannel = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
         annotation { "Name" : "Blade part", "Filter" : EntityType.BODY && BodyType.SOLID, "MaxNumberOfPicks" : 1 }
         definition.blade is Query;
+        annotation { "Name" : "Pitch plane depth" }
+        isLength(definition.pitchZ, PITCH_BOUNDS);
         annotation { "Name" : "Channel diameter" }
         isLength(definition.channelD, { (millimeter) : [2, 3.4, 6] } as LengthBoundSpec);
         annotation { "Name" : "Start radius" }
-        isLength(definition.rStart, { (millimeter) : [100, 112, 400] } as LengthBoundSpec);
+        isLength(definition.rStart, { (millimeter) : [40, 56, 400] } as LengthBoundSpec);
         annotation { "Name" : "End radius" }
         isLength(definition.rEnd, { (millimeter) : [200, 430, 500] } as LengthBoundSpec);
     }
     {
         fCylinder(context, id + "rod", {
-                    "bottomCenter" : vector(definition.rStart, 0 * millimeter, Z_CENTER * millimeter),
-                    "topCenter" : vector(definition.rEnd, 0 * millimeter, Z_CENTER * millimeter),
+                    "bottomCenter" : vector(definition.rStart, 0 * millimeter, -definition.pitchZ),
+                    "topCenter" : vector(definition.rEnd, 0 * millimeter, -definition.pitchZ),
                     "radius" : definition.channelD / 2
                 });
         opBoolean(context, id + "cut", {
