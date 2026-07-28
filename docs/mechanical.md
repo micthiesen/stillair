@@ -82,6 +82,12 @@ machining release.
 
 ## Rotor geometry
 
+> **Superseded 2026-07-27**: the rotor now uses printed BP-100 cambered-airfoil blades with
+> CF-rod spars, baked-in 17°→8.5° twist, and a single flat adapter — see
+> [blade-v2.md](blade-v2.md) (which re-derives the vertical envelope; the 12° "nominal
+> pitch" in the envelope table above belongs to this superseded flat blade). The birch
+> geometry below is retained as the fallback.
+
 Three 9 mm birch blades on printed pitch adapters. Cut four, finish all four identically,
 select the best-balanced three, keep the fourth as a ready spare. The symmetric edge treatment
 supports reverse operation.

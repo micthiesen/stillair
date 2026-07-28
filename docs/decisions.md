@@ -11,7 +11,7 @@ The design to take into CAD. All items below are **selected**.
 |---|---|---|
 | Mounting | Compact metal plate, two primary anchors, separate tether anchor | Exact anchors remain conditional on the verified slab and load calculation. |
 | Structure | Metal ceiling structure and hub; qualified printed blade adapters | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
-| Rotor | 44-inch maximum, three symmetric birch blades, 12° nominal pitch | 42 inches is the fallback if wall-effect testing or handling makes 44 undesirable. |
+| Rotor | 44-inch maximum, three printed BP-100 cambered-airfoil blades with CF-rod spars and 17°→8.5° baked-in twist | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
 | Power | Mean Well GST60A24-P1J, 24 V / 60 W, 3 A source fuse | Only low voltage crosses the ceiling; a physical switch opens the positive conductor. |
 | Control | ESP32-C6, local Matter over Wi-Fi (rs-matter, pure Rust), continuous speed and reverse, used from Apple Home | Replaces the original HomeKit/HAP plan (no maintained no_std HAP exists). Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
