@@ -19,6 +19,8 @@ const STATIONS = [
     { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : 8 }
 ];
 
+const Z_CENTER = -223.5; // blade pitch plane, mm below the ceiling (world origin)
+
 const M = 0.06;  // max camber
 const P = 0.40;  // camber position
 const T = 0.07;  // thickness
@@ -81,7 +83,7 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
             for (var p in pts2d)
                 sketchPts = append(sketchPts, le + (p[0] * c) * u + (p[1] * c) * v);
 
-            const pl = plane(vector(s.r, 0, 0) * millimeter, vector(1, 0, 0), vector(0, 1, 0));
+            const pl = plane(vector(s.r, 0, Z_CENTER) * millimeter, vector(1, 0, 0), vector(0, 1, 0));
             var sk = newSketchOnPlane(context, id + ("station" ~ toString(i)), { "sketchPlane" : pl });
             skFitSpline(sk, "foil", { "points" : sketchPts });
             skLineSegment(sk, "te", { "start" : sketchPts[size(sketchPts) - 1], "end" : sketchPts[0] });
