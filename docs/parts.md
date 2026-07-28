@@ -114,6 +114,11 @@ Three Ø16.0 × 62.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 ta
 [mechanical.md](mechanical.md) > Envelope; the vertical-PCB assumption that sized the 138
 moved with it, see [electrical.md](electrical.md).)
 
+> **No off-the-shelf substitute exists (searched 2026-07-28)**: every configurable catalog
+> standoff line caps below 62 mm — MISUMI tapped spacers hard-cap at 50 mm (and offer 2017,
+> not 6061), McMaster's only aluminum M6 female-female standoff is 52 mm hex, Accu's
+> threaded-spacer catalog has no aluminum at all. Stays CNC; a simple lathe part anyway.
+
 - Top: M6 × 16 A4-80 flat-head screws through MP-100, at least 9 mm engagement after countersink.
 - Bottom: **M6 × 20** A4-80 socket screws through MC-100 with wedge-locking washers
   (lengthened from M6 × 18 in the 2026-07 review: socket length is measured under the head,
@@ -125,7 +130,9 @@ moved with it, see [electrical.md](electrical.md).)
 
 ## MC-100 stationary motor carrier
 
-- Ø188 × 8.0 mm 6061-T6, clear anodized.
+- Ø180 × 8.0 mm 6061-T6, clear anodized (OD trimmed 188 → 180, 2026-07-28 owner tweak in
+  OnShape; rim past the Ø16 standoff posts is 7 mm, tether-hole edge margin ~9.7 mm, ENC-100
+  internal clearance improves).
 - Motor interface flat within 0.08 mm; runout to axis within 0.08 mm TIR.
 - Three Ø6.6 holes on Ø150 PCD at 90°, 210°, 330°.
 - Four Ø4.5 holes on Ø60 PCD, clocked from the current GL100 STEP. Counterbore Ø7.5 × 1.5
@@ -246,6 +253,13 @@ Tach features:
 ## KD-100 catcher disk
 
 - Ø50 × 4.0 mm 316 stainless, Ø13 center hole, R0.5 edge, flat within 0.10 mm.
+- **Off-the-shelf option (sourced 2026-07-28, owner decision pending)**: MISUMI's
+  configurable metal flat spacers build this exact geometry — 316, Ø50 OD × Ø13.0 ID ×
+  4.0 mm, machined with ±0.01 mm precision-grade thickness tolerance, ships to Canada
+  build-to-order (~1 week). Edge break and flatness are not configurable options — verify
+  on arrival; the mandatory 1.25 kN static proof covers the strength question either way.
+  Fixed-catalog fallback: McMaster 95211A204 (DIN 440-R 316, Ø44 × 13.5 × 3.4–4.6, ~$3,
+  stamped, no flatness guarantee) — dimensionally inferior, bench-trial only.
 - Disk top seats at Z120.7, 2.5 ±0.5 mm below RH-100.
 - The Ø50 disk edge crosses the Ø50 motor-screw PCD, so the RH-100 screw heads must be
   subflush. Measure the running gap to the lowest rotating screw or surface, not only the
@@ -500,7 +514,7 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 |---|---:|---|---|---|
 | MP-100 | 1 | Ceiling plate | Ø210 × 6, 304 SS | Laser/waterjet + machine |
 | ST-100 | 3 | Carrier standoff | Ø16 × 62, 6061-T6 | Turn + tap M6 |
-| MC-100 | 1 | Motor carrier | Ø188 × 8, 6061-T6 | CNC mill |
+| MC-100 | 1 | Motor carrier | Ø180 × 8, 6061-T6 | CNC mill |
 | SP-100 | 1 | Capture spindle | Ø16 flanged, 17-4PH | CNC turn + cross-drill |
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
 | KD-100 | 1 | Catcher disk | Ø50 × 4, 316 SS | Laser + machine |

@@ -14,8 +14,11 @@
 
 Notes:
 
-- Exact passive footprints and every fastener become orderable only after KiCad capture and
-  CAD freeze their packages and lengths; they are intentionally not listed line-by-line yet.
+- Exact passive footprints (and any PCB-side mounting hardware) become orderable only after
+  KiCad capture freezes their packages; they are intentionally not listed line-by-line yet.
+  The **mechanical** fastener set was frozen by the 2026-07-27/28 CAD work and is now listed
+  line-by-line with sourcing (2026-07-28 holistic pass). M3 hardware for EB-100/ENC-100/BR-100
+  waits on those bracket designs.
 - Custom mechanics (MP-100 through ENC-100) are fabricated per
   [../docs/parts.md](../docs/parts.md) and only after the motor and slab gates clear.
 - Verify availability and price at order time.

@@ -74,7 +74,12 @@ station is deliberately moderate (v2's c14/ys−10/zr−8 hook was unloftable ev
   silhouette.
 - **Bolts**: four M5 A4-80 from above through the hub's Ø5.5 stations (r62/r88, y±15) into
   **hex-nut pockets in the rectangle underside** (8.1 across-flats × 5.0 deep, ISO 4032
-  nuts, all-metal prevailing class). No printed thread carries load.
+  nuts, all-metal prevailing class). No printed thread carries load. Bolt length **M5 × 22**
+  (8 hub + 7 root above pocket + ~4 nut + ≥2 mm through-nut protrusion; the tip lands at or
+  just past the root underside in free air). **Nut buying trap (2026-07-28 sourcing)**: the
+  common "DIN 980V"/ISO 7042 oval-top prevailing nut is 5.1–6.0 mm tall and does not fit
+  the 5.0 mm pocket — specify the **3-punch style at standard hex height (~4.0 mm)**, and
+  caliper-verify AF ≤ 8.1 / height ≤ 5.0 on arrival.
 - **Dowels**: the blade prints **integrated Ø5 pins** on its top face at (r66, y0), (r86,
   y0), engaging RH-100's existing blind dowel holes (owner decision 2026-07-28; steel
   dowels deleted). Registration + shear in plastic is owner-scope like the rest of the
