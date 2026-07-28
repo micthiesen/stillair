@@ -27,7 +27,12 @@ Notes:
   TPSM365R6V3RDNR has been out of stock at DigiKey before); JLCPCB turnkey sourcing for
   board-mounted parts when using their assembly — JLCPCB's overseas-consignment fees are
   uneconomic for a prototype, so consignment is effectively off the table.
-- **JLCPCB path**: boards come from JLCPCB; PCBA vs hand-population is TBD. As of 2026-07
+- **JLCPCB path**: boards come from JLCPCB; PCBA vs hand-population is still open, but the
+  owner is comfortable hand-installing SMD (confirmed 2026-07-28), so hand-population and
+  the hand-solder-just-the-MCF hybrid are both live options. The 2026-07-28 DigiKey cart
+  (Web ID 374750597) deliberately holds only **LCSC-gap parts**: thin/absent-at-LCSC ICs
+  and spares, Coilcraft (never on LCSC), Panasonic FR bulk caps, genuine JST PH headers,
+  the GCT USB-C, cable-side housings/contacts, and the Hall daughterboard parts. As of 2026-07
   every IC except the exact `MCF8316DULVRGFR` variant is in the LCSC catalog, but all as
   Extended parts (per-part feeder fee), and LM2907M / TPS3435 stock is thin. Since
   consignment is uneconomic, the MCF choice for a PCBA run is: swap to the plain
