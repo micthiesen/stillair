@@ -236,11 +236,13 @@ bearing-face-up against KD-100, castellated crown downward.
 
 Tach features:
 
-- **Three identical stations, one per arm (moved 2026-07-28)**: Ø6.10 × 3.15 blind
-  pockets in the top face at **r76 on the three arm/station centerlines** (0/120/240). The
+- **Three identical stations, one per arm (moved 2026-07-28)**: **Ø6.45 × 3.35** blind
+  pockets in the top face at **r76 on the three arm/station centerlines** (0/120/240).
+  (Resized 2026-07-28 from Ø6.10 × 3.15 for the purchased imperial magnet — Ø6.35 × 3.18,
+  1/4 × 1/8 in; metric 6 × 3 N52 proved uneconomic to source in Canada.) The
   spoke restyle removed material at the old 30°/210° waist positions, and an
   opposite-the-magnet counterweight can never sit on an arm — so instead one station holds
-  the 6 × 3 mm axially magnetized N52 disk and the other two hold brass slugs trimmed to
+  the Ø6.35 × 3.18 axially magnetized N52 disk and the other two hold brass slugs trimmed to
   the same installed mass: three equal masses at 120° spacing balance by symmetry, and the
   Hall still sees exactly one magnet per revolution (brass is non-magnetic). r76 centers
   between the r66/r86 dowel holes on the arm centerline (10 mm clear of each).
@@ -248,8 +250,9 @@ Tach features:
   **two axial M2 × 5 screws through the cap's radial-end ears into tapped holes in the hub
   top face** (reworded 2026-07 review: "radial" describes the ear positions, not the screw
   axis).
-- **CW slugs are not same-size copies**: a Ø6 × 3 brass copy is ~13% heavier than the
-  magnet; trim to ~Ø6 × 2.65 mm to match, and confirm the resulting ~0.5 mm bondline gap
+- **CW slugs are not same-size copies**: a same-size brass copy is ~13% heavier than the
+  magnet (brass 8.5 vs NdFeB ~7.5 g/cm³); trim to ~Ø6.35 × 2.8 mm to match (cut from
+  1/4 in rod), and confirm the resulting ~0.55 mm bondline gap
   under the slug-side caps is within the adhesive's rated thickness (non-structural).
 - Match complete retained masses within 0.01 g across all three stations. Adhesive controls
   rattle only; it is not retention.

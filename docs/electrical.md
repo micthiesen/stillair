@@ -389,7 +389,7 @@ Hall daughterboard (18 × 8 mm):
 - `DRV5033FAQDBZR`, 3.3 V, 100 nF local bypass, open-drain output with 10 kΩ pull-up on the
   main board.
 - JST-PH: 3.3 V, HALL_TACH, AGND.
-- Sensor element and captive 6 × 3 mm N52 magnet both at r76.0 ±0.5 mm (moved with the
+- Sensor element and captive Ø6.35 × 3.18 mm (1/4 × 1/8 in) N52 magnet both at r76.0 ±0.5 mm (moved with the
   RH-100 tach stations 2026-07-28); south pole toward the
   package (verify polarity before closing the cap); magnet face parallel to the Hall PCB.
 - Axial gap 2.5 mm nominal, adjustable 1.5–4.0 mm.
