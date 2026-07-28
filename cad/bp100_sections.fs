@@ -2,10 +2,22 @@ FeatureScript 1560;
 import(path : "onshape/std/geometry.fs", version : "1560.0");
 
 // BP-100 blade sections (see docs/blade-v2.md).
-// Drapes a NACA 6407 section onto each selected chord line: scaled to the line's
-// length, LE at the ceiling-ward (higher-Z) endpoint, camber side toward +Z.
-// Assumes the chord lines live on vertical planes (station planes offset along X),
-// which is how the blade Part Studio is built.
+// Generates all 8 NACA 6407 station sketches from the built-in station table:
+// scaled to chord, twisted LE-up about the 30%-chord point (which sits on the
+// spar axis at y = ys, z = zr), on a computed plane at each radius.
+// Frame: X radial outboard, Y toward the LE, Z up toward the ceiling.
+
+// radius, chord, twist (deg), anchor y-shift, z-raise — all mm
+const STATIONS = [
+    { r : 110,   c : 78,  tw : 17.0, ys : 0,   zr : 0 },
+    { r : 180,   c : 100, tw : 15.0, ys : 0,   zr : 0 },
+    { r : 250,   c : 118, tw : 13.0, ys : 0,   zr : 0 },
+    { r : 330,   c : 112, tw : 11.5, ys : 0,   zr : 0 },
+    { r : 420,   c : 94,  tw : 10.0, ys : 0,   zr : 0 },
+    { r : 500,   c : 76,  tw : 9.0,  ys : 0,   zr : 3 },
+    { r : 556,   c : 40,  tw : 8.5,  ys : -6,  zr : 6 },
+    { r : 557.5, c : 14,  tw : 8.5,  ys : -10, zr : 8 }
+];
 
 const M = 0.06;  // max camber
 const P = 0.40;  // camber position
@@ -16,32 +28,21 @@ annotation { "Feature Type Name" : "BP-100 airfoil sections" }
 export const bp100Sections = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
-        annotation { "Name" : "Chord lines", "Filter" : EntityType.EDGE && SketchObject.YES, "MaxNumberOfPicks" : 12 }
-        definition.chords is Query;
+        annotation { "Name" : "Pitch offset" }
+        isAngle(definition.pitchOffset, { (degree) : [-6, 0, 6] } as AngleBoundSpec);
         annotation { "Name" : "TE thickness" }
         isLength(definition.teGap, { (millimeter) : [0, 0.6, 3] } as LengthBoundSpec);
     }
     {
-        const edges = evaluateQuery(context, definition.chords);
         var i = 0;
-        for (var e in edges)
+        for (var s in STATIONS)
         {
-            const plane = evOwnerSketchPlane(context, { "entity" : e });
-            const lines = evEdgeTangentLines(context, { "edge" : e, "parameters" : [0, 1] });
-            const p0 = lines[0].origin;
-            const p1 = lines[1].origin;
-            // LE is the ceiling-ward endpoint at every station of this blade
-            var le = p0;
-            var te = p1;
-            if (p1[2] > p0[2])
-            {
-                le = p1;
-                te = p0;
-            }
-            const c = norm(te - le);
-            const u = normalize(te - le);           // chordwise, LE -> TE
-            var v = vector(0, 0, 1) - dot(vector(0, 0, 1), u) * u;
-            v = normalize(v);                       // toward ceiling, perpendicular to chord
+            const c = s.c * millimeter;
+            const tw = s.tw * degree + definition.pitchOffset;
+            const anchor = vector(s.ys, s.zr) * millimeter;
+            const u = vector(-cos(tw), -sin(tw));    // chordwise, LE -> TE
+            const v = vector(-sin(tw), cos(tw));     // thickness-wise, toward ceiling
+            const le = anchor + 0.3 * c * vector(cos(tw), sin(tw));
             const gapRel = definition.teGap / c;
 
             var upper = [];
@@ -63,7 +64,7 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
                 }
                 const yt = T / 0.2 * (0.2969 * sqrt(x) - 0.1260 * x - 0.3516 * x ^ 2
                             + 0.2843 * x ^ 3 - 0.1036 * x ^ 4)
-                        + 0.5 * gapRel * x;         // linear opening to the TE gap
+                        + 0.5 * gapRel * x;          // linear opening to the TE gap
                 const th = atan(dyc);
                 upper = append(upper, vector(x - yt * sin(th), yc + yt * cos(th)));
                 lower = append(lower, vector(x + yt * sin(th), yc - yt * cos(th)));
@@ -78,12 +79,10 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
 
             var sketchPts = [];
             for (var p in pts2d)
-            {
-                const world = le + (p[0] * c) * u + (p[1] * c) * v;
-                sketchPts = append(sketchPts, worldToPlane(plane, world));
-            }
+                sketchPts = append(sketchPts, le + (p[0] * c) * u + (p[1] * c) * v);
 
-            var sk = newSketchOnPlane(context, id + ("station" ~ toString(i)), { "sketchPlane" : plane });
+            const pl = plane(vector(s.r, 0, 0) * millimeter, vector(1, 0, 0), vector(0, 1, 0));
+            var sk = newSketchOnPlane(context, id + ("station" ~ toString(i)), { "sketchPlane" : pl });
             skFitSpline(sk, "foil", { "points" : sketchPts });
             skLineSegment(sk, "te", { "start" : sketchPts[size(sketchPts) - 1], "end" : sketchPts[0] });
             skSolve(sk);
