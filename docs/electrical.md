@@ -43,7 +43,8 @@ development features proven unnecessary.
 **Open V2 option — horizontal donut board.** Once the housing exists, V2 may instead become an
 annular board mounted horizontally around the spindle, replacing the same-outline rule and the
 EB-100 bracket entirely. Geometry that makes it viable: between the plate underside (Z6) and
-the carrier top (Z144) the housing interior is a Ø194 cylinder that is empty except for the
+the carrier top (Z90 after the 2026-07-27 stack shortening) the housing interior is a Ø194
+cylinder that is empty except for the
 Ø16 spindle, the three Ø16 standoffs at r75, the tether run near Y−82, and the cable drop. The
 low-risk shape is ID Ø30–40 (generous non-contact clearance around the spindle) × OD ≤Ø130,
 entirely inside the standoff circle — ~12,500 mm², nearly 3× the rectangle — leaving a wide
@@ -539,14 +540,17 @@ keepout; the printed housing provides a nonmetallic window and at least 15 mm sp
 clearance to motor, hub, plate, **carrier**, wiring, and fasteners (2026-07 geometry check:
 all antenna positions along the board clear 15 mm with ≥19 mm actual margin).
 
-Physical orientation (2026-07 review, pinning what the dossier left implicit): the board
-mounts vertically with **local x = 0 at the top (global Z25, near the plate)** and x = 78
-at the bottom (Z103, toward the motor) — J1/power lands near the 15° cable entry and the
-tach/safety zone near the Hall bracket. The EB-100 reserve envelope's extra width (110 vs
-78 mm, 80 vs 58 mm) must be allocated to the **inward (X35) side and split explicitly
-between the two board ends** — the worst board corner already sits at r93.8 against the
-Ø194 housing minimum (3.2 mm margin), so nothing (connectors, cable bends) may overhang the
-X93 edge, and the corner-margin tolerance stack must be carried in CAD.
+Physical orientation: **open again as of the 2026-07-27 rotor raise.** The 2026-07 review
+pinned the board vertical with its 78 mm dimension along Z (Z25–103), but the interior is
+now only 84 mm tall (plate underside Z6 to carrier top Z90), so that orientation no longer
+fits. Candidates, to be decided when EB-100 is redesigned: (a) vertical with the **58 mm
+dimension along Z** (Z25–83, 7 mm to the carrier — preserves the vertical-mount RF story,
+antenna at the outward edge, but re-derive the corner-radius stack for the 78 mm width);
+(b) **horizontal under the plate** (~Z12–35, off-center beside the spindle flange; antenna
+keeps ≥15 mm below the plate — verify against the metal-clearance rule). The invariants
+that survive either way: J1/power lands near the 15° cable entry, tach/safety zone near the
+Hall bracket, nothing overhangs the housing's Ø194 interior, and the corner-margin
+tolerance stack must be carried in CAD.
 
 ## Test points
 

@@ -25,8 +25,8 @@ the bed.
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
 - **Mock first, cheap**: an MDF or 3D-printed Ø210 disk + three printed/threaded-rod
-  Ø16 × 138 standoffs + a blank Ø188 disk, to feel the 254 mm drop in the room before any
-  stainless is cut.
+  Ø16 × 84 standoffs + a blank Ø188 disk, to feel the (now much shallower) drop in the room
+  before any stainless is cut.
 - **Fully spec'd and motor-independent — fab any time**: ST-100 standoffs, SP-100 spindle
   (flange flats, thread end and cotter hole all dimensioned 2026-07-27), MP-100 ceiling
   plate, KD-100 catcher disk, BL-100 blades, LS-100 spreaders. Start

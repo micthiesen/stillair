@@ -11,18 +11,26 @@ qualification results remain release-dependent.
 
 ## Envelope
 
-Baseline: 44 in diameter, 60 RPM typical operating point, 8.1 in nearest-surface gap, 12°
-pitch. 42 in remains the airflow/handling fallback; 170 RPM is the user maximum.
+Baseline: 44 in diameter, 60 RPM typical operating point, ~4.5 in nearest-surface gap
+(hugger regime — deliberate, see below), BP-100 twisted blade. 42 in remains the
+airflow/handling fallback; 170 RPM is the user maximum.
 
 | Parameter | Value |
 |---|---|
 | Rotor diameter | 44 in |
-| Nearest-surface gap to ceiling | 8.1 in |
-| Nominal pitch | 12° |
+| Nearest-surface gap to ceiling | 4.53 in (115.2 mm) |
 | Wall-tip clearance | 5.5 in / side |
 | Tip speed (60 RPM) | 3.5 m/s |
-| Blade pitch plane | 8.8 in down |
-| Lowest blade surface | 9.4 in down |
+| Blade pitch plane | 5.26 in (133.7 mm) down |
+| Lowest blade surface | 5.85 in (148.7 mm) down |
+| Lowest assembly point | 6.46 in (164.0 mm, spindle end, r ≤ 11) |
+
+**2026-07-27 raise**: the rotor was raised 99.8 mm (blade bottom 248.5 → 148.7) so open
+cabinet doors clear the blades — a hard collision constraint that arrived after the original
+envelope was chosen. The stack shortened 54 mm at the standoffs (138 → 84) and 45.8 mm at
+the adapter (the BA-00 plate is flat: hub underside and blade pad underside are coplanar).
+Aero cost of the 0.107 D ceiling gap and the RPM compensation are recorded in
+[decisions.md](decisions.md) > Accepted deviations.
 
 Wall-clearance deviation: 44 in leaves 5.5 in to each wall, below common 18-inch guidance. No
 useful fan fits that guidance in this 55-inch space. Do not exceed 44 in, and keep 42 in
@@ -31,27 +39,30 @@ available if wall-flow testing is poor.
 ## Vertical stack
 
 Z = 0 is the finished ceiling; positive Z points down. Everything stays inside 10 inches
-(254 mm absolute). The 138 mm standoffs place the GL100 stationary face at Z152; its 34.2 mm
-body ends at Z186.2, and the blade center plane is Z223.5. Across 10°, 12°, and 14° adapters,
-the upper blade surface stays 8.00–8.17 in from the ceiling and the lowest point stays
-9.43–9.60 in down.
+(254 mm absolute). The 84 mm standoffs place the GL100 stationary face at Z98; its 34.2 mm
+body ends at Z132.2, and the blade center plane is Z133.7. The blade tops (Z115.2) rise
+above the hub plane *beside* the mechanism — the rotor sweeps r ≥ 110, outboard of every
+stationary part (carrier r94, plate r105), so nothing overlaps. The spindle end (Z164,
+central, r ≤ 11) hangs below the blades, which the owner accepted: only the blades need to
+clear the cabinet doors.
 
 | Interface | Z, mm |
 |---|---:|
 | Ceiling and plate top | 0.0 |
 | Ceiling plate underside | 6.0 |
-| Vertical PCB range | 25.0–103.0 |
-| Motor carrier top | 144.0 |
-| Carrier underside / GL100 stationary face | 152.0 |
-| GL100 rotating face | 186.2 |
-| Rotor hub top / underside | 186.2 / 194.2 |
-| Catcher disk top / underside | 196.7 / 200.7 |
-| Blade radial center plane | 223.5 |
-| Lowest blade at 10° / 12° / 14° | 239.4 / 241.6 / 243.8 |
+| PCB envelope (orientation being re-decided; see [electrical.md](electrical.md)) | 12.0–83.0 |
+| Motor carrier top | 90.0 |
+| Carrier underside / GL100 stationary face | 98.0 |
+| GL100 rotating face | 132.2 |
+| Rotor hub top / underside | 132.2 / 140.2 |
+| Highest blade surface | 115.2 |
+| Blade radial center plane | 133.7 |
+| Blade pad underside / BA-00 top face | 140.2 |
+| Catcher disk top / underside | 142.7 / 146.7 |
+| Lowest blade surface | 148.7 |
+| BA-00 adapter underside | 150.2 |
+| Castellated nut → cotter → spindle end | 146.7 → 159.2 → 164.0 |
 | Absolute lowest permitted point | 254.0 |
-
-At the 132 mm maximum chord and 9 mm thickness, the upper blade point is Z207.6 at 10°,
-Z205.4 at 12°, and Z203.2 at 14°.
 
 ## Coordinate system
 
@@ -76,7 +87,8 @@ Simple plates, posts, and one turned spindle (full dimensions in [parts.md](part
   centers, three Ø6.6 standoff holes on Ø150 PCD, Ø16.2 spindle opening, separate tether
   opening, and a P-clip strain-relief tapping pair at 15° (no cable slot — the supply is a
   surface run entering at the housing rim; see [parts.md](parts.md) "Cable entry").
-- **ST-100 standoffs** — three Ø16 × 138 mm 6061-T6 posts, M6 × 1 tapped ≥12 mm both ends.
+- **ST-100 standoffs** — three Ø16 × 84 mm 6061-T6 posts, M6 × 1 tapped ≥12 mm both ends
+  (shortened from 138 in the 2026-07-27 raise).
 - **MC-100 motor carrier** — Ø188 × 8 mm 6061-T6. Standoff holes on Ø150 PCD, 4 × Ø4.5 on the
   GL100 Ø60 PCD, Ø20.5 spindle clearance, tether pair, Hall mount, verified wire window.
 - **RH-100 rotor hub** — Ø200 × 8 mm 6061-T6. Ø20.5 captured aperture, four
@@ -92,9 +104,9 @@ machining release.
 
 > **Superseded 2026-07-27**: the rotor now uses printed BP-100 cambered-airfoil blades with
 > CF-rod spars, baked-in 17°→8.5° twist, and a single flat adapter — see
-> [blade-v2.md](blade-v2.md) (which re-derives the vertical envelope; the 12° "nominal
-> pitch" in the envelope table above belongs to this superseded flat blade). The birch
-> geometry below is retained as the fallback.
+> [blade-v2.md](blade-v2.md) (which re-derives the blade envelope; project-Z numbers there
+> shift with the 2026-07-27 raise, pitch plane Z223.5 → Z133.7). The birch geometry below is
+> retained as the fallback.
 
 Three 9 mm birch blades on printed pitch adapters. Cut four, finish all four identically,
 select the best-balanced three, keep the fourth as a ready spare. The symmetric edge treatment
@@ -121,7 +133,7 @@ supports reverse operation.
 Two secondary load paths:
 
 1. **Central catcher** (SP-100 + KD-100) protects against GL100 bearing/rotor retention
-   failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z196.7 shoulder, M12
+   failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z142.7 shoulder, M12
    lower thread, Ø50 × 4 mm 316 catcher disk, castellated nut, and cotter. The flange carries
    two 30.0 mm across-flats keyed into a matching double-D pocket in MP-100, so the nut
    torques from below with no counter-hold. The spindle passes

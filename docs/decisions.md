@@ -68,9 +68,14 @@ Constraints that cannot all be optimized.
 - **Wall clearance: 5.5 inches per side at 44-inch diameter.** Well below common 18-inch
   guidance. The room cannot fit a useful fan that meets the guidance, so 44 inches is a
   deliberate experimental maximum and 42 inches remains the fallback.
-- **Ceiling gap: 8.0–8.2 inches to the nearest blade surface.** The full 0.2-diameter
-  heuristic would exceed the desired total drop once blade pitch is included. The selected gap
-  spends nearly all of the permitted 10-inch envelope on airflow.
+- **Ceiling gap: ~4.5 inches to the nearest blade surface (hugger regime; changed
+  2026-07-27, was 8.0–8.2).** Open cabinet doors reach within ~160 mm of the ceiling and
+  collided with the original blade plane — a hard constraint, so the rotor was raised
+  99.8 mm (54 from ST-100, 45.8 by flattening BA-00). At 0.107 D the gap chokes the inflow
+  annulus (~0.44 m² vs the 0.98 m² disk): expect roughly **15–25% less CFM at fixed RPM**
+  and a corresponding CFM/W efficiency loss. Accepted because delivered airflow is
+  recoverable with the 3× RPM headroom (60 → ~72 RPM restores flow at ~20 W total, tip
+  speed still ~4 m/s) and a fan that strikes doors is worth 0% of its airflow.
 - **Certification: a custom assembly is not certified by using a certified power brick.**
   Component approvals reduce risk but do not create an accepted mark for the complete
   appliance. Confirm the local permanent-installation path before ceiling release (gate 6).

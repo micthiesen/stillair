@@ -2,10 +2,17 @@
 
 > **Status: accepted and modelled in OnShape 2026-07-27.** Supersedes the BL-100 birch
 > flat-plate blade and LS-100 spreaders, and collapses the BA-10/12/14 pitch-adapter family
-> to a single flat adapter (BA-00, undesigned). Their [parts.md](parts.md) sections remain
-> as reference/fallback. Both segments exported to
+> to a single flat adapter (**BA-00, designed 2026-07-27 — see [parts.md](parts.md)**).
+> Both segments exported to
 > [`cad/BP-100.step`](../cad/BP-100.step); slicer STLs come from that or straight from
 > OnShape.
+>
+> **2026-07-27 rotor raise**: the whole rotor moved up 99.8 mm to clear cabinet doors
+> (pitch plane project-Z 223.5 → **133.7**; pad underside 240 → **140.2**, coplanar with the
+> hub underside). Blade-local geometry in this doc is untouched; project-Z callouts below
+> carry both values as "old → new". In OnShape the blades were translated +99.8 by a
+> Transform after the pattern — `bp100_sections.fs` still has `Z_CENTER = -223.5`, which is
+> only wrong if you regenerate from the FS instead of moving on top of it.
 
 A two-segment 3D-printed blade (aero/LW-PLA class filament) with a Ø3 mm carbon-fiber rod
 spar, cambered low-Reynolds airfoil sections, spanwise twist baked in, and a slim root.
@@ -40,7 +47,8 @@ geometry, aero intent, and the OnShape build path.
 
 Blade-local frame used by this doc and the Part Studio: **origin on the rotor axis at the
 blade pitch plane, X radial outboard, Z up toward the ceiling, Y toward the leading edge.**
-Project Z (ceiling-down) = 223.5 − Z_local. The spar/pitch axis is the X axis; every section
+Project Z (ceiling-down) = 133.7 − Z_local after the 2026-07-27 raise (was 223.5 − Z_local;
+project-Z callouts below are written old → new). The spar/pitch axis is the X axis; every section
 is anchored to it at its **camber-line point above 30% chord** (0.05625 c above the chord
 line — anchoring by the chord-line point itself would put the straight rod *below* the
 cambered section's skin, outside the material; caught 2026-07-27). Twist rotates the LE
@@ -107,9 +115,11 @@ custom FeatureScript (enter 6407) and keep this table as the fallback / cross-ch
 ## Root fitting (the adapter interface)
 
 The blade slims toward the root; the structure is a boss under the airfoil, directly on the
-rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
+rod span, so the BA-00 flat adapter (designed 2026-07-27, spec in [parts.md](parts.md))
+clamps where the spar is:
 
-- **Pad**: underside flat at **Z_local −16.5** (project Z240.0), footprint r118–r192,
+- **Pad**: underside flat at **Z_local −16.5** (project Z240.0 → 140.2, coplanar with the
+  RH-100 underside since the raise), footprint r118–r192,
   y +18 to −40, R8 perimeter transitions blending into the airfoil body. Within that
   footprint the airfoil's lower surface reaches Z239.0, so the pad is ~1 mm proud at worst;
   the root TE (outside the footprint, aft of y−40) droops below the pad plane, which is fine
@@ -120,11 +130,13 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
   to the spar, straddling it; the old y±25 pattern no longer fits the slim root — this
   pattern is the adapter's to match, RH-100 is untouched). Top side: hex-nut pockets for M5
   all-metal prevailing nuts (8.2 mm across flats), cut normal to Z with **per-row floors** —
-  front row (y+10) floor at Z_local −4 (project Z227.5), aft row (y−30) floor at Z_local −12
-  (project Z235.5), because the root twist drops the TE-side skin ~5–7 mm below the pitch
-  axis and a single floor plane leaves the aft pockets hanging above the blade
-  (found in CAD 2026-07-27). Aft nuts sit flush to ≤1 mm proud of the local skin. Hardware from below should be flat/low-head;
-  everything below Z240 (plate + heads) has 14 mm of budget to the Z254 floor.
+  front row (y+10) floor at Z_local −4 (project Z227.5 → 127.7), aft row (y−30) floor at
+  Z_local −12
+  (project Z235.5 → 135.7), because the root twist drops the TE-side skin ~5–7 mm below the
+  pitch axis and a single floor plane leaves the aft pockets hanging above the blade
+  (found in CAD 2026-07-27). Aft nuts sit flush to ≤1 mm proud of the local skin. Hardware
+  from below is M5 socket heads in BA-00's counterbores; below-pad budget to the Z254 floor
+  is enormous after the raise (~100 mm).
 - **Balance pocket**: Ø15 × 2 mm blind pocket in the pad underside near (r155, y−10) for
   stick-on trim weights, concealed by the adapter plate. First-moment matching spec (≤0.5%)
   carries over from BL-100.
@@ -142,11 +154,15 @@ rod span, so the (out-of-scope) BA-00 flat adapter clamps where the spar is:
 Computed from the station table with twist about the 30% anchor (script:
 [`cad/bp100_envelope_check.py`](../cad/bp100_envelope_check.py), rerun if stations change):
 
-- Upper surface worst case Z215.0 (tip micro-station; Z218.1 at r250) — inside the ≥Z203.2
-  ceiling-gap floor with margin.
-- Lower surface worst case Z248.5 (r250) ≤ Z254 ✓. Within the root-pad footprint the lower
-  surface only reaches Z239.0, so the pad underside stays at Z240.0 (+ below-pad hardware
-  ≤ Z254 ✓); the root TE droops to Z243.7–247.1 *outside* the pad footprint, so the flat
+- Upper surface worst case Z215.0 → **115.2** after the raise (tip micro-station; 118.3 at
+  r250). The old ≥Z203.2 ceiling-gap floor was retired with the raise — the ~4.5 in gap is
+  the accepted hugger deviation ([decisions.md](decisions.md)); the binding constraint above
+  the blade is now the ENC-100 housing wall (r ≤ 106 vs blade sweep r ≥ 110, ~4 mm radial —
+  see parts.md ENC-100).
+- Lower surface worst case Z248.5 → **148.7** (r250), far inside Z254 ✓. Within the root-pad
+  footprint the lower
+  surface only reaches Z239.0 → 139.2, so the pad underside stays at Z240.0 → 140.2; the
+  root TE droops below the pad plane *outside* the pad footprint, so the flat
   adapter must not extend past the pad footprint aft of y−40.
 - Rod channel walls 1.24 mm (r110) to 2.75 mm (r250), ≥1.2 mm over the whole r112–r430 span.
 - Tip radius exactly 558.8 (44.0 in) — do not exceed.
@@ -165,7 +181,8 @@ Computed from the station table with twist about the 30% anchor (script:
    [`cad/bp100_sections.fs`](../cad/bp100_sections.fs) (paste into a Feature Studio in the
    blade document, then insert "BP-100 airfoil sections" in the Part Studio). It generates
    all 8 station sketches from its built-in copy of the station table — scaled, twisted
-   about the camber-line anchor, dropped to the Z223.5 pitch plane — with *Pitch offset*
+   about the camber-line anchor, dropped to the FS's Z223.5 pitch plane (the model then
+   carries a +99.8 Transform from the 2026-07-27 raise; see the status note) — with *Pitch offset*
    (the `PITCH_OFFSET` variant knob) and *TE thickness* (default 0.6 mm, printable blunt TE)
    as dialog inputs. Steps 1–3 are then optional scaffolding: the feature computes its own
    planes; keep the manual station planes only as references for the split and root pad.
@@ -192,9 +209,9 @@ Computed from the station table with twist about the 30% anchor (script:
 
 ## Open items
 
-- BA-00 flat adapter design (out of scope here): flat plate mating the pad, four M5 at
-  r130/r180 y+10/−30, plus whatever hub-side geometry RH-100's stations demand. RH-100 is
-  unchanged.
+- ~~BA-00 flat adapter design~~ — designed 2026-07-27, spec in [parts.md](parts.md)
+  (a true flat 10 mm plate; pad underside coplanar with the hub underside after the raise).
+  RH-100 is unchanged.
 - LS-100 load spreaders are a wood-blade artifact; whether the printed pad wants washer
   plates is the adapter/strength owner's call.
 - Structural validation of print + rod (owner's scope): if it changes wall/channel geometry,
