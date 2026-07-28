@@ -4,7 +4,8 @@ Fast-moving work state and chosen next step. This records the work, not machine 
 uncommitted changes. Durable findings live in the linked docs.
 
 Last updated: **2026-07-27** (BP-100 printed blade designed, modelled in OnShape, and
-exported; blade docs/BOM synced. Next remains the V1 schematic — unchanged and untouched.)
+exported; blade docs/BOM synced. Next changed by owner decision: build out the full OnShape
+assembly model before the V1 schematic — visualizing integration early is cheap insurance.)
 
 ## Now
 
@@ -35,23 +36,54 @@ exported; blade docs/BOM synced. Next remains the V1 schematic — unchanged and
 
 ## Next
 
-**Capture the V1 controller schematic in KiCad** (`pcb/`). Every remaining firmware unknown —
-register values, the golden image, sensorless startup tuning, the analog trip calibration — is
-gated on having an MCF8316D to talk to, so the board is the single thing standing between
-here and a fan that turns. Follow [electrical.md](electrical.md) SCH-01–SCH-07 **as amended by
-the review** (delayed `/PRE` RC + Schmitt, corrected reverse-polarity FET orientation, LM2907
-fixes, GPIO7/15 routes, GPIO8/9 pull-ups, 22 µF module bulk, NTC/VBUS circuits); order config
-and footprint sourcing in `pcb/README.md`. Not hardware-gated.
+**Build out the full assembly model in OnShape** (owner decision 2026-07-27; the document
+already holds MP-100 + three patterned BP-100 blades — 6 parts). Everything below is
+dimensioned in [parts.md](parts.md); the point is to see the integrated stack early and catch
+interface mistakes while they cost nothing. ENC-100 housing and cabling are **deliberately
+deferred** — they depend on everything else settling. Per-session working style:
+[CLAUDE.md](../CLAUDE.md) > "Building in OnShape together".
 
-Then, once a real MCF8316D exists: **capture the golden image.** The gate is built and holds;
-`stillair --port … config capture` prints the table, and until it is filled in every telemetry
-frame and CSV row honestly reports `config: unverified`.
+Order (each step is the reference geometry for the one after):
+
+1. **Import the official GL100 STEP** (links at the top of [parts.md](parts.md)) — every
+   motor interface clocks off it. Motor-derived dimensions stay provisional until the
+   physical release gates close.
+2. **SP-100 spindle** — revolve + 30.0 AF double-D flats + Ø3.2 cross-hole; fully
+   dimensioned in parts.md. Seat its flange in MP-100's double-D pocket; this establishes
+   the centerline stack (Z196.7 shoulder, thread to Z218).
+3. **ST-100 standoffs** ×3 (Ø16 × 138 on Ø150 PCD at 90/210/330°) — trivial; they set
+   MC-100's plane at Z152.
+4. **MC-100 motor carrier** — Ø188 × 8; clock the Ø60 M4 pattern and the phase-lead window
+   from the imported STEP.
+5. **Seat the GL100**: stationary rear face (Ø60/M4) up against MC-100, M4 × 12 from above;
+   rotating front face (Ø50/M4) at Z186.2.
+6. **RH-100 rotor hub** on the rotating face — M4 × 10 flat-heads from below, subflush;
+   pilot OD stays provisional (nominal 29.8, motor-measured before fab). Includes the three
+   adapter stations and tach pockets.
+7. **KD-100 catcher disk + DIN 935 castellated nut** on the spindle end — then *visually
+   verify* the 2.5 ±0.5 mm capture gap and the ≥2.0 mm screw-head clearance in section view.
+8. **BA-00 adapter — design first, then model** (the one open design task in the chain):
+   hub side mates RH-100's stations (four Ø5.5 at r62/r88 y±15 + two dowels), blade side
+   mates the BP-100 pad (four M5 at r130/r180 y+10/−30, pad underside Z240). "Flat" applies
+   to the blade interface only — the part must drop ~46 mm from the hub underside (Z194.2)
+   to the pad, so it's a riser/drop arm; geometry TBD. Record the finished design in
+   [blade-v2.md](blade-v2.md) + [parts.md](parts.md), CF-PPA per the BOM.
+9. **Clearance extras** once the stack exists: BR-100 Hall bracket + magnet caps (Hall gap
+   2.5 nominal), EB-100 bracket + the 78 × 58 PCB envelope — these are for visual clash
+   checks more than fabrication.
+
+Assembly practice: keep fabricated parts in Part Studios and compose in an OnShape Assembly
+using the Z-stack table in [mechanical.md](mechanical.md); pattern blades/adapters/standoffs
+in the assembly, not the Part Studios.
+
+**After (or in parallel): capture the V1 controller schematic in KiCad** (`pcb/`) — still the
+critical path to a fan that turns; every remaining firmware unknown is gated on a real
+MCF8316D. Follow [electrical.md](electrical.md) SCH-01–SCH-07 as amended by the review; order
+config and footprint sourcing in `pcb/README.md`. Then, once a real MCF8316D exists: **capture
+the golden image** (`stillair --port … config capture`).
 
 ## Candidates Not Chosen
 
-- **BA-00 flat blade adapter design** (new): flat plate mating the BP-100 pad (four M5 at
-  r130/r180, y+10/−30) to RH-100's unchanged stations. Small, motor-independent, and now the
-  only designed-parts gap in the blade path — good parallel work alongside the PCB.
 - **Blade materials + first prints**: order the Ø3 CF rods and an LW-PLA spool
   ([bom.csv](../bom/bom.csv)), print a segment set from `cad/BP-100.step`, owner strength
   validation. Longest blade-path lead alongside the PPA-CF adapter qualification.
