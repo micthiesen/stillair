@@ -3,7 +3,9 @@
 > **Status: accepted and modelled in OnShape 2026-07-27.** Supersedes the BL-100 birch
 > flat-plate blade and LS-100 spreaders, and collapses the BA-10/12/14 pitch-adapter family
 > to a single flat adapter (BA-00, undesigned). Their [parts.md](parts.md) sections remain
-> as reference/fallback. Segment STL exports into [`cad/`](../cad/) pending.
+> as reference/fallback. Both segments exported to
+> [`cad/BP-100.step`](../cad/BP-100.step); slicer STLs come from that or straight from
+> OnShape.
 
 A two-segment 3D-printed blade (aero/LW-PLA class filament) with a Ø3 mm carbon-fiber rod
 spar, cambered low-Reynolds airfoil sections, spanwise twist baked in, and a slim root.
