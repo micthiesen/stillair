@@ -150,9 +150,11 @@ moved with it, see [electrical.md](electrical.md).)
 - One-piece 17-4PH H1150 stainless, passivated.
 - Ø16.0 shank; Ø34 × 3.0 upper flange; straightness 0.10 mm; concentricity 0.05 mm TIR.
 - Ø16 shank runs from Z3 to the disk shoulder at Z120.7.
-- M12 × 1.75 thread from Z120.7 to **Z142.0** (21.3 mm long), with the runout inside the
-  Z120.7 shoulder.
-- **Ø3.2 cotter cross-hole, centreline at Z137.2**, perpendicular to the flange flats.
+- M12 × 1.75 thread from Z120.7 to **Z144.0** (23.3 mm long), with the runout inside the
+  Z120.7 shoulder. (Lengthened from Z142.0 on 2026-07-28: the purchased KD-100 is 6.0 mm
+  thick, not 4.0 — the whole nut stack sits 2 mm lower.)
+- **Ø3.2 cotter cross-hole, centreline at Z139.2**, perpendicular to the flange flats
+  (was Z137.2 with the 4.0 mm disk).
 - (All Z values shifted −76 total in the 2026-07-27/28 rotor raise with the shortened
   ST-100; the bottom-end geometry is unchanged relative to the hub. In OnShape these dims
   are driven by `#hubBottom` expressions.)
@@ -165,19 +167,24 @@ M12 A4 castellated nut** (s 19.0, total height m 15.0, unslotted height m′ 10.
 slots) with an **ISO 1234 3.2 × 32 A4 split pin** (trim legs to suit). The nut installs
 bearing-face-up against KD-100, castellated crown downward.
 
+(Re-based 2026-07-28 for the purchased 6.0 mm KD-100 — every row below the disk moved
+down 2 mm from the 4.0 mm-disk original.)
+
 | Z, mm | Feature |
 |---:|---|
 | 120.7 | Ø16→M12 shoulder; thread starts. KD-100 clamps up against this face |
-| 120.7–124.7 | KD-100, 4.0 mm, its Ø13 bore over the thread |
-| 124.7 | Nut bearing face |
-| 124.7–134.7 | Nut unslotted body (m′ = 10.0) |
-| 134.7–139.7 | Castellated crown, 5.0 mm of slot depth |
-| **137.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
-| 142.0 | Thread ends, 2.3 mm (>1 pitch) below the nut face |
+| 120.7–126.7 | KD-100, 6.0 mm, its bore over the thread |
+| 126.7 | Nut bearing face |
+| 126.7–136.7 | Nut unslotted body (m′ = 10.0) |
+| 136.7–141.7 | Castellated crown, 5.0 mm of slot depth |
+| **139.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
+| 144.0 | Thread ends, 2.3 mm (>1 pitch) below the crown |
 
 - The hole is centred in the 5.0 mm slot band so the cotter has material both sides. Stack
-  tolerance (KD-100 thickness + shoulder position, ~±0.2 mm) shifts the band to 134.5–139.9
-  worst case; the Ø3.2 hole spans 135.6–138.8 and stays inside the band at both extremes.
+  tolerance (KD-100 thickness + shoulder position, ~±0.2 mm) shifts the band to 136.5–141.9
+  worst case; the Ø3.2 hole spans 137.6–140.8 and stays inside the band at both extremes.
+  The purchased disk's thickness tolerance is unmeasured — confirm actual thickness on
+  arrival and re-run this band check before drilling the cross-hole.
 - Six castellations on a 1.75 mm pitch give **0.292 mm of axial adjustment per index step**,
   so worst-case seating error after aligning a slot is 0.146 mm. Rotate the *nut* to find
   alignment; the spindle is keyed and does not turn.
@@ -252,20 +259,28 @@ Tach features:
 
 ## KD-100 catcher disk
 
-- Ø50 × 4.0 mm 316 stainless, Ø13 center hole, R0.5 edge, flat within 0.10 mm.
-- **Off-the-shelf option (sourced 2026-07-28, owner decision pending)**: MISUMI's
-  configurable metal flat spacers build this exact geometry — 316, Ø50 OD × Ø13.0 ID ×
-  4.0 mm, machined with ±0.01 mm precision-grade thickness tolerance, ships to Canada
-  build-to-order (~1 week). Edge break and flatness are not configurable options — verify
-  on arrival; the mandatory 1.25 kN static proof covers the strength question either way.
-  Fixed-catalog fallback: McMaster 95211A204 (DIN 440-R 316, Ø44 × 13.5 × 3.4–4.6, ~$3,
-  stamped, no flatness guarantee) — dimensionally inferior, bench-trial only.
+- **Purchased part (owner selection 2026-07-28, supersedes the Ø50 × 4.0 custom laser
+  part)**: Amazon lathe-machined stainless washer, **Ø50 OD × Ø12 ID × 6.0 mm**, ~$35 for
+  5 (spares included). The extra 2 mm of thickness only helps in bending; it shifts the
+  entire nut/cotter stack down 2 mm — re-derived in "SP-100 bottom-end stack" (thread end
+  Z144.0, cotter Z139.2). Selected over the runner-up (MISUMI configurable 316 flat spacer,
+  Ø50 × Ø13.0 × 4.0 exact, build-to-order).
+- **Bore check before use**: Ø12 nominal over an M12 thread (major Ø11.97 max) is a
+  ~zero-clearance fit. On arrival, verify it slides freely over an M12 bolt; if not (or the
+  measured bore is < Ø12.2), open it to Ø12.5–13 on a drill press — the original spec bore
+  was Ø13 for 0.5 mm/side assembly clearance. Wider bearing annulus against the Ø16
+  shoulder (2.0 vs 1.5 mm radial) is a small bonus of the smaller bore.
+- **On-arrival checks**: confirm austenitic stainless (barely/non-magnetic — reject a
+  strongly magnetic 410-class part), flatness ≤ 0.10 mm, and **measure actual thickness**
+  — the cotter-hole position check below assumes 6.0; re-run the band arithmetic with the
+  measured value before drilling SP-100's cross-hole (disks arrive long before the spindle
+  is machined).
 - Disk top seats at Z120.7, 2.5 ±0.5 mm below RH-100.
 - The Ø50 disk edge crosses the Ø50 motor-screw PCD, so the RH-100 screw heads must be
   subflush. Measure the running gap to the lowest rotating screw or surface, not only the
   nominal hub underside.
 - Retain with a DIN 935 M12 A4 castellated nut and an ISO 1234 3.2 × 32 A4 split pin through
-  SP-100's Z137.2 cross-hole; the nut clamps KD-100 up against the Z120.7 shoulder. Full
+  SP-100's Z139.2 cross-hole; the nut clamps KD-100 up against the Z120.7 shoulder. Full
   stack in "SP-100 bottom-end stack".
 - Static proof the complete disk, nut, spindle, and plate path to 1.25 kN.
 - There must be no normal-operation witness marks after maximum-speed and imbalance tests.
@@ -517,7 +532,7 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | MC-100 | 1 | Motor carrier | Ø180 × 8, 6061-T6 | CNC mill |
 | SP-100 | 1 | Capture spindle | Ø16 flanged, 17-4PH | CNC turn + cross-drill |
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
-| KD-100 | 1 | Catcher disk | Ø50 × 4, 316 SS | Laser + machine |
+| KD-100 | 1 | Catcher disk | Ø50 × Ø12 × 6, stainless | Purchased (Amazon washer) + bore check |
 | BR-100 | 1 | Hall bracket | 0.8–1.0 mm 304 SS | Laser + bend |
 | MR-100 | 3 | Magnet / slug retaining cap | 14 × 8 × 0.8, 316 SS | Laser |
 | CW-100 | 2 | Matched balance slugs | Brass, mass-trimmed | Turn + trim |

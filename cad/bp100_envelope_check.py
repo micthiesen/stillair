@@ -125,7 +125,7 @@ chan_bot = RECT_T / 2 + 1.7
 print(f"  rod channel band {chan_top:.1f}-{chan_bot:.1f} from top face")
 print(f"  nut pocket (5.0 deep from underside) floor at {RECT_T - 5.0:.1f} from top; at y+/-15, channel at y0 -> no overlap")
 print(f"  balance pocket top face 2.0 deep -> web to channel top {chan_top - 2.0:.1f} mm")
-print(f"  rectangle bottom Z {RECT_BOT}; nut bottom Z 139.7; spindle end Z 142.0 (all above blade lowest)")
+print(f"  rectangle bottom Z {RECT_BOT}; nut bottom Z 141.7; spindle end Z 144.0 (all above blade lowest)")
 
 print("\ntransition r96 -> r120 (lateral flare of TE):")
 c, tw, ys, zr = stations[0][1], stations[0][2], stations[0][3], stations[0][4]
