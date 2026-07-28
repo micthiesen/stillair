@@ -43,7 +43,7 @@ development features proven unnecessary.
 **Open V2 option — horizontal donut board.** Once the housing exists, V2 may instead become an
 annular board mounted horizontally around the spindle, replacing the same-outline rule and the
 EB-100 bracket entirely. Geometry that makes it viable: between the plate underside (Z6) and
-the carrier top (Z90 after the 2026-07-27 stack shortening) the housing interior is a Ø194
+the carrier top (Z68 after the 2026-07-27/28 stack shortening) the housing interior is a Ø194
 cylinder that is empty except for the
 Ø16 spindle, the three Ø16 standoffs at r75, the tether run near Y−82, and the cable drop. The
 low-risk shape is ID Ø30–40 (generous non-contact clearance around the spindle) × OD ≤Ø130,
@@ -56,7 +56,7 @@ angular separation: MCF power stage at one clock position, tach/analog 120–180
 Open questions if pursued: RF first — the board sits sandwiched between the stainless plate
 above and the carrier/motor below, so the ESP module goes at the outer rim, antenna facing
 radially out through the plastic wall, clocked away from standoffs/tether, sitting mid-gap
-(Z ~60–90) to keep the 15 mm metal clearance; verify with a real RSSI check. Connectors face
+(Z ~30–50 in the shortened interior) to keep the 15 mm metal clearance; verify with a real RSSI check. Connectors face
 up/down, so all service means dropping the housing (acceptable for a dev-stripped V2).
 
 The real cost: the V1→V2 plan inherits V1's validated layout, and a donut V2 is a new layout —
@@ -540,17 +540,15 @@ keepout; the printed housing provides a nonmetallic window and at least 15 mm sp
 clearance to motor, hub, plate, **carrier**, wiring, and fasteners (2026-07 geometry check:
 all antenna positions along the board clear 15 mm with ≥19 mm actual margin).
 
-Physical orientation: **open again as of the 2026-07-27 rotor raise.** The 2026-07 review
-pinned the board vertical with its 78 mm dimension along Z (Z25–103), but the interior is
-now only 84 mm tall (plate underside Z6 to carrier top Z90), so that orientation no longer
-fits. Candidates, to be decided when EB-100 is redesigned: (a) vertical with the **58 mm
-dimension along Z** (Z25–83, 7 mm to the carrier — preserves the vertical-mount RF story,
-antenna at the outward edge, but re-derive the corner-radius stack for the 78 mm width);
-(b) **horizontal under the plate** (~Z12–35, off-center beside the spindle flange; antenna
-keeps ≥15 mm below the plate — verify against the metal-clearance rule). The invariants
-that survive either way: J1/power lands near the 15° cable entry, tach/safety zone near the
-Hall bracket, nothing overhangs the housing's Ø194 interior, and the corner-margin
-tolerance stack must be carried in CAD.
+Physical orientation: **horizontal under the plate** (settled by the 2026-07-27/28 rotor
+raise; the 2026-07 review's vertical mount needed 97 mm and the interior is now 62 mm,
+plate underside Z6 to carrier top Z68 — both vertical orientations are dead). The board
+mounts flat, component envelope ~Z12–35, off-center beside the spindle flange within the
+Ø194 interior; EB-100 becomes a horizontal standoff arrangement off the same MP-100 taps.
+Open items for the bracket redesign: antenna placement keeping ≥15 mm spatial clearance to
+the plate above (verify against the metal-clearance rule — mid-height standoffs help),
+J1/power near the 15° cable entry, tach/safety zone near the Hall bracket, nothing
+overhanging the Ø194 interior, corner-margin tolerance stack carried in CAD.
 
 ## Test points
 

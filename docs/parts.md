@@ -109,8 +109,8 @@ numbers, tether anchor, and the pre-drill verification checklist in
 
 ## ST-100 carrier standoffs
 
-Three Ø16.0 × 84.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 tapped at least
-12 mm deep at both ends. (Shortened from 138.0 in the 2026-07-27 rotor raise — see
+Three Ø16.0 × 62.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 tapped at least
+12 mm deep at both ends. (Shortened from 138.0 in the 2026-07-27/28 rotor raise — see
 [mechanical.md](mechanical.md) > Envelope; the vertical-PCB assumption that sized the 138
 moved with it, see [electrical.md](electrical.md).)
 
@@ -141,12 +141,13 @@ moved with it, see [electrical.md](electrical.md).)
 
 - One-piece 17-4PH H1150 stainless, passivated.
 - Ø16.0 shank; Ø34 × 3.0 upper flange; straightness 0.10 mm; concentricity 0.05 mm TIR.
-- Ø16 shank runs from Z3 to the disk shoulder at Z142.7.
-- M12 × 1.75 thread from Z142.7 to **Z164.0** (21.3 mm long), with the runout inside the
-  Z142.7 shoulder.
-- **Ø3.2 cotter cross-hole, centreline at Z159.2**, perpendicular to the flange flats.
-- (All Z values shifted −54 in the 2026-07-27 rotor raise with the shortened ST-100; the
-  bottom-end geometry is unchanged relative to the hub.)
+- Ø16 shank runs from Z3 to the disk shoulder at Z120.7.
+- M12 × 1.75 thread from Z120.7 to **Z142.0** (21.3 mm long), with the runout inside the
+  Z120.7 shoulder.
+- **Ø3.2 cotter cross-hole, centreline at Z137.2**, perpendicular to the flange flats.
+- (All Z values shifted −76 total in the 2026-07-27/28 rotor raise with the shortened
+  ST-100; the bottom-end geometry is unchanged relative to the hub. In OnShape these dims
+  are driven by `#hubBottom` expressions.)
 
 ### SP-100 bottom-end stack (derived 2026-07-27)
 
@@ -158,24 +159,24 @@ bearing-face-up against KD-100, castellated crown downward.
 
 | Z, mm | Feature |
 |---:|---|
-| 142.7 | Ø16→M12 shoulder; thread starts. KD-100 clamps up against this face |
-| 142.7–146.7 | KD-100, 4.0 mm, its Ø13 bore over the thread |
-| 146.7 | Nut bearing face |
-| 146.7–156.7 | Nut unslotted body (m′ = 10.0) |
-| 156.7–161.7 | Castellated crown, 5.0 mm of slot depth |
-| **159.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
-| 164.0 | Thread ends, 2.3 mm (>1 pitch) below the nut face |
+| 120.7 | Ø16→M12 shoulder; thread starts. KD-100 clamps up against this face |
+| 120.7–124.7 | KD-100, 4.0 mm, its Ø13 bore over the thread |
+| 124.7 | Nut bearing face |
+| 124.7–134.7 | Nut unslotted body (m′ = 10.0) |
+| 134.7–139.7 | Castellated crown, 5.0 mm of slot depth |
+| **137.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
+| 142.0 | Thread ends, 2.3 mm (>1 pitch) below the nut face |
 
 - The hole is centred in the 5.0 mm slot band so the cotter has material both sides. Stack
-  tolerance (KD-100 thickness + shoulder position, ~±0.2 mm) shifts the band to 156.5–161.9
-  worst case; the Ø3.2 hole spans 157.6–160.8 and stays inside the band at both extremes.
+  tolerance (KD-100 thickness + shoulder position, ~±0.2 mm) shifts the band to 134.5–139.9
+  worst case; the Ø3.2 hole spans 135.6–138.8 and stays inside the band at both extremes.
 - Six castellations on a 1.75 mm pitch give **0.292 mm of axial adjustment per index step**,
   so worst-case seating error after aligning a slot is 0.146 mm. Rotate the *nut* to find
   alignment; the spindle is keyed and does not turn.
 - Cross-hole clocking is set perpendicular to the flange flats so the drawing is
   deterministic; nothing depends on it (a castellated nut aligns to any hole angle).
 - Ø3.2 through a Ø12 thread leaves 4.4 mm of material each side. The nut hangs at r ≤ 11 in
-  free space — RH-100 ends at Z140.2 above it, and the adapters start at r52.
+  free space — RH-100 ends at Z118.2 above it, and the blade roots start at r52.
 - **Anti-rotation (dimensioned 2026-07-27; supersedes the 2026-07 review's wrench-flat
   note)**: two parallel flats on the flange OD, **30.0 mm across flats** (−0.1/−0.2),
   symmetric about the axis, cut through the full 3.0 mm flange thickness, flat faces normal
@@ -196,7 +197,7 @@ bearing-face-up against KD-100, castellated crown downward.
   a simple holding fixture (recess-up, spindle hanging through a hole) when handling.
 - The upper flange sits captive in MP-100 (the Ø34.2→Ø16.2 bore step is a real internal
   shoulder — retention is self-contained in the plate, not ceiling-dependent). The disk
-  seats on the machined Z142.7 shoulder, so the capture gap is not set by loose washers.
+  seats on the machined Z120.7 shoulder, so the capture gap is not set by loose washers.
 - The spindle passes through MC-100, the GL100 bore, and RH-100 without normal contact.
 
 ## RH-100 captured rotor hub
@@ -209,9 +210,11 @@ bearing-face-up against KD-100, castellated crown downward.
 - Top annular pilot protrudes 1.5 mm into the motor bore. Keep pilot ID Ø20.5. Final OD is
   the measured mating diameter minus 0.10–0.20 mm diametrical clearance. Do not release a
   nominal 29.8 mm unverified.
-- Three adapter stations at 0°, 120°, 240°. Each station: Ø5.5 through-holes at local
+- Three blade-root stations at 0°, 120°, 240°. Each station: Ø5.5 through-holes at local
   (r62,y−15), (r62,y+15), (r88,y−15), (r88,y+15); blind Ø5 H7 × 4 deep dowel holes at
-  (r66,y0) and (r86,y0), dowels protruding 3 mm.
+  (r66,y0) and (r86,y0). **v3 (2026-07-28): the BP-100 blade bolts here directly** — its
+  printed Ø5 pins engage the dowel holes (steel dowels deleted), M5 bolts from above into
+  nut pockets in the blade root.
 
 Tach features:
 
@@ -231,12 +234,12 @@ Tach features:
 ## KD-100 catcher disk
 
 - Ø50 × 4.0 mm 316 stainless, Ø13 center hole, R0.5 edge, flat within 0.10 mm.
-- Disk top seats at Z142.7, 2.5 ±0.5 mm below RH-100.
+- Disk top seats at Z120.7, 2.5 ±0.5 mm below RH-100.
 - The Ø50 disk edge crosses the Ø50 motor-screw PCD, so the RH-100 screw heads must be
   subflush. Measure the running gap to the lowest rotating screw or surface, not only the
   nominal hub underside.
 - Retain with a DIN 935 M12 A4 castellated nut and an ISO 1234 3.2 × 32 A4 split pin through
-  SP-100's Z159.2 cross-hole; the nut clamps KD-100 up against the Z142.7 shoulder. Full
+  SP-100's Z137.2 cross-hole; the nut clamps KD-100 up against the Z120.7 shoulder. Full
   stack in "SP-100 bottom-end stack".
 - Static proof the complete disk, nut, spindle, and plate path to 1.25 kN.
 - There must be no normal-operation witness marks after maximum-speed and imbalance tests.
@@ -247,31 +250,22 @@ Tach features:
 - Two 3.4 × 8 mm adjustment slots on 12 mm pitch at MC-100 (±2 mm adjustment).
 - DRV5033 sensing face downward at r68 on the 30° line.
 - Nominal sensing-face-to-magnet-cap gap 2.5 mm; qualify 1.5–4.0 mm.
-- Sensor face is approximately Z128.9 (2.5 mm above the hub top at Z132.2, minus the 0.8 mm
-  cap; re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
+- Sensor face is approximately Z106.9 (hub top Z110.2 − 0.8 mm cap − 2.5 mm gap;
+  re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
   exit and daughterboard footprint.
 
-## BA-00 flat blade adapter
+## Blade root-joint qualification (BA-00 deleted)
 
-Designed 2026-07-27, replacing the BA-10/12/14 pitch family (pitch now lives in the BP-100
-print; see [blade-v2.md](blade-v2.md)). Three installed + one spare, identical.
+> **No adapter exists anymore.** BA-00 (designed 2026-07-27) was deleted 2026-07-28 when
+> BP-100 v3 integrated the mounting plate into the blade print ([blade-v2.md](blade-v2.md)):
+> the blade root rectangle bolts straight to RH-100's stations with four M5 into nut pockets
+> in the root, and printed Ø5 pins engage the hub's dowel holes. What survives here is the
+> material research and the qualification program, retargeted at the **blade root print
+> (segA)** — read "adapter" below as "blade root". Loads are small (blade centrifugal ~15 N
+> at 170 RPM plus gravity moment); pins take shear, bolts clamp, no printed thread carries
+> load. Filament for the loaded root is the owner's call (the aero/LW-PLA blade body vs the
+> qualified CF-PPA below — segA material selection is part of the strength program).
 
-- **A genuinely flat plate**: 10.0 mm thick CF-PPA, top face at Z140.2 mating *both* the
-  RH-100 underside and the BP-100 pad underside (made coplanar in the 2026-07-27 raise),
-  underside at Z150.2.
-- Plan outline: hub end r52–r98 × y±25; blade end r119–r191 × y+17…−39 (1 mm inside the pad
-  footprint — it must not extend aft of y−40, where the root TE droops below the pad plane);
-  straight tapered sides between the two ends; R5 plan-view corners.
-- Hub face matches RH-100: four Ø5.5 holes at r62/r88, y±15, and two Ø5.20 × 3.2 deep dowel
-  sockets at (r66, y0), (r86, y0). M5 A4-80 bolts enter from above through the hub into
-  **hex-nut pockets in the adapter underside** (8.1 mm across-flats × 5.0 deep for ISO 4032
-  M5 nuts, all-metal prevailing class) — no printed thread carries load.
-- Blade face: four Ø5.5 holes at r130/r180, y+10/−30, counterbored Ø10.0 × 5.5 from the
-  underside for M5 socket heads driving up into the hex nuts already pocketed in the BP-100
-  root (per-row pocket floors; pick lengths for ≥1 thread pitch protrusion past each nut).
-- Print flat, top (hub) face down — same orientation as the witness coupons below.
-- Loads are small (blade centrifugal ~15 N at 170 RPM plus gravity moment); dowels take
-  shear, bolts clamp, and the qualification below is still the release evidence.
 - Qualified CF-PPA preferred; CF-PA12 only after equivalent testing.
 - **Filament selection (researched 2026-07)**: primary **Bambu Lab PPA-CF** (true PPA + CF;
   168 MPa XY tensile, 208 MPa flexural, HDT 227 °C at 0.45 MPa, ~1.3% moisture saturation —
@@ -305,8 +299,9 @@ Qualification:
 
 > **Superseded 2026-07-27 by the BP-100 printed blade with CF-rod spar — see
 > [blade-v2.md](blade-v2.md) (accepted, modelled in OnShape).** BL-100, LS-100, and the
-> BA pitch family are all superseded (the BA family collapsed to the flat BA-00, designed
-> above); RH-100 is unaffected. This section is retained as the fallback design.
+> BA pitch family are all superseded (the BA family collapsed to BA-00, then BA-00 itself
+> was deleted 2026-07-28 — v3 blades bolt directly to RH-100); RH-100 is unaffected. This
+> section is retained as the fallback design.
 
 Cut and finish four, select three, keep one spare.
 
@@ -325,11 +320,11 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 
 ## EB-100 PCB bracket and ENC-100 housing
 
-- PCB is 78 × 58 × 1.6 mm. **Mounting orientation is open again** as of the 2026-07-27
-  raise: the interior is now 84 mm tall (Z6–Z90), so the old 78-along-Z vertical mount
-  (Z25–103) no longer fits. Candidates — 58-along-Z vertical (Z25–83, 7 mm to the carrier)
-  or horizontal under the plate; decide when EB-100 is redesigned. See
-  [electrical.md](electrical.md) > PCB-01 mechanical definition.
+- PCB is 78 × 58 × 1.6 mm, **mounted horizontally under the plate** (~Z12–35): the
+  2026-07-27/28 raise leaves a 62 mm interior (Z6–Z68), which kills both vertical
+  orientations (78-along-Z needed 97; 58-along-Z needed 77+). EB-100 becomes a horizontal
+  bracket/standoff arrangement off the same MP-100 taps — redesign details at bracket
+  design time. See [electrical.md](electrical.md) > PCB-01 mechanical definition.
 - PCB mounting holes are (6,6), (72,6), (6,52), (72,52) mm from the board's lower-left.
 - Reserve 110 × 80 × 25 mm including connectors and cable bends, with 8 mm service clearance
   beyond power and motor edges.
@@ -490,7 +485,7 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | ID | Qty | Part | Baseline | Process |
 |---|---:|---|---|---|
 | MP-100 | 1 | Ceiling plate | Ø210 × 6, 304 SS | Laser/waterjet + machine |
-| ST-100 | 3 | Carrier standoff | Ø16 × 84, 6061-T6 | Turn + tap M6 |
+| ST-100 | 3 | Carrier standoff | Ø16 × 62, 6061-T6 | Turn + tap M6 |
 | MC-100 | 1 | Motor carrier | Ø188 × 8, 6061-T6 | CNC mill |
 | SP-100 | 1 | Capture spindle | Ø16 flanged, 17-4PH | CNC turn + cross-drill |
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
@@ -498,7 +493,6 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | BR-100 | 1 | Hall bracket | 0.8–1.0 mm 304 SS | Laser + bend |
 | MR-100 | 2 | Magnet / counterweight cap | 14 × 8 × 0.8, 316 SS | Laser |
 | CW-100 | 1 | Matched counterweight | Brass, mass-trimmed | Turn + trim |
-| BA-00 | 3+1 | Flat blade adapter | CF-PPA, 10 mm plate | Qualified print |
 | BL-100 | 4 | Wood blade | 9 mm Baltic birch | CNC router |
 | LS-100 | 6 | Load spreader | 65 × 15 × 2, 6061 | Laser/waterjet |
 | EB-100 | 1 | PCB bracket | 1.5 mm 5052 or print | Bend or print |

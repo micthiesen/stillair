@@ -17,20 +17,19 @@ airflow/handling fallback; 170 RPM is the user maximum.
 
 | Parameter | Value |
 |---|---|
-| Rotor diameter | 44 in |
-| Nearest-surface gap to ceiling | 4.53 in (115.2 mm) |
+| Rotor diameter | 43.94 in (Ø~1116; 44.0 in do-not-exceed) |
+| Nearest-surface gap to ceiling | 4.68 in (118.8 mm) |
 | Wall-tip clearance | 5.5 in / side |
 | Tip speed (60 RPM) | 3.5 m/s |
-| Blade pitch plane | 5.26 in (133.7 mm) down |
-| Lowest blade surface | 5.85 in (148.7 mm) down |
-| Lowest assembly point | 6.46 in (164.0 mm, spindle end, r ≤ 11) |
+| Blade pitch plane | 4.89 in (124.2 mm) down |
+| Lowest blade surface | 5.87 in (149.2 mm) down — the assembly's lowest point |
 
-**2026-07-27 raise**: the rotor was raised 99.8 mm (blade bottom 248.5 → 148.7) so open
-cabinet doors clear the blades — a hard collision constraint that arrived after the original
-envelope was chosen. The stack shortened 54 mm at the standoffs (138 → 84) and 45.8 mm at
-the adapter (the BA-00 plate is flat: hub underside and blade pad underside are coplanar).
-Aero cost of the 0.107 D ceiling gap and the RPM compensation are recorded in
-[decisions.md](decisions.md) > Accepted deviations.
+**2026-07-27/28 raise**: the rotor was raised ~99 mm (blade bottom 248.5 → 149.2) so open
+cabinet doors (~160 mm line) clear the blades — a hard collision constraint that arrived
+after the original envelope was chosen. Realized as: standoffs 138 → **62** and the blade
+adapter **deleted** (BP-100 v3 integrates the root, [blade-v2.md](blade-v2.md); the interim
+84 mm/flat-BA-00 step lasted one day). Aero cost of the ~0.106 D ceiling gap and the RPM
+compensation are recorded in [decisions.md](decisions.md) > Accepted deviations.
 
 Wall-clearance deviation: 44 in leaves 5.5 in to each wall, below common 18-inch guidance. No
 useful fan fits that guidance in this 55-inch space. Do not exceed 44 in, and keep 42 in
@@ -39,29 +38,28 @@ available if wall-flow testing is poor.
 ## Vertical stack
 
 Z = 0 is the finished ceiling; positive Z points down. Everything stays inside 10 inches
-(254 mm absolute). The 84 mm standoffs place the GL100 stationary face at Z98; its 34.2 mm
-body ends at Z132.2, and the blade center plane is Z133.7. The blade tops (Z115.2) rise
-above the hub plane *beside* the mechanism — the rotor sweeps r ≥ 110, outboard of every
-stationary part (carrier r94, plate r105), so nothing overlaps. The spindle end (Z164,
-central, r ≤ 11) hangs below the blades, which the owner accepted: only the blades need to
-clear the cabinet doors.
+(254 mm absolute). The 62 mm standoffs place the GL100 stationary face at Z76; its 34.2 mm
+body ends at Z110.2, and the blade pitch plane is Z124.2 (the mid-thickness of the blade's
+root rectangle, bolted flush to the hub underside). The blade tops (Z118.8) rise above the
+root plane *beside* the mechanism — the rotor sweeps r ≥ ~96, outboard of every stationary
+part below the plate, and the plate/housing sit well above. The spindle end (Z142, central,
+r ≤ 11) is above the lowest blade surface, so the blades set the assembly's lowest point.
 
 | Interface | Z, mm |
 |---|---:|
 | Ceiling and plate top | 0.0 |
 | Ceiling plate underside | 6.0 |
-| PCB envelope (orientation being re-decided; see [electrical.md](electrical.md)) | 12.0–83.0 |
-| Motor carrier top | 90.0 |
-| Carrier underside / GL100 stationary face | 98.0 |
-| GL100 rotating face | 132.2 |
-| Rotor hub top / underside | 132.2 / 140.2 |
-| Highest blade surface | 115.2 |
-| Blade radial center plane | 133.7 |
-| Blade pad underside / BA-00 top face | 140.2 |
-| Catcher disk top / underside | 142.7 / 146.7 |
-| Lowest blade surface | 148.7 |
-| BA-00 adapter underside | 150.2 |
-| Castellated nut → cotter → spindle end | 146.7 → 159.2 → 164.0 |
+| PCB envelope (horizontal under the plate; see [electrical.md](electrical.md)) | ~12–35 |
+| Motor carrier top | 68.0 |
+| Carrier underside / GL100 stationary face | 76.0 |
+| GL100 rotating face | 110.2 |
+| Rotor hub top / underside | 110.2 / 118.2 |
+| Highest blade surface | 118.8 |
+| Blade root rectangle (top flush on hub) | 118.2–130.2 |
+| Catcher disk top / underside | 120.7 / 124.7 |
+| Blade pitch plane (rod axis) | 124.2 |
+| Castellated nut → cotter → spindle end | 124.7 → 137.2 → 142.0 |
+| Lowest blade surface | 149.2 |
 | Absolute lowest permitted point | 254.0 |
 
 ## Coordinate system
@@ -87,13 +85,14 @@ Simple plates, posts, and one turned spindle (full dimensions in [parts.md](part
   centers, three Ø6.6 standoff holes on Ø150 PCD, Ø16.2 spindle opening, separate tether
   opening, and a P-clip strain-relief tapping pair at 15° (no cable slot — the supply is a
   surface run entering at the housing rim; see [parts.md](parts.md) "Cable entry").
-- **ST-100 standoffs** — three Ø16 × 84 mm 6061-T6 posts, M6 × 1 tapped ≥12 mm both ends
-  (shortened from 138 in the 2026-07-27 raise).
+- **ST-100 standoffs** — three Ø16 × 62 mm 6061-T6 posts, M6 × 1 tapped ≥12 mm both ends
+  (shortened from 138 in the 2026-07-27/28 raise).
 - **MC-100 motor carrier** — Ø188 × 8 mm 6061-T6. Standoff holes on Ø150 PCD, 4 × Ø4.5 on the
   GL100 Ø60 PCD, Ø20.5 spindle clearance, tether pair, Hall mount, verified wire window.
 - **RH-100 rotor hub** — Ø200 × 8 mm 6061-T6. Ø20.5 captured aperture, four
   underside-countersunk Ø4.5 holes on the GL100 Ø50 PCD for subflush M4 flat-heads, measured
-  pilot ring, three dowel-registered adapter stations, retained tach magnet.
+  pilot ring, three dowel-registered blade-root stations (BP-100 v3 blades bolt directly,
+  their printed pins engaging the dowel holes), retained tach magnet.
 
 **Motor screw-depth rule**: rear M4 threads are officially 6 mm maximum; output-face M4
 threads are 3.5 mm maximum. The baseline uses M4 × 12 through a 1.5 mm carrier counterbore
@@ -102,11 +101,10 @@ machining release.
 
 ## Rotor geometry
 
-> **Superseded 2026-07-27**: the rotor now uses printed BP-100 cambered-airfoil blades with
-> CF-rod spars, baked-in 17°→8.5° twist, and a single flat adapter — see
-> [blade-v2.md](blade-v2.md) (which re-derives the blade envelope; project-Z numbers there
-> shift with the 2026-07-27 raise, pitch plane Z223.5 → Z133.7). The birch geometry below is
-> retained as the fallback.
+> **Superseded 2026-07-27/28**: the rotor now uses printed BP-100 v3 cambered-airfoil
+> blades with CF-rod spars, baked-in twist, and an **integrated root** bolted straight to
+> the hub (no adapter at all) — see [blade-v2.md](blade-v2.md); pitch plane now Z124.2. The
+> birch geometry below is retained as the fallback.
 
 Three 9 mm birch blades on printed pitch adapters. Cut four, finish all four identically,
 select the best-balanced three, keep the fourth as a ready spare. The symmetric edge treatment
@@ -133,7 +131,7 @@ supports reverse operation.
 Two secondary load paths:
 
 1. **Central catcher** (SP-100 + KD-100) protects against GL100 bearing/rotor retention
-   failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z142.7 shoulder, M12
+   failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z120.7 shoulder, M12
    lower thread, Ø50 × 4 mm 316 catcher disk, castellated nut, and cotter. The flange carries
    two 30.0 mm across-flats keyed into a matching double-D pocket in MP-100, so the nut
    torques from below with no counter-hold. The spindle passes
@@ -163,7 +161,7 @@ Measure these before ordering motor-dependent metal:
 |---|---|
 | Runaway load case | 270 RPM (calculation basis, raised from 250 in 2026-07 review — supply-power bound; never dynamically tested) |
 | Guarded rotor proof | 216 RPM × 2 min/direction |
-| Installed adapter proof | 500 N radial each |
+| Installed blade-root joint proof | 500 N radial each (was "adapter proof"; the printed root joint inherits it) |
 | Batch destructive test | >1.0 kN |
 | Hub OD runout | ≤0.10 mm TIR |
 | Blade first-moment mismatch | ≤0.5% |

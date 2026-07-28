@@ -10,8 +10,8 @@ The design to take into CAD. All items below are **selected**.
 | Area | Decision | Note |
 |---|---|---|
 | Mounting | Compact metal plate, two primary anchors, separate tether anchor | Exact anchors remain conditional on the verified slab and load calculation. |
-| Structure | Metal ceiling structure and hub; qualified printed blade adapters | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
-| Rotor | 44-inch maximum, three printed BP-100 cambered-airfoil blades with CF-rod spars and 17°→8.5° baked-in twist | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
+| Structure | Metal ceiling structure and hub; blades bolt directly to the hub (adapters deleted 2026-07-28, BP-100 v3) | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
+| Rotor | 44-inch maximum, three printed BP-100 v3 cambered-airfoil blades with CF-rod spars, baked-in twist, and integrated bolt-on roots | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27, root integrated 2026-07-28 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
 | Power | Mean Well GST60A24-P1J, 24 V / 60 W, 3 A source fuse | Only low voltage crosses the ceiling; a physical switch opens the positive conductor. |
 | Control | ESP32-C6, local Matter over Wi-Fi (rs-matter, pure Rust), continuous speed and reverse, used from Apple Home | Replaces the original HomeKit/HAP plan (no maintained no_std HAP exists). Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
@@ -52,7 +52,7 @@ undocumented assumption.
    overspeed, bus-voltage behavior, thermals, RF, and the exact MCF settings before V2 release.
 4. **Concrete interface** — the slab, existing hole, hidden services, anchor geometry,
    installation torque, and separate tether anchor are physically verified.
-5. **Rotor qualification** — blades, adapters, hub, central capture, balance, proof load,
+5. **Rotor qualification** — blades, root joints, hub, central capture, balance, proof load,
    proof speed, controlled imbalance behavior, and dynamic catcher/tether tests are signed off.
 6. **Installation approval** — any required permit, accepted certification mark, or field
    evaluation for a permanent custom appliance is resolved locally. *(Open gate.)*
@@ -68,14 +68,16 @@ Constraints that cannot all be optimized.
 - **Wall clearance: 5.5 inches per side at 44-inch diameter.** Well below common 18-inch
   guidance. The room cannot fit a useful fan that meets the guidance, so 44 inches is a
   deliberate experimental maximum and 42 inches remains the fallback.
-- **Ceiling gap: ~4.5 inches to the nearest blade surface (hugger regime; changed
-  2026-07-27, was 8.0–8.2).** Open cabinet doors reach within ~160 mm of the ceiling and
+- **Ceiling gap: ~4.7 inches to the nearest blade surface (hugger regime; changed
+  2026-07-27/28, was 8.0–8.2).** Open cabinet doors reach within ~160 mm of the ceiling and
   collided with the original blade plane — a hard constraint, so the rotor was raised
-  99.8 mm (54 from ST-100, 45.8 by flattening BA-00). At 0.107 D the gap chokes the inflow
-  annulus (~0.44 m² vs the 0.98 m² disk): expect roughly **15–25% less CFM at fixed RPM**
-  and a corresponding CFM/W efficiency loss. Accepted because delivered airflow is
-  recoverable with the 3× RPM headroom (60 → ~72 RPM restores flow at ~20 W total, tip
-  speed still ~4 m/s) and a fan that strikes doors is worth 0% of its airflow.
+  ~99 mm (ST-100 138 → 62; adapter deleted, the v3 blade root bolts flush to the hub). At
+  ~0.106 D the gap chokes the inflow annulus (~0.42 m² vs the 0.98 m² disk): expect roughly
+  **15–25% less CFM at fixed RPM** and a corresponding CFM/W efficiency loss. Accepted
+  because delivered airflow is recoverable with the 3× RPM headroom (60 → ~72 RPM restores
+  flow at ~20 W total, tip speed still ~4 m/s) and a fan that strikes doors is worth 0% of
+  its airflow. Secondary effect: the v3 proplet droops downward instead of raking up, so
+  the tip stays out of the intake throat.
 - **Certification: a custom assembly is not certified by using a certified power brick.**
   Component approvals reduce risk but do not create an accepted mark for the complete
   appliance. Confirm the local permanent-installation path before ceiling release (gate 6).

@@ -43,17 +43,20 @@ interface mistakes while they cost nothing. ENC-100 housing and cabling are **de
 deferred** — they depend on everything else settling. Per-session working style:
 [CLAUDE.md](../CLAUDE.md) > "Building in OnShape together".
 
-**Progress 2026-07-27 (same day, later session): steps 1–7 are modelled** (GL100 derived +
-clocked, Variable Studio live with `#pilotOD`/`#gl100Len`/`#hallGap`/`#phaseClock`/`#phaseR`,
-SP-100, ST-100 ×3, MC-100 with phase window, RH-100 with stations + tach pockets, KD-100 +
-castellated nut; capture-gap section check passed). Mid-build the owner requested a **99.8 mm
-rotor raise** to clear cabinet doors — docs rewritten (stack: standoffs 84, flat BA-00,
-blade bottom Z148.7; deviation in [decisions.md](decisions.md)); the OnShape model still has
-the *old* heights pending the update sequence: set `#standoffLen` = 84, re-drive motor
-transform + hub plane from variables, shorten SP-100 sketch dims (shoulder 142.7 / end 164 /
-hole 159.2), translate blades +99.8, then model BA-00 (now designed, parts.md) and pattern.
-Note: the OnShape model frame is rotated 180° about Z vs the docs
-([mechanical.md](mechanical.md) > Coordinate system).
+**Progress 2026-07-28: steps 1–7 modelled AND the rotor redesigned twice.** The stack is
+fully modelled and variable-driven (`#standoffLen` 62, `#hubBottom`, `#pilotOD`,
+`#gl100Len`, `#hallGap`, `#phaseClock` 135.57°, `#phaseR`): GL100 derived + clocked, SP-100,
+ST-100 ×3, MC-100 with phase window, RH-100, KD-100 + castellated nut (capture-gap section
+check passed at the new height). Mid-build the owner required a **~99 mm rotor raise**
+(cabinet doors) which triggered **BP-100 v3**: the blade adapter is deleted — the blade
+prints an integrated root rectangle bolting straight to RH-100 (printed dowel pins, nut
+pockets), guided lofts throughout (`cad/bp100_sections.fs`, four features), drooped tip,
+blade bottom Z149.2. All docs are swept (stack tables, BA-00 deletion, hugger deviation,
+horizontal PCB, BOM, test matrix). Remaining OnShape clicks if not already done: scarf
+split at r330 + segB −0.10 move-face, rename segA/segB, circular pattern ×3, **re-export
+`cad/BP-100.step`** (committed STEP is v2). Then step 9 (clearance extras: BR-100, magnet
+caps, EB-100 + horizontal PCB envelope). Note: the OnShape model frame is rotated 180°
+about Z vs the docs ([mechanical.md](mechanical.md) > Coordinate system).
 
 Order (each step is the reference geometry for the one after):
 
