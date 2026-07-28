@@ -128,6 +128,26 @@ moved with it, see [electrical.md](electrical.md).)
   actual washer-stack thickness stated on the drawing; washer stacks ≤3 mm reach the full
   9 mm guideline).
 
+Fabrication callouts (pre-order check 2026-07-28):
+
+- **Tap drill Ø5.0 × 15.5 mm deep, thread M6 × 1 − 6H × 12.0 mm min, both ends.** The
+  15.5 drill satisfies JLCCNC's blind-tap DFM rule (≥ 0.5 × nominal Ø unthreaded below the
+  thread: 12 + 3 = 15 min). Two 15.5 drills in a 62 part leave a 31 mm solid web — no
+  break-through risk.
+- Screw-bottoming check passes with margin: worst protrusion into the tap is ~10 mm (top
+  M6 × 16 flat-head through the countersunk 6 mm plate; bottom M6 × 20 through 8 mm MC-100
+  plus the wedge-lock pair) against 12 mm of thread.
+- Thread-entry chamfer 0.5 × 45°; break all edges.
+- The 62.0 ±0.10 length and 0.05 end squareness are tighter than ISO 2768-mK, so they are
+  drawing/remark callouts — and per the MP-100 precedent JLCCNC treats those as advisory,
+  not contractual. Both are natural lathe outcomes (three parts faced in one setup match
+  closely); **verify on arrival with calipers and a square before mounting**, as with the
+  MP-100 flatness check.
+- Tap concentricity to the OD is deliberately uncontrolled — the joint locates through the
+  Ø6.6 clearance holes in both plates, which absorb ordinary drill wander.
+- Qty: 3 required; order 4–5 (turned-part marginal cost is small and a dropped or
+  cross-threaded spare otherwise costs a full shipping cycle).
+
 ## MC-100 stationary motor carrier
 
 - Ø180 × 8.0 mm 6061-T6, clear anodized (OD trimmed 188 → 180, 2026-07-28 owner tweak in
