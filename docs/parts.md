@@ -297,9 +297,10 @@ Qualification:
 
 ## BL-100 wooden blades
 
-> **Proposed replacement (2026-07-27, not yet accepted): BP-100 printed blade with CF-rod
-> spar — see [blade-v2.md](blade-v2.md).** If accepted, BL-100, LS-100, and the BA pitch
-> family are superseded; RH-100 is unaffected.
+> **Superseded 2026-07-27 by the BP-100 printed blade with CF-rod spar — see
+> [blade-v2.md](blade-v2.md) (accepted, modelled in OnShape).** BL-100, LS-100, and the
+> BA pitch family are all superseded (BA collapses to a single flat BA-00, undesigned);
+> RH-100 is unaffected. This section is retained as the fallback design.
 
 Cut and finish four, select three, keep one spare.
 

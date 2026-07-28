@@ -1,8 +1,9 @@
 # BP-100 printed blade (V2 blade redesign)
 
-> **Status: proposed 2026-07-27, not yet accepted.** When accepted this supersedes the BL-100
-> birch flat-plate blade and collapses the BA-10/12/14 pitch-adapter family to a single flat
-> adapter (BA-00, undesigned). BL-100/LS-100 stay in [parts.md](parts.md) until then.
+> **Status: accepted and modelled in OnShape 2026-07-27.** Supersedes the BL-100 birch
+> flat-plate blade and LS-100 spreaders, and collapses the BA-10/12/14 pitch-adapter family
+> to a single flat adapter (BA-00, undesigned). Their [parts.md](parts.md) sections remain
+> as reference/fallback. Segment STL exports into [`cad/`](../cad/) pending.
 
 A two-segment 3D-printed blade (aero/LW-PLA class filament) with a Ø3 mm carbon-fiber rod
 spar, cambered low-Reynolds airfoil sections, spanwise twist baked in, and a slim root.
