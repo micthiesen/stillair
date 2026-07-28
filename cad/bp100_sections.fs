@@ -96,3 +96,33 @@ export const bp100Sections = defineFeature(function(context is Context, id is Id
             i += 1;
         }
     });
+
+// Cuts the Ø3.4 spar-rod channel along the pitch axis. Insert AFTER the loft
+// (and tip fillet); the r112 start leaves a 2 mm cap inside the root, and the
+// r430 end is where the proplet run-in starts lifting the loft off the straight
+// rod line (see docs/blade-v2.md, "Spar and segmentation").
+annotation { "Feature Type Name" : "BP-100 spar channel" }
+export const bp100SparChannel = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+        annotation { "Name" : "Blade part", "Filter" : EntityType.BODY && BodyType.SOLID, "MaxNumberOfPicks" : 1 }
+        definition.blade is Query;
+        annotation { "Name" : "Channel diameter" }
+        isLength(definition.channelD, { (millimeter) : [2, 3.4, 6] } as LengthBoundSpec);
+        annotation { "Name" : "Start radius" }
+        isLength(definition.rStart, { (millimeter) : [100, 112, 400] } as LengthBoundSpec);
+        annotation { "Name" : "End radius" }
+        isLength(definition.rEnd, { (millimeter) : [200, 430, 500] } as LengthBoundSpec);
+    }
+    {
+        fCylinder(context, id + "rod", {
+                    "bottomCenter" : vector(definition.rStart, 0 * millimeter, Z_CENTER * millimeter),
+                    "topCenter" : vector(definition.rEnd, 0 * millimeter, Z_CENTER * millimeter),
+                    "radius" : definition.channelD / 2
+                });
+        opBoolean(context, id + "cut", {
+                    "tools" : qCreatedBy(id + "rod", EntityType.BODY),
+                    "targets" : definition.blade,
+                    "operationType" : BooleanOperationType.SUBTRACTION
+                });
+    });
