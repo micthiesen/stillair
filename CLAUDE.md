@@ -11,6 +11,33 @@ else lives here. This repo is the canonical source; the old ChatGPT design site 
 [docs/STATE.md](docs/STATE.md) — read that first.** End work sessions with `/wrap`; decide an
 open next step with `/next`.
 
+## Building in OnShape together
+
+Michael drives OnShape; Claude designs and instructs. Learned working style (from the BP-100
+blade build, 2026-07):
+
+- **One step at a time.** When Michael executes the clicks, give a single step with exact
+  dialog values, then stop and wait for the result before the next. Never dump a 12-step
+  sequence to execute blind — steps get invalidated by what the model actually does.
+- **Natural OnShape referencing over typed coordinates.** Prefer projected geometry (U),
+  midpoint/coincident snaps, dims to existing edges, and "up to next/face" end conditions.
+  Typed coordinate tables are the fallback, not the default, and are error-prone across
+  sketch-plane orientations.
+- **Lean FeatureScript for geometry generation.** Custom FeatureScripts are the preferred way
+  to get computed geometry (section curves, tables of sketches, parametric cuts) into the
+  model: one FS file per item with multiple features in it, not many fragments — kept in
+  `cad/*.fs`, edited here, `pbcopy`'d for pasting into a Feature Studio, committed like code.
+  The line: **deterministic geometry from tables/math → FS; anything needing visual judgment
+  or geometry feedback → manual features** (lofts blending into curved faces, fillets that
+  may fail and need radius negotiation, up-to-next extrudes, anything you'd tune by eye).
+- **FS gotchas that bit us**: sketch ids derive from array position, so append new stations
+  at the array *end* and edit values in place — reordering breaks downstream feature
+  references. `pbpaste`-verify after every `pbcopy`.
+- **Cross-check computed geometry with a host-side script** (`cad/*_check.py` pattern) before
+  Michael models it; rerun when the numbers change. The camber-line-vs-chord-line rod miss
+  was caught by a question, not the script — extend the script when a new class of claim
+  appears.
+
 ## Quick reference
 
 `firmware/` is three crates on purpose. `stillair-core` holds the whole behavioral contract as
