@@ -180,7 +180,8 @@ Computed from the station table with twist about the 30% anchor (script:
     Offset B's joint face −0.10 mm (Move Face) for glue clearance.
 11. **Checks**: section > measure wall at r400–r430 around the channel (≥1.0 mm), verify
     Z_local extremes against the envelope numbers above, mass properties per segment.
-12. **Export**: STL per segment (A root-face down, B joint-face down), into `cad/` as
+12. **Export**: STL per segment (both print joint-face down, leaning ~30° — the root
+    closure rounded away A's formerly-flat root face), into `cad/` as
     `BP-100_segA` / `BP-100_segB` once accepted; print 4 blade sets, select 3, keep a spare,
     per the BL-100 practice.
 
