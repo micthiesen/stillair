@@ -20,8 +20,8 @@ const STATIONS = [
     // root closure: rounds the r110 end's plan-view corners via a second
     // small loft. Appended LAST so the earlier stations keep their sketch
     // ids (the main loft references them by id).
-    { r : 105,   c : 61,  tw : 17.0, ys : 0,   zr : 0 },
-    { r : 102.5, c : 27,  tw : 17.0, ys : 0,   zr : 0 }
+    { r : 105.5, c : 66,  tw : 17.0, ys : 0,   zr : 0 },
+    { r : 101.5, c : 30,  tw : 17.0, ys : 0,   zr : 0 }
 ];
 
 const Z_CENTER = -223.5; // blade pitch plane, mm below the ceiling (world origin)
