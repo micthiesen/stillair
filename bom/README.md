@@ -45,6 +45,11 @@ Notes:
   commodity stock the owner already keeps on hand. Only project-specific or
   uncommon-spec hardware gets a BOM line.
 
-Ordered so far (2026-07): the wall-box power chain, cable, Micro-Fit connector set, the
-GST60A24-P1J supply (all DigiKey), and the GL100 KV10 motor (RobotShop). All PCB
-semiconductors and JST/USB connectors are still to be ordered with the V1 board run.
+Ordered so far: the wall-box power chain, cable, Micro-Fit connector set, the GST60A24-P1J
+supply (all DigiKey, 2026-07-26), the GL100 KV10 motor (RobotShop), the MP-100 ceiling
+plate (JLCCNC), and — 2026-07-28 — the complete mechanical fastener set including the
+KD-100 catcher washers and Nord-Locks (Accu, $219.45 CAD), CW-100 brass rod (Amazon), and
+the LCSC-gap electronics order 374750597 (DigiKey, ~$63 USD: insurance ICs and spares,
+bulk caps, USB-C, cable-side JST housings/contacts, trimmers, dev cable). Still to order
+with the V1 board run: everything LCSC-path (most semis, passives, PH headers, SM04B, the
+Sunlord inductor) plus the boards themselves.
