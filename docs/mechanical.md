@@ -59,6 +59,14 @@ Z205.4 at 12°, and Z203.2 at 14°.
 - Blade centerlines: 0°, 120°, 240°.
 - Standoff centerlines: 90°, 210°, 330°.
 - Hall magnet: r68 at 30°. Counterweight: r68 at 210°.
+- Phase-lead window: r45.6 at 315° (clocked 2026-07-27 from the GL100 STEP: pad-to-bolt-hole
+  offset is a fixed 44.43°, bolt holes on the axes, so the pad lands on ~45° diagonals; 315°
+  keeps the Hall corridor at 30° clear and shortens the phase-lead run to the PCB side).
+
+> **OnShape model frame**: the existing OnShape document is rotated **180° about Z** relative
+> to this table (tether at +Y in the model, −Y here; lone standoff at −Y). Discovered
+> 2026-07-27; kept as-is because the model is internally consistent. Convert with
+> *model angle = doc angle + 180°*; Variable Studio angles (`#phaseClock`) are model-frame.
 
 ## Primary structure
 
