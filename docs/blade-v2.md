@@ -104,7 +104,7 @@ station is deliberately moderate (v2's c14/ys−10/zr−8 hook was unloftable ev
   ([decisions.md](decisions.md)).
 - Lower surface worst **Z149.2** (r250) — ~11 mm above the ~160 cabinet-door line, far
   inside the Z254 envelope floor. The blade is the lowest thing in the assembly (spindle
-  end Z144 is above it).
+  end Z142 is above it).
 - Rod walls ≥1.36 mm (r120) over the whole channel span; 1.42 mm at r430.
 - Blade tops (Z118.8, sweeping r ≥ 110) vs the future ENC-100 wall (r ≤ 106): ~4 mm radial
   — the binding constraint for the housing design (see parts.md ENC-100).

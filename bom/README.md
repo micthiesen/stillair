@@ -35,6 +35,10 @@ Notes:
   assembled board.
 - Tools (crimpers etc.), wall-box enclosure hardware, and test equipment are deliberately out
   of scope for this BOM.
+- **Common electronics bench hardware is also out of scope** (owner decision 2026-07-28):
+  PCB standoffs, M3 mounting screws for boards, jumper wire, heat-shrink and similar
+  commodity stock the owner already keeps on hand. Only project-specific or
+  uncommon-spec hardware gets a BOM line.
 
 Ordered so far (2026-07): the wall-box power chain, cable, Micro-Fit connector set, the
 GST60A24-P1J supply (all DigiKey), and the GL100 KV10 motor (RobotShop). All PCB

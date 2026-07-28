@@ -42,7 +42,7 @@ Z = 0 is the finished ceiling; positive Z points down. Everything stays inside 1
 body ends at Z110.2, and the blade pitch plane is Z124.2 (the mid-thickness of the blade's
 root rectangle, bolted flush to the hub underside). The blade tops (Z118.8) rise above the
 root plane *beside* the mechanism — the rotor sweeps r ≥ ~96, outboard of every stationary
-part below the plate, and the plate/housing sit well above. The spindle end (Z144, central,
+part below the plate, and the plate/housing sit well above. The spindle end (Z142, central,
 r ≤ 11) is above the lowest blade surface, so the blades set the assembly's lowest point.
 
 | Interface | Z, mm |
@@ -56,9 +56,9 @@ r ≤ 11) is above the lowest blade surface, so the blades set the assembly's lo
 | Rotor hub top / underside | 110.2 / 118.2 |
 | Highest blade surface | 118.8 |
 | Blade root rectangle (top flush on hub) | 118.2–130.2 |
-| Catcher disk top / underside | 120.7 / 126.7 |
+| Catcher disk top / underside | 120.7 / 124.7 |
 | Blade pitch plane (rod axis) | 124.2 |
-| Castellated nut → cotter → spindle end | 126.7 → 139.2 → 144.0 |
+| Castellated nut → cotter → spindle end | 124.7 → 137.2 → 142.0 |
 | Lowest blade surface | 149.2 |
 | Absolute lowest permitted point | 254.0 |
 
@@ -135,9 +135,9 @@ Two secondary load paths:
 
 1. **Central catcher** (SP-100 + KD-100) protects against GL100 bearing/rotor retention
    failure and four-M4 hub release. 17-4PH Ø16 flanged spindle with a Z120.7 shoulder, M12
-   lower thread, Ø50 × 6 mm purchased stainless catcher disk (2026-07-28: an Amazon
-   lathe-machined washer replaced the custom 4 mm laser part; stack re-based in
-   [parts.md](parts.md)), castellated nut, and cotter. The flange carries
+   lower thread, Ø44 × 4 mm DIN 440 A4 catcher washer (2026-07-28: a purchased Accu part
+   replaced the custom Ø50 × 4 laser disk — see [parts.md](parts.md) KD-100), castellated
+   nut, and cotter. The flange carries
    two 30.0 mm across-flats keyed into a matching double-D pocket in MP-100, so the nut
    torques from below with no counter-hold. The spindle passes
    through the GL100 Ø30 bore without normal contact (Ø20.5 hub aperture gives 2.25 mm radial
