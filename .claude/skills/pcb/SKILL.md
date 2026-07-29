@@ -153,6 +153,34 @@ so Michael can watch the block appear instead of reviewing it at the end.
   gitignored; leave it alone.
 - **`kicad-cli` on PATH is Homebrew's** (`/opt/homebrew/bin/kicad-cli`) and may not match the
   app. Konnect is configured to use the bundle's.
+- **Custom symbol libraries: placement only resolves the installed-symbols dir.**
+  `register_symbol_library` (project or global scope) makes `search_symbols` work, but
+  `add_schematic_component` still errors "library not found" — it only reads
+  `KICAD10_SYMBOL_DIR`. Fix: symlink the project `.kicad_sym` into
+  `/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols/` (re-create after KiCad
+  updates). The project lib is `pcb/pcb-01/pcb01-parts.kicad_sym`.
+- **`batch_connect_to_net` writes local net labels only** (no `label_type` option). For a
+  cross-sheet net, convert exactly one label per sheet to a global label:
+  `delete_schematic_net_label` at the pin coords, then `add_schematic_net_label` with
+  `label_type: global_label` at the same coords. Wiring convention on this board: label-based
+  connectivity (labels sit directly on pin endpoints), local labels for intra-sheet nets,
+  one global label per cross-sheet net per sheet, net names exactly as in docs/electrical.md.
+- **`batch_edit_schematic_components` cannot create new fields**, only update existing ones
+  (Value/Footprint work; a new `MPN` errors "Field not found"). Create fields one at a time
+  with `add_component_annotation`. Fields in use: `MPN`, `LCSC`, `Note`, `DNP`.
+- **`download_jlcpcb_database` 404s** in Konnect v0.2.1 (upstream data URL moved), so
+  `search_jlcpcb_parts` has no local DB. Verify LCSC part numbers by web search or at order
+  time; JLCPCB/LCSC part pages are JS-rendered and WebFetch-opaque.
+- **KiCad 10 renamed transistor symbols**: `Device:Q_PMOS_GDS` etc. are gone; `Device:Q_PMOS`
+  has *letter* pin numbers (G/D/S) that cannot map to numeric footprint pads. Use the
+  `Transistor_FET:Q_PMOS_<order>` variants, which kept numeric pins (e.g. `Q_PMOS_GDS` for
+  SOT-223 1=G 2=D+tab 3=S).
+- **`Device:D_TVS` is bidirectional** (pins A1/A2). For a unidirectional TVS (SMCJ24A) use
+  `Device:D_Zener` so cathode/anode are explicit (KiCad diode convention: pin 1 = K).
+- **`validate_component_connections` flags `no_connect`-typed pins too** — every NC pin still
+  needs an explicit `add_no_connect` flag at its coordinates.
+- **`get_schematic_view` writes an SVG to `$TMPDIR`** (KiCad 10 CLI has no bitmap export);
+  convert with `rsvg-convert -w 1800 -o out.png <svg>` and Read the PNG to inspect.
 
 ## Safety invariants that constrain layout and capture
 

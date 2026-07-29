@@ -167,7 +167,7 @@ register dumps or community drivers untranslated).
 | CPH ↔ CPL | 47 nF, **100 V** X7R | Flying capacitor (datasheet wants ≥2× VM; 50 V gave only 4% margin at nominal bus) |
 | AVDD → AGND | 1 µF, 10 V X7R | Analog rail bypass |
 | DVDD → DGND | 1 µF, ≥6.3 V X7R | Digital rail bypass |
-| SW_BK → FB_BK | 47 µH Coilcraft LPS4018-473MRB | MCF auxiliary buck. **Verify Isat ≥ 910 mA** (the buck OCP max) before capture — the LPS4018's saturation rating is likely below it; a same-value LPS5030/XAL40xx-class part closes the gap |
+| SW_BK → FB_BK | 47 µH Sunlord SWPA6045S470MT | MCF auxiliary buck. Isat gate (≥ 910 mA buck OCP max) resolved at capture 2026-07-28: the whole LPS4018/SWPA4018 4 mm class sits at ~0.55 A and fails, and LPS5030 (0.53 A) does not close the gap either — the family step buys Irms, not saturation margin (no 47 µH XAL40xx exists). SWPA6045 is 1.4 A Isat, shielded, LCSC-stocked; DigiKey alternate LPS6225-473MRB (1.0 A). The rail is near-unloaded, so the gate protects the startup-inrush and shorted-scope-header corners where a saturated inductor defeats cycle-by-cycle OCP — cheap margin, and it keeps the fault-matrix buck-OCP row interpretable |
 | FB_BK → GND_BK | 22 µF, 10 V X7R | Buck output |
 | FG, nFAULT | 4.7 kΩ pull-ups to 3.3 V | Open-drain outputs |
 | SDA, SCL | 4.7 kΩ pull-ups to 3.3 V | Configuration bus |
