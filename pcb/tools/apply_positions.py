@@ -1,5 +1,11 @@
 """Apply footprint positions to the board file in one pass, then verify.
 
+WARNING on rotation: pad (at x y angle) angles in .kicad_pcb are ABSOLUTE
+(footprint angle + pad-local angle). When --rot changes a footprint's angle by
+delta, this script adds the same delta to every pad angle in that footprint,
+matching what KiCad's own rotate does. Graphics (fp_line/rect/circle) use
+footprint-local coords and need no correction.
+
 Usage: python3 apply_positions.py moves.json [--rot rotmoves.json]
 
 moves.json: {"REF": [x, y], ...} in mm (KiCad frame). Only the footprint-level
@@ -46,8 +52,21 @@ def main():
             return blk
         x, y = moves.get(ref, (float(at_m.group(2)), float(at_m.group(3))))
         tail = at_m.group(4)
+        blk2 = blk
         if ref in rots:
+            old_rot = float((at_m.group(4) or " )").strip(" )") or 0)
+            delta = (rots[ref] - old_rot) % 360
             tail = f" {rots[ref]:g})"
+            if delta:
+                def fix_pad(pm):
+                    base = float(pm.group(4) or 0)
+                    na = (base + delta) % 360
+                    return f'{pm.group(1)}(at {pm.group(2)} {pm.group(3)}{f" {na:g}" if na else ""})'
+                blk2 = re.sub(r'(\(pad "[^"]*" \w+ \w+\s*)\(at ([\-\d.]+) ([\-\d.]+)(?: ([\-\d.]+))?\)',
+                              fix_pad, blk)
+                at_m2 = re.search(r'(\n\t\t\(at )([\-\d.]+) ([\-\d.]+)((?: [\-\d.]+)?\))', blk2)
+                applied.append(ref)
+                return blk2[:at_m2.start()] + f"{at_m2.group(1)}{x:g} {y:g}{tail}" + blk2[at_m2.end():]
         new_at = f"{at_m.group(1)}{x:g} {y:g}{tail}"
         applied.append(ref)
         # Also shift pad/graphic coords? No - they are footprint-local; only the

@@ -651,9 +651,9 @@
 		(keepout
 			(tracks not_allowed)
 			(vias not_allowed)
-			(pads not_allowed)
+			(pads allowed)
 			(copperpour not_allowed)
-			(footprints not_allowed)
+			(footprints allowed)
 		)
 		(placement
 			(enabled no)

@@ -66,12 +66,25 @@ Konnect *can* place and route; we still don't let it.
   clearance here, is this rail decoupled).
 - JLCPCB part search and stocked-alternative suggestions.
 
+**Claude also does placement** (updated 2026-07-29 after the PCB-01 first pass): the working
+pattern is *plan in scripts + subagents, apply via file*. The toolkit lives in `pcb/tools/`
+(`board_model.py` exact courtyard/pad/net parser, `apply_positions.py` bulk file writes with
+parse verification, `place_targeted.py` spiral placement toward a target pin,
+`check_plan.py`/`validate_group.py` geometry checks, `make_briefs.py` per-group agent briefs,
+`render_board.sh`). Group definitions and regions: `pcb/pcb-01/placement/groups.json`.
+Sonnet subagents plan one coupled subcircuit each from a generated brief and return JSON —
+they never touch the board, so no locking is needed; the orchestrator validates each plan,
+solves cross-group conflicts, and applies everything in one file write (KiCad closed).
+Learned limits: agents handle ~10-20-part groups well but blow the 64k output cap or
+degenerate into brute-force on 30-part analog groups — use `place_targeted.py` for those;
+IPC moves are fine for <20 interactive nudges but far too slow for bulk.
+
 **Michael does** — the parts that need eyes on a canvas:
 
-- **Component placement.** Zones come from the spec, but the actual arrangement is a spatial
-  judgment call.
 - **Routing.** All of it, including copper pours. Konnect has routing tools and a Freerouting
   bridge; we are not using them for this board.
+- **Placement review/fine-tune** on Claude's first pass, especially the MCF switching loops
+  vs TI's reference layout and anything housing-related.
 - **Starting and exporting the project**, plus anything that means clicking through a KiCad
   dialog once.
 
@@ -193,6 +206,13 @@ so Michael can watch the block appear instead of reviewing it at the end.
   `Device:D_Zener` so cathode/anode are explicit (KiCad diode convention: pin 1 = K).
 - **`validate_component_connections` flags `no_connect`-typed pins too** — every NC pin still
   needs an explicit `add_no_connect` flag at its coordinates.
+- **Pad angles in `.kicad_pcb` are ABSOLUTE** (footprint rot + pad-local rot). Changing a
+  footprint's rotation by editing only its `(at x y rot)` line silently mis-orients every
+  pad's copper — `pcb/tools/apply_positions.py --rot` handles the pad-angle delta correctly;
+  never rotate via a bare file edit.
+- **The MCF8316D RGF land pattern's (4.8)/(6.8) dims are pad-CENTERLINE spans** (columns at
+  ±2.4, rows ±3.4, pads 0.6×0.25) — deriving centers from "overall minus pad length" puts
+  the corner pads into collision. Footprint fixed 2026-07-29 against drawing 4224999/B.
 - **`get_schematic_view` writes an SVG to `$TMPDIR`** (KiCad 10 CLI has no bitmap export);
   convert with `rsvg-convert -w 1800 -o out.png <svg>` and Read the PNG to inspect.
 - **NEVER use `add_layer`, `set_design_rules`, `create_netclass`, or `assign_net_to_class` on
