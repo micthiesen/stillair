@@ -195,6 +195,18 @@ so Michael can watch the block appear instead of reviewing it at the end.
   needs an explicit `add_no_connect` flag at its coordinates.
 - **`get_schematic_view` writes an SVG to `$TMPDIR`** (KiCad 10 CLI has no bitmap export);
   convert with `rsvg-convert -w 1800 -o out.png <svg>` and Read the PNG to inspect.
+- **NEVER use `add_layer`, `set_design_rules`, `create_netclass`, or `assign_net_to_class` on
+  a KiCad 10 board — they corrupt it.** All four write KiCad-5-era S-expressions:
+  `add_layer` nests malformed entries inside F.Cu's line with colliding layer IDs, and the
+  others insert `(min_clearance …)` / `(netclass …)` tokens the KiCad 10 parser rejects — the
+  board then fails to load entirely. In KiCad 10, design rules and net classes live in the
+  `.kicad_pro` JSON (`board.design_settings.rules`, `net_settings.classes` +
+  `netclass_patterns`), and a 4-layer stack is `(4 "In1.Cu" power)` / `(6 "In2.Cu" power)` as
+  siblings in the layers block. Edit the `.kicad_pro` JSON directly (it is not an
+  object-graph file) and verify with `kicad-cli pcb drc` afterward, which is a full parse.
+  `set_board_size` and `add_mounting_hole` are fine.
+- **Custom DRC rules go in `pcb-01.kicad_dru`** (plain-text rules file, safe to edit): the
+  Ø8 mounting-hole copper keepout lives there as a `physical_clearance` rule against H1-H4.
 
 ## Safety invariants that constrain layout and capture
 

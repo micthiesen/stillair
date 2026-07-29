@@ -1,0 +1,10 @@
+(version 1)
+
+# PCB-01 custom rules (docs/electrical.md > PCB-01 mechanical definition).
+
+# Mounting holes are isolated from circuit ground: keep all copper and
+# components outside an 8 mm diameter circle around each 3.2 mm NPTH.
+# Hole edge at r=1.6 mm + 2.4 mm clearance = r=4.0 mm (diameter 8 mm).
+(rule "mounting-hole-keepout"
+  (condition "B.memberOfFootprint('H1') || B.memberOfFootprint('H2') || B.memberOfFootprint('H3') || B.memberOfFootprint('H4')")
+  (constraint physical_clearance (min 2.4mm)))
