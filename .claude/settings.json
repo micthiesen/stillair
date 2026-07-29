@@ -1,4 +1,17 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__konnect__(place_component|move_component|rotate_component|route_trace|add_via|route_differential_pair|route_pad_to_pad|refill_zones)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/Documents/KiCad/10.0/3rdparty/plugins/com_github_mixelpixx_konnect/bin/konnect skill pre-pcb-ipc"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(cargo build:*)",

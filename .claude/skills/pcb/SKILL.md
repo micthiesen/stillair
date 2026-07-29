@@ -124,11 +124,22 @@ so Michael can watch the block appear instead of reviewing it at the end.
   S-expression engine and work with KiCad closed. PCB tools speak the KiCad 10 IPC API over a
   socket and need KiCad **running** with the board open and the API enabled
   (Preferences → Plugins → Enable API). `check_kicad_ui` tells you which world you're in.
-- **Do not re-run `konnect init`.** It installs 6 skills + 2 agents into `~/.claude/` and
-  patches `~/.claude/settings.json` — both of which are rulesync-generated or hand-managed in
-  the dotfiles repo. It also rewrites settings.json with reordered keys and no trailing
-  newline. Konnect's own skills are useful; if we want them permanently they belong in
-  `~/.dotfiles/.rulesync/skills/`, not in the generated output.
+- **Never run `konnect init`.** It installs 6 skills + 2 agents into `~/.claude/` and patches
+  `~/.claude/settings.json` — the first is rulesync-generated output that gets wiped on the
+  next regenerate, the second is hand-managed and gets rewritten with reordered keys and no
+  trailing newline. It also runs on `konnect init --help`, since that subcommand takes no
+  flags. Those files are already vendored here (below); re-running would duplicate them
+  globally and dirty the dotfiles repo.
+- **Konnect's own skills live in this repo**, not in `~/.claude/`: `konnect` (the never-edit
+  rules), `kicad-schematic`, `kicad-pcb`, `kicad-review`, `kicad-manufacture`,
+  `kicad-library`, plus two agents in `.claude/agents/`. They carry the per-toolset call
+  recipes and reference tables (trace widths, JLCPCB rules, error taxonomy) that this skill
+  deliberately does not duplicate. Read them for *how*; read this one for *what and who*.
+  They came from Konnect v0.2.1 — on a Konnect upgrade, diff them against a fresh
+  `konnect init` in a scratch `CLAUDE_CONFIG_DIR` rather than installing over the top.
+- **The pre-PCB-IPC hook is project-scoped**, in `.claude/settings.json`. It fires before
+  placement/routing tool calls to remind that KiCad must be open. Konnect wants to install it
+  globally; keep it here.
 - **macOS needs explicit paths.** `~/Library/Application Support/konnect/config.toml` sets
   `kicad_cli` (inside the .app bundle) and `ipc_address`. Already written; recreate it if
   Konnect starts failing on exports.
