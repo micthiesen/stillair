@@ -14,7 +14,7 @@ fabrication gates at the bottom of that doc clear.
 | Part | Files | Status |
 |---|---|---|
 | MP-100 | `MP-100_revA.step`, `MP-100_revA.pdf` | Ordered 2026-07-27, JLCCNC |
-| ST-100 | `ST-100_revA.step`, `ST-100_revA.pdf` | Released 2026-07-28 |
+| ST-100 | `ST-100_revA.step`, `ST-100_revA.pdf` | Ordered 2026-07-28, JLCCNC |
 
 Name every export `<PART>_rev<X>.<ext>` and commit it **as sent**. The point is that a later
 revision diffs against the geometry that was actually quoted, not against the live OnShape

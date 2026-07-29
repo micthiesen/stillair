@@ -109,7 +109,8 @@ numbers, tether anchor, and the pre-drill verification checklist in
 
 ## ST-100 carrier standoffs
 
-> **Rev A released 2026-07-28**: [`cad/ST-100_revA.step`](../cad/ST-100_revA.step) and
+> **Status: ORDERED 2026-07-28** (JLCCNC, 6061-T6 clear anodized, qty 4, $101.79). Rev A
+> files are [`cad/ST-100_revA.step`](../cad/ST-100_revA.step) and
 > [`cad/ST-100_revA.pdf`](../cad/ST-100_revA.pdf). Any change from here is a rev B.
 
 Three Ø16.0 × 62.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 tapped at least

@@ -50,6 +50,7 @@ supply (all DigiKey, 2026-07-26), the GL100 KV10 motor (RobotShop), the MP-100 c
 plate (JLCCNC), and — 2026-07-28 — the complete mechanical fastener set including the
 KD-100 catcher washers and Nord-Locks (Accu, $219.45 CAD), CW-100 brass rod (Amazon), and
 the LCSC-gap electronics order 374750597 (DigiKey, ~$63 USD: insurance ICs and spares,
-bulk caps, USB-C, cable-side JST housings/contacts, trimmers, dev cable). Still to order
+bulk caps, USB-C, cable-side JST housings/contacts, trimmers, dev cable), and the ST-100
+standoffs (JLCCNC, qty 4, $101.79). Still to order
 with the V1 board run: everything LCSC-path (most semis, passives, PH headers, SM04B, the
 Sunlord inductor) plus the boards themselves.
