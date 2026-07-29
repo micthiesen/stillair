@@ -254,6 +254,15 @@ so Michael can watch the block appear instead of reviewing it at the end.
   never cosmetic — the J2 defect above appeared in the final DRC report but was lumped into
   the "residual noise" summary. Silk/courtyard classes may be noise; anything touching
   copper, edge, or holes gets looked at item by item.
+- **The gap checker doesn't model rotation changes.** `aes_check.py`-style pre-checks build
+  boxes from the *current* stored rotation; a move that also rotates a non-square part
+  reports false overlaps (or misses real ones). Hand-verify the rot-swapped box for those
+  parts, or apply rot first and re-check.
+- **Schematic→board sync after file-based schematic edits is Michael running F8**
+  (Update PCB from Schematic) — kicad-cli has no headless equivalent. New components land
+  wherever he drops them (fine, anywhere); Claude re-places them from the file afterward.
+  "No net found for pad MP" warnings during F8 are connector mounting tabs — benign.
+- **`add_component_annotation` takes `key`/`value`** (not `property_name`/`property_value`).
 
 ## Safety invariants that constrain layout and capture
 

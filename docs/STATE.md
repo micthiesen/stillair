@@ -3,80 +3,77 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-28** (ordering-campaign session: COTS substitution pass, then every
-currently-orderable line ordered — Accu fasteners, DigiKey LCSC-gap electronics, brass rod,
-and the ST-100 standoffs as the second custom part committed to metal.)
+Last updated: **2026-07-29** (PCB-01 session: schematic captured, board placed, aesthetic
+pass, three-round board-truth review loop — 4 blockers found and fixed — layout locked,
+firmware register guards landed.)
 
 ## Now
 
-- **The firmware is done and runs on real hardware.** `firmware/` is three crates:
-  `stillair-core` (`no_std`, zero esp-\* deps, sans-I/O, **171 host tests**), `firmware/cli`
-  (the tuning harness), and `firmware/app` (the C6 binary). Supervisor, MCF8316D wire
-  format, tuning console, configuration gate, and the Matter control plane are implemented
-  and **verified end to end against Apple Home** (CTL-12). Everything left is gated on a
-  real MCF8316D.
-- **The full assembly model exists in OnShape and moves** — variable-driven, one Part
-  Studio, revolute-mate animation. The model frame is rotated 180° about Z vs the docs
-  ([mechanical.md](mechanical.md) > Coordinate system). Owner remainder: resize the RH-100
-  tach pockets to Ø6.45 × 3.35 for the imperial magnets ([parts.md](parts.md)).
-- **Everything orderable is ordered (2026-07-28)**: the complete mechanical fastener set
-  incl. KD-100 DIN 440 washers and Nord-Locks (Accu, $219.45 CAD), the LCSC-gap
-  electronics order 374750597 (DigiKey, ~$63 USD), CW-100 brass rod (Amazon), and
-  **ST-100 rev A — JLCCNC, qty 4, 6061 clear anodized, $101.79** (files in `cad/`,
-  pre-order check + fabrication callouts in [parts.md](parts.md)). Tach magnets, P-clips,
-  and bench hardware are owner stock; every remaining electronics purchase rides the V1
-  board run via LCSC ([bom/README.md](../bom/README.md)).
-- **Custom metal is now measurement-gated, not design-gated.** SP-100 needs exactly two
-  numbers, both in transit: measured KD-100 washer thickness (cotter Z = t + 133.2;
-  washers due ~Thu) and measured GL100 axial body length (capture-gap stack). MC-100 and
-  RH-100 wait on the physical motor (pilot bore, face ownership, wire-exit clocking, M4
-  thread depths) plus Gate 01 (CubeMars bearing reply; worst case adds an external thrust
-  bearing reshaping both). BR-100 is undesigned. ([parts.md](parts.md) fabrication gates,
-  [build.md](build.md).)
-- **On-arrival checks queued**: KD-100 washers (magnet test, flatness, measure t before
-  drilling SP-100), M5 prevailing nuts (caliper AF ≤8.1, height ≤5.0), ST-100 (62.0 ±0.1,
-  square on ends, chase taps with an M6 screw), MP-100 (straightedge flatness before
-  ceiling drilling). All recorded in [bom.csv](../bom/bom.csv) notes.
+- **PCB-01 layout is LOCKED and ready to route.** Full schematic (SCH-01–07, ERC clean,
+  170 parts), 4-layer board set up per spec, all placement done and aesthetically aligned,
+  and a 25-lens agent review loop run to convergence (round 3: GO, zero defects). Final DRC
+  residuals are all documented waivers →
+  [pcb/pcb-01/placement/waivers.md](../pcb/pcb-01/placement/waivers.md). The review found
+  and fixed 4 blockers the spec-derived capture could never catch — including a bug that
+  was *in the spec itself* (HALL_TACH pulldown-vs-pullup self-contradiction) →
+  [electrical.md](electrical.md) "Open items from the 2026-07 board-truth review".
+- **Review-sourced fixes are on the board and in the spec**: R43 10k pull-up to 3V3 (the
+  analog overspeed chain was structurally blind without it), NT1 net-tie (the only
+  PGND↔AGND bridge — was layout-prose only), C36–C40 tach filter alternates marked DNP
+  (else ~18.5 µF ⇒ ~12 s trip lag), J5 side-entry SM04B + U12 DRT-3 footprints (both were
+  wrong parts/packages), C42/C43 safety-latch decoupling added, PGOOD pull-up re-sourced
+  to U3 VCC per TI practice, proximity shuffle (C5 at U1's VM corner, C11/C32/C34 at
+  their pins).
+- **Firmware carries the review's guards** (`stillair-core`, 149 tests green):
+  `mcf8316::fields` pins the two datasheet-verified bit layouts (CLOSED_LOOP4.MAX_SPEED,
+  DEVICE_CONFIG2 EXT_WDT), `mcf_config` tests fail any future captured image that misses
+  the four wiring-dependent registers or enables GPIO watchdog tickle with a window the
+  2 Hz heartbeat can't satisfy (only 1000 ms qualifies). TEMP_SENSE remains wired-but-
+  unread — `TODO(temp-sense)` at the ADC1/TRNG line in `app/src/matter.rs`.
+- **Mechanical/ordering state unchanged from 2026-07-28**: everything orderable is
+  ordered; SP-100 waits on two measurements in transit (KD-100 washer t, GL100 axial
+  length); MC-100/RH-100 wait on the physical motor + Gate 01; on-arrival checks queued in
+  [bom.csv](../bom/bom.csv) notes. Owner remainder: RH-100 tach-pocket resize to
+  Ø6.45 × 3.35 ([parts.md](parts.md)).
 
 ## Next
 
-**Capture the V1 controller schematic in KiCad** (`pcb/`) — carried forward; it is the
-critical path to a fan that turns, and every remaining firmware unknown is gated on a real
-MCF8316D. Follow [electrical.md](electrical.md) SCH-01–SCH-07 as amended; order config and
-footprint sourcing in `pcb/README.md`. Capture-time notes from this session's sourcing:
-use the **3296Y** footprint (not W — different footprint, substituted for stock), confirm
-the Sunlord SWPA4018S470MT LCSC C-number + Isat ≥ ~0.5 A, and re-verify TPSM365R6V3RDNR
-stock. Once a real MCF8316D exists: `stillair --port … config capture`.
-
-Small model remainders, do opportunistically (tracked, not blocking): tach-pocket resize
-(above), re-export `cad/BP-100.step` (committed STEP is v2 geometry), unmodeled hub screws
-if wanted for visuals, and the step-9 clearance extras (BR-100 bracket at r76, MR-100 caps,
-EB-100 + horizontal PCB envelope).
+**Route PCB-01** — Michael lays traces and pours, Claude guides (his explicit split).
+Standing guidance from the lock handoff: ground pours meet **only at NT1**; USB routes
+J6 → U12 → module with no stub; net classes drive widths (Power24/Phase 2.0 mm, Rail3V3
+0.5, Tach12V 0.4); MCF switching-loop review vs TI's reference layout happens during
+routing; silkscreen ref cleanup comes **after** routing (the 199 silk overlaps are the one
+deliberately-deferred DRC class — Claude can script the sweep once vias are down). Review
+context and waivers: [electrical.md](electrical.md) review section,
+[waivers.md](../pcb/pcb-01/placement/waivers.md), the /pcb skill.
 
 ## Candidates Not Chosen
 
 - **Motor-arrival release sprint**: when the GL100 lands, run the measurement checklist and
-  release SP-100 → MC-100/RH-100; consider quoting all three now and batching them into one
-  CNC order to share shipping. Becomes Next the day the box arrives.
-- **Blade materials + first prints**: Ø3 CF rods (cut 374) and an LW-PLA spool are still
-  unordered (blades were out of scope this session); segA material call is the owner's
-  strength program. Print 4 sets, select 3.
-- **Mount mockup** (MDF/printed disk + rod standoffs at the 62 mm stack) — still open,
-  fully parallel with the PCB.
+  release SP-100 → MC-100/RH-100; consider batching all three into one CNC order. Becomes
+  Next the day the box arrives.
+- **Fab-output pass after routing** (gerbers, pos, BOM export via the /pcb skill's
+  manufacture path; MCF/TPSM footprints vs Ultra Librarian per `pcb/README.md`) — the step
+  after routing, not chosen because routing isn't done.
+- **TEMP_SENSE firmware implementation** (shared-ADC arrangement vs Matter TRNG) — parked
+  with a code TODO; needs bench priorities, not board work.
+- **Blade materials + first prints**; **mount mockup** — carried, fully parallel.
 - **Non-concurrent Matter commissioning** (`run` vs `run_coex`) — a held lever, not a task.
 
 ## Learned Recently
 
-- **ST-100 pre-order check** (JLC blind-tap drill math, screw-bottoming margins, which
-  callouts are advisory-only, qty-with-spare rationale) → [parts.md](parts.md) ST-100.
-- **OnShape turned-part + drawing how-to** (countersink-as-thread-chamfer, mid-plane
-  mirror for the second tap, Datum/Geometric-tolerance tool behavior) →
-  [`cad/README.md`](../cad/README.md).
-- **KD-100 is purchased, not fabbed**: Accu DIN 440 Ø44 × Ø13.5 × 4.0; SP-100 stack
-  re-derived around the 4 mm washer with a measure-first rule → [parts.md](parts.md),
-  [mechanical.md](mechanical.md).
-- **Sourcing traps and substitutions** (3296Y footprint swap, Sunlord-for-Coilcraft,
-  Marketplace separate-shipping trap, 3-punch vs DIN 980V nut geometry, SPH-002T
-  packaging) → [bom.csv](../bom/bom.csv) Design-status/Notes fields.
-- **Scope rules**: common bench hardware is out of BOM scope; the DigiKey cart is
-  LCSC-gap-only → [bom/README.md](../bom/README.md).
+- **The board-truth review loop** (agents review the board netlist against *intent* with
+  the spec off-limits; fix → sweep spec → re-run until nits-only) → the /pcb skill,
+  "board-truth review loop"; findings + accepted tradeoffs → [electrical.md](electrical.md).
+- **Placement toolkit + gotchas** (exact courtyard model after the silk-bleed parser bug,
+  per-side edge waivers, rot-blind checker, F8 round-trip flow, connector mating-face
+  rules) → /pcb skill quirks, `pcb/tools/`.
+- **Analog-trip calibration math** (LM2907 K ±10 % makes RV1 trim mandatory; ripple ≈
+  hysteresis ⇒ ±10 RPM scatter; C2 bank is the remedy) → [electrical.md](electrical.md)
+  SCH-06 calibration.
+- **MCF register-image capture checklist** (SPEED_MODE, SPEED_RANGE_SEL, ALARM_PIN_EN,
+  OTW_REP, EXT_WDT window, MAX_SPEED mapping) → [electrical.md](electrical.md) open items
+  + enforced in `firmware/core/src/mcf_config.rs` tests.
+- **J5/U12 were wrong variants since capture** (BOM said side-entry; TPD2EUSB30 only
+  exists in DRT) → fixed everywhere; lesson folded into the /pcb skill's review-loop and
+  footprint practices.
