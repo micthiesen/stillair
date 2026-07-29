@@ -35,15 +35,28 @@ uncovered = sorted(set(parts) - set(boxes))
 if uncovered:
     print("NOT covered by any plan (still parked):", uncovered)
 
+# Edge waivers are PER-SIDE: only the mating face of a right-angle connector may
+# overhang, and only toward off-board. A blanket per-ref waiver here once masked
+# J2 pads hanging fully off the board (wrong rotation). "l/r/t/b" = allowed side.
+EDGE_WAIVER = {"J1": "l", "J2": "b"}
+
 bad = 0
 refs = sorted(boxes)
 for i, a in enumerate(refs):
     A = boxes[a]
-    if A[0] < board_model.BOARD[0] - 0.01 or A[1] < board_model.BOARD[1] - 0.01 \
-       or A[2] > board_model.BOARD[2] + 0.01 or A[3] > board_model.BOARD[3] + 0.01:
-        if not a.startswith(("H", "J1", "J2")):  # connectors legitimately overhang
-            print(f"EDGE {a}: {tuple(round(v,2) for v in A)}")
-            bad += 1
+    w = EDGE_WAIVER.get(a, "")
+    over = []
+    if A[0] < board_model.BOARD[0] - 0.01 and "l" not in w:
+        over.append("l")
+    if A[1] < board_model.BOARD[1] - 0.01 and "t" not in w:
+        over.append("t")
+    if A[2] > board_model.BOARD[2] + 0.01 and "r" not in w:
+        over.append("r")
+    if A[3] > board_model.BOARD[3] + 0.01 and "b" not in w:
+        over.append("b")
+    if over and not a.startswith("H"):
+        print(f"EDGE {a} ({''.join(over)}): {tuple(round(v,2) for v in A)}")
+        bad += 1
     for hx, hy in board_model.HOLES:
         cx = min(max(hx, A[0]), A[2])
         cy = min(max(hy, A[1]), A[3])

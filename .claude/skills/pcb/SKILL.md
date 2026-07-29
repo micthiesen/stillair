@@ -227,6 +227,17 @@ so Michael can watch the block appear instead of reviewing it at the end.
   `set_board_size` and `add_mounting_hole` are fine.
 - **Custom DRC rules go in `pcb-01.kicad_dru`** (plain-text rules file, safe to edit): the
   Ø8 mounting-hole copper keepout lives there as a `physical_clearance` rule against H1-H4.
+- **Right-angle connectors: verify the mating face points OFF-board and every pad is
+  ON-board, per placement.** A blanket "connectors legitimately overhang" edge waiver in
+  check_plan.py masked J2 placed rotated 90° wrong — mating face pointing into the board
+  interior, pin 3's THT pad fully off the board edge. Waivers are now per-side
+  (`EDGE_WAIVER` in check_plan.py: only the mating-face side may overhang). Rule of thumb:
+  right-angle THT/SMD headers sit with body fully on board and face flush at the edge; only
+  courtyard grace beyond the face may cross Edge.Cuts.
+- **Triage every DRC class by name before calling it cosmetic.** `copper_edge_clearance` is
+  never cosmetic — the J2 defect above appeared in the final DRC report but was lumped into
+  the "residual noise" summary. Silk/courtyard classes may be noise; anything touching
+  copper, edge, or holes gets looked at item by item.
 
 ## Safety invariants that constrain layout and capture
 

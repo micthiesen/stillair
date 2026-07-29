@@ -56,27 +56,46 @@ def load(board_file=BOARD_FILE):
         rot = float(at_m.group(3) or 0)
         r = math.radians(rot)
 
+        # Walk each (fp_* ...) item with balanced parens and test its OWN layer
+        # tag. A lookahead regex here once matched silk geometry against the
+        # NEXT item's CrtYd tag, under-measuring courtyards by up to 0.34 mm.
         xs, ys = [], []
-        for seg in re.finditer(
-            r'\(fp_(?:line|rect)\s*\(start ([\-\d.]+) ([\-\d.]+)\)\s*'
-            r'\(end ([\-\d.]+) ([\-\d.]+)\)[\s\S]{0,400}?\(layer "[FB]\.CrtYd"\)',
-            blk,
-        ):
-            for lx, ly in ((float(seg.group(1)), float(seg.group(2))),
-                           (float(seg.group(3)), float(seg.group(4)))):
-                gx, gy = _rot_xy(lx, ly, r)
-                xs.append(gx)
-                ys.append(gy)
-        for c in re.finditer(
-            r'\(fp_circle\s*\(center ([\-\d.]+) ([\-\d.]+)\)\s*\(end ([\-\d.]+) ([\-\d.]+)\)[\s\S]{0,400}?\(layer "[FB]\.CrtYd"\)',
-            blk,
-        ):
-            cx, cy, ex, ey = map(float, c.groups())
-            rad = math.hypot(ex - cx, ey - cy)
-            gx, gy = _rot_xy(cx, cy, r)
-            xs += [gx - rad, gx + rad]
-            ys += [gy - rad, gy + rad]
-        used_crtyd = bool(xs) and (max(xs) - min(xs) > 1.0) and (max(ys) - min(ys) > 1.0)
+        idx = 0
+        while True:
+            i = blk.find("(fp_", idx)
+            if i < 0:
+                break
+            depth, j = 0, i
+            while True:
+                if blk[j] == "(":
+                    depth += 1
+                elif blk[j] == ")":
+                    depth -= 1
+                if depth == 0:
+                    break
+                j += 1
+            item = blk[i:j + 1]
+            idx = j + 1
+            if '.CrtYd"' not in item:
+                continue
+            if item.startswith("(fp_circle"):
+                c = re.search(
+                    r'\(center ([\-\d.]+) ([\-\d.]+)\)\s*\(end ([\-\d.]+) ([\-\d.]+)\)',
+                    item,
+                )
+                cx, cy, ex, ey = map(float, c.groups())
+                rad = math.hypot(ex - cx, ey - cy)
+                gx, gy = _rot_xy(cx, cy, r)
+                xs += [gx - rad, gx + rad]
+                ys += [gy - rad, gy + rad]
+            else:
+                for sx, sy in re.findall(
+                    r'\((?:start|end|mid|xy) ([\-\d.]+) ([\-\d.]+)\)', item
+                ):
+                    gx, gy = _rot_xy(float(sx), float(sy), r)
+                    xs.append(gx)
+                    ys.append(gy)
+        used_crtyd = bool(xs)
         if not used_crtyd:
             xs, ys = [], []
 
