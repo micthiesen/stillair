@@ -130,6 +130,10 @@ so Michael can watch the block appear instead of reviewing it at the end.
   trailing newline. It also runs on `konnect init --help`, since that subcommand takes no
   flags. Those files are already vendored here (below); re-running would duplicate them
   globally and dirty the dotfiles repo.
+- **The vendored Konnect agents pinned a dead model** (`claude-sonnet-4-20250514`), which made
+  every `kicad-schematic-build-agent` / `kicad-design-review-agent` launch die at startup with
+  an API error. Fixed to `claude-sonnet-5` (2026-07-28); on a Konnect upgrade re-check the
+  `model:` frontmatter of both files in `.claude/agents/`.
 - **Konnect's own skills live in this repo**, not in `~/.claude/`: `konnect` (the never-edit
   rules), `kicad-schematic`, `kicad-pcb`, `kicad-review`, `kicad-manufacture`,
   `kicad-library`, plus two agents in `.claude/agents/`. They carry the per-toolset call
@@ -165,6 +169,9 @@ so Michael can watch the block appear instead of reviewing it at the end.
   `label_type: global_label` at the same coords. Wiring convention on this board: label-based
   connectivity (labels sit directly on pin endpoints), local labels for intra-sheet nets,
   one global label per cross-sheet net per sheet, net names exactly as in docs/electrical.md.
+- **`add_schematic_component` silently drops its `footprint` parameter** — the call echoes the
+  value back but never writes it (confirmed via `get_schematic_component`). Always set
+  footprints afterward with `batch_edit_schematic_components`.
 - **`batch_edit_schematic_components` cannot create new fields**, only update existing ones
   (Value/Footprint work; a new `MPN` errors "Field not found"). Create fields one at a time
   with `add_component_annotation`. Fields in use: `MPN`, `LCSC`, `Note`, `DNP`.

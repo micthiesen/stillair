@@ -239,7 +239,7 @@
             (effects
               (font
                 (size 1.27 1.27)))))
-        (pin output line
+        (pin passive line
           (at 17.78 15.24 180)
           (length 2.54)
           (name "OUTA"
@@ -261,7 +261,7 @@
             (effects
               (font
                 (size 1.27 1.27)))))
-        (pin output line
+        (pin passive line
           (at 17.78 10.16 180)
           (length 2.54)
           (name "OUTB"
@@ -283,7 +283,7 @@
             (effects
               (font
                 (size 1.27 1.27)))))
-        (pin output line
+        (pin passive line
           (at 17.78 5.08 180)
           (length 2.54)
           (name "OUTC"
@@ -1353,54 +1353,6 @@
     (uuid "419c8227-0501-423b-8945-5cd2dd02e960"))
 
   (symbol
-    (lib_id "pcb01-parts:MCF8316D")
-    (at 139.7 90.17 0)
-    (unit 1)
-    (in_bom yes)
-    (on_board yes)
-    (dnp no)
-    (uuid "1d156cf0-f574-467b-a2bd-502273d4803d")
-    (property "Reference" "U1"
-      (at 139.7 86.36 0)
-      (effects
-        (font
-          (size 1.27 1.27))))
-    (property "Value" "MCF8316D"
-      (at 139.7 93.98 0)
-      (effects
-        (font
-          (size 1.27 1.27))))
-    (property "Footprint" ""
-      (at 139.7 90.17 0)
-      (hide yes)
-      (effects
-        (font
-          (size 1.27 1.27))))
-    (property "Datasheet" ""
-      (at 139.7 90.17 0)
-      (hide yes)
-      (effects
-        (font
-          (size 1.27 1.27))))
-    (property "MPN" "MCF8316DVRGFR"
-      (at 0 0 0)
-      (effects
-        (font
-          (size 1.27 1.27))
-        (hide yes)))
-    (property "LCSC" "C47122159"
-      (at 0 0 0)
-      (effects
-        (font
-          (size 1.27 1.27))
-        (hide yes)))
-    (instances
-      (project "sch03-mcf-power"
-        (path "/8fb5e3f8-8338-4744-bcd3-fd635296a010"
-          (reference "U1")
-          (unit 1)))))
-
-  (symbol
     (lib_id "Device:C")
     (at 100.33 54.61 0)
     (unit 1)
@@ -1872,5 +1824,49 @@
       (project "sch03-mcf-power"
         (path "/8fb5e3f8-8338-4744-bcd3-fd635296a010"
           (reference "R10")
+          (unit 1)))))
+
+  (symbol
+    (lib_id "pcb01-parts:MCF8316D")
+    (at 139.7 90.17 0)
+    (unit 1)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "f84b1e13-6fcb-4958-920e-bbb842d8b524")
+    (property "Reference" "U1"
+      (at 139.7 86.36 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Value" "MCF8316DVRGFR"
+      (at 139.7 93.98 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Footprint" ""
+      (at 139.7 90.17 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Datasheet" ""
+      (at 139.7 90.17 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+        (property "MPN" "MCF8316DVRGFR"
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+        (property "LCSC" "C47122159"
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "sch03-mcf-power"
+        (path "/8fb5e3f8-8338-4744-bcd3-fd635296a010"
+          (reference "U1")
           (unit 1)))))
 )
