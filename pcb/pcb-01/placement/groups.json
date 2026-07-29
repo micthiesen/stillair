@@ -237,9 +237,10 @@
         "R54",
         "TP21",
         "TP22",
-        "TP23"
+        "TP23",
+        "C32"
       ],
-      "intent": "Analog tach chain, now allowed in the antenna band (copper keepout stays; parts are low-profile so RF impact accepted). U8 LM2907 SOIC-14 central-west (pin1 top-left going CCW; left column pins 1-7 at its west edge, right column 8-14 east). Level shift at NW: Q3 2N7002 (pad1=gate=HALL_TACH, pad2=source=AGND, pad3=drain) + R43 (100k gate pulldown) + R44 (10k drain pullup to +12V_TACH) + R45 (100R drain->U8 pin 1). C34 (100nF 1% timing, U8 pin 2 to AGND) TIGHT to pin 2 - most critical cap in the group. R46/R47 (10k/10k TACH_BIAS divider) + C33 (100nF) at pin 11. Rscale: R48 (562k) + RV1 trimmer (rheostat) from pin 3, RV1 adjustable from above - keep its screw clear. C35 (2.2uF C2 filter) at pin 3; C36-C40 are DNP alternates - tidy row near C35. R49 (10k emitter load) at pin 5. Trip stage east: U9 TLV1701 (pin1=IN+ VREF, pin3=IN- via R51 47k from VTACH, pin4=OUT=OVERSPEED_N, pin5=V+ 3V3, pin2=V-), D9 BAT54S clamp (pad3=common) at IN-, C41 (100nF) at U9 V+, R52/R53 (VREF divider 10k/35.7k), R54 (90.9k hysteresis OVERSPEED_N->VREF), R50 (10k OVERSPEED_N pullup), R42 (10k TACH_PGOOD pullup, same node). TP21=HALL_TACH, TP22=VTACH, TP23=VREF. Avoid the H4 hole keepout (circle r4 at (122,56) is far north of you; H2 keepout circle r4 at (122,102) is south of you - both outside this region)."
+      "intent": "Analog tach chain, now allowed in the antenna band (copper keepout stays; parts are low-profile so RF impact accepted). U8 LM2907 SOIC-14 central-west (pin1 top-left going CCW; left column pins 1-7 at its west edge, right column 8-14 east). Level shift at NW: Q3 2N7002 (pad1=gate=HALL_TACH, pad2=source=AGND, pad3=drain) + R43 (100k gate pulldown) + R44 (10k drain pullup to +12V_TACH) + R45 (100R drain->U8 pin 1). C34 (100nF 1% timing, U8 pin 2 to AGND) TIGHT to pin 2 - most critical cap in the group. R46/R47 (10k/10k TACH_BIAS divider) + C33 (100nF) at pin 11. Rscale: R48 (562k) + RV1 trimmer (rheostat) from pin 3, RV1 adjustable from above - keep its screw clear. C35 (2.2uF C2 filter) at pin 3; C36-C40 are DNP alternates - tidy row near C35. R49 (10k emitter load) at pin 5. Trip stage east: U9 TLV1701 (pin1=IN+ VREF, pin3=IN- via R51 47k from VTACH, pin4=OUT=OVERSPEED_N, pin5=V+ 3V3, pin2=V-), D9 BAT54S clamp (pad3=common) at IN-, C41 (100nF) at U9 V+, R52/R53 (VREF divider 10k/35.7k), R54 (90.9k hysteresis OVERSPEED_N->VREF), R50 (10k OVERSPEED_N pullup), R42 (10k TACH_PGOOD pullup, same node). TP21=HALL_TACH, TP22=VTACH, TP23=VREF. Avoid the H4 hole keepout (circle r4 at (122,56) is far north of you; H2 keepout circle r4 at (122,102) is south of you - both outside this region). C32 (1nF LM2907 input filter) moved here 2026-07: it is a functional part, not a DNP alternate, and belongs at R45/U8 pin 1."
     },
     "ldo": {
       "region": [
@@ -275,8 +276,7 @@
         "C37",
         "C38",
         "C39",
-        "C40",
-        "C32"
+        "C40"
       ],
       "intent": "DNP alternates for the LM2907 C2 filter plus the optional input filter cap, parked as a tidy bank in the mid-board pocket; all unfitted by default."
     }

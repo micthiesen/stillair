@@ -608,14 +608,6 @@
     (uuid "c41ecba5-433d-47c7-abfd-90ee292bc1b3"))
 
   (label "3V3"
-    (at 134.62 50.8 0)
-    (effects
-      (font
-        (size 1.27 1.27))
-      (justify left bottom))
-    (uuid "e000d8d6-56c6-4362-9bed-1dcc8c1b8d71"))
-
-  (label "3V3"
     (at 85.09 57.15 0)
     (effects
       (font
@@ -710,6 +702,14 @@
         (size 1.27 1.27))
       (justify left bottom))
     (uuid "1cafbc08-6ab1-4477-8fb0-c115a8370e01"))
+
+  (label "U3_VCC"
+    (at 134.62 50.8 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "60070514-73b7-4ab5-86c3-e0d1f33338cd"))
 
   (global_label "VM24"
     (shape bidirectional)

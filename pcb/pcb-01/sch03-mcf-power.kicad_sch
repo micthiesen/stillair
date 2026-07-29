@@ -823,6 +823,105 @@
             (effects
               (font
                 (size 1.27 1.27))))))
+      (embedded_fonts no))
+    (symbol "Device:NetTie_2"
+      (pin_numbers
+        (hide yes))
+      (pin_names
+        (offset 0)
+        (hide yes))
+      (exclude_from_sim no)
+      (in_bom no)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (property "Reference" "NT"
+        (at 0 1.27 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "Value" "NetTie_2"
+        (at 0 -1.27 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "Footprint" ""
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "Datasheet" ""
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "Description" "Net tie, 2 pins"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "ki_keywords" "net tie short"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (property "ki_fp_filters" "Net*Tie*"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27))))
+      (symbol "NetTie_2_0_1"
+        (polyline
+          (pts
+            (xy -1.27 0)
+            (xy 1.27 0))
+          (stroke
+            (width 0.254)
+            (type default))
+          (fill
+            (type none))))
+      (symbol "NetTie_2_1_1"
+        (pin passive line
+          (at -2.54 0 0)
+          (length 2.54)
+          (name "1"
+            (effects
+              (font
+                (size 1.27 1.27))))
+          (number "1"
+            (effects
+              (font
+                (size 1.27 1.27)))))
+        (pin passive line
+          (at 2.54 0 180)
+          (length 2.54)
+          (name "2"
+            (effects
+              (font
+                (size 1.27 1.27))))
+          (number "2"
+            (effects
+              (font
+                (size 1.27 1.27))))))
       (embedded_fonts no)))
 
   (no_connect
@@ -1180,6 +1279,22 @@
         (size 1.27 1.27))
       (justify left bottom))
     (uuid "453867d6-c002-4e66-8be5-81f33434186d"))
+
+  (label "PGND"
+    (at 48.26 148.59 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "2563ae60-fbfd-4311-a453-d72cb25bc100"))
+
+  (label "AGND"
+    (at 53.34 148.59 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "e804be0c-8935-45ea-b513-5c39098bcae2"))
 
   (global_label "DRVOFF"
     (shape input)
@@ -1856,17 +1971,57 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "MCF8316DVRGFR"
+    (property "MPN" "MCF8316DVRGFR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-        (property "LCSC" "C47122159"
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
+    (property "LCSC" "C47122159"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch03-mcf-power"
         (path "/8fb5e3f8-8338-4744-bcd3-fd635296a010"
           (reference "U1")
+          (unit 1)))))
+
+  (symbol
+    (lib_id "Device:NetTie_2")
+    (at 50.8 148.59 0)
+    (unit 1)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "73eb001a-5961-44f8-8d45-43df7353db61")
+    (property "Reference" "NT1"
+      (at 50.8 144.78 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Value" "PGND-AGND tie"
+      (at 50.8 152.4 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Footprint" "NetTie:NetTie-2_SMD_Pad2.0mm"
+      (at 50.8 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Datasheet" ""
+      (at 50.8 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (instances
+      (project "sch03-mcf-power"
+        (path "/8fb5e3f8-8338-4744-bcd3-fd635296a010"
+          (reference "NT1")
           (unit 1)))))
 )

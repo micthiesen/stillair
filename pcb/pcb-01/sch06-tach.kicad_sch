@@ -1435,14 +1435,6 @@
     (uuid "f2a2cc3f-cd47-447c-9657-b2d76cde09aa"))
 
   (label "AGND"
-    (at 124.46 109.22 0)
-    (effects
-      (font
-        (size 1.27 1.27))
-      (justify left bottom))
-    (uuid "ad2065ed-105e-4e41-a062-de1b590d1bcc"))
-
-  (label "AGND"
     (at 165.1 109.22 0)
     (effects
       (font
@@ -2082,6 +2074,14 @@
       (justify left bottom))
     (uuid "22b4a007-51b9-4556-8c5f-fa14778a1fd9"))
 
+  (label "3V3"
+    (at 124.46 109.22 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "39d04e01-5287-4635-b5f8-34519c95ade7"))
+
   (global_label "VM24"
     (shape bidirectional)
     (at 54.61 40.64 0)
@@ -2611,7 +2611,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "100k"
+    (property "Value" "10k"
       (at 124.46 109.22 0)
       (effects
         (font
@@ -3061,7 +3061,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "470nF"
+    (property "Value" "470nF DNP"
       (at 203.2 128.27 0)
       (effects
         (font
@@ -3103,7 +3103,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "1uF"
+    (property "Value" "1uF DNP"
       (at 210.82 128.27 0)
       (effects
         (font
@@ -3145,7 +3145,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "3.3uF"
+    (property "Value" "3.3uF DNP"
       (at 195.58 143.51 0)
       (effects
         (font
@@ -3187,7 +3187,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "4.7uF"
+    (property "Value" "4.7uF DNP"
       (at 203.2 143.51 0)
       (effects
         (font
@@ -3229,7 +3229,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "6.8uF"
+    (property "Value" "6.8uF DNP"
       (at 210.82 143.51 0)
       (effects
         (font

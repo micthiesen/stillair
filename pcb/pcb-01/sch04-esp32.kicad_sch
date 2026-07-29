@@ -2052,7 +2052,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "22uF"
+    (property "Value" "22uF 25V X7R"
       (at 100.33 53.34 0)
       (effects
         (font
@@ -2633,7 +2633,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-563"
+    (property "Footprint" "Package_TO_SOT_SMD:Texas_DRT-3"
       (at 204.47 85.09 0)
       (hide yes)
       (effects

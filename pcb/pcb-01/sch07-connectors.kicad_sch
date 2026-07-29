@@ -2523,7 +2523,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" "Connector_JST:JST_SH_BM04B-SRSS-TB_1x04-1MP_P1.00mm_Vertical"
+    (property "Footprint" "Connector_JST:JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal"
       (at 160.02 49.53 0)
       (hide yes)
       (effects

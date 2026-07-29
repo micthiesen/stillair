@@ -134,7 +134,10 @@ behavior shows the GST60 is inadequate.
   25 V 1210).
 - CVCC: 1 µF / 16 V. BIAS: directly to the 3.3 V output.
 - **EN: tie to VM24** (or a UVLO divider) — the datasheet forbids floating it.
-- PGOOD: 10 kΩ pull-up to 3.3 V, routed into the permission-clear path.
+- PGOOD: 10 kΩ pull-up to **VCC (pin 8, `U3_VCC`)**, routed into the permission-clear path.
+  (2026-07 board review: TI documents VCC — the internal LDO, independent of the switched
+  output — as the intended PGOOD pull-up source; pulling up from VOUT makes the flag's own
+  reference collapse together with the fault it reports.)
 - MODE/SYNC selection via a 3-pad jumper to GND (auto/PFM, default) or 3.3 V (forced PWM) —
   the pin must never float; an unpopulated 2-pad jumper is an invalid state.
 - Power budget (verified 2026-07): worst-case simultaneous 3.3 V load ≈ 391 mA (Wi-Fi TX
@@ -201,7 +204,9 @@ motor phases.
 - 10 kΩ + 1 µF on EN; reset and boot buttons.
 - 100 Ω series on SPEED, DIR, ARM_PULSE, and the watchdog heartbeat.
 - DNP isolation links on I²C.
-- USB-C native D−/D+ through 22 Ω, `TPD2EUSB30` ESD, 5.1 kΩ on CC1/CC2. VBUS is sense/test
+- USB-C native D−/D+ through 22 Ω, `TPD2EUSB30` ESD (**DRT 3-pin SOT package — footprint
+  `Texas_DRT-3`**; the part does not exist in SOT-563, corrected 2026-07), 5.1 kΩ on
+  CC1/CC2. VBUS is sense/test
   only and never powers the fan.
 
 GPIO map, verified against the ESP32-C6-MINI-1 datasheet v1.5 (2026-07): every pin below is
@@ -417,9 +422,13 @@ VM24 -> 47 Ω / 0.25 W -> TPS7A1601ADGNR -> +12V_TACH (12.049 V nominal)
 
 ### LM2907M-14
 
-- `HALL_TACH` drives a 2N7002 gate with 100 kΩ pulldown; the drain is pulled to +12V_TACH by
-  10 kΩ and feeds pin 1 TACH+ through 100 Ω (optional 1 nF C0G to AGND). This level shift
-  keeps 3.3 V from driving an unpowered LM2907.
+- `HALL_TACH` carries the DRV5033's required **10 kΩ pull-up to 3.3 V** (R43 — the sensor
+  output is open-drain; the daughterboard carries no pull-up of its own) and drives a 2N7002
+  gate; the drain is pulled to +12V_TACH by 10 kΩ and feeds pin 1 TACH+ through 100 Ω
+  (optional 1 nF C0G to AGND). This level shift keeps 3.3 V from driving an unpowered
+  LM2907. *(Corrected 2026-07 board review: this section previously said "100 kΩ pulldown",
+  contradicting the daughterboard section's pull-up requirement — as captured, the open-drain
+  hall line was stuck low and the analog overspeed chain could never see an edge.)*
 - Pin 11 TACH−: 6.0 V from a 10 kΩ / 10 kΩ divider on +12V_TACH, bypassed by 100 nF.
 - C1: 100 nF, 1% C0G, **pin 2 (CP1) to AGND** (corrected 2026-07 review: the dossier said
   "pins 2 to 3", which dumps the ±180 µA pump current into the output filter node and voids
@@ -428,8 +437,10 @@ VM24 -> 47 Ω / 0.25 W -> TPS7A1601ADGNR -> +12V_TACH (12.049 V nominal)
   end), adjusted to approximately 656.1 kΩ total. Pin 3 carries only Rscale ∥ C2 to AGND.
 - C2: provisional **2.2 µF** / 16 V X7R from pin 3 to AGND (baseline moved from 4.7 µF by
   the 2026-07 timing analysis — see the two-tier trip claim below), with DNP alternatives
-  for 0.47, 1.0, 3.3, 4.7, and 6.8 µF. Final value selected by ripple and dynamic-trip
-  testing.
+  for 0.47, 1.0, 3.3, 4.7, and 6.8 µF (C36–C40 — schematic values now carry an explicit
+  "DNP" suffix; the capture originally omitted it, which would have had all six populated in
+  parallel for ~18.5 µF and a ~12 s trip lag). Final value selected by ripple and
+  dynamic-trip testing.
 - Pin 4 to pin 3; pin 10 to pin 5; **10 kΩ emitter load from pin 5 to AGND** (added 2026-07
   review: without it the follower has no pull-down path below the input clamp and
   falling-speed response is unspecified). Pin 5 is buffered VTACH. **Pin 12 to AGND.**
@@ -506,7 +517,7 @@ detection necessarily happens in the running state).
 | J2 MOTOR | Molex Micro-Fit 43650-0300 (single-row, right-angle) | 1 U, 2 V, 3 W |
 | J3 HALL | JST B3B-PH-K-S | 1 3V3, 2 HALL_TACH, 3 AGND |
 | J4 TEMP | JST B2B-PH-K-S | 1 TEMP_SENSE, 2 AGND |
-| J5 I2C | JST-SH 4-pin | GND, 3V3, SDA, SCL |
+| J5 I2C | JST-SH 4-pin **SM04B-SRSS-TB side-entry** (matches BOM/ordered cable; board was captured with the vertical BM04B by mistake, fixed 2026-07) | GND, 3V3, SDA, SCL |
 | J6 USB-C | GCT USB4105-GF-A | Native USB data; VBUS sense only |
 | J7 PROGRAM | TC2030 footprint | 3V3, TX, RX, EN, BOOT, GND |
 | J8 SCOPE | DNP 2×5, 1.27 mm | VM, rails, controls, FG, nFAULT, SOX |
@@ -529,7 +540,10 @@ Layers:
 - **L1** — components, short MCF switching loops, ≥2–3 mm 2 oz VM/phase pours, connectors.
   At least 12 thermal vias under/around the MCF exposed pad.
 - **L2** — continuous AGND below logic and RF; local PGND island only under the motor stage,
-  joined once beside the MCF through a wide net tie.
+  joined once beside the MCF through a wide net tie — implemented as schematic component
+  **NT1** (`NetTie:NetTie-2_SMD_Pad2.0mm`, added 2026-07 board review: as a layout-note-only
+  instruction the tie never existed in the netlist, leaving PGND and AGND disconnected and
+  every VM24-fed regulator's return loop open).
 - **L3** — VM24 and 3.3 V distribution with ground fill. No copper under the ESP antenna.
 - **L4** — quiet signals and ground. Keep phases, both switch nodes, and motor-current return
   out of the tachometer region.
@@ -558,6 +572,32 @@ DRVOFF, TPS3435 WDI/WDO/WD-EN/MR, MCF watchdog, nFAULT, SDA/SCL, FG, HALL_TACH, 
 OVERSPEED_N, and OUTA/B/C. Include probe grounds, BOOT/RESET, direct I²C access, zero-ohm
 isolation links around watchdog and analog fault paths, a spare bulk-cap footprint, and an
 optional DNP input-fuse footprint.
+
+## Open items from the 2026-07 board-truth review
+
+A 13-lens agent review of the captured board (netlist as source of truth, spec deliberately
+excluded) fixed five defects (R43 hall pull-up, NT1 ground tie, C36–C40 DNP marks, J5/U12
+footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
+
+- **USB-only flashing does not work**: VBUS powers nothing (sense divider only), so
+  flashing requires 24 V present. Accept, or add a VBUS→3V3 path (needs a 5 V→3.3 V
+  regulator + ORing) in V2 if bench-without-24V flashing matters.
+- **F1 ships bridged** (no input fuse) — protection is the wall supply's. Populate a fuse
+  once measured motor current defines the rating.
+- **JP1 defaults to PFM**; re-bridge 2-3 for FPWM if 3V3 ripple shows in the tach chain
+  during commissioning.
+- **RV1 low end** puts the analog trip at ~173 RPM, only 3 RPM above the user max —
+  TACH-01/02 calibration is the guardrail; nothing in hardware prevents mis-trimming.
+- **D8 PGOOD blip-clear of the overspeed latch** — documented accepted tradeoff (see
+  SCH-05); re-affirmed 2026-07.
+- **SMCJ24A max clamp (38.9 V) vs MCF abs-max (40 V)** — 1.1 V margin at full rated surge;
+  acceptable on a desktop-supply input, revisit if the supply changes.
+- **No TP on SPEED** (probeable only via DNP J8); add TP29 in V2 if bench work wants it.
+- **J7 pin 1 ties to 3V3 directly** — don't use a programmer that actively drives 3.3 V
+  while 24 V is connected.
+- **Firmware TODO**: TEMP_SENSE (GPIO6/ADC1) is wired but unread — ADC1 is currently
+  consumed whole by the Matter TRNG; needs a shared-ADC arrangement to implement the
+  overtemperature input. (WDO on GPIO23 is deliberately unread — see docs/controls.md.)
 
 ## V1-to-V2 gates
 
