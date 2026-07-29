@@ -1,5 +1,12 @@
 # Accepted DRC residuals — PCB-01 placement (2026-07-29)
 
+> **LAYOUT LOCKED 2026-07-29** after the three-round board-truth review loop (18 + 5 + 2
+> agent lenses; round 3 verdict GO, zero defects). Final DRC:
+> clearance 10 (stock fine-pitch footprint internals), courtyards_overlap 15 (list below,
+> all TP-ring or verified-body-clear margin pairs), silk classes pending post-routing
+> cleanup, lib_footprint classes = our deliberate customizations. Placement changes after
+> this point only with a re-run of the checks in pcb/tools/.
+
 Reference list for reading `kicad-cli pcb drc` output. Every violation class below
 was triaged item-by-item; anything not listed here appearing in a future DRC run
 is NEW and needs a look. Rule of thumb from the J2 incident: courtyard classes may
