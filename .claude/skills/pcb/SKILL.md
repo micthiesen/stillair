@@ -79,6 +79,22 @@ Learned limits: agents handle ~10-20-part groups well but blow the 64k output ca
 degenerate into brute-force on 30-part analog groups — use `place_targeted.py` for those;
 IPC moves are fine for <20 interactive nudges but far too slow for bulk.
 
+**The board-truth review loop** (established 2026-07-29, caught 4 blockers the spec-derived
+capture could never catch — including a bug that was *in the spec itself*): after capture and
+placement, run swarms of Sonnet review agents against artifacts extracted FROM THE BOARD
+(`pcb/tools/extract_netlist.py out.md [positions.txt]`), with `docs/` and the schematic
+explicitly off-limits to the agents (the board was derived from them — checking against them
+is circular). Agents get a functional brief (what the product must do, not how it's wired),
+fetch datasheets themselves, and map every pad number to a pin function independently.
+Lenses: per-subsystem pin-by-pin, logical-path traces, value/orientation sweeps, sequencing
+walks, placement physics (with the positions file), firmware cross-checks (GPIO map, register
+image), and a completeness critic. Then: integrate fixes (schematic-side via Konnect, Michael
+runs F8 to sync the board, Claude places new/changed parts), sweep the spec + BOM + TODOs,
+re-extract, and re-run with a brief addendum listing fixes-to-verify and accepted-tradeoffs
+(so they don't get re-flagged). Loop until only nits/accepted items come back. Round-1
+lesson: demand primary sources — one agent's web-search summary had BAT54H's pinout backwards
+and only reading the actual datasheet page corrected it.
+
 **Michael does** — the parts that need eyes on a canvas:
 
 - **Routing.** All of it, including copper pours. Konnect has routing tools and a Freerouting
