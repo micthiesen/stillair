@@ -71,6 +71,20 @@ flatness and TIR) are poor fits for JLC even though MP-100 was a good one.
    on the views instead.
 5. ISO 2768-mK block, form tolerances, minimum internal corner radii, material and finish.
 
+**Turned-part modeling + drawing notes** (learned on ST-100 rev A, 2026-07-28):
+
+- Model the thread-entry chamfer as the Hole feature's **countersink** (Ø7 × 90° for M6):
+  it exports in the STEP and lands in the drawing's hole callout automatically.
+- Second-end tap on a turned part: **Mid plane** between the end faces + **Feature mirror**
+  of the Hole feature — one edit drives both ends.
+- In OnShape's tapped-Hole dialog the tap fields (Tapped depth, Tap clearance) are below
+  the fold — scroll; the visible 13.44/90° pair is the countersink, not the thread.
+- Drawings: the **Datum** tool attaches to the OD silhouette edge or the Ø dimension; the
+  **Geometric tolerance** tool only attaches its leader *during placement* (hover-click the
+  edge while the dialog is open) — a frame placed floating cannot be attached afterwards.
+- Fill the title block TITLE/DWG NO fields before export (left empty on ST-100 rev A;
+  harmless, but the shop sees it).
+
 **Gotcha that cost a rebuild:** OnShape hole tables snap their origin to real geometry, so
 an under-constrained centre bore silently offsets every coordinate in the table. MP-100's
 bore sat 0.64 mm low in Y and the table inherited it. If the table's origin will not snap

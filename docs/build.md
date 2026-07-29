@@ -27,14 +27,17 @@ the bed.
 - **Mock first, cheap**: an MDF or 3D-printed Ø210 disk + three printed/threaded-rod
   Ø16 × 62 standoffs + a blank Ø180 disk, to feel the (now much shallower) drop in the room
   before any stainless is cut.
-- **Fully spec'd and motor-independent — fab any time**: ST-100 standoffs, SP-100 spindle
-  (flange flats, thread end and cotter hole all dimensioned 2026-07-27), MP-100 ceiling
-  plate, KD-100 catcher disk, BP-100 blade prints (BL-100/LS-100 remain the fallback).
-  Start the blade root-joint filament-qualification program immediately — it is the longest
-  non-motor-gated path in the project.
-- **Stock to order now**: Ø16 6061 rod, **Ø38–40 mm** 17-4PH round bar (the SP-100 flange
-  needs the diameter; not Ø16 bar). The Ø210 × 6 mm 304 plate is no longer needed as stock —
-  MP-100 was ordered finished from JLCCNC on 2026-07-27.
+- **Ordered finished**: MP-100 (JLCCNC 2026-07-27), ST-100 (JLCCNC 2026-07-28, qty 4,
+  clear anodized), KD-100 (became a purchased DIN 440 washer — Accu 2026-07-28). BP-100
+  blade prints remain fab-any-time; start the blade root-joint filament-qualification
+  program immediately — it is the longest non-motor-gated path in the project.
+- **SP-100 is fully dimensioned but measure-first** (2026-07-28): the cotter-hole Z is set
+  from the measured KD-100 washer thickness, and the capture-gap stack wants the measured
+  GL100 axial body length before metal is cut — both measurements arrive with deliveries
+  already in transit. See parts.md > SP-100.
+- **Stock to order now**: only **Ø38–40 mm** 17-4PH round bar, and only if fabbing SP-100
+  locally rather than ordering it finished (the flange needs the diameter; not Ø16 bar).
+  The Ø16 6061 rod and Ø210 plate lines are dead — ST-100 and MP-100 ship finished.
 - **MP-100 is released** (2026-07-27): both paper decisions landed — ENC tab clocking at
   45/105/165/225/285/345° and a 15° rim cable entry replacing the deleted mid-plate slot.
   See parts.md "ENC-100 tab clocking" and "Cable entry". Never was motor-gated.
