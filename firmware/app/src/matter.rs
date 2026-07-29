@@ -404,6 +404,15 @@ pub async fn run(
 
     // Hardware TRNG seeding a reseeding CSPRNG, rather than anything derived from time —
     // these bytes end up in the commissioning session keys.
+    //
+    // TODO(temp-sense): taking ADC1 whole here is why TEMP_SENSE (GPIO6/ADC1_CH6, the
+    // motor NTC divider on PCB-01) is wired but unread — the behavioral contract's
+    // overtemperature stop currently has no input. Implementing it means sharing ADC1
+    // between TrngSource's entropy sampling and a periodic GPIO6 conversion (esp-hal's
+    // TrngSource holds the peripheral; check whether a later esp-hal exposes shared/split
+    // ADC access, else sample temperature before constructing the TRNG or drop to raw
+    // register access). Tracked in docs/electrical.md > "Open items from the 2026-07
+    // board-truth review".
     let _trng = TrngSource::new(rng, adc1);
     let crypto = default_crypto(
         reseeding_csprng(Trng::try_new().expect("the TRNG must be available"), 1000)

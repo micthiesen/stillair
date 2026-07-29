@@ -89,7 +89,39 @@ impl Setting {
 /// ```
 ///
 /// prints this table from a live device, ready to paste.
+///
+/// # Capture checklist (2026-07 board-truth review)
+///
+/// The PCB-01 wiring makes specific register fields load-bearing; a capture that leaves
+/// them at their reset defaults leaves the corresponding copper inert. The image must pin,
+/// at minimum (tests below enforce the register coverage):
+///
+/// - **`PIN_CONFIG`** — `SPEED_MODE` = 01b (PWM duty command; reset default is analog, and
+///   the board drives SPEED with a 200 Hz LEDC PWM) and `ALARM_PIN_EN` = 1 (the ALARM →
+///   GPIO14 thermal-stop path is wired and unit-tested but dead until enabled).
+/// - **`PERI_CONFIG1`** — `SPEED_RANGE_SEL` = 1h (10–325 Hz duty band; the reset default
+///   band starts at 325 Hz, above the 200 Hz carrier).
+/// - **`GD_CONFIG1`** — `OTW_REP` = 1 (thermal warnings must reach ALARM).
+/// - **`CLOSED_LOOP4.MAX_SPEED`** — the 180 RPM stored ceiling; [`max_speed_setting`]
+///   builds this entry so the masked value and the speed ladder stay in one place.
+/// - **`DEVICE_CONFIG2`** — external-watchdog fields, *only* with a satisfiable window:
+///   the board heartbeat is fixed at [`crate::config::WATCHDOG_HEARTBEAT_HZ`] (rising edge
+///   every 500 ms), so GPIO tickle mode requires `EXT_WDT_CONFIG` = 3h (1000 ms). 2h
+///   (500 ms) is edge-on-deadline and faults on jitter; 0h/1h can never pass — and 0h is
+///   the chip's reset default. The `ext_wdt` test below fails the build on a bad capture.
 pub const IMAGE: &[Setting] = &[];
+
+/// The `CLOSED_LOOP4.MAX_SPEED` image entry for a given stored ceiling, claiming only the
+/// 14 `MAX_SPEED` bits (Table 8-10) so the bench-tuned speed-loop gains in the same
+/// register stay unclaimed until they are captured.
+pub const fn max_speed_setting(max_speed: u16) -> Setting {
+    Setting::masked(
+        "CLOSED_LOOP4.MAX_SPEED",
+        reg::CLOSED_LOOP4,
+        crate::mcf8316::fields::MAX_SPEED_MASK,
+        max_speed as u32,
+    )
+}
 
 /// Why a configuration check failed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -388,6 +420,91 @@ mod tests {
             );
             assert_ne!(setting.mask, 0, "{} claims no bits at all", setting.name);
         }
+    }
+
+    #[test]
+    fn a_captured_image_pins_every_register_the_board_wiring_depends_on() {
+        // The capture checklist in [`IMAGE`]'s doc, enforced: PCB-01 wires SPEED as PWM,
+        // ALARM into the thermal-stop path, and carries the 180 RPM stored ceiling — all
+        // dead at register reset defaults. An image that omits these registers passes
+        // check() while leaving that copper inert. Trivially satisfied while IMAGE is
+        // empty; the day a capture lands, this names what it must cover.
+        if IMAGE.is_empty() {
+            return;
+        }
+        for required in [
+            reg::PIN_CONFIG,
+            reg::PERI_CONFIG1,
+            reg::GD_CONFIG1,
+            reg::CLOSED_LOOP4,
+        ] {
+            assert!(
+                IMAGE.iter().any(|s| s.address == required),
+                "captured image does not pin register {required:#05x} (see the capture \
+                 checklist on IMAGE)"
+            );
+        }
+    }
+
+    #[test]
+    fn ext_wdt_gpio_mode_requires_a_window_the_heartbeat_can_satisfy() {
+        // The round-3 board review's cross-subsystem trap: EXT_WD is wired to the same
+        // fixed heartbeat as the TPS3435, a rising edge every
+        // 1000 / WATCHDOG_HEARTBEAT_HZ ms. The MCF's GPIO tickle windows are 100/200/500/
+        // 1000 ms and the reset default is 100 ms — enabling GPIO tickle with any window
+        // that does not comfortably exceed the heartbeat period faults the instant the
+        // feature turns on. "Comfortably" = strictly greater than the edge period, which
+        // at 2 Hz admits only the 1000 ms window (500 ms is edge-on-deadline).
+        use crate::mcf8316::fields::*;
+
+        let edge_period_ms = 1_000 / crate::config::WATCHDOG_HEARTBEAT_HZ;
+        for setting in IMAGE {
+            if setting.address != reg::DEVICE_CONFIG2 {
+                continue;
+            }
+            let claims = |bits: u32| setting.mask & bits == bits;
+            let gpio_wdt_enabled = claims(EXT_WDT_EN | EXT_WDT_INPUT_MODE_GPIO)
+                && setting.value & EXT_WDT_EN != 0
+                && setting.value & EXT_WDT_INPUT_MODE_GPIO != 0;
+            if !gpio_wdt_enabled {
+                continue;
+            }
+            assert!(
+                claims(EXT_WDT_CONFIG_MASK),
+                "{}: enables GPIO watchdog tickle without claiming EXT_WDT_CONFIG — the \
+                 reset window is 100 ms, which the {edge_period_ms} ms heartbeat can never \
+                 satisfy",
+                setting.name
+            );
+            let window_ms = EXT_WDT_GPIO_WINDOW_MS
+                [((setting.value & EXT_WDT_CONFIG_MASK) >> EXT_WDT_CONFIG_SHIFT) as usize];
+            assert!(
+                window_ms > edge_period_ms,
+                "{}: EXT_WDT_CONFIG selects a {window_ms} ms window but the heartbeat's \
+                 rising edge lands every {edge_period_ms} ms — the watchdog would fault \
+                 immediately (or on the first jitter)",
+                setting.name
+            );
+        }
+    }
+
+    #[test]
+    fn the_max_speed_setting_encodes_the_stored_ceiling_and_nothing_else() {
+        use crate::mcf8316::{max_speed_to_milli_rpm, seeds};
+
+        let setting = max_speed_setting(seeds::MAX_SPEED);
+        assert_eq!(setting.address, reg::CLOSED_LOOP4);
+        // The seed value means 180 RPM through the documented scaling; the setting must
+        // carry it verbatim inside the mask.
+        assert_eq!(
+            max_speed_to_milli_rpm(seeds::MAX_SPEED, crate::config::POLE_PAIRS),
+            crate::speed::MilliRpm(crate::config::RPM_MCF_LIMIT * 1_000)
+        );
+        assert_eq!(setting.value, u32::from(seeds::MAX_SPEED));
+        // Kp/Ki live in the same register's upper bits; a register whose gains are already
+        // bench-tuned must still match, and a wrong ceiling must still fail.
+        assert!(setting.matches(0xDEAD_C000 | u32::from(seeds::MAX_SPEED)));
+        assert!(!setting.matches(0xDEAD_C000 | u32::from(seeds::MAX_SPEED + 6)));
     }
 
     #[test]

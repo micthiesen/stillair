@@ -620,11 +620,11 @@ footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
   `GD_CONFIG1.OTW_REP = 1` or the tested McfAlarm/thermal-stop path never fires;
   `DEVICE_CONFIG2.EXT_WDT_EN = 1` + `EXT_WDT_INPUT_MODE = 1` (GPIO tickle) + a deliberate
   `EXT_WDT_FAULT_MODE` choice (1h = latch Hi-Z adds a genuinely independent layer) to make
-  the wired EXT_WD pin real defense-in-depth — **and `EXT_WDT_CONFIG` MUST be 2h (500 ms)
-  or 3h (1000 ms)**: the board's heartbeat is fixed at 2 Hz (edge per 250 ms), which can
-  never satisfy the 100/200 ms windows, and 100 ms is the register's reset default —
-  naively enabling GPIO tickle without setting the window faults instantly (2026-07
-  round-3 review). Also firmware: `seeds::MAX_SPEED` (0x0168) is
+  the wired EXT_WD pin real defense-in-depth — **and `EXT_WDT_CONFIG` MUST be 3h (1000 ms)**:
+  the 2 Hz heartbeat's rising edge lands every 500 ms, so the 100/200 ms windows can never
+  pass, the 500 ms window is edge-on-deadline (faults on first jitter), and 100 ms is the
+  register's reset default. Enforced in code: `mcf_config` tests fail any captured image
+  that enables GPIO tickle with an unsatisfiable window (2026-07 round-3 review). Also firmware: `seeds::MAX_SPEED` (0x0168) is
   value-validated but not yet mapped to its host register/bit-field in `mcf8316::reg` —
   close that before the image lands. DIR/BRAKE/buck reset defaults are already the intended
   states and need no image entries.

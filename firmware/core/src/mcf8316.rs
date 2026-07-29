@@ -37,6 +37,31 @@ pub mod seeds {
 /// TI's `MAX_SPEED` register scaling: electrical Hz = `MAX_SPEED` / 6.
 pub const MAX_SPEED_PER_ELECTRICAL_HZ: u32 = 6;
 
+/// Bit-field layouts transcribed from the datasheet, for the few fields the board wiring
+/// makes load-bearing. Everything here is pinned to a specific SLLSFX9A table — the rest of
+/// the configuration block stays deliberately untranscribed (see the module doc).
+pub mod fields {
+    /// `CLOSED_LOOP4.MAX_SPEED`, bits 13–0 (Table 8-10): the 14-bit stored speed ceiling,
+    /// electrical Hz × 6. The upper bits of the register are the speed-loop Kp/Ki gains,
+    /// which a `MAX_SPEED`-only setting must not claim.
+    pub const MAX_SPEED_MASK: u32 = 0x3FFF;
+
+    /// `DEVICE_CONFIG2` external-watchdog fields (Table 8-25, offset A8h, reset 0):
+    /// enable, bit 4.
+    pub const EXT_WDT_EN: u32 = 1 << 4;
+    /// Tickle window select, bits 3–2. GPIO-mode windows: 0h=100 ms, 1h=200 ms,
+    /// 2h=500 ms, 3h=1000 ms (I²C-mode windows are 10× longer).
+    pub const EXT_WDT_CONFIG_MASK: u32 = 0b11 << 2;
+    pub const EXT_WDT_CONFIG_SHIFT: u32 = 2;
+    /// The GPIO-mode window in milliseconds for each `EXT_WDT_CONFIG` value.
+    pub const EXT_WDT_GPIO_WINDOW_MS: [u32; 4] = [100, 200, 500, 1000];
+    /// Input source, bit 1: 0h = I²C tickle, 1h = GPIO tickle (the board wires the
+    /// heartbeat GPIO to EXT_WD, so an enabled watchdog here is expected to use GPIO mode).
+    pub const EXT_WDT_INPUT_MODE_GPIO: u32 = 1 << 1;
+    /// Fault mode, bit 0: 0h = report only, 1h = latch with MOSFETs Hi-Z.
+    pub const EXT_WDT_FAULT_MODE_LATCH: u32 = 1 << 0;
+}
+
 /// Convert a `MAX_SPEED` register value to the mechanical speed it represents.
 pub fn max_speed_to_milli_rpm(max_speed: u16, pole_pairs: u32) -> MilliRpm {
     if pole_pairs == 0 {
@@ -75,6 +100,16 @@ pub mod reg {
     pub const ALGO_STATUS: u16 = 0x0E4;
     /// Device control, home of `CLR_FLT` (§9.3.1).
     pub const ALGO_CTRL1: u16 = 0x0EA;
+    /// Speed-loop gains and the `MAX_SPEED` stored ceiling (§8.3, Table 8-10).
+    pub const CLOSED_LOOP4: u16 = 0x08E;
+    /// Sleep/CSA/clock and the external-watchdog fields (§8.3.3, Table 8-25).
+    pub const DEVICE_CONFIG2: u16 = 0x0A8;
+    /// Pin muxing: `SPEED_MODE`, `ALARM_PIN_EN`, brake/dir input selects (§8.3).
+    pub const PIN_CONFIG: u16 = 0x0A4;
+    /// Peripheral config: `SPEED_RANGE_SEL` among others (§8.3.4).
+    pub const PERI_CONFIG1: u16 = 0x0AA;
+    /// Gate-driver config: OCP/OVP plus `OTW_REP` thermal reporting (§8.3).
+    pub const GD_CONFIG1: u16 = 0x0AC;
 
     /// Every register the console can name, so tuning reads like `reg read VM_VOLTAGE`
     /// rather than `reg read 0x47c`.
@@ -91,7 +126,7 @@ pub mod reg {
         ("CLOSED_LOOP1", 0x088),
         ("CLOSED_LOOP2", 0x08A),
         ("CLOSED_LOOP3", 0x08C),
-        ("CLOSED_LOOP4", 0x08E),
+        ("CLOSED_LOOP4", CLOSED_LOOP4),
         ("FAULT_CONFIG1", 0x090),
         ("FAULT_CONFIG2", 0x092),
         ("REF_PROFILES1", 0x094),
@@ -102,11 +137,11 @@ pub mod reg {
         ("REF_PROFILES6", 0x09E),
         ("INT_ALGO_1", 0x0A0),
         ("INT_ALGO_2", 0x0A2),
-        ("PIN_CONFIG", 0x0A4),
+        ("PIN_CONFIG", PIN_CONFIG),
         ("DEVICE_CONFIG1", 0x0A6),
-        ("DEVICE_CONFIG2", 0x0A8),
-        ("PERI_CONFIG1", 0x0AA),
-        ("GD_CONFIG1", 0x0AC),
+        ("DEVICE_CONFIG2", DEVICE_CONFIG2),
+        ("PERI_CONFIG1", PERI_CONFIG1),
+        ("GD_CONFIG1", GD_CONFIG1),
         ("GD_CONFIG2", 0x0AE),
         // Status and control (RAM), §9.
         ("GATE_DRIVER_FAULT_STATUS", GATE_DRIVER_FAULT_STATUS),
