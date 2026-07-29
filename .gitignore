@@ -9,3 +9,4 @@ target/
 fp-info-cache
 .history/
 *.lck
+*.kicad_pcb.bak
