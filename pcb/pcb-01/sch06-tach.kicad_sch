@@ -3628,6 +3628,6 @@
     (instances
       (project "sch06-tach"
         (path "/f6620a3f-49ba-424a-af0f-7c8c09aa1573"
-          (reference "?")
+          (reference "#FLG04")
           (unit 1)))))
 )

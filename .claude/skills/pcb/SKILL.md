@@ -172,6 +172,13 @@ so Michael can watch the block appear instead of reviewing it at the end.
 - **`add_schematic_component` silently drops its `footprint` parameter** — the call echoes the
   value back but never writes it (confirmed via `get_schematic_component`). Always set
   footprints afterward with `batch_edit_schematic_components`.
+- **`edit_schematic_component` renames the Reference property but not the `instances` block**
+  — the per-instance `(reference "…")` keeps its old value, and KiCad's netlister uses the
+  instance, not the property. Symptom: renamed power flags showed up in Update-PCB as bogus
+  components "01".."04" with no footprint. Fix by patching the instance reference (scripted
+  text edit; see scratchpad fix_flag_instances.py pattern), then verify with
+  `kicad-cli sch export netlist` + grep. Prefer `add_power_symbol` over placing
+  `power:PWR_FLAG` with `add_schematic_component` in the first place.
 - **`batch_edit_schematic_components` cannot create new fields**, only update existing ones
   (Value/Footprint work; a new `MPN` errors "Field not found"). Create fields one at a time
   with `add_component_annotation`. Fields in use: `MPN`, `LCSC`, `Note`, `DNP`.

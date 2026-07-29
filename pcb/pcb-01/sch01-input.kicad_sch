@@ -1463,7 +1463,7 @@
     (instances
       (project "sch01-input"
         (path "/f4787083-75cc-4a54-9808-7f276fa01d58"
-          (reference "?")
+          (reference "#FLG01")
           (unit 1)))))
 
   (symbol
@@ -1500,7 +1500,7 @@
     (instances
       (project "sch01-input"
         (path "/f4787083-75cc-4a54-9808-7f276fa01d58"
-          (reference "?")
+          (reference "#FLG02")
           (unit 1)))))
 
   (symbol
@@ -1537,6 +1537,6 @@
     (instances
       (project "sch01-input"
         (path "/f4787083-75cc-4a54-9808-7f276fa01d58"
-          (reference "?")
+          (reference "#FLG03")
           (unit 1)))))
 )
