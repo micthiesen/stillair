@@ -2009,7 +2009,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" "RF_Module:ESP32-C6-MINI-1"
+    (property "Footprint" "pcb01-parts:ESP32-C6-MINI-1_BodyCourtyard"
       (at 139.7 100.33 0)
       (hide yes)
       (effects

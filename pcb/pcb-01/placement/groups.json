@@ -1,0 +1,51 @@
+{
+  "_comment": "Placement group definitions for PCB-01. Regions are absolute board mm (KiCad frame, Y down; board spans x50-128, y50-108, lower-left = (50,108)). Regions are mutually disjoint; pinned anchors inside a region are listed as obstacles in the generated brief.",
+  "pinned": ["J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "U1", "U2", "U3", "L1", "C1", "C2", "C6", "SW3", "H1", "H2", "H3", "H4"],
+  "groups": {
+    "input": {
+      "region": [51.5, 60, 74, 87],
+      "members": ["F1", "Q1", "R1", "R2", "D1", "D2", "C3", "C4", "C5", "TP1", "TP2", "TP3"],
+      "intent": "24V entry chain: J1 (pinned, left edge, pin1=RAW24 upper) -> F1 (DNP bridge fuse) -> Q1 reverse PMOS (pad2=drain=RAW24, pad3=source=VM24) -> VM24 joins C1/C2 bulk (pinned radials) then flows east to the MCF. Keep the RAW24->Q1->VM24 path short and wide. Gate network R1 (10k to AGND), R2 (100k gate-source), D1 zener (pad1=cathode=VM24, pad2=anode=gate) cluster tight at Q1's gate. D2 SMCJ24A TVS (pad1=cathode=VM24, pad2=anode=PGND) adjacent to the VM24 node. C3/C4 10uF + C5 100nF are the MCF-loop ceramics: place at the region's EAST edge so they sit beside U1's VM pins. TP1=RAW24 near J1, TP2=VM24, TP3=PGND probe-accessible."
+    },
+    "mcf_west": {
+      "region": [74, 80, 82, 101],
+      "members": ["C12", "C13", "C15", "C16", "R8", "R9", "R10", "TP8", "TP16"],
+      "intent": "West flank of U1 (MCF8316D, pinned at (85,88), pins 1-12 on its west edge x=82.9, pin1=DVDD at north end going south: DVDD,FB_BK,GND_BK,SW_BK,CPL,CPH,CP,VM,VM,VM,PGND at y84.9..90.4). L1 (buck inductor, pinned at (76,93)) and C16 (buck out 22uF) form the buck loop with SW_BK/FB_BK/GND_BK pins: C16 directly south of or beside L1, loop tight. C12 (1uF CP-to-VM) and C13 (47nF CPH-CPL) are charge-pump caps: as close to pins 6/7/8 as possible. C15 (1uF DVDD) tight to pin 1. R8/R9/R10 (BRAKE/DIR/SPEED pulldowns to AGND, pins 35/34/28 on... those pins are actually on the symbol west but on the FOOTPRINT they are south-west corner pins 21,28,30-35 region) - place along the south of the region. TP8=MCF_DVDD near C15, TP16=MCF_EXT_WD."
+    },
+    "mcf_east": {
+      "region": [88.5, 72, 94, 84],
+      "members": ["C14", "R4", "R5", "R6", "R7", "TP7", "TP12", "TP17", "TP18", "TP19", "TP20"],
+      "intent": "East/north flank of U1 (pinned at (85,88); its footprint east edge x=87.1 carries pins 21-32 south-to-north: DRVOFF,NC*4,AGND,AVDD,SPEED,FG,SDA,SCL,EXT_WD at y85..91; north edge carries pins 33-40). C14 (1uF AVDD bypass) as close to the region's west edge / U1 pin 27 as possible. R4/R5 (FG/nFAULT 4.7k pullups to 3V3), R6/R7 (SDA/SCL 4.7k pullups): tidy pairs. TP12=DRVOFF, TP7=MCF_AVDD, TP17=NFAULT, TP18=SDA, TP19=SCL, TP20=FG in an accessible probe row."
+    },
+    "v33": {
+      "region": [76, 52, 98, 68],
+      "members": ["C7", "C8", "C9", "C10", "C11", "JP1", "R3", "TP4", "TP5", "TP9", "TP28"],
+      "intent": "3.3V buck module U3 (pinned at (85,61); RDN footprint: west edge has pin3 VIN at y57.8/pin2 EN/pin11 MODE top-to-bottom on x82.4; east edge pin4 VOUT y57.8/pin9 BIAS/pin8 VCC/pin1 PGOOD; south half is the two big VOUT/SW power pads). Input caps C7 (2.2uF) + C8 (100nF) tight to VIN on the west, VM24 arrives from the south-west. Output caps C9/C10 (22uF) tight to VOUT east. C11 (1uF VCC) near pin 8. JP1 mode jumper reachable, R3 (PGOOD pullup) near pin 1. TP5=3V3, TP9=PGOOD, TP4=AGND probe, TP28=AGND probe spread for scope grounds."
+    },
+    "esp_usb": {
+      "region": [96, 52, 111, 79],
+      "members": ["C17", "C18", "C19", "C20", "R11", "R12", "R13", "R14", "R15", "R16", "R17", "R18", "R19", "R20", "R21", "R55", "R56", "R57", "R58", "U12", "SW1", "SW2", "TP13", "TP14", "TP25", "TP26"],
+      "intent": "Support for U2 ESP32-C6 module (pinned; its west pad column is at x=114.1, y57-69 - your region's east boundary faces it) and J6 USB-C (pinned at top edge (104,53)) and J7 TC2030 (pinned obstacle at (107.5,78.5)). C17 (22uF) + C18 (100nF) 3V3 decoupling at the region's east edge near the module's 3V3 pad (pad 5 'IO13'... the 3V3 pin is pad 3 at (116.6,68.9)-ish - closest approach is your SE corner). USB chain northward: J6 -> R20/R21 (22R series) -> U12 TPD2EUSB30 ESD -> module: keep R20/R21/U12 between J6 and the module, short. R55/R56 (5.1k CC pulldowns) + R57/R58 (VBUS divider) + TP25 (VBUS_SENSE) tight to J6. SW1 (EN/reset) + R11/C19 EN network together; SW2 (BOOT) + R12; R13 (GPIO8 pullup); buttons pressable, not under the module. R16/R17 (I2C 0R links), R14/R15 (100R SPEED/DIR series) at the region's SW corner heading toward the MCF. R18 (MCU_CLEAR_N pullup), R19+C20 (NTC divider). TP13=WD_HEARTBEAT, TP14=WDO, TP26=AGND probe."
+    },
+    "permission": {
+      "region": [94, 79, 104, 98],
+      "members": ["U5", "U10", "Q2", "C22", "R24", "R25", "R26", "R27", "R28", "R29", "R30", "D3", "D4", "D5", "D6", "D7", "TP10", "TP11", "TP24", "TP27"],
+      "intent": "Safety permission latch. U5 (SN74LVC1G74 latch) central. Q2 2N7002K (pad1=gate, pad2=source=AGND, pad3=drain=DRVOFF) at the region WEST edge - its drain net DRVOFF runs to U1 pin 21 on U1's east edge, keep that run short. R26 (1k U5.Q->gate) + R27 (100k gate pulldown) at Q2. R28 (4.7k DRVOFF pullup to MCF_AVDD) near Q2. R24 (100R ARM_PULSE series) + R25 (100k CLK pulldown) at U5's CLK side. Wired-OR: R29 (10k pullup) + five BAT54H diodes D3-D7 (pad1=cathode=fault source, pad2=anode=U5_CLR_OR node) in a tidy bank feeding U10 (Schmitt buffer) -> U5 CLR. C22 (100nF) tight to U10 VCC. D7's cathode goes to SW3 manual-clear button (pinned at south edge (97,101.5)) - put D7/R30 nearest SW3. TP10=U5_CLR_OR, TP11=U5_Q, TP24=OVERSPEED_N, TP27=PGND probe."
+    },
+    "lock_wd": {
+      "region": [104, 79, 112, 94],
+      "members": ["U6", "U11", "C23", "C24", "R31", "D8", "U7", "C25", "R32", "R33", "R34", "R35", "R36", "R37", "R38", "TP15"],
+      "intent": "North half: U6 persistent lock (second 1G74) + its delayed-preset chain: R31 (100k) -> C23 (10uF RC) -> U11 Schmitt -> U6 /PRE, with D8 (pad1=cathode=PGOOD, pad2=anode=RC node) discharge diode; keep R31/C23/D8/U11 a compact chain, C24 (100nF) tight to U11 VCC. J7 (pinned obstacle at (107.5,78.5), courtyard (104-111, 76.5-80.5)) intrudes at your NW corner. South half: U7 TPS3435 watchdog with C25 (100nF) tight to VDD, R32/R33 (SET0/1 to AGND) beside it, R34 (MR pullup), R35 (WD-EN pullup), R36 (100R heartbeat->WDI), R37 (10k WDO pullup), R38 (100R heartbeat->MCF EXT_WD; EXT_WD is U1 pin 32 to the WEST - put R38 at the west edge). TP15=WD_MR."
+    },
+    "tach": {
+      "region": [112, 79, 127, 94],
+      "members": ["U8", "C33", "C34", "C32", "C35", "C36", "C37", "C38", "C39", "C40", "R43", "R44", "R45", "R46", "R47", "R48", "RV1", "Q3", "U9", "D9", "C41", "R42", "R49", "R50", "R51", "R52", "R53", "R54", "TP21", "TP22", "TP23"],
+      "intent": "Analog tach chain, now allowed in the antenna band (copper keepout stays; parts are low-profile so RF impact accepted). U8 LM2907 SOIC-14 central-west (pin1 top-left going CCW; left column pins 1-7 at its west edge, right column 8-14 east). Level shift at NW: Q3 2N7002 (pad1=gate=HALL_TACH, pad2=source=AGND, pad3=drain) + R43 (100k gate pulldown) + R44 (10k drain pullup to +12V_TACH) + R45 (100R drain->U8 pin 1). C34 (100nF 1% timing, U8 pin 2 to AGND) TIGHT to pin 2 - most critical cap in the group. R46/R47 (10k/10k TACH_BIAS divider) + C33 (100nF) at pin 11. Rscale: R48 (562k) + RV1 trimmer (rheostat) from pin 3, RV1 adjustable from above - keep its screw clear. C35 (2.2uF C2 filter) at pin 3; C36-C40 are DNP alternates - tidy row near C35. R49 (10k emitter load) at pin 5. Trip stage east: U9 TLV1701 (pin1=IN+ VREF, pin3=IN- via R51 47k from VTACH, pin4=OUT=OVERSPEED_N, pin5=V+ 3V3, pin2=V-), D9 BAT54S clamp (pad3=common) at IN-, C41 (100nF) at U9 V+, R52/R53 (VREF divider 10k/35.7k), R54 (90.9k hysteresis OVERSPEED_N->VREF), R50 (10k OVERSPEED_N pullup), R42 (10k TACH_PGOOD pullup, same node). TP21=HALL_TACH, TP22=VTACH, TP23=VREF. Avoid the H4 hole keepout (circle r4 at (122,56) is far north of you; H2 keepout circle r4 at (122,102) is south of you - both outside this region)."
+    },
+    "ldo": {
+      "region": [105, 94, 121.5, 102.5],
+      "members": ["U4", "R39", "C26", "C27", "C28", "C29", "C30", "C31", "R40", "R41", "TP6"],
+      "intent": "Protected 12V tach rail. Power flows: VM24 -> R39 (47R 1W 2512, give it a little breathing room for heat) -> U4 TPS7A1601 MSOP-8 (pin8=IN west-ish, pin1=OUT, pin3=PG, pin7=DELAY, pin4+EP=GND) -> +12V_TACH north to the tach group. C26 (10uF 63V) + C27 (100nF) input caps tight to IN; C28 (10uF 25V) + C29 (100nF) output caps tight to OUT. R40/R41 (910k/100k 0.1% FB divider) + C30 (10nF feed-forward) compact at FB. C31 (10nF DELAY) at pin 7. TP6=+12V_TACH. Obstacles: J8 scope header (pinned, box (115,99.6)-(119,102.5) intrudes at your south edge), H2 hole keepout circle r4 at (122,102) clips your SE corner."
+    }
+  }
+}
