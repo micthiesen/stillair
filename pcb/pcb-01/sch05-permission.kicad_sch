@@ -1701,6 +1701,38 @@
       (justify left bottom))
     (uuid "8dd132f8-5128-403a-978a-bb479b5b0fd3"))
 
+  (label "3V3"
+    (at 50.8 144.78 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "195a72aa-5dcf-4195-bb90-5be91cdc6ecb"))
+
+  (label "AGND"
+    (at 50.8 152.4 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "9e1d6b70-5663-4c48-a87a-88abe085477b"))
+
+  (label "3V3"
+    (at 63.5 144.78 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "faa63232-3096-40d7-aca4-3071d96c3f32"))
+
+  (label "AGND"
+    (at 63.5 152.4 0)
+    (effects
+      (font
+        (size 1.27 1.27))
+      (justify left bottom))
+    (uuid "abe1b98c-29aa-43c9-bd7e-2fda2271159d"))
+
   (global_label "3V3"
     (shape bidirectional)
     (at 87.63 36.83 0)
@@ -1866,14 +1898,18 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "SN74LVC1G74DCTR"
+    (property "MPN" "SN74LVC1G74DCTR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-        (property "LCSC" "C840104"
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
+    (property "LCSC" "C840104"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2162,10 +2198,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2202,10 +2240,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2242,10 +2282,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2282,10 +2324,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2322,10 +2366,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2434,10 +2480,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "SN74LVC1G17DCKR"
+    (property "MPN" "SN74LVC1G17DCKR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2510,10 +2558,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "SN74LVC1G74DCTR"
+    (property "MPN" "SN74LVC1G74DCTR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2622,10 +2672,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "BAT54H"
+    (property "MPN" "BAT54H"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2662,10 +2714,12 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "SN74LVC1G17DCKR"
+    (property "MPN" "SN74LVC1G17DCKR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -2738,14 +2792,18 @@
       (effects
         (font
           (size 1.27 1.27))))
-        (property "MPN" "TPS3435CAKAGDDFR"
+    (property "MPN" "TPS3435CAKAGDDFR"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-        (property "LCSC" "C6339182"
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
+    (property "LCSC" "C6339182"
       (at 0 0 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+      (effects
+        (font
+          (size 1.27 1.27))
+        (hide yes)))
     (instances
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
@@ -3038,5 +3096,85 @@
       (project "sch05-permission"
         (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
           (reference "C25")
+          (unit 1)))))
+
+  (symbol
+    (lib_id "Device:C")
+    (at 50.8 148.59 0)
+    (unit 1)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "06038652-affe-45b6-80dd-975dc7dd1fa6")
+    (property "Reference" "C42"
+      (at 50.8 144.78 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Value" "100nF"
+      (at 50.8 152.4 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+      (at 50.8 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Datasheet" ""
+      (at 50.8 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+        (property "Note" "U5 fault-latch VCC decoupling (added 2026-07 review)"
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "sch05-permission"
+        (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
+          (reference "C42")
+          (unit 1)))))
+
+  (symbol
+    (lib_id "Device:C")
+    (at 63.5 148.59 0)
+    (unit 1)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid "2fe6c892-08b4-4e91-86bf-27de80ad7c1c")
+    (property "Reference" "C43"
+      (at 63.5 144.78 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Value" "100nF"
+      (at 63.5 152.4 0)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+      (at 63.5 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+    (property "Datasheet" ""
+      (at 63.5 148.59 0)
+      (hide yes)
+      (effects
+        (font
+          (size 1.27 1.27))))
+        (property "Note" "U6 overspeed-latch VCC decoupling (added 2026-07 review)"
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) (hide yes))
+    )
+    (instances
+      (project "sch05-permission"
+        (path "/63ecd561-e244-4052-97b3-4a0ab8bf0562"
+          (reference "C43")
           (unit 1)))))
 )

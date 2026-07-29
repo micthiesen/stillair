@@ -2535,7 +2535,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "MPN" "BM04B-SRSS-TB"
+    (property "MPN" "SM04B-SRSS-TB(LF)(SN)"
       (at 0 0 0)
       (effects
         (font

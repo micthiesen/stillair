@@ -486,7 +486,14 @@ representative ~1–3% duty cycle, not 50%** (2026-07 review: the real magnet ar
 ~4 ms pulses at 200 RPM, marginal against the LM2907 charge-pump slew at min-spec pump
 current — 50%-duty calibration masks it; also measure the actual Hall pulse width vs speed
 during commissioning). Allow at least 30 seconds settling, adjust for trip at 3.333 Hz, and
-verify raw reset near 3.000 Hz. Bench note: bladeless motor-only runs accelerate far faster
+verify raw reset near 3.000 Hz. **Per-unit trim is mandatory, not optional**: the LM2907's
+gain constant K carries a ±10% datasheet tolerance, which alone moves an untrimmed trip
+point ±20 RPM (180–220 RPM at mid-scale) — larger than every other tolerance in the chain
+combined (<3%). Expect ±10 RPM of run-to-run scatter at the threshold: output ripple with
+C2 = 2.2 µF (~0.27 V pk-pk) is about equal to the comparator's 0.26 V hysteresis window.
+The latch is immune (chatter only extends the assertion), but if calibration scatter is
+troublesome, populating a larger C2 from the C36–C40 DNP bank is the intended fix, at the
+cost of dynamic-trip lag (see the two-tier claim below). Bench note: bladeless motor-only runs accelerate far faster
 than any filter can track — rely on MCF current/power limits, not the analog trip, when no
 rotor is fitted.
 
@@ -593,11 +600,30 @@ footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
 - **SMCJ24A max clamp (38.9 V) vs MCF abs-max (40 V)** — 1.1 V margin at full rated surge;
   acceptable on a desktop-supply input, revisit if the supply changes.
 - **No TP on SPEED** (probeable only via DNP J8); add TP29 in V2 if bench work wants it.
+- **Cold-plug VM ramp rate: analyzed safe** (2026-07 review raised the MCF's 4 V/µs VM
+  abs-max ramp vs no inrush limiting): the 940 µF bulk bank sits directly on the VM pins,
+  so dV/dt = I/C — reaching 4 V/µs would take ~3.8 kA. Physically excluded with the 60 W
+  desktop supply. The real cold-plug stress is inrush through Q1's body diode and the J1
+  contacts; scope it at commissioning (bench note already in the build plan).
+- **No ESD/series protection on the J3/J4 sensor pigtails or the buttons** (USB has U12).
+  Enclosure-internal in V1; revisit for V2 if any of these become user-accessible.
 - **J7 pin 1 ties to 3V3 directly** — don't use a programmer that actively drives 3.3 V
   while 24 V is connected.
 - **Firmware TODO**: TEMP_SENSE (GPIO6/ADC1) is wired but unread — ADC1 is currently
   consumed whole by the Matter TRNG; needs a shared-ADC arrangement to implement the
   overtemperature input. (WDO on GPIO23 is deliberately unread — see docs/controls.md.)
+- **MCF register-image capture checklist** (the `mcf_config::IMAGE` bench capture is
+  deliberately empty until a device is measured; when captured, the image MUST cover these
+  or the board wiring stays inert on virgin silicon — 2026-07 review): `PIN_CONFIG.
+  SPEED_MODE = 01b` (PWM duty) and `PERI_CONFIG1.SPEED_RANGE_SEL = 1h` (10–325 Hz band, the
+  200 Hz LEDC carrier) or the SPEED pin reads as analog; `PIN_CONFIG.ALARM_PIN_EN = 1` +
+  `GD_CONFIG1.OTW_REP = 1` or the tested McfAlarm/thermal-stop path never fires;
+  `DEVICE_CONFIG2.EXT_WDT_EN = 1` + `EXT_WDT_INPUT_MODE = 1` (GPIO tickle) + a deliberate
+  `EXT_WDT_FAULT_MODE` choice (1h = latch Hi-Z adds a genuinely independent layer) to make
+  the wired EXT_WD pin real defense-in-depth. Also firmware: `seeds::MAX_SPEED` (0x0168) is
+  value-validated but not yet mapped to its host register/bit-field in `mcf8316::reg` —
+  close that before the image lands. DIR/BRAKE/buck reset defaults are already the intended
+  states and need no image entries.
 
 ## V1-to-V2 gates
 
