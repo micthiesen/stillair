@@ -1,2 +1,10 @@
 target/
 .DS_Store
+
+# KiCad
+# .kicad_prl is per-user editor state; .history/ is KiCad 10's local-history
+# directory, which carries its own nested git repo.
+*.kicad_prl
+*-backups/
+fp-info-cache
+.history/

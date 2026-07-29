@@ -134,7 +134,9 @@ This overrides the global draft-PR workflow.
 - `testing/` — `test-matrix.csv`, the pass/fail commissioning matrix with sign-off fields.
 - `cad/` — fabrication outputs (DXF/STEP/print files) exported from OnShape when parts near
   release. The OnShape model itself is not in the repo.
-- `pcb/` — KiCad project for the 78 × 58 mm V1/V2 controller board (not started).
+- `pcb/` — KiCad project for the 78 × 58 mm V1/V2 controller board: `pcb/pcb-01/` (PCB-01),
+  driven through the Konnect MCP server. See the `/pcb` skill before touching any `.kicad_*`
+  file — those are never edited as text.
 - `firmware/` — Rust `no_std` supervisor firmware: `core/` (host-testable contract) and
   `app/` (ESP32-C6 binary).
 
@@ -204,6 +206,7 @@ patterns, `unseamless-coop` for the session-continuity system). Shared AI toolin
 
 ## On-demand procedures live in skills
 
+- **/pcb** — KiCad + Konnect: capture, board setup, validation, and the agent/human split.
 - **/next** — decide the next step: candidates, gating analysis, recorded in STATE.md.
 - **/wrap** — conclude a session: sweep learnings into their homes, rewrite STATE.md, commit,
   push.

@@ -1,0 +1,28 @@
+{
+  "default_passives": {
+    "bulk_cap": "10uF X5R 0805",
+    "decoupling_cap": "100nF X7R 0402"
+  },
+  "design_rules": [
+    "Board is PCB-01: 78.0 x 58.0 mm, R3 corners, 4-layer FR-4 1.6 mm, 2 oz outer / 1 oz inner copper, ENIG finish. Do not change the outline or stackup without asking.",
+    "Four mounting holes: 3.2 mm NPTH at (6,6), (72,6), (6,52), (72,52) mm from the lower-left. Holes are isolated from circuit ground; keep all copper and components outside an 8 mm diameter circle around each.",
+    "Layer plan: L1 components and short MCF switching loops; L2 continuous AGND under logic and RF with a local PGND island only under the motor stage, joined once beside the MCF through a wide net tie; L3 VM24 and 3.3 V distribution with ground fill; L4 quiet signals and ground.",
+    "No copper on any layer under the ESP32-C6 antenna. Apply Espressif's all-layer keepout and place the antenna at the outward board edge.",
+    "Keep motor phases, both switch nodes, and motor-current return out of the tachometer region. Route HALL_TACH and VTACH over uninterrupted AGND, away from OUTA/B/C.",
+    "The analog overspeed chain (DRV5033 Hall -> LM2907 -> TLV1701 -> U6 latch -> DRVOFF) must function with no firmware and no MCF participation. Never route any part of that path through the ESP32-C6.",
+    "At least 12 thermal vias under and around the MCF8316D exposed pad; request POFV (copper-filled and capped) vias from JLCPCB, drill 0.25-0.35 mm.",
+    "Keep bulk capacitors within 10-15 mm of the MCF power return, and keep the TPSM365R6 input loop compact.",
+    "Every component must have an MPN that matches a line in bom/bom.csv, and an LCSC part number where one exists, so the JLCPCB PCBA option stays open.",
+    "V1 is deliberately over-instrumented. Every signal listed in docs/electrical.md > Test points gets a real probe pad; do not economize on test points or probe grounds."
+  ],
+  "fab_constraints": {
+    "fab_house": "JLCPCB",
+    "layer_count": 4,
+    "min_clearance_mm": 0.16,
+    "min_trace_width_mm": 0.16,
+    "min_via_drill_mm": 0.3
+  },
+  "naming_conventions": {
+    "net_prefix_ground": "GND"
+  }
+}

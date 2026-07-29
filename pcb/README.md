@@ -1,10 +1,26 @@
 # PCB
 
 KiCad project for the 78 × 58 mm V1/V2 controller board (schematic capture, layout, fab
-outputs). Not started yet; the complete circuit-level handoff (outline, schematic blocks,
-starting values, pinouts, placement zones, layer plan, test points) is
+outputs). The complete circuit-level handoff (outline, schematic blocks, starting values,
+pinouts, placement zones, layer plan, test points) is
 [../docs/electrical.md](../docs/electrical.md), and the V1-to-V2 gate list is at the bottom
 of that doc.
+
+## Projects
+
+- `pcb-01/` — the controller board (**PCB-01**). Created 2026-07-28, empty apart from the
+  KiCad scaffolding; schematic capture is the next step.
+- PCB-02, the 18 × 8 mm DRV5033 Hall daughterboard, gets its own project when PCB-01 is
+  captured. It rides in the same fab order.
+
+## Tooling
+
+KiCad 10 plus the [Konnect](https://github.com/mixelpixx/Konnect) MCP server, wired up in
+`.mcp.json` (Claude Code) and `~/.codex/config.toml` (Codex). The operating manual — who
+drives what, session startup, and the quirks — is the **`/pcb` skill** at
+[`.claude/skills/pcb/SKILL.md`](../.claude/skills/pcb/SKILL.md). Board constraints and the
+safety-critical routing rules are committed as Konnect project config in
+`pcb-01/.konnect/project.json`, so the agent reads them without being told.
 
 Fabrication is planned through JLCPCB; JLCPCB assembly vs hand-population is TBD (prefer
 footprints/parts in the LCSC catalog where it doesn't compromise the design, so the PCBA
