@@ -765,7 +765,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" ""
+    (property "Footprint" "pcb01-parts:TPSM365R6_RDN0011A"
       (at 110.49 69.85 0)
       (hide yes)
       (effects

@@ -1854,7 +1854,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" ""
+    (property "Footprint" "pcb01-parts:TI_SM8_DCT0008A"
       (at 85.09 49.53 0)
       (hide yes)
       (effects
@@ -2498,7 +2498,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" ""
+    (property "Footprint" "pcb01-parts:TI_SM8_DCT0008A"
       (at 199.39 49.53 0)
       (hide yes)
       (effects

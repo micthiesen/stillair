@@ -1442,7 +1442,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" ""
+    (property "Footprint" "Inductor_SMD:L_Sunlord_SWPA6045S"
       (at 95.25 85.09 0)
       (hide yes)
       (effects
@@ -1844,7 +1844,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Footprint" ""
+    (property "Footprint" "pcb01-parts:MCF8316D_RGF0040E"
       (at 139.7 90.17 0)
       (hide yes)
       (effects
