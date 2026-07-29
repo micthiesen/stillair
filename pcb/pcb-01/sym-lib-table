@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+
+  (lib (name "pcb01-parts") (type "KiCad") (uri "/Users/michael/Code/stillair/pcb/pcb-01/pcb01-parts.kicad_sym") (options "") (descr ""))
+)

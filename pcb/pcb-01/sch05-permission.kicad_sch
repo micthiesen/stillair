@@ -1,0 +1,9 @@
+(kicad_sch
+  (version 20250610)
+  (generator "konnect")
+  (generator_version "10.0")
+  (uuid "63ecd561-e244-4052-97b3-4a0ab8bf0562")
+  (paper "A4")
+
+  (lib_symbols)
+)
