@@ -8,3 +8,4 @@ target/
 *-backups/
 fp-info-cache
 .history/
+*.lck
