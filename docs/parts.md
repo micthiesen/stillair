@@ -109,6 +109,9 @@ numbers, tether anchor, and the pre-drill verification checklist in
 
 ## ST-100 carrier standoffs
 
+> **Rev A released 2026-07-28**: [`cad/ST-100_revA.step`](../cad/ST-100_revA.step) and
+> [`cad/ST-100_revA.pdf`](../cad/ST-100_revA.pdf). Any change from here is a rev B.
+
 Three Ø16.0 × 62.0 ±0.10 mm 6061-T6 posts, end squareness 0.05 mm, M6 × 1 tapped at least
 12 mm deep at both ends. (Shortened from 138.0 in the 2026-07-27/28 rotor raise — see
 [mechanical.md](mechanical.md) > Envelope; the vertical-PCB assumption that sized the 138
