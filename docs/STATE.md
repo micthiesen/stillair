@@ -3,38 +3,39 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-30** (mid-routing checkpoint: PCB-01 power + USB + ESP routed,
-buck loop and tach analog remain.)
+Last updated: **2026-07-30** (routing session 2 wrap: power complete through the buck loop,
+NT1 ground tie made real, USB + ESP done; digital fan-out and tach analog remain.)
 
 ## Now
 
-- **PCB-01 routing is ~60% done** (Michael lays copper, Claude sequences — working well
-  as label-level step-by-step). Done: L2 ground planes (AGND + PGND island meeting only
-  at NT1), antenna keepout, motor phases (B.Cu diagonals into J2 after the U↔W pin swap),
-  the whole MCF west-side cluster, input stage (J1 → fuse → reverse-PMOS → planes), L3
-  split into `vm24-plane`/`3v3-plane` with via-storm distribution, the 3.3 V regulator,
-  USB (connector fan-out + FS diff pair + ESD), ESP power/grounds. Rationale for every
-  non-obvious call → [electrical.md](electrical.md) "Routing notes".
-- **Remaining to route**: MCF buck loop (pins 3/5 → L1/C16 — the hardest corridor, B.Cu
-  dives, in progress), digital signal fan-out (ESP ↔ MCF ↔ watchdog: SDA/SCL, SPEED, DIR,
-  FG, EN/BOOT, PGOOD, EXT_WD, heartbeat), tach + safety analog block (Hall → LM2907 →
-  comparator → latch, the most placement-sensitive), +12 V tach LDO, leftover connectors/
-  TPs, then B.Cu AGND fill + L3 leftover ground fill + final stitch, full DRC, and the
-  scripted silkscreen cleanup (Claude, KiCad closed). 283 ratsnest items at checkpoint.
-- **DRC discipline held**: all error classes at baseline waiver families; via-diameter
-  and stacked-via slips caught and fixed same-chunk. `kicad-cli pcb drc` on a saved file
-  is the fast loop (no UI round-trip).
-- **Layout-lock amendments** (routing-driven, all recorded): J2 phase order U↔W, C15 and
-  C12 rotated 180°, net classes actually persisted to `.kicad_pro` (the setup script had
-  silently never run).
-- **Mechanical/ordering unchanged**: motor still in transit; SP-100 waits on measurements.
+- **PCB-01 routing: all power + USB + ESP done, validated at DRC baseline** (every
+  violation class matches the documented waiver families; 276 ratsnest items remain, all
+  planned). Done since capture: L2 AGND plane + PGND island (joined ONLY at NT1 — whose
+  pad vias were nearly forgotten; see the new /pcb quirk), phases to J2 (U↔W pin swap),
+  full MCF power cluster including the buck loop (C13/C15 column rearranged live to open
+  via space — remote geometry analysis failed three times where the shove-router
+  succeeded), input stage, L3 `vm24-plane`/`3v3-plane` split with via-storm distribution,
+  3.3 V regulator, USB FS diff pair + ESD, ESP power/grounds. Board min via now 0.4/0.2.
+  All whys → [electrical.md](electrical.md) "Routing notes (2026-07, in progress)".
+- **Remaining to route** (in planned order): digital signal fan-out (ESP ↔ MCF ↔ watchdog:
+  SDA/SCL, SPEED, DIR, FG, EN/BOOT, PGOOD, EXT_WD/TP16, heartbeat, TEMP_SENSE, J4/J5/J7),
+  tach + safety analog block (Hall → LM2907 → RV1 → comparator → latch → DRVOFF; most
+  placement-sensitive, +12 V LDO feed via R39 whose VM24 side is already stitched),
+  stragglers (J8 DNP header thin traces), then B.Cu AGND ground fill + L3 leftover ground
+  fill + stitching, final DRC to baseline, and the scripted silk cleanup (Claude, KiCad
+  closed).
+- **Workflow that's proven**: small chunks in pad-number + net-name vocabulary, Michael
+  threads with walkaround, `kicad-cli pcb drc` on each save diffed against the waiver
+  baseline, structural changes (cap rotations/rearrangements) sanctioned when corridors
+  are provably dead. Deferred-AGND rule: west of U1, AGND is F.Cu-only (island below);
+  R1/R8–R10/C16 AGND stragglers wait for the B.Cu fill.
+- **Mechanical/ordering unchanged**: motor in transit; SP-100 waits on measurements.
 
 ## Next
 
-**Finish routing PCB-01** — buck loop, then digital fan-out, then tach analog (guide
-chunk-by-chunk in pad-label vocabulary; Michael threads, walkaround negotiates). Then
-fills + final DRC + silk sweep. After that: fab-output pass (gerbers/pos/BOM via the /pcb
-skill manufacture path).
+**Finish routing PCB-01** — digital fan-out first (chunked like the power steps), then the
+tach analog block, then fills + final DRC + waiver-count re-triage (open task) + silk
+sweep. After that: fab-output pass (gerbers/pos/BOM via the /pcb skill manufacture path).
 
 ## Candidates Not Chosen
 
@@ -47,11 +48,10 @@ skill manufacture path).
 
 ## Learned Recently
 
-- **Routing decisions + ground/plane architecture** → [electrical.md](electrical.md)
+- **NT1/net-tie vias, stale-fill DRC phantoms, zone-name reuse** → /pcb skill quirks
+  (all three bit us this session).
+- **Buck-loop resolution + all routing decisions** → [electrical.md](electrical.md)
   "Routing notes (2026-07, in progress)".
-- **J2 phase pinout change** → SCH-07 connector table in electrical.md.
-- **Waiver counts drift with rotations/net-class changes** — re-triage at session end
-  (task open); J7's Tag-Connect keepout self-flag excluded in-UI as benign.
-- **Step-by-step routing workflow** (small chunks, pad-number + net-name vocabulary,
-  screenshots at checkpoints, headless DRC between steps) — candidate for the /pcb skill
-  once routing completes and the pattern is proven end-to-end.
+- **Remote mm-level geometry analysis has a floor**: three derived via placements failed
+  where live shove-routing worked — hand corridor *topology* and constraints to the
+  person at the screen, not coordinates, once gaps drop under ~1 mm.

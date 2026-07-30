@@ -604,6 +604,15 @@ Decisions made while laying copper; the board file is the authority, these are t
 - **Net classes** (Phase/Power24 2.0 mm + 1.0/0.5 via, Rail3V3 0.5, Tach12V 0.4, all
   0.2 clearance) are now genuinely in `pcb-01.kicad_pro` — the planned setup script had
   never run; clearances above 0.2 would false-fire on U1's 0.5 mm pitch.
+- **Buck loop (U1 pins 3/5 → L1/C16)**: the C13/C15 cap column was rearranged to open a
+  via plaza (the original arrangement left no legal via spot for the two B.Cu dives —
+  three remote analyses failed before the live shove-router pass succeeded). SW node runs
+  on B.Cu under the PGND island; 0.3 necks, 0.4 runs, 0.5 vias. Board min via lowered to
+  0.4/0.2 (JLCPCB 4-layer standard) while solving this.
+- **NT1 requires its own vias** — the net-tie pads are F.Cu-only and the ground planes
+  are L2, so the tie is only real once each pad has a via into its plane. Caught by the
+  unconnected-items list during validation, not by any violation: a missing net-tie via
+  is silent in DRC error classes. One via per pad placed 2026-07-30.
 
 ## Open items from the 2026-07 board-truth review
 

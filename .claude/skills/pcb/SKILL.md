@@ -145,6 +145,21 @@ so Michael can watch the block appear instead of reviewing it at the end.
 
 ## Quirks (add to this list)
 
+- **`kicad-cli pcb drc` does not refill zones** — it checks against the fill saved in the
+  file. A via added after the last `B` shows as a 0.000 mm clearance + hole_clearance pair
+  against the zone it pierces. Refill (`B`) + save in KiCad, then re-run. Routing-session
+  loop that works: Michael saves, Claude runs
+  `kicad-cli pcb drc --format json --severity-all` and diffs the type counts against the
+  documented baseline in `placement/waivers.md`.
+- **Net-tie footprints need a via per pad before the tie exists.** NetTie pads are F.Cu-only;
+  if the tied nets live on inner planes, the tie is vapor until each pad gets a via into its
+  plane. No DRC *violation* fires for this — it appears only as unconnected-items ratsnest,
+  so check the unconnected list for the net-tie ref explicitly during routing validation.
+- **Zone dialog reuses the last zone's name** — drawing a second zone right after the first
+  silently inherits its name (nets are set per-zone and stay correct). Check names in the
+  Zone Manager after creating several zones; misnamed ground zones make DRC reports lie to
+  the reader.
+
 - **Never text-edit `.kicad_sch` / `.kicad_pcb` / `.kicad_sym` / `.kicad_mod` / `fp-lib-table`
   / `sym-lib-table`.** They are object graphs with UUIDs and cross-references; a `sed` breaks
   them silently. Everything goes through Konnect. `.kicad_pro` is JSON and tolerates careful
