@@ -9,9 +9,15 @@ angle R maps local (x, y) -> global (x cosR + y sinR, -x sinR + y cosR).
 """
 
 import math
+import os
 import re
 
-BOARD_FILE = "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+# Override with STILLAIR_BOARD to run against another board (e.g. pcb-02).
+# The envelope/keepout constants below are PCB-01's; geometry checks that use
+# them are only meaningful there.
+BOARD_FILE = os.environ.get(
+    "STILLAIR_BOARD", "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+)
 
 # Board envelope and fixed keepouts (docs/electrical.md PCB-01 definition).
 BOARD = (50.6, 50.6, 127.4, 107.4)  # courtyard-legal region, 0.6 inside the edge

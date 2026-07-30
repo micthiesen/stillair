@@ -1,7 +1,8 @@
 #!/bin/bash
 # Render the board to PNG for visual review. Usage: render_board.sh [out.png]
+# Override the board with STILLAIR_BOARD (defaults to PCB-01).
 set -e
-BOARD="/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+BOARD="${STILLAIR_BOARD:-/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb}"
 OUT="${1:-/tmp/pcb01-render.png}"
 SVG="$(mktemp /tmp/pcb01-XXXX.svg)"
 /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli pcb export svg \

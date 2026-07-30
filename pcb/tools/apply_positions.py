@@ -18,12 +18,16 @@ KiCad MUST be closed while this runs (single-writer rule).
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 
-BOARD_FILE = "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+# Override with STILLAIR_BOARD to run against another board (e.g. pcb-02).
+BOARD_FILE = os.environ.get(
+    "STILLAIR_BOARD", "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+)
 KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
 
 

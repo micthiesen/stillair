@@ -420,8 +420,10 @@ capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCa
 - All components on the magnet-facing side (single-sided hand assembly); the sensor face is
   the closest surface to the magnet cap.
 - Mounting: two Ø2.2 mm NPTH (M2) on the board centerline at board-local (7, 4) and
-  (14, 4) mm — 7 mm pitch. These are the BR-100 bracket datum; U1's sensor element sits at
-  the inner end (r76 line), J1 flush at the outer edge.
+  (13, 4) mm — 6 mm pitch (H2 moved from 14 at placement: the S3B courtyard extends
+  1.85 mm behind its pad row, and at 14 an M2 washer would touch the connector body).
+  These are the BR-100 bracket datum; U1's sensor element sits at the inner end (r76
+  line) at board-local (2.5, 4), J1's body flush at the outer edge.
 - Sensor element and captive Ø6.35 × 3.18 mm (1/4 × 1/8 in) N52 magnet both at r76.0 ±0.5 mm (moved with the
   RH-100 tach stations 2026-07-28); south pole toward the
   package (verify polarity before closing the cap); magnet face parallel to the Hall PCB.

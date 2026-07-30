@@ -31,11 +31,12 @@ re-scoped to schematic-only.)
 
 ## Next
 
-**PCB-02 layout** (capture + board setup done 2026-07-30: `pcb/pcb-02/`, ERC and DRC
-clean, 24 × 8 mm outline with the M2 hole pair at board-local (7,4)/(14,4) as the
-BR-100 datum — decisions in electrical.md's daughterboard section). Michael: open the
-project in KiCad, F8 (Update PCB from Schematic), drop U1/C1/J1 anywhere, save; Claude
-then places from the file, Michael routes (three nets), then generalize
+**PCB-02 routing** (capture, board setup, and placement done 2026-07-30: `pcb/pcb-02/`,
+ERC clean, DRC clean apart from the J1-silk-over-edge waivers in
+`pcb/pcb-02/placement/waivers.md`; M2 datum settled at board-local (7,4)/(13,4) —
+H2 moved 1 mm west at placement for washer clearance, electrical.md updated). Michael
+routes the three nets in KiCad (expect ~1 via, or 0 if AGND rides a B.Cu pour); Claude
+runs the DRC-diff-per-save loop against the waivers baseline. Then generalize
 `pcb/tools/jlc_fab.py` for the fab package; it ships as its own small order.
 
 ## Candidates Not Chosen
