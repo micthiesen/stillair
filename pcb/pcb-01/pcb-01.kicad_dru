@@ -1,4 +1,4 @@
 (version 1)
 (rule "mounting-hole-keepout"
-  (condition "(B.memberOfFootprint('H1') || B.memberOfFootprint('H2') || B.memberOfFootprint('H3') || B.memberOfFootprint('H4')) && (A.Type == 'Pad' || A.Type == 'Track' || A.Type == 'Via' || A.Type == 'Zone')")
+  (condition "(B.memberOfFootprint('H1') || B.memberOfFootprint('H2') || B.memberOfFootprint('H3') || B.memberOfFootprint('H4')) && B.Type == 'Pad' && (A.Type == 'Pad' || A.Type == 'Track' || A.Type == 'Via' || A.Type == 'Zone')")
   (constraint physical_clearance (min 2.15mm)))

@@ -7,6 +7,18 @@
 > cleanup, lib_footprint classes = our deliberate customizations. Placement changes after
 > this point only with a re-run of the checks in pcb/tools/.
 
+> **ROUTING COMPLETE 2026-07-30.** Post-routing/fills baseline
+> (`kicad-cli pcb drc --severity-all`): **unconnected 0, starved_thermal 0**,
+> clearance 6 (all U7 SOT-23-8 internal pad pairs; count fell from 14 once net-class
+> clearances landed and the mounting-hole rule was scoped — see below),
+> courtyards_overlap 18 (13 from the locked-placement list + 5 routing-era pairs below),
+> silk_over_copper 199 / silk_overlap 199 / silk_edge_clearance 5 (scripted sweep
+> pending), lib_footprint_mismatch 7 / lib_footprint_issues 4 (deliberate customizations).
+> Anything beyond these counts in a future run is NEW.
+> The `.kicad_dru` mounting-hole rule is now scoped with `B.Type == 'Pad'` — unscoped, it
+> also fired between vias and H1–H4's silkscreen *reference text* (4 noise pairs plus one
+> false hit on a legal stitch via).
+
 Reference list for reading `kicad-cli pcb drc` output. Every violation class below
 was triaged item-by-item; anything not listed here appearing in a future DRC run
 is NEW and needs a look. Rule of thumb from the J2 incident: courtyard classes may
@@ -28,6 +40,13 @@ Courtyards include ~0.25 mm grace margins; these pairs overlap margins only.
   its plastic sits next to U9's pin-4/5 fillets. Accepted.
 - **J8 × TP6** (−0.52 courtyard): TP6's probe pad is 0.48 mm clear of J8's body;
   probeable even with the header loaded.
+
+Routing-era additions (2026-07-30, from the C15/C12/C13-neighborhood placement
+amendments; all verified pad/body-clear via `board_model.py` pad extents):
+
+- **R7 × TP12, TP12 × R39, TP7 × R39, R7 × R39**: TP probe pads clear R39's east pad
+  by ≥0.35 mm and R7 by ≥0.65 mm; TPs have no body.
+- **TP15 × R34**: probe pad edge 0.67 mm from R34's nearest pad.
 
 ## Board-edge overhangs — intentional (mating faces) or trivial
 

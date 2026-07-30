@@ -277,6 +277,14 @@ so Michael can watch the block appear instead of reviewing it at the end.
   `set_board_size` and `add_mounting_hole` are fine.
 - **Custom DRC rules go in `pcb-01.kicad_dru`** (plain-text rules file, safe to edit): the
   Ø8 mounting-hole copper keepout lives there as a `physical_clearance` rule against H1-H4.
+- **`memberOfFootprint()` in `.kicad_dru` conditions matches the footprint's TEXT fields
+  too** — the H1-H4 rule fired between a legal stitch via and H4's silkscreen *reference
+  text*. Scope the object side with `B.Type == 'Pad'` (done 2026-07-30).
+- **Rule areas drawn with margin can swallow a module's own pads.** The antenna keepout
+  at x 121 covered U2's east ground-pad column (x 121.9), making those pads impossible to
+  legally connect (tracks/vias not_allowed; pads allowed — so no violation warns you,
+  the pads just can't be reached). When drawing a keepout next to a module, check its
+  edge against the module's pad coordinates, not its courtyard.
 - **Right-angle connectors: verify the mating face points OFF-board and every pad is
   ON-board, per placement.** A blanket "connectors legitimately overhang" edge waiver in
   check_plan.py masked J2 placed rotated 90° wrong — mating face pointing into the board

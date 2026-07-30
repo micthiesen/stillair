@@ -635,6 +635,27 @@ Decisions made while laying copper; the board file is the authority, these are t
 - **Board min via 0.4/0.2 now actually in Board Setup** (2026-07-30) — the buck-loop
   session documented the decision but the constraint had stayed at 0.5, flagging 11 legal
   0.4/0.2 vias. Netclass-specific minimums (Phase/Power24 1.0/0.5) unaffected.
+- **J8.1/J8.2 taps closed (2026-07-30)**: PGND reuses TP27's existing via at (97.5, 92.0)
+  — B.Cu 0.25 run east, landing directly on the PTH pad (SOX pattern). VM24 got its own
+  0.6/0.3 via just inside the plane edge, B.Cu run east. That was the last
+  point-to-point net.
+- **Fills + stitching complete (2026-07-30), board at zero unconnected.** B.Cu `agnd-bcu`
+  zone (clearance 0.3, min width 0.25, thermal 0.5/0.5) over the whole outline. Stitch
+  rules used for the sweep: east of the x 98 L3 split a bare AGND via lands on the L2
+  plane anywhere; inside the PGND-island footprint an AGND via must land on visible B.Cu
+  fill (L2 there is PGND). Isolated fill islands (the south band cut off by the fan-out,
+  plus patches at J3, U4.9, U1's west side) were each tied in with one via east of the
+  split. 3V3 stitch: vias only east of x 98 (or the x 86–98 / y<62 notch); TP5, R29,
+  R30, U5.2 are trace-fed across the split. U2's east ground-pad column is strapped at
+  x 121.9 with two vias.
+- **Antenna keepout west edge trimmed x 121 → 122.4 (2026-07-30)**: as drawn it swallowed
+  U2's own east ground-pad column (x 121.9), making the pads impossible to legally
+  connect. The module's antenna section starts at x 122.6, so 122.4 still covers it.
+  Refill now correctly floods ground into the freed 121–122.4 strip under the module
+  body (Espressif: ground under module, none under antenna).
+- **Starved thermals resolved by solid zone connections** (2026-07-30) on U1.41 (MCF
+  thermal via field), U4.9, J3.3, and J8.3 — all PTH pads where the fill could only
+  reach one spoke. J3/J8 hand-soldering takes slightly more heat; accepted for V1.
 
 ## Open items from the 2026-07 board-truth review
 
