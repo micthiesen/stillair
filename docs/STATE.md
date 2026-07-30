@@ -3,9 +3,10 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-30** (routing session 4: PCB-01 copper is DONE — J8 taps, B.Cu
-AGND fill, full AGND + 3V3 stitch sweeps, starved thermals fixed, waivers re-triaged.
-Zero unconnected, zero non-waived DRC.)
+Last updated: **2026-07-30** (routing session 4 + silk: PCB-01 copper AND silkscreen are
+DONE. Copper: J8 taps, B.Cu AGND fill, full stitch sweeps, starved thermals, scripted
+routing audit (RAW24 widened, SW-node fill keepout). Silk: scripted sweep + render-guided
+hand fixes; all residuals waived. Zero unconnected, zero non-waived DRC.)
 
 ## Now
 
@@ -17,17 +18,19 @@ Zero unconnected, zero non-waived DRC.)
   (documented in `pcb/pcb-01/placement/waivers.md`): **unconnected 0, starved_thermal
   0**, clearance 6 / courtyards 18 / lib 7+4 all triaged-and-waived, silk 199/199/5
   pending. Whys → [electrical.md](electrical.md) "Routing notes".
-- **Remaining on PCB-01**: (1) scripted silkscreen sweep (Claude, KiCad closed — the
-  199/199/5 silk classes); (2) fab-output pass (gerbers/pos/BOM via the /pcb
+- **Silk sweep done** (`pcb/tools/silk_sweep.py` + hand fixes): silk classes
+  199/199/5 → 40/20/4, all non-functional and waived in `placement/waivers.md`;
+  45 refs hidden (42 passives + TP21/TP24/R42 — no room at 0.8 mm min text).
+- **Remaining on PCB-01**: the fab-output pass only (gerbers/pos/BOM via the /pcb
   manufacture path).
 - **Mechanical/ordering unchanged**: motor in transit; SP-100 waits on measurements.
 
 ## Next
 
-**Silk sweep, then fab outputs.** The silk sweep is scripted cleanup of reference-text
-overlaps (KiCad must be closed); then `export_manufacturing_package` for the JLCPCB
-bundle. After that PCB-01 is order-ready and PCB-02 (Hall daughterboard) capture is the
-natural follow-on so both boards share one fab order.
+**Fab outputs.** `export_manufacturing_package` for the JLCPCB bundle (first one done
+by hand per the /pcb skill's ask-before-doing note). After that PCB-01 is order-ready
+and PCB-02 (Hall daughterboard) capture is the natural follow-on so both boards share
+one fab order.
 
 ## Candidates Not Chosen
 

@@ -19,6 +19,19 @@
 > also fired between vias and H1–H4's silkscreen *reference text* (4 noise pairs plus one
 > false hit on a legal stitch via).
 
+> **SILK SWEEP DONE 2026-07-30** (`pcb/tools/silk_sweep.py` + hand fixes from renders).
+> Final silk residuals — all verified non-functional, waived:
+> **silk_over_copper 40**: footprint outline artwork over the footprint's own pads
+> (U1's QFN rectangle and similar); fab clips silk at mask openings.
+> **silk_overlap 20**: text/outline stroke crossings, all legible (JP1, TP18, D-column,
+> J3, J8, U7, SW1/SW2 neighborhoods).
+> **silk_edge_clearance 4**: J1 and U2 overhang outlines crossing Edge.Cuts (intentional
+> overhangs; fab clips silk at the board edge).
+> **45 hidden reference designators**: 42 dense-cluster passives (machine-assembled;
+> see pos file/BOM) plus TP21, TP24, R42 — no legal spot at the 0.8 mm board minimum
+> text size. TP21 is the lone probe ring in the SE tach corner; TP24 is the middle ring
+> of the labeled TP11/TP24/TP27 column. Zero text-on-text, zero ref-over-copper.
+
 Reference list for reading `kicad-cli pcb drc` output. Every violation class below
 was triaged item-by-item; anything not listed here appearing in a future DRC run
 is NEW and needs a look. Rule of thumb from the J2 incident: courtyard classes may
