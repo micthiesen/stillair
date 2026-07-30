@@ -65,9 +65,24 @@ RF) need a partial re-run instead of being inherited. Decide only after V1 bring
 housing prototype; V1 stays the rectangle regardless, and if the donut is chosen, delete
 EB-100 from the parts register rather than carrying both.
 
-**Fabrication**: boards will be ordered from JLCPCB. Whether JLCPCB also sources and
-assembles the components (PCBA) or the board is hand-populated is TBD; check part
-availability in the JLCPCB/LCSC catalog during KiCad capture so the decision stays open.
+**Fabrication** (decided 2026-07-30): JLCPCB fabricates AND assembles. Board options:
+4-layer JLC04161H-7628 stackup, 1.6 mm, 2 oz outer / 1 oz inner, ENIG, **Standard PCBA**
+(forced — the ESP32-C6-MINI-1 is a JLCPCB "Standard Only" part), single-side (all SMD is
+top-side), min 5 boards / 2 assembled. Request POFV (epoxy filled & capped) via covering
+for the MCF thermal cluster. The package is generated headless by
+`python3 pcb/tools/jlc_fab.py` → `pcb/pcb-01/fab/` (gerber zip, BOM, CPL); LCSC numbers
+for parts whose schematic LCSC field is empty live in `pcb/pcb-01/fab/lcsc-map.csv` with
+per-line substitution rationale (owner-approved 2026-07-30: 1% resistors where 0.1%
+is unstocked — RV1 end-to-end calibration absorbs initial tolerance; X5R for X7R on
+bypass lines; Vishay BAT54W-G3-08 for the dead-stock Nexperia BAT54H).
+
+**Hand-populated at the bench** (excluded from the assembly files by `jlc_fab.py`):
+C1/C2 (Panasonic FR authenticity — DigiKey stock in hand), J1/J2 (Molex Micro-Fit in
+hand), U8 (LM2907 dead on LCSC; DigiKey qty 3 in hand), and C34 — the LM2907
+charge-pump timing cap must stay 1% C0G for overspeed-chain temperature stability and
+no 0603 C0G 100 nF exists at JLCPCB in any tolerance; **buy a DigiKey 0603 100 nF 1%
+C0G/U2J (e.g. TDK C1608 series) with the next order**. J3/J4 (JST PH THT) ride
+JLCPCB's hand-solder service instead, since genuine JST is deep-stocked there.
 
 ## SCH-01 24 V input
 

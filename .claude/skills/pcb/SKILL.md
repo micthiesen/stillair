@@ -114,8 +114,14 @@ and only reading the actual datasheet page corrected it.
 
 - Modifying an existing placement or an existing route.
 - Anything that changes the outline, the hole pattern, or the layer stack after they are set.
-- Running fab exports. `export_manufacturing_package` makes this cheap, so this may well move
-  to Claude once we've done one by hand — update this file when it does.
+- ~~Running fab exports~~ — moved to Claude 2026-07-30 at Michael's request: run
+  `python3 pcb/tools/jlc_fab.py` (headless kicad-cli; writes gerber zip + JLCPCB BOM/CPL
+  to `pcb/pcb-01/fab/`, merging `fab/lcsc-map.csv` for parts without schematic LCSC
+  fields). Do NOT use Konnect's `export_manufacturing_package`: its "jlcpcb" BOM lacks
+  the LCSC column, its position file is inches with KiCad headers, and `drill.drl`
+  comes out as a directory. `validate_for_manufacturing` is equally shallow (read the
+  routed 4-layer board as "2 layers, 0 nets" and said READY) — the real pre-fab gate is
+  the headless DRC diff against `placement/waivers.md`.
 
 ## Starting a session
 

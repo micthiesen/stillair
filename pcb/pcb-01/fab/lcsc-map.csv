@@ -1,0 +1,51 @@
+Comment,Footprint,LCSC,Note
+10k,Resistor_SMD:R_0402_1005Metric,C25744,Basic; UNI-ROYAL 0402WGF1002TCE 1%
+10.0k,Resistor_SMD:R_0402_1005Metric,C25744,Basic; same 10k 1% part
+100k,Resistor_SMD:R_0402_1005Metric,C25741,Basic
+4.7k,Resistor_SMD:R_0402_1005Metric,C25900,Basic
+100R,Resistor_SMD:R_0402_1005Metric,C25076,Basic
+0R,Resistor_SMD:R_0402_1005Metric,C17168,Basic
+22R,Resistor_SMD:R_0402_1005Metric,C25092,Basic
+1k,Resistor_SMD:R_0402_1005Metric,C11702,Basic
+5.1k,Resistor_SMD:R_0402_1005Metric,C25905,Basic
+910k 0.1%,Resistor_SMD:R_0402_1005Metric,C3921007,Extended; RE0402BRE07910KL 0.1% thin film
+100k 0.1%,Resistor_SMD:R_0402_1005Metric,C852472,Extended; RT0402BRD07100KL 0.1%
+47.0k 0.1%,Resistor_SMD:R_0402_1005Metric,C728561,Extended; RT0402BRD0747KL 0.1%
+10.0k 0.1%,Resistor_SMD:R_0402_1005Metric,C190095,Extended; RT0402BRD0710KL 0.1%
+90.9k 0.1%,Resistor_SMD:R_0402_1005Metric,C2079068,Extended; CPF0402B90K9E1 0.1%; only ~79 stock - recheck at order
+35.7k 0.1%,Resistor_SMD:R_0402_1005Metric,C2998133,SUBSTITUTION: no 0.1% stocked; FRC0402F3572TS 1% - RV1 calibration absorbs initial tolerance
+562k 0.1%,Resistor_SMD:R_0402_1005Metric,C273337,SUBSTITUTION: no 0.1% stocked; RC0402FR-07562KL 1% - RV1 calibration absorbs initial tolerance
+47R 1W,Resistor_SMD:R_2512_6332Metric,C723713,Extended; RC2512FK-0747RL 1W 1%
+BAT54H,Diode_SMD:D_SOD-123,C3313038,SUBSTITUTION: Nexperia BAT54H dead stock (7); Vishay BAT54W-G3-08 SOD-123 same die class; verify package drawing at part-match step
+BAT54S,Package_TO_SOT_SMD:SOT-23,C19726,onsemi BAT54SLT1G; generic C7420333 (preferred; 197k stock) is the fallback
+2N7002K,Package_TO_SOT_SMD:SOT-23,C85047,Diodes 2N7002K-7 per bom.csv
+2N7002,Package_TO_SOT_SMD:SOT-23,C85047,bom.csv specifies 2N7002K-7 for both Q2/Q3
+TLV1701DBV,Package_TO_SOT_SMD:SOT-23-5,C130035,Extended; 758 stock
+SN74LVC1G17DCKR,Package_TO_SOT_SMD:SOT-353_SC-70-5,C10425,Extended
+47uH,Inductor_SMD:L_Sunlord_SWPA6045S,C36414,Sunlord SWPA6045S470MT confirmed
+200k 10-turn,Potentiometer_SMD:Potentiometer_Bourns_3224W_Vertical,C55072,Bourns 3224W-1-204E exact
+SW_Push,Button_Switch_SMD:SW_SPST_PTS645Sx43SMTR92,C221871,PTS645SK43SMTR92LFS; same land pattern (K=260gf actuation)
+HALL,Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical,C131339,Genuine JST B3B-PH-K-S(LF)(SN); THT - JLC hand-solder service
+TEMP,Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical,C131337,Genuine JST B2B-PH-K-S(LF)(SN); THT - JLC hand-solder service
+I2C,Connector_JST:JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal,C160404,Genuine JST; 59 stock - recheck at order
+USB-C,Connector_USB:USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal,C3020560,GCT USB4105-GF-A; 295 stock - recheck; DigiKey pair in hand as fallback
+100nF,Capacitor_SMD:C_0402_1005Metric,C1525,Basic; 16V X7R
+1uF,Capacitor_SMD:C_0402_1005Metric,C52923,Basic; 25V X5R
+10nF,Capacitor_SMD:C_0402_1005Metric,C15195,Basic; 50V X7R
+100nF 50V,Capacitor_SMD:C_0603_1608Metric,C14663,Basic; 50V X7R
+100nF,Capacitor_SMD:C_0603_1608Metric,C14663,Basic; same 50V part
+1uF 16V,Capacitor_SMD:C_0603_1608Metric,C15849,Basic; 50V X5R covers all 0603 1uF lines
+1uF 16V X7R,Capacitor_SMD:C_0603_1608Metric,C15849,Basic; X5R sub approved
+1uF 10V X7R,Capacitor_SMD:C_0603_1608Metric,C15849,Basic; X5R sub approved
+1uF 6.3V X7R,Capacitor_SMD:C_0603_1608Metric,C15849,Basic; X5R sub approved
+10nF 50V C0G,Capacitor_SMD:C_0603_1608Metric,C85973,Extended; Murata GRM1885C1H103JA01D C0G
+100nF 100V,Capacitor_SMD:C_0805_2012Metric,C28233,Basic; 100V X7R
+47nF 100V X7R,Capacitor_SMD:C_0805_2012Metric,C107126,Extended; only 100V-capable option
+10uF,Capacitor_SMD:C_0805_2012Metric,C15850,Basic; 25V X5R
+2.2uF 16V X7R,Capacitor_SMD:C_0805_2012Metric,C377773,Basic; 50V X5R sub approved
+10uF 50V X7R,Capacitor_SMD:C_1210_3225Metric,C2918502,Extended; no Basic 1210s exist
+2.2uF 100V X7R,Capacitor_SMD:C_1210_3225Metric,C153036,Extended; 100V X7R
+22uF 25V X7R,Capacitor_SMD:C_1210_3225Metric,C309062,Extended; 25V X7R
+22uF 10V X7R,Capacitor_SMD:C_1210_3225Metric,C309062,Extended; same 25V part
+10uF 63V,Capacitor_SMD:C_1210_3225Metric,C437568,Extended; Murata 63V X7R exact
+10uF 25V,Capacitor_SMD:C_1210_3225Metric,C39232,Extended; 25V X7R
