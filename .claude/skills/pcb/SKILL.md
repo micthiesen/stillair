@@ -59,6 +59,37 @@ kicad-cli, and the manufacturing/validation tools are verifiably wrong (see
 skills were rewritten to match; kicad-review carries a scope note. On a Konnect upgrade,
 re-test the broken tools before widening this.
 
+## Board playbook — the end-to-end phase order (distilled from PCB-01)
+
+"Let's do the next board" means this sequence; each phase's how-to is detailed later in this
+file. Scale the ceremony to the board — PCB-02 (1 IC, ~5 parts) gets the same *order* but a
+fraction of the agent fan-out PCB-01's 170 parts needed.
+
+1. **Schematic capture** (Konnect, KiCad closed): transcribe from docs/electrical.md +
+   bom/bom.csv; MPN/LCSC/DNP fields as you go; label-based wiring convention.
+2. **Schematic validation**: `run_erc` + `find_orphan_items` / `find_shorted_nets` /
+   `find_single_pin_nets`, cross-check against bom.csv.
+3. **Board setup** (file-side): outline, mounting holes, stackup + net classes via
+   `.kicad_pro` JSON (never the Konnect rule tools), `.kicad_dru` for custom rules, verify
+   with a headless DRC parse.
+4. **Placement**: plan in `pcb/tools/` scripts (+ per-group Sonnet planners only when the
+   board is big enough to need them), apply via file write, validate with check_plan-style
+   geometry checks. Michael fine-tunes on canvas.
+5. **Board-truth review loop** (the quality gate that caught what nothing else did):
+   extract netlist/positions FROM the board, Sonnet review swarm with docs off-limits,
+   integrate fixes, re-extract, re-run with a fixes-to-verify addendum, loop until only
+   nits return. Size the swarm to the board.
+6. **Routing** (Michael, on canvas): rules-not-coordinates briefs; Claude runs the
+   headless-DRC-diff-per-save loop and maintains the waivers baseline in
+   `pcb/<board>/placement/waivers.md`.
+7. **Silk + final render check**: `silk_sweep.py` fixpoint + render-guided hand fixes;
+   eyeball a final render.
+8. **Fab package + order**: /kicad-manufacture procedure (`jlc_fab.py`, lcsc-map,
+   pre-flight DRC diff), then the JLCPCB walkthrough — Michael clicks, Claude reviews
+   saved order pages offline and verifies polarities from the board file on request.
+9. **Record + wrap**: sourcing decisions → electrical.md + lcsc-map notes; order → bom.csv;
+   STATE.md; commit/push.
+
 ## Division of labor
 
 The split follows what each side is actually good at, not what the tools technically allow.
