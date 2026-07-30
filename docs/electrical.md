@@ -656,6 +656,14 @@ Decisions made while laying copper; the board file is the authority, these are t
 - **Starved thermals resolved by solid zone connections** (2026-07-30) on U1.41 (MCF
   thermal via field), U4.9, J3.3, and J8.3 — all PTH pads where the fill could only
   reach one spoke. J3/J8 hand-soldering takes slightly more heat; accepted for V1.
+- **Post-routing scripted audit (2026-07-30**, script: width-vs-netclass, tach-region
+  purity, SW-vs-fill proximity, antenna strip): two real findings, both fixed — the
+  RAW24 input haul was 0.5 mm with 0.6/0.3 vias (now at class size; it's the one
+  Power24 net with no plane behind it), and BUCK_SW's B.Cu diagonal had the new AGND
+  fill alongside at 0.30 mm for 8 mm (B.Cu pour keepout added, gap now 1.14 mm).
+  Verified-benign leftovers, for the record: phase B.Cu tails into J2 are 1.0 mm (not
+  the 2.0 class default) — fine at fan phase currents; J8's VM24/PGND debug legs thread
+  the tach block at 0.25 but dead-end at a DNP header, so they carry no current.
 
 ## Open items from the 2026-07 board-truth review
 
