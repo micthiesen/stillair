@@ -2,7 +2,7 @@ Comment,Footprint,LCSC,Note
 10k,Resistor_SMD:R_0402_1005Metric,C25744,Basic; UNI-ROYAL 0402WGF1002TCE 1%
 10.0k,Resistor_SMD:R_0402_1005Metric,C25744,Basic; same 10k 1% part
 100k,Resistor_SMD:R_0402_1005Metric,C25741,Basic
-4.7k,Resistor_SMD:R_0402_1005Metric,C25900,Basic
+4.7k,Resistor_SMD:R_0402_1005Metric,C105871,YAGEO RC0402FR-074K7L 1% (C25900 Basic was assembly-pool-short at 2026-07-30 order)
 100R,Resistor_SMD:R_0402_1005Metric,C25076,Basic
 0R,Resistor_SMD:R_0402_1005Metric,C17168,Basic
 22R,Resistor_SMD:R_0402_1005Metric,C25092,Basic
@@ -14,7 +14,7 @@ Comment,Footprint,LCSC,Note
 10.0k 0.1%,Resistor_SMD:R_0402_1005Metric,C190095,Extended; RT0402BRD0710KL 0.1%
 90.9k 0.1%,Resistor_SMD:R_0402_1005Metric,C2079068,Extended; CPF0402B90K9E1 0.1%; only ~79 stock - recheck at order
 35.7k 0.1%,Resistor_SMD:R_0402_1005Metric,C2998133,SUBSTITUTION: no 0.1% stocked; FRC0402F3572TS 1% - RV1 calibration absorbs initial tolerance
-562k 0.1%,Resistor_SMD:R_0402_1005Metric,C273337,SUBSTITUTION: no 0.1% stocked; RC0402FR-07562KL 1% - RV1 calibration absorbs initial tolerance
+562k 0.1%,Resistor_SMD:R_0402_1005Metric,C4323390,SUBSTITUTION: no 0.1% stocked; Vishay CRCW0402562KFKED 1% - RV1 calibration absorbs initial tolerance (C273337 pool-short at 2026-07-30 order)
 47R 1W,Resistor_SMD:R_2512_6332Metric,C723713,Extended; RC2512FK-0747RL 1W 1%
 BAT54H,Diode_SMD:D_SOD-123,C3313038,SUBSTITUTION: Nexperia BAT54H dead stock (7); Vishay BAT54W-G3-08 SOD-123 same die class; verify package drawing at part-match step
 BAT54S,Package_TO_SOT_SMD:SOT-23,C19726,onsemi BAT54SLT1G; generic C7420333 (preferred; 197k stock) is the fallback
