@@ -159,6 +159,25 @@ so Michael can watch the block appear instead of reviewing it at the end.
   silently inherits its name (nets are set per-zone and stay correct). Check names in the
   Zone Manager after creating several zones; misnamed ground zones make DRC reports lie to
   the reader.
+- **An unfill-all saved to disk looks like mass destruction in headless DRC**: every
+  zone-only-connected stitch via flags `via_dangling` (66 at once on PCB-01) and the plane
+  nets' unconnected counts explode. Before diagnosing, check `grep -c filled_polygon
+  file.kicad_pcb` — zero means the fills are simply absent; `B` + save restores everything.
+- **Duplicate-numbered pads are NOT connected for DRC/ratsnest purposes.** Tact switches
+  whose two pin-1 pads are internally one leg still need a copper join pad-to-pad (SW1, SW2,
+  SW3 all did) or the net reports unconnected forever.
+- **Accidental micro vias pass the normal via-diameter check** — micro vias have their own
+  (smaller) minimum, so a stray 0.3/0.1 `via micro` hides among legal vias while being
+  unmanufacturable at JLCPCB (no micro vias at all, and F.Cu→B.Cu span is invalid anyway).
+  If a via looks undersized but doesn't flag, check its *type* in properties.
+- **A duplicate track segment lying exactly on top of a longer same-net segment is
+  invisible and un-clickable** — clicking always selects the long twin, and the cleanup tool
+  doesn't remove it, but DRC flags it `track_dangling`. Grab it with a tiny drag-box that
+  fully encloses only the stub (box-select takes only fully-enclosed items).
+- **Board Setup constraint edits, like net classes, must be verified to have landed in the
+  file.** The 0.4/0.2 min-via decision was documented in electrical.md but the board still
+  carried 0.5 min diameter a session later; 11 legal vias flagged before the constraint was
+  actually entered. After any Board Setup change, confirm via a headless DRC diff.
 
 - **Never text-edit `.kicad_sch` / `.kicad_pcb` / `.kicad_sym` / `.kicad_mod` / `fp-lib-table`
   / `sym-lib-table`.** They are object graphs with UUIDs and cross-references; a `sed` breaks

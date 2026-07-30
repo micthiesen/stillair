@@ -613,6 +613,28 @@ Decisions made while laying copper; the board file is the authority, these are t
   are L2, so the tie is only real once each pad has a via into its plane. Caught by the
   unconnected-items list during validation, not by any violation: a missing net-tie via
   is silent in DRC error classes. One via per pad placed 2026-07-30.
+- **Digital fan-out complete (2026-07-30)**: I2C (with J5 branch), SPEED/DIR/BRAKE with
+  their west pull-down straps, FG/NFAULT/ALARM, ESP_EN/ESP_BOOT (buttons' duplicate pin-1
+  pads each needed a copper join), UART, GPIO8 strap, VBUS_SENSE, PGOOD diode-OR feed,
+  WDO/WD_HEARTBEAT/MCF_EXT_WD, DRVOFF, TEMP_SENSE (long leg on B.Cu). Standard sizes:
+  0.25 mm signal, 0.2 mm necks at U1/U7 fine pitch, 0.6/0.3 vias. Notable: the R4–R7
+  pull-up column at x 89 sits over the **VM24** half of L3, so its 3V3 arrives as an F.Cu
+  bus fed from a via east of the x 98 plane split (near R12) — same constraint applies to
+  any 3V3 pad west of x 98 (J5.2 is fed by trace from U3's output for the same reason).
+- **Tach + safety analog block complete (2026-07-30)**: TACH_LDO_IN feed is a 0.4 mm B.Cu
+  haul from R39 (west) to U4; +12V_TACH is a 0.4 mm star from U4.1 (caps south, LM2907 +
+  bias northeast, TP6/J8.4 east); Hall front-end, LM2907 core (VTACH_RAW west ripple bank
+  joined over B.Cu), comparator/VREF, and the full U5/U6/U7/U10/U11 latch web routed at
+  0.25 with ratsnest-ordered short hops. MCF_AVDD done. ARM_PULSE and MCU_CLEAR_N cross to
+  the ESP on B.Cu.
+- **J8 debug legs are 0.25 mm by design** (DNP header). Routed: 3V3 (via R52 hop), 
+  +12V_TACH, DRVOFF, SPEED, FG, NFAULT, SOX (B.Cu lands directly on the PTH pad — a via
+  next to a through-hole pad is a hole-to-hole violation). Still open: J8.1 VM24 and J8.2
+  PGND taps (their planes end at x 98; needs a via there + an eastward run), and a
+  starved-thermal on J8.3's In2 connection (1 spoke; tracked task).
+- **Board min via 0.4/0.2 now actually in Board Setup** (2026-07-30) — the buck-loop
+  session documented the decision but the constraint had stayed at 0.5, flagging 11 legal
+  0.4/0.2 vias. Netclass-specific minimums (Phase/Power24 1.0/0.5) unaffected.
 
 ## Open items from the 2026-07 board-truth review
 
