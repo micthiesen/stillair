@@ -3,53 +3,53 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-30** (routing session 4 + silk: PCB-01 copper AND silkscreen are
-DONE. Copper: J8 taps, B.Cu AGND fill, full stitch sweeps, starved thermals, scripted
-routing audit (RAW24 widened, SW-node fill keepout). Silk: scripted sweep + render-guided
-hand fixes; all residuals waived. Zero unconnected, zero non-waived DRC.)
+Last updated: **2026-07-30** (session 4 wrap: PCB-01 layout is FINISHED — copper, fills,
+stitching, scripted routing audit, silkscreen. Zero unconnected, zero non-waived DRC.
+Only the fab-output pass remains.)
 
 ## Now
 
-- **PCB-01 routing and fills are 100% complete.** This session closed the J8.1/J8.2 plane
-  taps, created the B.Cu `agnd-bcu` fill, swept all 87 AGND + 29 3V3 stitch items
-  (rules-based sweep by Michael, headless DRC validation per chunk), trimmed the antenna
-  keepout that was swallowing U2's ground column, scoped the `.kicad_dru` mounting-hole
-  rule, and resolved all 5 starved thermals via solid zone connections. Final baseline
-  (documented in `pcb/pcb-01/placement/waivers.md`): **unconnected 0, starved_thermal
-  0**, clearance 6 / courtyards 18 / lib 7+4 all triaged-and-waived, silk 199/199/5
-  pending. Whys → [electrical.md](electrical.md) "Routing notes".
-- **Silk sweep done** (`pcb/tools/silk_sweep.py` + hand fixes): silk classes
-  199/199/5 → 40/20/4, all non-functional and waived in `placement/waivers.md`;
-  45 refs hidden (42 passives + TP21/TP24/R42 — no room at 0.8 mm min text).
-- **Remaining on PCB-01**: the fab-output pass only (gerbers/pos/BOM via the /pcb
-  manufacture path).
+- **PCB-01 layout is complete and fully triaged.** Copper: J8 plane taps, B.Cu `agnd-bcu`
+  fill, all 116 AGND+3V3 stitch items closed (rules-based sweep by Michael, headless DRC
+  diff per save), antenna keepout trimmed off U2's ground column, `.kicad_dru` scoped,
+  starved thermals solid-connected. Audit: RAW24 haul widened to class size, BUCK_SW got
+  a B.Cu pour keepout (fill gap 0.30 → 1.14 mm). Silk: ~100 refs relocated via
+  `pcb/tools/silk_sweep.py` + render-guided hand fixes; 45 refs hidden (42 passives +
+  TP21/TP24/R42 — provably no room at the 0.8 mm minimum). Final baseline in
+  `pcb/pcb-01/placement/waivers.md`; whys in [electrical.md](electrical.md) "Routing
+  notes".
+- **The scripted-audit pattern paid off**: width-vs-netclass, tach-region purity,
+  SW-vs-fill proximity, and antenna-strip checks found two real DRC-invisible issues in
+  ~15 min; a Sonnet review swarm was considered and rejected (agents are weak at raw
+  trace-geometry reasoning — audits + DRC beat them here).
 - **Mechanical/ordering unchanged**: motor in transit; SP-100 waits on measurements.
 
 ## Next
 
-**Fab outputs.** `export_manufacturing_package` for the JLCPCB bundle (first one done
-by hand per the /pcb skill's ask-before-doing note). After that PCB-01 is order-ready
-and PCB-02 (Hall daughterboard) capture is the natural follow-on so both boards share
-one fab order.
+**Fab-output pass for PCB-01**: gerbers/pos/BOM via the /pcb manufacture path
+(`export_manufacturing_package`; first export is done together per the skill's
+ask-before-doing note, and needs KiCad open). This makes PCB-01 order-ready. PCB-02
+(Hall daughterboard) capture is the natural follow-on so both boards share one fab
+order.
 
 ## Candidates Not Chosen
 
 - **Motor-arrival release sprint**: measurement checklist → SP-100 → MC-100/RH-100 CNC
   batch. Becomes Next the day the GL100 box arrives.
 - **PCB-02 Hall daughterboard capture** — small board, unblocks the fab order bundle;
-  natural follow-on to the PCB-01 fab-output pass.
+  natural follow-on to the fab-output pass.
 - **TEMP_SENSE firmware implementation** — parked with `TODO(temp-sense)` in
   `app/src/matter.rs`.
 - **Blade materials + first prints**; **mount mockup** — carried, fully parallel.
 
 ## Learned Recently
 
-- **Two new /pcb quirks** (`.kicad_dru` conditions match text fields — scope with
-  `B.Type == 'Pad'`; rule areas can silently swallow a module's own pads) →
-  `.claude/skills/pcb/SKILL.md`.
-- **Rules-based sweeps beat coordinate lists for dense stitch work**: give trace/via
-  sizes + the plane-geography rules (which L2/L3 region is under which x/y band) and
-  let Michael chase airwires on canvas; validate with the headless DRC diff per save.
-  Coordinate-by-coordinate instructions stopped being useful once the board got dense.
-- **All fill/stitch decisions** (island stitching, keepout trim, solid thermals) →
-  [electrical.md](electrical.md) "Routing notes (2026-07, in progress)".
+- **Rules-not-coordinates for dense canvas work** + silk-sweep tooling and its quirks
+  (absolute property-text angles, 0.8 mm text floor, hollow outline interiors hiding
+  labels under modules, headless render-inspection recipe) → `.claude/skills/pcb/SKILL.md`.
+- **`.kicad_dru` conditions match text fields** (scope with `B.Type == 'Pad'`) and
+  **rule areas can swallow a module's own pads** → `.claude/skills/pcb/SKILL.md`.
+- **All copper/fill/audit decisions** (stitch geography, keepout trim, solid thermals,
+  RAW24/BUCK_SW audit fixes, unlabeled TP21/TP24) →
+  [electrical.md](electrical.md) "Routing notes"; residual waivers →
+  `pcb/pcb-01/placement/waivers.md`.

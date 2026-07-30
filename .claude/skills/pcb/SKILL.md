@@ -99,6 +99,12 @@ and only reading the actual datasheet page corrected it.
 
 - **Routing.** All of it, including copper pours. Konnect has routing tools and a Freerouting
   bridge; we are not using them for this board.
+- **For dense stitch/fill work, give Michael RULES, not coordinates** (learned on the
+  2026-07-30 fill session): trace/via sizes + the plane geography (which L2/L3 region is
+  under which x/y band, where a bare via reaches a plane vs needs visible fill) and let him
+  chase airwires on canvas; Claude validates each save with a headless DRC diff. Coordinate
+  lists stop being useful once the board is dense — he asked for exactly this switch, and
+  the 116-airwire sweep went faster than any scripted chunk.
 - **Placement review/fine-tune** on Claude's first pass, especially the MCF switching loops
   vs TI's reference layout and anything housing-related.
 - **Starting and exporting the project**, plus anything that means clicking through a KiCad
@@ -285,6 +291,22 @@ so Michael can watch the block appear instead of reviewing it at the end.
   legally connect (tracks/vias not_allowed; pads allowed — so no violation warns you,
   the pads just can't be reached). When drawing a keepout next to a module, check its
   edge against the module's pad coordinates, not its courtyard.
+- **Silkscreen ref cleanup is scripted: `pcb/tools/silk_sweep.py`** (KiCad closed). It
+  parses flagged Reference fields from a headless DRC JSON, grid/ring-searches clear
+  spots (pads + silk + other texts + edge as obstacles), and rewrites only the property
+  `(at)`/`(size)` lines. Run it as a fixpoint loop against successive DRC JSONs; it
+  stalls at the truly-impossible refs, which get hidden (passives) or hand-placed from
+  renders (TPs/ICs). Quirks paid for: **property text angles are stored ABSOLUTE** like
+  pad angles (don't add the footprint rotation); **board min text height (0.8) forbids
+  shrinking below it** — text_height violations, not a free escape; **footprint outline
+  interiors look like free space to bbox models** — fp_line outlines have hollow
+  interiors, and labels placed "inside" a module outline end up under the soldered part
+  (TP13/R42/D9 all did this; only the render caught it). Always eyeball a final render.
+- **Render-inspection recipe** (headless): `kicad-cli pcb export svg --layers
+  "F.Cu,F.Silkscreen,Edge.Cuts" --fit-page-to-board --exclude-drawing-sheet
+  --black-and-white`, then `rsvg-convert -w 4600` and crop with `sips -c h w
+  --cropOffset y x` (px = (mm − 50) × width/78 for PCB-01). Good enough to hand-place
+  silk labels and sanity-check dense areas without opening KiCad.
 - **Right-angle connectors: verify the mating face points OFF-board and every pad is
   ON-board, per placement.** A blanket "connectors legitimately overhang" edge waiver in
   check_plan.py masked J2 placed rotated 90° wrong — mating face pointing into the board
