@@ -79,10 +79,15 @@ bypass lines; Vishay BAT54W-G3-08 for the dead-stock Nexperia BAT54H).
 **Hand-populated at the bench** (excluded from the assembly files by `jlc_fab.py`):
 C1/C2 (Panasonic FR authenticity — DigiKey stock in hand), J1/J2 (Molex Micro-Fit in
 hand), U8 (LM2907 dead on LCSC; DigiKey qty 3 in hand), and C34 — the LM2907
-charge-pump timing cap must stay 1% C0G for overspeed-chain temperature stability and
-no 0603 C0G 100 nF exists at JLCPCB in any tolerance; **buy a DigiKey 0603 100 nF 1%
-C0G/U2J (e.g. TDK C1608 series) with the next order**. J3/J4 (JST PH THT) ride
-JLCPCB's hand-solder service instead, since genuine JST is deep-stocked there.
+charge-pump timing cap must stay C0G/U2J for overspeed-chain temperature stability and
+no 0603 C0G 100 nF exists at JLCPCB in any tolerance; **buy a DigiKey 0603 100 nF
+C0G/U2J with the next DigiKey order** (decided 2026-07-30: not AliExpress — dielectric
+is unverifiable there and is the one property that matters; 5% initial tolerance is
+fine since RV1 calibrates the chain end-to-end, so e.g. TDK C1608C0G1E104J works —
+grab a strip of ordinary 100 nF 0603 for PCB-02 decoupling in the same cart). J3/J4
+(JST PH THT) ride JLCPCB's hand-solder service instead, since genuine JST is
+deep-stocked there. Bench work on arrival also includes **bridging F1's pads** (DNP
+1206 fuse footprint; the real fuse is the wall-box ATO).
 
 ## SCH-01 24 V input
 

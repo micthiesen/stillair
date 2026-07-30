@@ -3,57 +3,62 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-30** (session 5: PCB-01 ORDERED from JLCPCB — order
-**W2026073105230212**, $354.07 incl. DHL Express: 5 boards, 2 assembled, Standard PCBA,
-4-layer 2 oz outer ENIG, POFV vias.)
+Last updated: **2026-07-30** (session 5 wrap: PCB-01 ordered from JLCPCB, Konnect
+re-scoped to schematic-only.)
 
 ## Now
 
-- **PCB-01 is at the fab.** 60/60 BOM lines matched (two order-time pool-shortage swaps:
-  4.7k → C105871, 562k → C4323390 — recorded in `pcb/pcb-01/fab/lcsc-map.csv`). Placement
-  preview polarity-checked (D1–D9 verified against the board file; D2's vertical
-  orientation confirmed). U1 (MCF QFN) had no preview model — its orientation rides on
-  the "Confirm Parts Placement" engineer review; verify the render crop against the
-  board file when JLCPCB emails it, before approving.
-- **In-flight watch**: DFM/engineering review may email about the J2/J6 edge overhangs
-  and rail-adjacent parts (intentional — confirm); DHL will send a tax-payment link.
-- **Hand-populate on arrival**: C1, C2, C34, J1, J2, U8. **C34 needs a DigiKey 0603
-  100 nF 1% C0G/U2J added to the next DigiKey order** (nothing suitable at JLCPCB).
+- **PCB-01 is at the fab**: JLCPCB order **W2026073105230212**, $354.07 incl. DHL —
+  5 boards, 2 assembled (Standard PCBA, top side), 4-layer 2 oz outer / 1 oz inner
+  ENIG, POFV vias, 0.2 mm min-via tier. 60/60 BOM lines matched; two order-time
+  pool-shortage swaps (4.7k → C105871, 562k → C4323390) are in
+  `pcb/pcb-01/fab/lcsc-map.csv`. Full option set + sourcing rationale:
+  [electrical.md](electrical.md) "Fabrication" + the /kicad-manufacture skill.
+- **In-flight watch**: engineering review may ask about the intentional J2/J6 edge
+  overhangs (confirm); DHL emails a tax link; **U1's orientation was unverifiable in
+  the preview (no model)** — when the Confirm-Parts-Placement render arrives, check
+  the MCF pin-1 corner against the board file before approving.
+- **Bench work queued for arrival**: hand-solder C1, C2, C34, J1, J2, U8; bridge F1's
+  pads. **Next DigiKey order must include C34** (0603 100 nF C0G/U2J, 5% fine — see
+  electrical.md) plus a 100 nF 0603 strip for PCB-02. Nothing else is unpurchased
+  electrically.
 - **Owner lean recorded**: if PCB-01 fits the housing and works, V1 likely becomes the
-  permanent board — no V2 unless desired. Keeps the electrical.md "decide after V1
-  bring-up" gate, but the default flipped from "V2 later" to "V1 is probably it".
+  permanent board — no V2 unless desired (electrical.md's decide-after-bring-up gate
+  stands; the default flipped).
+- **Konnect verdict settled**: schematic engine only — kept for capture, everything
+  board/fab-side runs on kicad-cli + `pcb/tools/`. Vendored skills rewritten to match.
 - **Mechanical/ordering unchanged**: motor in transit; SP-100 waits on measurements.
 
 ## Next
 
-**PCB-02 Hall daughterboard capture** (18 × 8 mm DRV5033 carrier, own KiCad project in
-`pcb/pcb-02/`, spec in electrical.md "PCB-02"). Pure desk work, fully parallel with the
-board order in transit; it ships as its own small order (V1 went out separately). The
-`jlc_fab.py` pattern generalizes — parameterize or copy it for pcb-02.
+**PCB-02 Hall daughterboard capture** (18 × 8 mm DRV5033 carrier; spec in
+electrical.md "PCB-02"; own KiCad project, e.g. `pcb/pcb-02/`). Pure desk work, fully
+parallel with the order in transit, and the last uncaptured electronics. Use Konnect
+per the re-scope (schematic capture) and generalize `pcb/tools/jlc_fab.py` for its
+fab package; it ships as its own small order. DRV5033 ×3 already in hand.
 
 ## Candidates Not Chosen
 
 - **Motor-arrival release sprint**: measurement checklist → SP-100 → MC-100/RH-100 CNC
   batch. Becomes Next the day the GL100 box arrives.
+- **Bring-up prep** (commissioning scripts against the real board; tach-chain bench
+  stim via J3 square-wave injection) — becomes relevant when boards + C34 arrive.
 - **TEMP_SENSE firmware implementation** — parked with `TODO(temp-sense)` in
   `app/src/matter.rs`.
 - **Blade materials + first prints**; **mount mockup** — carried, fully parallel.
-- **Bring-up prep** (commissioning scripts against the real board) — becomes relevant
-  when boards + DigiKey C34 arrive.
 
 ## Learned Recently
 
-- **Konnect manufacturing/validation tools are not fab-ready** (inch-unit CPL, no LCSC
-  column, drill-as-directory, validator misreads the board) → /pcb skill; fab exports
-  are Claude-driven via `pcb/tools/jlc_fab.py`.
-- **jlcsearch.tscircuit.com is the LCSC-lookup workaround** for JS-opaque JLCPCB pages
-  (raw JSON, basic/extended + stock; resistance param wants raw ohms). JLC SMT-pool
-  stock ≠ LCSC marketplace stock, and the order-page matcher is the final word — two
-  deep-stock parts still came up short there.
-- **JLCPCB order-flow facts** (2026-07-30): impedance stackup picker locks copper
-  weights — leave "Specify Stackup"/impedance off and set outer/inner copper directly;
-  min-via-hole option must match the drill file (board has 0.2 mm drills → 0.2 mm
-  tier); Standard PCBA forces ≥70 mm width → auto edge rails + depanel service;
-  saved-page HTML decodes selections via the `cur` class.
-- **All sourcing decisions + substitution rationale** → electrical.md "Fabrication" +
+- **Konnect re-scope** (schematic-only doctrine, which toolsets to never load, why) →
+  /pcb skill "Konnect scope"; /kicad-pcb gutted to a danger list; /kicad-manufacture
+  rewritten around `pcb/tools/jlc_fab.py`; /kicad-review scoped schematic-good /
+  board-superseded.
+- **JLCPCB order-flow facts** (stackup picker locks copper — set weights directly;
+  min-via tier must match the drill file; Standard-PCBA rails/depanel; THT hand-solder
+  service; Confirm Parts Placement; `cur`-class offline page decoding; DHL for
+  Canada) → /kicad-manufacture skill.
+- **jlcsearch.tscircuit.com** as the LCSC catalog workaround + SMT-pool-vs-marketplace
+  stock distinction → /kicad-manufacture skill.
+- **All sourcing/substitution decisions** (incl. C34's dielectric-over-tolerance call
+  and the AliExpress counterfeit rationale) → electrical.md "Fabrication" +
   `pcb/pcb-01/fab/lcsc-map.csv`.

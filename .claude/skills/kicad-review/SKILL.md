@@ -9,6 +9,17 @@ argument-hint: "[what to review]"
 
 # KiCAD Design Review & Validation Workflow
 
+> **Stillair scope note (2026-07-30 Konnect re-scope).** The SCHEMATIC half of this skill is
+> the good half of Konnect — `find_orphan_items` / `find_shorted_nets` /
+> `find_single_pin_nets` / `run_erc` and the `design_review` audits are worth running during
+> capture. The BOARD half is superseded: ignore `get_drc_violations` and especially
+> `validate_for_manufacturing` (verified broken — read PCB-01's routed 4-layer board as
+> "2 layers, 0 nets, READY"). Board DRC is headless
+> `kicad-cli pcb drc --format json --severity-all` diffed against
+> `pcb/<board>/placement/waivers.md`, and pre-fab checks are the /pcb +
+> /kicad-manufacture procedure. Deep review is the board-truth agent-swarm loop in /pcb
+> (artifacts extracted FROM the board, docs off-limits to reviewers), not these tools alone.
+
 This skill guides Claude through systematic design review of a KiCAD project using MCP tools.
 ALL checks are performed through MCP tools — never parse .kicad_sch or .kicad_pcb files directly.
 

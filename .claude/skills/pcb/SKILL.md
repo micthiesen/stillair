@@ -44,6 +44,21 @@ doc gets updated in the same commit as the board.
 | PCB-01 | 78 × 58 mm V1/V2 controller, 4-layer | `pcb/pcb-01/pcb-01.kicad_pro` |
 | PCB-02 | 18 × 8 mm DRV5033 Hall daughterboard | not started; own project, same fab order |
 
+## Konnect scope — settled 2026-07-30, after PCB-01 shipped to fab
+
+The keep/kill review after the first full board: **Konnect is the schematic engine, and only
+that.** Its file-based schematic tools captured all 7 sheets / ~170 components with KiCad
+closed and have no kicad-cli equivalent (the CLI cannot place a symbol, draw a wire, or edit
+a field) — that alone justifies keeping it, and it's the workhorse for PCB-02. Everything
+board-side lost to alternatives or is broken: board setup corrupts KiCad 10 files
+(quirks below), placement lost to `pcb/tools/`, routing is Michael's, DRC is headless
+kicad-cli, and the manufacturing/validation tools are verifiably wrong (see
+/kicad-manufacture). Operating rule: **load `sch_*`, `library`, `project`, `config`,
+`design_review` freely; never load `pcb_routing` or `manufacturing`; treat `pcb_board` /
+`verification` as read-only-and-suspect.** The vendored kicad-pcb and kicad-manufacture
+skills were rewritten to match; kicad-review carries a scope note. On a Konnect upgrade,
+re-test the broken tools before widening this.
+
 ## Division of labor
 
 The split follows what each side is actually good at, not what the tools technically allow.
