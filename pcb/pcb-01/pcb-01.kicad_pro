@@ -60,7 +60,7 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.5,
+          "min_clearance": 0.0,
           "min_island_area": 10.0,
           "min_thickness": 0.25,
           "pad_connection": 1,
@@ -69,7 +69,13 @@
           "thermal_relief_spoke_width": 0.5
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [],
       "meta": {
         "version": 2
@@ -203,7 +209,17 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        1.0,
+        2.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -230,7 +246,24 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        },
+        {
+          "diameter": 0.4,
+          "drill": 0.2
+        },
+        {
+          "diameter": 0.6,
+          "drill": 0.3
+        },
+        {
+          "diameter": 1.0,
+          "drill": 0.5
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -511,14 +544,92 @@
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "clearance": 0.2,
+        "name": "Phase",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 2,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 2.0,
+        "tuning_profile": "",
+        "via_diameter": 1.0,
+        "via_drill": 0.5
+      },
+      {
+        "clearance": 0.2,
+        "name": "Power24",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 3,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 2.0,
+        "tuning_profile": "",
+        "via_diameter": 1.0,
+        "via_drill": 0.5
+      },
+      {
+        "clearance": 0.2,
+        "name": "Rail3V3",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.5,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3
+      },
+      {
+        "clearance": 0.2,
+        "name": "Tach12V",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.4,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3
       }
     ],
     "meta": {
       "version": 5
     },
-    "net_colors": null,
+    "net_colors": {
+      "3V3": "rgb(15, 255, 36)",
+      "AGND": "rgb(255, 255, 0)",
+      "PGND": "rgb(255, 0, 255)",
+      "VM24": "rgb(20, 255, 250)"
+    },
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "Phase",
+        "pattern": "PHASE_*"
+      },
+      {
+        "netclass": "Power24",
+        "pattern": "VM24"
+      },
+      {
+        "netclass": "Power24",
+        "pattern": "RAW24*"
+      },
+      {
+        "netclass": "Power24",
+        "pattern": "PGND"
+      },
+      {
+        "netclass": "Rail3V3",
+        "pattern": "3V3"
+      },
+      {
+        "netclass": "Tach12V",
+        "pattern": "+12V_TACH"
+      },
+      {
+        "netclass": "Tach12V",
+        "pattern": "TACH_LDO_IN"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
@@ -645,13 +756,46 @@
       {
         "filename": "pcb-01.kicad_sch",
         "name": "pcb-01",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
       }
     ],
     "used_designators": "1\\-4",
     "variants": []
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "d3d2f339-2d54-4348-bfa6-3bbc3f84dd10",
+      "pcb-01"
+    ],
+    [
+      "4f3ad3bc-5559-459d-bbfa-6b409864fcc9",
+      "SCH-01 24V Input"
+    ],
+    [
+      "5accb999-253c-4b65-8ba1-1db5f7d3d973",
+      "SCH-02 3V3 Rail"
+    ],
+    [
+      "b94aab52-70f7-47bc-a2ca-ec3aa53d5118",
+      "SCH-03 MCF Power Stage"
+    ],
+    [
+      "b2c29f3b-e41c-41c3-8681-177f71b3533f",
+      "SCH-04 ESP32-C6 Supervisor"
+    ],
+    [
+      "00bedea2-bbc3-424f-aa7a-f09db894703d",
+      "SCH-05 Permission + Watchdog"
+    ],
+    [
+      "57d19020-28f3-4fe2-8853-915d9dad5b29",
+      "SCH-06 Hall Tach"
+    ],
+    [
+      "8d2711af-a735-4039-b9c0-aeb6fc13d51a",
+      "SCH-07 Connectors"
+    ]
+  ],
   "text_variables": {},
   "tuning_profiles": {
     "meta": {

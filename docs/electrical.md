@@ -521,7 +521,7 @@ detection necessarily happens in the running state).
 | Ref | Part | Pinout |
 |---|---|---|
 | J1 POWER | Molex Micro-Fit 43045-0200 (dual-row, right-angle) | 1 RAW24, 2 0V |
-| J2 MOTOR | Molex Micro-Fit 43650-0300 (single-row, right-angle) | 1 U, 2 V, 3 W |
+| J2 MOTOR | Molex Micro-Fit 43650-0300 (single-row, right-angle) | 1 W, 2 V, 3 U (U↔W swapped 2026-07 routing: J2's pad order mirrored U1's phase-pin order, and the swap makes all three 2 mm traces straight parallel runs with no layer changes; motor leads are unlabeled flying wires, so phase order at the connector is free) |
 | J3 HALL | JST B3B-PH-K-S | 1 3V3, 2 HALL_TACH, 3 AGND |
 | J4 TEMP | JST B2B-PH-K-S | 1 TEMP_SENSE, 2 AGND |
 | J5 I2C | JST-SH 4-pin **SM04B-SRSS-TB side-entry** (matches BOM/ordered cable; board was captured with the vertical BM04B by mistake, fixed 2026-07) | GND, 3V3, SDA, SCL |
@@ -579,6 +579,31 @@ DRVOFF, TPS3435 WDI/WDO/WD-EN/MR, MCF watchdog, nFAULT, SDA/SCL, FG, HALL_TACH, 
 OVERSPEED_N, and OUTA/B/C. Include probe grounds, BOOT/RESET, direct I²C access, zero-ohm
 isolation links around watchdog and analog fault paths, a spare bulk-cap footprint, and an
 optional DNP input-fuse footprint.
+
+## Routing notes (2026-07, in progress)
+
+Decisions made while laying copper; the board file is the authority, these are the whys:
+
+- **J2 phase order swapped U↔W** (see SCH-07 table) so the three phase runs are straight
+  parallel 2 mm traces: F.Cu necks (0.3) off the QFN pairs, one 1.0/0.5 via each, B.Cu
+  diagonals into J2's through-holes.
+- **Grounds**: L2 carries the AGND plane and the PGND island (boundary steps at x 78 under
+  NT1 and notches around U1's thermal-via field, which is AGND). Rule while routing the
+  west side: **no AGND vias west of U1** — L2 there is the island; west-side AGND lives on
+  F.Cu anchored at U1's pad 41. A B.Cu AGND fill at the end picks up stragglers (R1, the
+  R8–R10 pulldowns, C16).
+- **L3 is split power distribution**: `vm24-plane` (west, staircase boundary at x 86/98)
+  and `3v3-plane` (east). Power pads connect by via storm, not fat F.Cu spaghetti; the
+  antenna rule-area keeps all four layers clear under the ESP antenna.
+- **C15, C12 rotated 180°** and C13's neighborhood re-threaded — routing-driven placement
+  fixes (both caps had their quiet pad facing the congested side). Recorded as amendments
+  to the locked placement.
+- **USB**: FS-speed (12 Mbps), so the interleaved type-C pads and the U12 ESD branch were
+  routed for cleanliness, not impedance; U12 hangs ~3 mm off the R20/R21 junction rather
+  than strictly in-line — accepted at FS edge rates.
+- **Net classes** (Phase/Power24 2.0 mm + 1.0/0.5 via, Rail3V3 0.5, Tach12V 0.4, all
+  0.2 clearance) are now genuinely in `pcb-01.kicad_pro` — the planned setup script had
+  never run; clearances above 0.2 would false-fire on U1's 0.5 mm pitch.
 
 ## Open items from the 2026-07 board-truth review
 

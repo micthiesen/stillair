@@ -1,147 +1,322 @@
 (kicad_sch
-  (version 20260306)
-  (generator "eeschema")
-  (generator_version "10.0")
-  (uuid "d3d2f339-2d54-4348-bfa6-3bbc3f84dd10")
-  (paper "A4")
-
-  (lib_symbols)
-
-  (sheet
-    (at 20 30)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "4f3ad3bc-5559-459d-bbfa-6b409864fcc9")
-    (property "Sheetname" "SCH-01 24V Input"
-      (at 20 29.2 0))
-    (property "Sheetfile" "sch01-input.kicad_sch"
-      (at 20 65.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "2")))))
-
-  (sheet
-    (at 90 30)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "5accb999-253c-4b65-8ba1-1db5f7d3d973")
-    (property "Sheetname" "SCH-02 3V3 Rail"
-      (at 90 29.2 0))
-    (property "Sheetfile" "sch02-logic-rail.kicad_sch"
-      (at 90 65.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "3")))))
-
-  (sheet
-    (at 160 30)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "b94aab52-70f7-47bc-a2ca-ec3aa53d5118")
-    (property "Sheetname" "SCH-03 MCF Power Stage"
-      (at 160 29.2 0))
-    (property "Sheetfile" "sch03-mcf-power.kicad_sch"
-      (at 160 65.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "4")))))
-
-  (sheet
-    (at 230 30)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "b2c29f3b-e41c-41c3-8681-177f71b3533f")
-    (property "Sheetname" "SCH-04 ESP32-C6 Supervisor"
-      (at 230 29.2 0))
-    (property "Sheetfile" "sch04-esp32.kicad_sch"
-      (at 230 65.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "5")))))
-
-  (sheet
-    (at 20 110)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "00bedea2-bbc3-424f-aa7a-f09db894703d")
-    (property "Sheetname" "SCH-05 Permission + Watchdog"
-      (at 20 109.2 0))
-    (property "Sheetfile" "sch05-permission.kicad_sch"
-      (at 20 145.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "6")))))
-
-  (sheet
-    (at 90 110)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "57d19020-28f3-4fe2-8853-915d9dad5b29")
-    (property "Sheetname" "SCH-06 Hall Tach"
-      (at 90 109.2 0))
-    (property "Sheetfile" "sch06-tach.kicad_sch"
-      (at 90 145.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "7")))))
-
-  (sheet
-    (at 160 110)
-    (size 55 35)
-    (fields_autoplaced)
-    (stroke
-      (width 0.1524)
-      (type solid))
-    (fill
-      (color 0 0 0 0.0))
-    (uuid "8d2711af-a735-4039-b9c0-aeb6fc13d51a")
-    (property "Sheetname" "SCH-07 Connectors"
-      (at 160 109.2 0))
-    (property "Sheetfile" "sch07-connectors.kicad_sch"
-      (at 160 145.4 0))
-    (instances
-      (project "pcb-01"
-        (path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
-          (page "8")))))
-  (embedded_fonts no)
-
-  (sheet_instances
-    (path "/"
-      (page "1")))
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "d3d2f339-2d54-4348-bfa6-3bbc3f84dd10")
+	(paper "A4")
+	(lib_symbols)
+	(sheet
+		(at 20 110)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "00bedea2-bbc3-424f-aa7a-f09db894703d")
+		(property "Sheetname" "SCH-05 Permission + Watchdog"
+			(at 20 109.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch05-permission.kicad_sch"
+			(at 20 145.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 20 30)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "4f3ad3bc-5559-459d-bbfa-6b409864fcc9")
+		(property "Sheetname" "SCH-01 24V Input"
+			(at 20 29.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch01-input.kicad_sch"
+			(at 20 65.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 90 110)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "57d19020-28f3-4fe2-8853-915d9dad5b29")
+		(property "Sheetname" "SCH-06 Hall Tach"
+			(at 90 109.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch06-tach.kicad_sch"
+			(at 90 145.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "7")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 90 30)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "5accb999-253c-4b65-8ba1-1db5f7d3d973")
+		(property "Sheetname" "SCH-02 3V3 Rail"
+			(at 90 29.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch02-logic-rail.kicad_sch"
+			(at 90 65.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 160 110)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "8d2711af-a735-4039-b9c0-aeb6fc13d51a")
+		(property "Sheetname" "SCH-07 Connectors"
+			(at 160 109.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch07-connectors.kicad_sch"
+			(at 160 145.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "8")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 230 30)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b2c29f3b-e41c-41c3-8681-177f71b3533f")
+		(property "Sheetname" "SCH-04 ESP32-C6 Supervisor"
+			(at 230 29.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch04-esp32.kicad_sch"
+			(at 230 65.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 160 30)
+		(size 55 35)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b94aab52-70f7-47bc-a2ca-ec3aa53d5118")
+		(property "Sheetname" "SCH-03 MCF Power Stage"
+			(at 160 29.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sheetfile" "sch03-mcf-power.kicad_sch"
+			(at 160 65.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(instances
+			(project "pcb-01"
+				(path "/d3d2f339-2d54-4348-bfa6-3bbc3f84dd10"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
 )
