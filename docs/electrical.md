@@ -409,11 +409,19 @@ One physical revolution becomes one analog safety decision. A single captive mag
 the dangerous half-speed failure mode of a two-magnet tach; an equal-mass nonmagnetic slug at
 180° restores balance.
 
-Hall daughterboard (18 × 8 mm):
+Hall daughterboard (**PCB-02**, 24 × 8 mm — grown from the original 18 × 8 at 2026-07-30
+capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCad project
+`pcb/pcb-02/`, 2-layer 1 oz):
 
 - `DRV5033FAQDBZR`, 3.3 V, 100 nF local bypass, open-drain output with 10 kΩ pull-up on the
   main board.
-- JST-PH: 3.3 V, HALL_TACH, AGND.
+- J1 **S3B-PH-K-S** (JST-PH side entry, settled 2026-07-30): 1 = 3V3, 2 = HALL_TACH,
+  3 = AGND — mirrors J3 on PCB-01. Cable exits in the board plane away from the hub.
+- All components on the magnet-facing side (single-sided hand assembly); the sensor face is
+  the closest surface to the magnet cap.
+- Mounting: two Ø2.2 mm NPTH (M2) on the board centerline at board-local (7, 4) and
+  (14, 4) mm — 7 mm pitch. These are the BR-100 bracket datum; U1's sensor element sits at
+  the inner end (r76 line), J1 flush at the outer edge.
 - Sensor element and captive Ø6.35 × 3.18 mm (1/4 × 1/8 in) N52 magnet both at r76.0 ±0.5 mm (moved with the
   RH-100 tach stations 2026-07-28); south pole toward the
   package (verify polarity before closing the cap); magnet face parallel to the Hall PCB.

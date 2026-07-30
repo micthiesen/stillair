@@ -42,7 +42,7 @@ doc gets updated in the same commit as the board.
 | Designator | What | KiCad project |
 |---|---|---|
 | PCB-01 | 78 × 58 mm V1/V2 controller, 4-layer | `pcb/pcb-01/pcb-01.kicad_pro` |
-| PCB-02 | 18 × 8 mm DRV5033 Hall daughterboard | not started; own project, same fab order |
+| PCB-02 | 24 × 8 mm DRV5033 Hall daughterboard, 2-layer | `pcb/pcb-02/pcb-02.kicad_pro` (own small fab order; grown from spec'd 18 × 8 on 2026-07-30) |
 
 ## Konnect scope — settled 2026-07-30, after PCB-01 shipped to fab
 
@@ -333,6 +333,14 @@ so Michael can watch the block appear instead of reviewing it at the end.
   siblings in the layers block. Edit the `.kicad_pro` JSON directly (it is not an
   object-graph file) and verify with `kicad-cli pcb drc` afterward, which is a full parse.
   `set_board_size` and `add_mounting_hole` are fine.
+- **`add_mounting_hole` writes a dangling lib id and thin geometry** (found on PCB-02,
+  2026-07-30): it names the footprint `MountingHole:MountingHole_<drill>mm`, which exists in
+  KiCad's library only for some diameters (2.2 mm doesn't — the real name is
+  `MountingHole_2.2mm_M2`), gives the NPTH pad a 0.5 mm annular keepout the library doesn't
+  have, and omits the courtyard + Cmts screw-head circles entirely — so placement checks
+  can't see the screw head. DRC flags it as `lib_footprint_issues`. Fix pattern: scripted
+  file patch (lib id, pad size to match lib, add the two fp_circles with uuids), then a
+  headless DRC parse to verify — see scratchpad fix_pcb02_holes.py from that session.
 - **Custom DRC rules go in `pcb-01.kicad_dru`** (plain-text rules file, safe to edit): the
   Ø8 mounting-hole copper keepout lives there as a `physical_clearance` rule against H1-H4.
 - **`memberOfFootprint()` in `.kicad_dru` conditions matches the footprint's TEXT fields

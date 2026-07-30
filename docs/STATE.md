@@ -31,11 +31,12 @@ re-scoped to schematic-only.)
 
 ## Next
 
-**PCB-02 Hall daughterboard capture** (18 × 8 mm DRV5033 carrier; spec in
-electrical.md "PCB-02"; own KiCad project, e.g. `pcb/pcb-02/`). Pure desk work, fully
-parallel with the order in transit, and the last uncaptured electronics. Use Konnect
-per the re-scope (schematic capture) and generalize `pcb/tools/jlc_fab.py` for its
-fab package; it ships as its own small order. DRV5033 ×3 already in hand.
+**PCB-02 layout** (capture + board setup done 2026-07-30: `pcb/pcb-02/`, ERC and DRC
+clean, 24 × 8 mm outline with the M2 hole pair at board-local (7,4)/(14,4) as the
+BR-100 datum — decisions in electrical.md's daughterboard section). Michael: open the
+project in KiCad, F8 (Update PCB from Schematic), drop U1/C1/J1 anywhere, save; Claude
+then places from the file, Michael routes (three nets), then generalize
+`pcb/tools/jlc_fab.py` for the fab package; it ships as its own small order.
 
 ## Candidates Not Chosen
 

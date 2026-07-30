@@ -8,10 +8,11 @@ of that doc.
 
 ## Projects
 
-- `pcb-01/` — the controller board (**PCB-01**). Created 2026-07-28, empty apart from the
-  KiCad scaffolding; schematic capture is the next step.
-- PCB-02, the 18 × 8 mm DRV5033 Hall daughterboard, gets its own project when PCB-01 is
-  captured. It rides in the same fab order.
+- `pcb-01/` — the controller board (**PCB-01**). Captured, routed, and ordered from JLCPCB
+  2026-07-30 (order W2026073105230212).
+- `pcb-02/` — the 24 × 8 mm DRV5033 Hall daughterboard (**PCB-02**). Created 2026-07-30:
+  schematic captured (ERC clean), 2-layer board set up (outline, M2 hole pair as the BR-100
+  datum, JLCPCB rules). Ships as its own small order — PCB-01 already went out separately.
 
 ## Tooling
 
