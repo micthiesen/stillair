@@ -51,6 +51,18 @@ plate (JLCCNC), and — 2026-07-28 — the complete mechanical fastener set incl
 KD-100 catcher washers and Nord-Locks (Accu, $219.45 CAD), CW-100 brass rod (Amazon), and
 the LCSC-gap electronics order 374750597 (DigiKey, ~$63 USD: insurance ICs and spares,
 bulk caps, USB-C, cable-side JST housings/contacts, trimmers, dev cable), and the ST-100
-standoffs (JLCCNC, qty 4, $101.79). Still to order
-with the V1 board run: everything LCSC-path (most semis, passives, PH headers, SM04B, the
-Sunlord inductor) plus the boards themselves.
+standoffs (JLCCNC, qty 4, $101.79). The V1 board run went out 2026-07-30 as JLCPCB
+W2026073105230212 (boards + all LCSC-path parts via PCBA) with PCB-02 following the same
+day as W2026073108244536, and the **final electronics order** closed 2026-07-30 as
+DigiKey **100723632** ($62.33, 24 lines: PCB-02's C1/J1, the C34 1206 C0G, board-#2
+completion headers, the J4 NTC element, EB-100 M3 standoffs, tach-chain 0.1% spares,
+the C2 DNP calibration ladder, and bench spares). Electrically nothing is left to buy;
+the remaining hardware (M2 kit for PCB-02, a Micro-Fit-capable crimper) routes via
+Amazon/Accu, not DigiKey.
+
+DigiKey cart mechanics (learned building 100723632 via browser automation): the cart
+page's Bulk Add box takes `qty, part-number` lines but **silently drops MPNs that have
+multiple packaging variants** (cut tape / reel / Digi-Reel) — use packaging-specific
+DigiKey numbers (the `-1-ND` / `...CT-ND` forms, findable on each product page) for
+anything taped; single-listing MPNs (connectors, hardware) resolve fine as bare MPNs.
+Verify the cart line MPNs after a bulk add rather than trusting the submit.
