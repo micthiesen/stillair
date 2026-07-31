@@ -333,6 +333,12 @@ so Michael can watch the block appear instead of reviewing it at the end.
   siblings in the layers block. Edit the `.kicad_pro` JSON directly (it is not an
   object-graph file) and verify with `kicad-cli pcb drc` afterward, which is a full parse.
   `set_board_size` and `add_mounting_hole` are fine.
+- **`add_board_text` writes valid KiCad 10 `gr_text` but omits `(justify mirror)` on back
+  layers** (verified on PCB-02, 2026-07-30) — B.SilkS text comes out readable from the
+  FRONT, i.e. mirrored on the physical part. Follow up with a scripted patch adding
+  `(justify mirror)` inside the effects block (see scratchpad fix_pcb02_bsilk.py), then
+  DRC-parse and render `--mirror` to eyeball. Otherwise the tool is safe: correct syntax,
+  uuid included, file-based with KiCad closed.
 - **`add_mounting_hole` writes a dangling lib id and thin geometry** (found on PCB-02,
   2026-07-30): it names the footprint `MountingHole:MountingHole_<drill>mm`, which exists in
   KiCad's library only for some diameters (2.2 mm doesn't — the real name is
