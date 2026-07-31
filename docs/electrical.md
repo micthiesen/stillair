@@ -80,11 +80,19 @@ bypass lines; Vishay BAT54W-G3-08 for the dead-stock Nexperia BAT54H).
 C1/C2 (Panasonic FR authenticity — DigiKey stock in hand), J1/J2 (Molex Micro-Fit in
 hand), U8 (LM2907 dead on LCSC; DigiKey qty 3 in hand), and C34 — the LM2907
 charge-pump timing cap must stay C0G/U2J for overspeed-chain temperature stability and
-no 0603 C0G 100 nF exists at JLCPCB in any tolerance; **buy a DigiKey 0603 100 nF
-C0G/U2J with the next DigiKey order** (decided 2026-07-30: not AliExpress — dielectric
-is unverifiable there and is the one property that matters; 5% initial tolerance is
-fine since RV1 calibrates the chain end-to-end, so e.g. TDK C1608C0G1E104J works —
-grab a strip of ordinary 100 nF 0603 for PCB-02 decoupling in the same cart). J3/J4
+no 0603 C0G 100 nF exists at JLCPCB in any tolerance. **2026-07-30 sourcing sweep
+finding: a 0603 (or 0805) class-1 100 nF does not exist from any manufacturer — it's a
+dielectric-permittivity limit, not a stock gap** (this section's earlier TDK
+C1608C0G1E104J example was a phantom part number; the smallest real class-1 100 nF is
+1206). **Decision (locked 2026-07-30): KEMET C1206C104K3GACTU** (1206, C0G, 25 V,
+±10 % — RV1's trim range absorbs the tolerance; 562k + 0–200k covers a ±10 % C34 with
+headroom), **hand-bridged onto C34's 0603 site**: a 1206's termination inner edges
+(±1.1 mm) overlap a 0603 footprint's pad outer edges (±1.2 mm), so it sits on the site
+with generous fillets — standard upsize rework, inspectable, verified functionally by
+TACH-01 calibration. Rationale: X7R would age −2..−5 %/year after calibration, drifting
+the trip *upward* (the safety-eroding direction) unwatched; C0G ends that permanently.
+An X7R 0603 drop-in from the PCB-02 decoupling strip stays on the bench as the
+fast-bring-up fallback only; if a V2 board happens, C34's footprint becomes 1206. J3/J4
 (JST PH THT) ride JLCPCB's hand-solder service instead, since genuine JST is
 deep-stocked there. Bench work on arrival also includes **bridging F1's pads** (DNP
 1206 fuse footprint; the real fuse is the wall-box ATO).
