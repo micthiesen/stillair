@@ -426,8 +426,27 @@ capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCa
   line) at board-local (2.5, 4), J1's body flush at the outer edge.
 - Sensor element and captive Ø6.35 × 3.18 mm (1/4 × 1/8 in) N52 magnet both at r76.0 ±0.5 mm (moved with the
   RH-100 tach stations 2026-07-28); south pole toward the
-  package (verify polarity before closing the cap); magnet face parallel to the Hall PCB.
-- Axial gap 2.5 mm nominal, adjustable 1.5–4.0 mm.
+  package by convention (the FA variant is omnipolar — TI datasheet §7.1 — so a reversed
+  magnet still trips at the same threshold magnitudes; polarity is not assembly-critical);
+  magnet face parallel to the Hall PCB. The element sits at U1's placed anchor,
+  board-local (2.5, 4): 4.5 mm from H1 along the hole centerline, zero cross-axis offset
+  (2026-07-30 review, verified from TI §11.1.2 + the footprint file).
+- Axial gap 2.5 mm nominal, adjustable 1.5–4.0 mm, **measured from the SOT-23's marked
+  outer face (the surface toward the magnet) to the magnet cap**. The Hall element sits
+  ≈0.4 mm behind that face (TI §11.1.2: 0.7 mm above the seating plane in a 1.12 mm
+  package), so element-to-magnet is gap + 0.4 mm; the 15× field margin absorbs it, but
+  record measurements against the package face, never the PCB substrate (measuring from
+  the substrate would under-report the true clearance by the package height).
+- Considered and declined at the 2026-07-30 board review: a series resistor on
+  HALL_TACH at the sensor end (signal is ≤3.3 Hz behind a 10 kΩ pull-up into a 2N7002
+  gate with R45/C32 filtering at the LM2907; DRV5033 carries internal load-dump/reverse
+  protection, and dead-tach is covered by the firmware FG-vs-Hall plausibility contract).
+- Bracket (BR-100) handoff facts from the review: J1 is the board's tallest feature
+  (~4.5 mm toward the rotor at its station, ~15 mm outboard of the sensor) — size axial
+  clearance to it, not to the 1.1 mm sensor; the connector housing and cable extend past
+  the 24 mm board edge, and all cable strain relief must come from the bracket (no board
+  material exists beyond J1); at H1 use a bare pan head or washer ≤Ø4.5 (a standard Ø5
+  washer leaves <0.35 mm to U1's pin-3 joint); solder the board before mounting it.
 
 With the marker removed, run the GL100 through 0–180 RPM in both directions and require zero
 Hall pulses from the motor magnets. With it installed, require exactly one pulse per

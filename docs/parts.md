@@ -319,6 +319,12 @@ Tach features:
 - Sensor face is approximately Z106.9 (hub top Z110.2 − 0.8 mm cap − 2.5 mm gap;
   re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
   exit and daughterboard footprint.
+- PCB-02 datum facts (board captured/placed 2026-07-30, see electrical.md): the Hall
+  element sits 4.5 mm from H1 along the M2 hole centerline (holes 6 mm apart, Ø2.2,
+  board 24 × 8 mm) with zero cross-axis offset; the gap spec is measured to the SOT-23's
+  outer face. The JST connector at the outer end is the tallest rotor-facing feature
+  (~4.5 mm) and its housing/cable extend past the board edge — the bracket provides all
+  cable strain relief and must clear J1's height, not just the sensor's.
 
 ## Blade root-joint qualification (BA-00 deleted)
 

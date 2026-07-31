@@ -31,13 +31,16 @@ re-scoped to schematic-only.)
 
 ## Next
 
-**PCB-02 routing** (capture, board setup, and placement done 2026-07-30: `pcb/pcb-02/`,
-ERC clean, DRC clean apart from the J1-silk-over-edge waivers in
-`pcb/pcb-02/placement/waivers.md`; M2 datum settled at board-local (7,4)/(13,4) —
-H2 moved 1 mm west at placement for washer clearance, electrical.md updated). Michael
-routes the three nets in KiCad (expect ~1 via, or 0 if AGND rides a B.Cu pour); Claude
-runs the DRC-diff-per-save loop against the waivers baseline. Then generalize
-`pcb/tools/jlc_fab.py` for the fab package; it ships as its own small order.
+**PCB-02 fab package** (capture, board setup, placement, routing, AND the four-agent
+board-truth review all done 2026-07-30: `pcb/pcb-02/` at exactly the waivers baseline —
+8 J1-silk warnings, 0 unconnected. Review verdict: no board changes; findings landed as
+docs — gap datum + element depth and the BR-100 handoff facts in electrical.md/parts.md,
+harness continuity test TACH-06, series-R-declined rationale). Next: generalize
+`pcb/tools/jlc_fab.py` (pcb-01-hardcoded) the way apply_positions/board_model/
+render_board already were (STILLAIR_BOARD env), build the JLCPCB package, and order —
+own small order, bare boards, hand-assembled from parts in hand (plus the S3B-PH-K-S
+LCSC number to verify at order time, and C34 + the 100 nF strip on the next DigiKey
+order).
 
 ## Candidates Not Chosen
 
