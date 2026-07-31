@@ -1,49 +1,77 @@
 #!/usr/bin/env python3
-"""Generate the JLCPCB fabrication + assembly package for PCB-01.
+"""Generate the JLCPCB fabrication (+ assembly) package for a Stillair board.
 
-Outputs into pcb/pcb-01/fab/:
-  gerbers/            individual gerber + drill files (kicad-cli)
-  pcb-01-gerbers.zip  the zip to upload on the JLCPCB quote page
-  bom-jlcpcb.csv      assembly BOM  (Comment, Designator, Footprint, LCSC Part #)
-  cpl-jlcpcb.csv      pick-and-place (Designator, Mid X, Mid Y, Layer, Rotation)
+Usage: jlc_fab.py [pcb-01|pcb-02]     (default pcb-01)
+
+Outputs into pcb/<board>/fab/:
+  gerbers/              individual gerber + drill files (kicad-cli)
+  <board>-gerbers.zip   the zip to upload on the JLCPCB quote page
+  bom-jlcpcb.csv        assembly BOM   } only for boards with assembly=True
+  cpl-jlcpcb.csv        pick-and-place } (PCB-02 is a bare-board order)
 
 The assembly files contain only the JLCPCB-assembled subset: DNP parts, bare-pad
 "components" (test points, Tag-Connect, net tie, solder jumper) and the
-hand-populated lines (HAND_SOLDER below) are excluded. Rerun after any board or
+hand-populated lines (hand_solder below) are excluded. Rerun after any board or
 schematic change; kicad-cli reads the saved files, so save/refill zones first.
 """
 
 import csv
-import io
 import subprocess
 import sys
 import zipfile
 from pathlib import Path
 
 KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
-ROOT = Path(__file__).resolve().parents[1] / "pcb-01"
-BOARD = ROOT / "pcb-01.kicad_pcb"
-SCHEMATIC = ROOT / "pcb-01.kicad_sch"
+
+BOARDS = {
+    "pcb-01": {
+        # 4-layer controller, Standard PCBA top side.
+        "layers": (
+            "F.Cu,In1.Cu,In2.Cu,B.Cu,F.Mask,B.Mask,"
+            "F.Silkscreen,B.Silkscreen,F.Paste,B.Paste,Edge.Cuts"
+        ),
+        "assembly": True,
+        # Bare pads / fitted-but-no-part refs, never in assembly files.
+        "no_part_prefixes": ("TP",),
+        "no_part_refs": {"J7", "NT1", "JP1"},
+        # DNP flags are inconsistent in the schematic (intrinsic dnp vs a DNP
+        # property), so exclude by explicit ref too.
+        "dnp_refs": {"C6", "C32", "C36", "C37", "C38", "C39", "C40", "F1", "J8"},
+        # Hand-populated at the bench (THT, or parts already in hand / not
+        # LCSC-stocked). Keep in sync with docs/electrical.md "Fabrication".
+        # C1/C2: Panasonic FR authenticity (DigiKey stock in hand). J1/J2: Molex
+        # in hand. U8: LM2907 effectively dead on LCSC (~55 under the MX reel
+        # code); DigiKey qty 3 in hand. C34: 100nF 1% C0G 0603 (LM2907
+        # charge-pump timing) has no 0603 form in the JLC catalog; DigiKey.
+        "hand_solder": {"C1", "C2", "C34", "J1", "J2", "U8"},
+    },
+    "pcb-02": {
+        # 2-layer Hall daughterboard: bare boards, hand-assembled from parts in
+        # hand (DRV5033 x3, 100 nF strip, S3B-PH-K-S via DigiKey).
+        "layers": (
+            "F.Cu,B.Cu,F.Mask,B.Mask,"
+            "F.Silkscreen,B.Silkscreen,F.Paste,B.Paste,Edge.Cuts"
+        ),
+        "assembly": False,
+        "no_part_prefixes": (),
+        "no_part_refs": set(),
+        "dnp_refs": set(),
+        "hand_solder": set(),
+    },
+}
+
+BOARD_NAME = sys.argv[1] if len(sys.argv) > 1 else "pcb-01"
+CFG = BOARDS[BOARD_NAME]
+ROOT = Path(__file__).resolve().parents[1] / BOARD_NAME
+BOARD = ROOT / f"{BOARD_NAME}.kicad_pcb"
+SCHEMATIC = ROOT / f"{BOARD_NAME}.kicad_sch"
 OUT = ROOT / "fab"
 
-GERBER_LAYERS = (
-    "F.Cu,In1.Cu,In2.Cu,B.Cu,F.Mask,B.Mask,"
-    "F.Silkscreen,B.Silkscreen,F.Paste,B.Paste,Edge.Cuts"
-)
-
-# Bare pads / fitted-but-no-part refs, never in assembly files.
-NO_PART_PREFIXES = ("TP",)
-NO_PART_REFS = {"J7", "NT1", "JP1"}
-# DNP flags are inconsistent in the schematic (intrinsic dnp vs a DNP property),
-# so exclude by explicit ref too.
-DNP_REFS = {"C6", "C32", "C36", "C37", "C38", "C39", "C40", "F1", "J8"}
-# Hand-populated at the bench (THT, or parts already in hand / not LCSC-stocked).
-# Keep in sync with docs/electrical.md "Fabrication".
-# C1/C2: Panasonic FR authenticity (DigiKey stock in hand). J1/J2: Molex in hand.
-# U8: LM2907 effectively dead on LCSC (~55 under the MX reel code); DigiKey qty 3 in hand.
-# C34: 100nF 1% C0G 0603 (LM2907 charge-pump timing, overspeed-chain gain) does not
-# exist in the JLC catalog in any 0603 form; hand-solder a DigiKey C0G/U2J part.
-HAND_SOLDER = {"C1", "C2", "C34", "J1", "J2", "U8"}
+GERBER_LAYERS = CFG["layers"]
+NO_PART_PREFIXES = CFG["no_part_prefixes"]
+NO_PART_REFS = CFG["no_part_refs"]
+DNP_REFS = CFG["dnp_refs"]
+HAND_SOLDER = CFG["hand_solder"]
 
 # (Comment, Footprint) -> LCSC number, merged over empty schematic LCSC fields.
 # Durable home for capture-time-undecided sourcing; see lcsc-map.csv Note column
@@ -84,7 +112,7 @@ def export_gerbers() -> None:
         "-o", str(gdir) + "/",
         str(BOARD),
     )
-    zip_path = OUT / "pcb-01-gerbers.zip"
+    zip_path = OUT / f"{BOARD_NAME}-gerbers.zip"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(gdir.iterdir()):
             z.write(f, f.name)
@@ -187,6 +215,9 @@ def export_cpl() -> None:
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
     export_gerbers()
-    export_bom()
-    export_cpl()
+    if CFG["assembly"]:
+        export_bom()
+        export_cpl()
+    else:
+        print("bare-board order: skipping assembly BOM/CPL")
     print("done", file=sys.stderr)
