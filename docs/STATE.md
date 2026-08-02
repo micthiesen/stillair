@@ -26,9 +26,9 @@ motor-gated CNC batch — SP-100/MC-100/RH-100 — was designed to rev A and **o
   PCB-01 engineering review (J2/J6 overhangs intentional; verify MCF pin-1 corner in the
   placement render), CNC review may flag the SP-100 PDF's 17-4PH note (answer: per order
   config, SUS304).
-- **Open loose ends**: CubeMars bearing email (sent 2026-07-27, unanswered — chase or
-  accept as Gate 01 residual risk); a Micro-Fit-capable crimper, the last unbought item
-  (M2 hardware: owner stock. BR-100: owner-fabbed, untracked as of 2026-08-02).
+- **Procurement is closed — nothing left to buy** (2026-08-02: M2 hardware and crimpers
+  are owner stock; BR-100 owner-fabbed/untracked). The one open loose end: the CubeMars
+  bearing email (sent 2026-07-27, unanswered — chase or accept as Gate 01 residual risk).
 
 ## Next
 
