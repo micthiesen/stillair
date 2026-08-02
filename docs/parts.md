@@ -364,24 +364,15 @@ Tach features:
 
 ## BR-100 Hall bracket
 
-- 0.8–1.0 mm 304 stainless Z-bracket with a folded return flange.
-- Two 3.4 × 8 mm adjustment slots on 12 mm pitch at MC-100 (±2 mm adjustment).
-- DRV5033 sensing face downward at **r76** on the **150° line** (owner move 2026-08-01,
-  from 30° — see the MC-100 Hall-bracket holes: the controlling definition is the bisector
-  between two adjacent ST-100 standoff holes; the magnet sweeps the full r76 circle so any
-  angle senses).
-- Nominal sensing-face-to-hub-top gap 2.5 mm (caps deleted 2026-08-01; the magnet face
-  sits ~0.17 mm recessed, so effective magnet gap ~2.7 mm); qualify 1.5–4.0 mm.
-- Sensor face is approximately Z107.7 (hub top Z110.2 − 2.5 mm gap; set at fit-up via
-  the slots). **BR-100 is owner-fabbed by hand, not designed in this repo** (decision
-  2026-08-01) — the repo carries only its interface facts: the MC-100 hole pair, the
-  PCB-02 datums below, and the gap window.
-- PCB-02 datum facts (board captured/placed 2026-07-30, see electrical.md): the Hall
-  element sits 4.5 mm from H1 along the M2 hole centerline (holes 6 mm apart, Ø2.2,
-  board 24 × 8 mm) with zero cross-axis offset; the gap spec is measured to the SOT-23's
-  outer face. The JST connector at the outer end is the tallest rotor-facing feature
-  (~4.5 mm) and its housing/cable extend past the board edge — the bracket provides all
-  cable strain relief and must clear J1's height, not just the sensor's.
+> **Owner-fabbed, untracked (2026-08-02)**: hand-made by the owner; no design, material,
+> or dimensions tracked here. The repo keeps only the interfaces it must satisfy: the
+> MC-100 M3 hole pair (12 mm pitch at r71.25 on the standoff bisector — see MC-100), the
+> PCB-02 mounting datums (electrical.md daughterboard section: M2 holes 6 mm apart,
+> element 4.5 mm from H1, gap measured to the SOT-23 face, JST connector is the tallest
+> rotor-facing feature and needs clearance + cable strain relief), and the sensing
+> requirement — DRV5033 face-down over the r76 magnet track, gap qualified 1.5–4.0 mm
+> (nominal 2.5 to hub top; magnet sits ~0.17 recessed → ~2.7 effective), set at fit-up
+> and validated at TACH-01/02.
 
 ## Blade root-joint qualification (BA-00 deleted)
 
@@ -619,7 +610,7 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | SP-100 | 1 | Capture spindle | Ø16 flanged, 17-4PH | CNC turn + cross-drill |
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
 | KD-100 | 1 | Catcher disk | Ø44 × Ø13.5 × 4, DIN 440 A4 | Purchased (Accu HDW-M12-A4) |
-| BR-100 | 1 | Hall bracket | 0.8–1.0 mm 304 SS | Laser + bend |
+| BR-100 | 1 | Hall bracket | — | Owner hand-fab, untracked |
 | ~~MR-100~~ | — | ~~Magnet / slug retaining cap~~ deleted 2026-08-01: inserts epoxied in | | |
 | CW-100 | 2 | Matched balance slugs | Brass, mass-trimmed | Turn + trim |
 | BL-100 | 4 | Wood blade | 9 mm Baltic birch | CNC router |

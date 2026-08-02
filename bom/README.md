@@ -58,8 +58,8 @@ day as W2026073108244536, and the **final electronics order** closed 2026-07-30 
 DigiKey **100723632** ($62.33, 24 lines: PCB-02's C1/J1, the C34 1206 C0G, board-#2
 completion headers, the J4 NTC element, EB-100 M3 standoffs, tach-chain 0.1% spares,
 the C2 DNP calibration ladder, and bench spares). Electrically nothing is left to buy;
-the remaining hardware (M2 kit for PCB-02, a Micro-Fit-capable crimper) routes via
-Amazon/Accu, not DigiKey.
+the remaining hardware is just a Micro-Fit-capable crimper (Amazon; the planned M2 kit
+died 2026-08-02 — owner has M2 hardware in stock).
 
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
