@@ -164,6 +164,10 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## MC-100 stationary motor carrier
 
+> **Status: Rev A released 2026-08-02** — [`cad/MC-100_revA.step`](../cad/MC-100_revA.step)
+> + [`cad/MC-100_revA.pdf`](../cad/MC-100_revA.pdf). Any change from here is a rev B.
+> Not yet ordered.
+
 - Ø180 × 8.0 mm 6061-T6, clear anodized (OD trimmed 188 → 180, 2026-07-28 owner tweak in
   OnShape; rim past the Ø16 standoff posts is 7 mm, tether-hole edge margin ~9.7 mm, ENC-100
   internal clearance improves).
@@ -174,7 +178,8 @@ Fabrication callouts (pre-order check 2026-07-28):
 - Center clearance Ø20.5.
 - Two Ø8.5 tether holes at X±7, Y−76.
 - Two Hall-bracket M3 × 0.5 tapped through holes (no counterbore/countersink — heads bear
-  on BR-100's slotted feet) on 12 mm pitch at r71, on the **150° line — the bisector
+  on BR-100's slotted feet) on 12 mm pitch at r71 (as-modeled r71.25 — the BR-100 slots
+  absorb it), on the **150° line — the bisector
   between two adjacent ST-100 standoff holes** (owner move 2026-08-01, from 30°: the
   sensor angle is free since the magnet sweeps the full r76 circle; clearances unchanged —
   60° to each adjacent standoff bolt head, 15° min to the nearest ENC-100 tab, ~74° to the
