@@ -51,6 +51,14 @@ blade build, 2026-07):
   Michael models it; rerun when the numbers change. The camber-line-vs-chord-line rod miss
   was caught by a question, not the script — extend the script when a new class of claim
   appears.
+- **Angular positions are frame-ambiguous; the drawing pass is the model audit** (2026-08-02,
+  CNC batch). Sketch angle dims mirror on bottom-face sketches and land in different effective
+  conventions per sketch (the MC-100 phase window and Hall holes disagreed), so define
+  clockings relationally ("bisector between two standoff holes"), verify placements visually,
+  never by number alone. Route every release through a drawing with **auto hole callouts** —
+  they read feature truth and caught two real model bugs (MC-100 counterbores at M5 defaults,
+  RH-100 pockets at stale Ø6.1) that checklist-confirmation against the docs had passed.
+  Drawing title-block TITLE may refuse to edit; DWG NO + filename suffice for JLC.
 - **Verification effort follows cost asymmetry, not checklists** (Michael, 2026-08-01, GL100
   arrival). Once a vendor part's revision is physically confirmed, trust its STEP/datasheet
   for positions and interfaces. Don't pre-measure anything whose failure mode is cheap to

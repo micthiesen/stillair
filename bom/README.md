@@ -66,6 +66,12 @@ ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 
 packing slip). Still in transit: PCB-01 (DHL), PCB-02 (Global Standard Direct Line), and
 DigiKey 100723632.
 
+The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
+shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),
+MC-100 $48.83 and RH-100 $42.08 (both 6061-T6, bead blast + natural matte anodize;
+RH-100 on the ±0.05 tolerance tier so the measured-bore pilot fit is contractual, the
+one paid tier in the batch that's functionally load-bearing).
+
 DigiKey cart mechanics (learned building 100723632 via browser automation): the cart
 page's Bulk Add box takes `qty, part-number` lines but **silently drops MPNs that have
 multiple packaging variants** (cut tape / reel / Digi-Reel) — use packaging-specific

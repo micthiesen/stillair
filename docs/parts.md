@@ -164,9 +164,12 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## MC-100 stationary motor carrier
 
-> **Status: Rev A released 2026-08-02** — [`cad/MC-100_revA.step`](../cad/MC-100_revA.step)
-> + [`cad/MC-100_revA.pdf`](../cad/MC-100_revA.pdf). Any change from here is a rev B.
-> Not yet ordered.
+> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $48.83;
+> bead blast + natural matte anodize) —
+> [`cad/MC-100_revA.step`](../cad/MC-100_revA.step) +
+> [`cad/MC-100_revA.pdf`](../cad/MC-100_revA.pdf). On arrival: straightedge the motor
+> face (0.08 flatness is advisory at 2768-medium) and chase the two M3 taps with a screw
+> (anodize film, ST-100 precedent).
 
 - Ø180 × 8.0 mm 6061-T6, clear anodized (OD trimmed 188 → 180, 2026-07-28 owner tweak in
   OnShape; rim past the Ø16 standoff posts is 7 mm, tether-hole edge margin ~9.7 mm, ENC-100
@@ -191,9 +194,16 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## SP-100 capture spindle
 
-> **Status: Rev A released 2026-08-02** — [`cad/SP-100_revA.step`](../cad/SP-100_revA.step)
-> + [`cad/SP-100_revA.pdf`](../cad/SP-100_revA.pdf), built on the measured washer
-> (cross-hole Z136.58). Any change from here is a rev B. Not yet ordered.
+> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $82.76) —
+> [`cad/SP-100_revA.step`](../cad/SP-100_revA.step) +
+> [`cad/SP-100_revA.pdf`](../cad/SP-100_revA.pdf), cross-hole at measured Z136.58.
+> **Ordered in SUS304, not 17-4PH** (JLCCNC stocks no 17-4PH; accepted 2026-08-02:
+> ~13× yield margin at the 1.25 kN proof, the part is stationary so there's no fatigue
+> driver, and the proof test remains the release evidence — the PDF's 17-4PH note is
+> superseded by the order config; correct it at any rev B). Install note: the A4 nut on
+> a 304 thread is stainless-on-stainless — **anti-seize at the one-time install**.
+> On arrival: check flats/concentricity with calipers (2768-medium ordered; tight
+> callouts advisory per the MP-100/ST-100 precedent).
 
 - One-piece 17-4PH H1150 stainless, passivated.
 - Ø16.0 shank; Ø34 × 3.0 upper flange; straightness 0.10 mm; concentricity 0.05 mm TIR.
@@ -267,9 +277,13 @@ bearing-face-up against KD-100, castellated crown downward.
 
 ## RH-100 captured rotor hub
 
-> **Status: Rev A released 2026-08-02** — [`cad/RH-100_revA.step`](../cad/RH-100_revA.step)
-> + [`cad/RH-100_revA.pdf`](../cad/RH-100_revA.pdf), pilot at measured-bore-derived
-> Ø29.85 ±0.05. Any change from here is a rev B. Not yet ordered.
+> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $42.08;
+> bead blast + natural matte anodize; **±0.05 tolerance tier bought deliberately** —
+> 2768-medium would legally allow a Ø30.05 pilot, an interference fit on the measured
+> Ø29.99 bore) — [`cad/RH-100_revA.step`](../cad/RH-100_revA.step) +
+> [`cad/RH-100_revA.pdf`](../cad/RH-100_revA.pdf). On arrival: the pilot must slip into
+> the motor bore by hand, no force; check M4 flat heads sit 0.1–0.2 subflush with the
+> real screws.
 
 - Ø200 × 8.0 mm 6061-T6, flat within 0.08 mm and OD concentric to pilot within 0.05 mm TIR.
 - **Restyled 2026-07-28 (owner, in OnShape)**: no longer a full disk — a three-arm spoke

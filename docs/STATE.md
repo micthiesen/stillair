@@ -3,89 +3,64 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-01** (arrival day: GL100 motor, Accu fasteners, Titen HD
-anchors, and DigiKey 374750597 — salesorder 100668200 — all received; the
-motor-arrival release sprint is now Next.)
+Last updated: **2026-08-02** (session 7 wrap: motor arrived and was measured, the
+motor-gated CNC batch — SP-100/MC-100/RH-100 — was designed to rev A and **ordered**.)
 
 ## Now
 
-- **Arrived 2026-08-01**: the GL100 motor (RobotShop), the complete Accu fastener set
-  (incl. KD-100 washers, castellated nut, Nord-Locks), the ohcanadasupply.ca Titen HD
-  anchors, and DigiKey 374750597 (salesorder **100668200** on the packing slip — the
-  LCSC-gap ICs, bulk caps, USB-C, JST housings/contacts, Qwiic cable). Still in flight:
-  PCB-01 (JLCPCB W2026073105230212, DHL — 2 assembled + 3 bare), PCB-02
-  (JLCPCB W2026073108244536, Global Standard Direct Line), and DigiKey **100723632**
-  ($62.33, 24 lines; contents in bom/README.md).
-- **PCB-02 is design-complete**: captured, placed, routed (DRC exactly at the
-  `pcb/pcb-02/placement/waivers.md` baseline), swarm-reviewed (no board changes — all
-  findings became docs), back-silk probe legend, fab package via the generalized
-  `pcb/tools/jlc_fab.py pcb-02`. M2 datum (7,4)/(13,4) is the BR-100 bracket reference.
-- **C34 decision locked**: 0603/0805 class-1 100 nF does not exist anywhere
-  (permittivity limit); KEMET C1206C104K3GACTU ×4 ordered, hand-bridged onto the 0603
-  site. X7R drop-in is bring-up fallback only. Full rationale: electrical.md
-  "Fabrication".
-- **In-flight watch (PCB-01)**: engineering review may ask about the intentional J2/J6
-  edge overhangs (confirm); DHL emails a tax link; **check U1's MCF pin-1 corner against
-  the board file when the Confirm-Parts-Placement render arrives** — it was unverifiable
-  in the preview. J2 spare headers in 100723632 are backordered (not bring-up-critical).
-- **Two small non-DigiKey purchases remain, both hardware**: an Amazon M2 kit
-  (screws/nylocks/≤Ø4.5 washers/1–3 mm spacers — DigiKey's M2 catalog verified bare)
-  and a Micro-Fit-capable crimper (Amazon IWISS-class ~$30 beats the $400 Molex tool;
-  covers the JST PH crimps too). Fold into any Amazon order.
-- **Mechanical unchanged**: SP-100 waits on measured motor axial length; MC-100/RH-100/
-  BR-100 wait on motor gates; blades are owner print-engineering (eSUN PLA-LWT + CF rods
-  now ordered).
+- **All motor-gated metal is ordered**: JLCCNC **W2026080301372216**, $204.44 shipped
+  (SP-100 $82.76 / MC-100 $48.83 / RH-100 $42.08). Rev A drawings + STEPs in `cad/`.
+  SP-100 went in **SUS304** (JLCCNC has no 17-4PH; margin math + anti-seize install note
+  in parts.md), RH-100 on the **±0.05 tier** so the measured-bore pilot fit is
+  contractual. Per-part on-arrival checks are in each parts.md status block.
+- **Arrived 2026-08-01**: GL100 motor, the full Accu fastener set, Titen HD anchors,
+  DigiKey 374750597 (salesorder 100668200). Measured: axial 34.2–34.3 (nominal stands,
+  stack derived), KD-100 t = 3.38 → SP-100 cross-hole Z136.6, bore Ø29.99–30.00 →
+  pilot Ø29.85. All caliper-clearable fabrication gates closed (parts.md).
+- **Design deltas this weekend** (all in parts.md): MR-100 caps deleted — epoxy is the
+  retention; Hall sensor line moved to the standoff bisector ("150°", relational def
+  controls); RH-100 blade stations owner-customized (released STEP is interface truth;
+  blade root is owner-managed); BR-100 will be owner hand-fabbed, not designed in repo.
+- **Parcels in flight**: PCB-01 (JLCPCB W2026073105230212, DHL — 2 assembled + 3 bare),
+  PCB-02 (W2026073108244536), DigiKey **100723632**, and now the CNC batch. Watches:
+  PCB-01 engineering review (J2/J6 overhangs intentional; verify MCF pin-1 corner in the
+  placement render), CNC review may flag the SP-100 PDF's 17-4PH note (answer: per order
+  config, SUS304).
+- **Open loose ends**: CubeMars bearing email (sent 2026-07-27, unanswered — chase or
+  accept as Gate 01 residual risk); Amazon M2 kit + Micro-Fit-capable crimper still
+  unbought (fold into any Amazon order).
 
 ## Next
 
-**Motor-arrival release sprint** — measurement session done 2026-08-01, most gates
-cleared (parts.md "Fabrication gates" has the full status): revision confirmed exact,
-face/bore ownership confirmed (Ø50 + bore rotate), axial length measured 34.2–34.3 →
-capture-gap stack derived and inside the 2.0–3.0 band, **no model changes needed**.
-M4 depths waived to assembly-time checks; STEP trusted for positions/wire exit (owner
-decision, recorded in CLAUDE.md + parts.md). **All caliper gates now closed
-(2026-08-01)**: KD-100 measured t = 3.38 → SP-100 cotter cross-hole **Z136.6**; bore
-measured Ø29.99–30.00 → RH-100 pilot OD **Ø29.85** (29.80–29.90). Remaining before
-metal: model/release SP-100, MC-100, RH-100 in OnShape — **done 2026-08-02: all three
-rev A drawings + STEPs released to `cad/`** (session highlights: MC-100 counterbore was
-M5-defaults in-model, fixed to Ø7.5×1.5; RH-100 tach pockets were stale Ø6.1, fixed to
-Ø6.45; MR-100 caps deleted — epoxy retention; Hall line moved to the standoff bisector;
-RH-100 blade stations owner-customized, STEP is interface truth). **Next: upload the
-three parts to JLCCNC for quotes** (SP-100 17-4PH H1150 passivated; MC-100/RH-100
-6061-T6 clear anodized; qty 1 each), and the bearing-data decision — CubeMars email
-(sent 2026-07-27) still unanswered; chase it or accept as documented residual risk per
-Gate 01.
+**Bring-up prep, so the bench is ready the day the DHL box lands** (restored: it was the
+Next before the motor arrived and is still fully desk-work, blocked on nothing).
+Concretely: commissioning scripts against `--sim` for the PCB-01..03 test rows, the
+tach-chain bench-stim plan (square-wave injection at J3/HALL_TACH per TACH-01), the cable
+build sheets (J1 power, J3 Hall straight-through per TACH-06), and the hand-solder
+sequence for arrival (C1, C2, C34-bridge, J1, J2, U8, F1 bridge). Reference:
+testing/test-matrix.csv + electrical.md "Fabrication".
 
 ## Candidates Not Chosen
 
-- **Bring-up prep** (previous Next, still fully desk-work and unblocked): commissioning
-  scripts against `--sim` for the PCB-01..03 test rows, the tach-chain bench-stim plan
-  (TACH-01), cable build sheets (J1 power, J3 Hall straight-through per TACH-06), and
-  the arrival hand-solder sequence (C1, C2, C34-bridge, J1, J2, U8, F1 bridge).
-  Reference: testing/test-matrix.csv + electrical.md "Fabrication".
-- **BR-100 bracket + EB-100 standoff CAD**: now unblocked datum-wise (PCB-02 holes,
-  element offset, J1 height all documented in parts.md/electrical.md), but sensibly
-  waits for the motor so the wire-exit clocking is real.
-- **TEMP_SENSE firmware** — hardware side now complete (NTC ordered); still parked with
-  `TODO(temp-sense)` in `app/src/matter.rs`.
-- **Blade materials + first prints; mount mockup** — carried, owner-driven.
+- **EB-100 PCB-bracket CAD** — fully unblocked now (motor in hand, wire exit real,
+  PCB-01 mounting facts documented); pairs naturally with the owner's BR-100 hand-fab.
+- **TEMP_SENSE firmware** — hardware complete; still parked with `TODO(temp-sense)` in
+  `app/src/matter.rs`.
+- **Blade prints (BP-100)** — owner print-engineering; materials + CF rods in hand/inbound.
+- **On-arrival check sessions** — each parcel has its checklist (parts.md status blocks,
+  STATE watches); becomes the day's work whenever a box lands.
 
 ## Learned Recently
 
-- **PCB-02 build + board-truth review findings** (gap datum = SOT-23 face, element
-  0.4 mm behind it; BR-100 handoff facts; H1 washer ≤Ø4.5; harness continuity TACH-06;
-  series-R declined; omnipolar clarification) → electrical.md daughterboard section,
-  parts.md BR-100, testing/test-matrix.csv.
-- **C34 physics + bridge decision** → electrical.md "Fabrication", bom.csv.
-- **Final-order swarm findings** (board-#2 J1/J2 headers, EB-100 standoffs never
-  bought, J4 NTC never selected, C1/C2 zero-margin qty, 0.1% tach-resistor spares,
-  C2 DNP-ladder stock, M2-not-at-DigiKey, crimper gap) → bom.csv lines + notes,
-  electrical.md.
-- **DigiKey cart mechanics** (Bulk Add silently drops multi-packaging MPNs; use
-  `-1-ND`/`CT-ND` numbers; verify lines after add) → bom/README.md.
-- **Konnect `add_board_text` quirk** (valid KiCad 10 output but no `(justify mirror)`
-  on back layers) and **`add_mounting_hole` quirks** (dangling lib id, no courtyard)
-  → /pcb skill.
-- **JLCPCB shipping split** (Global Standard Direct Line for cheap non-blocking
-  parcels — AliExpress-style consolidated clearance, ≤$99 declared; DHL for expensive
-  blocking ones — best brokerage schedule) → bom/README.md order log context.
+- **GL100 measurements + gate closures** (axial stack, washer → Z136.6, bore → pilot
+  Ø29.85; face/bore ownership confirmed) → parts.md "GL100 release checks" +
+  "Fabrication gates".
+- **Owner verification philosophy** (measure only what feeds non-adjustable machined
+  features or safety assumptions; adapt at install otherwise) → CLAUDE.md.
+- **Drawing pass as model audit + frame-ambiguity gotcha** (caught M5-default
+  counterbores and stale Ø6.1 pockets; angles mirror across sketch frames — define
+  clockings relationally) → CLAUDE.md OnShape section.
+- **MR-100 deletion + epoxy retention rationale**; **SUS304 substitution margin math**;
+  **±0.05-tier reasoning for the pilot** → parts.md.
+- **Order log + arrivals** (100668200 = 374750597; W2026080301372216 contents) →
+  bom/README.md, bom.csv.
