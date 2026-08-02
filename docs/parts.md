@@ -187,8 +187,9 @@ Fabrication callouts (pre-order check 2026-07-28):
 - M12 × 1.75 thread from Z120.7 to **Z142.0** (21.3 mm long), with the runout inside the
   Z120.7 shoulder. (A same-day 2026-07-28 excursion to Z144.0 for a 6 mm Amazon washer was
   reverted when the DIN 440 4 mm washer was selected instead.)
-- **Ø3.2 cotter cross-hole, centreline at Z137.2** (nominal — set from the measured washer
-  thickness, see KD-100), perpendicular to the flange flats.
+- **Ø3.2 cotter cross-hole, centreline at Z136.6** (**set 2026-08-01 from the measured
+  washer: t = 3.38 → Z = 3.38 + 133.2 = 136.58, drawn as 136.6**; supersedes the 4.0-nominal
+  Z137.2), perpendicular to the flange flats.
 - (All Z values shifted −76 total in the 2026-07-27/28 rotor raise with the shortened
   ST-100; the bottom-end geometry is unchanged relative to the hub. In OnShape these dims
   are driven by `#hubBottom` expressions.)
@@ -208,7 +209,7 @@ bearing-face-up against KD-100, castellated crown downward.
 | 124.7 | Nut bearing face |
 | 124.7–134.7 | Nut unslotted body (m′ = 10.0) |
 | 134.7–139.7 | Castellated crown, 5.0 mm of slot depth |
-| **137.2** | **Cotter cross-hole centreline** — mid-band, 0.9 mm clear at both ends |
+| **137.2** | **Cotter cross-hole centreline** (nominal at t = 4.0; **machine at Z136.6 per measured t = 3.38**) — mid-band |
 | 142.0 | Thread ends, 2.3 mm (>1 pitch) below the crown |
 
 - The hole is centred in the 5.0 mm slot band so the cotter has material both sides. The
@@ -216,6 +217,10 @@ bearing-face-up against KD-100, castellated crown downward.
   the cross-hole Z is **set from the measured washer thickness** (Z = t + 133.2) before
   SP-100 is machined — with a measured t, the remaining stack tolerance (shoulder position,
   nut m′) is back to ~±0.2 and the hole stays comfortably inside the band.
+  **Measured 2026-08-01: t = 3.38 mm → Z136.6** (slot band 134.08–139.08 at that t; the
+  hole is dead-center with 2.5 mm both sides). Single washer measured; the three are one
+  stamping batch, so siblings track within a few hundredths — any of them installs. Thread
+  end stays Z142.0 (now 2.9 mm past the crown; more margin, not less).
 - Six castellations on a 1.75 mm pitch give **0.292 mm of axial adjustment per index step**,
   so worst-case seating error after aligning a slot is 0.146 mm. Rotate the *nut* to find
   alignment; the spindle is keyed and does not turn.
@@ -260,8 +265,8 @@ bearing-face-up against KD-100, castellated crown downward.
   A4-80 flat-head screws. Install heads 0.1–0.2 mm subflush. Nominal motor engagement is
   2.0 mm, below the official 3.5 mm maximum.
 - Top annular pilot protrudes 1.5 mm into the motor bore. Keep pilot ID Ø20.5. Final OD is
-  the measured mating diameter minus 0.10–0.20 mm diametrical clearance. Do not release a
-  nominal 29.8 mm unverified.
+  the measured mating diameter minus 0.10–0.20 mm diametrical clearance. **Released
+  2026-08-01: bore measured Ø29.99–30.00 → pilot OD Ø29.85 (band 29.80–29.90).**
 - Three blade-root stations at 0°, 120°, 240°. Each station: Ø5.5 through-holes at local
   (r62,y−15), (r62,y+15), (r88,y−15), (r88,y+15); blind Ø5 H7 × 4 deep dowel holes at
   (r66,y0) and (r86,y0). **v3 (2026-07-28): the BP-100 blade bolts here directly** — its
@@ -308,6 +313,7 @@ Tach features:
   actual thickness**: the DIN 440 band is wide (±0.6), so set SP-100's cross-hole from the
   measured value (hole Z = measured t + 133.2; 4.0 nominal → Z137.2) before the spindle is
   machined. Washers arrive long before SP-100 is cut, so this costs nothing.
+  **Measured 2026-08-01: t = 3.38 mm → cross-hole Z136.6** (recorded in the SP-100 section).
 - Disk top seats at Z120.7, 2.5 ±0.5 mm below RH-100.
 - The Ø50 disk edge crosses the Ø50 motor-screw PCD, so the RH-100 screw heads must be
   subflush. Measure the running gap to the lowest rotating screw or surface, not only the
@@ -605,10 +611,8 @@ Do not release motor-dependent metal until:
   shoulder). Nominal 34.2 stands in the model — no Variable Studio change. The ≥2.0 mm
   screw clearance holds at worst case *only* with the RH-100 heads subflush — that
   requirement stands.
-- The pilot diameter is derived from the physical motor — **open, owner's call
-  2026-08-01**: one inside-jaw reading of the rotating bore before RH-100 is cut
-  (interference on a machined register is not install-adaptable), or accept the Ø30.0
-  STEP nominal and cut the pilot at 29.8–29.9.
+- ~~The pilot diameter is derived from the physical motor~~ — **closed 2026-08-01**:
+  rotating bore measured Ø29.99–30.00 → pilot OD released at Ø29.85 (29.80–29.90).
 - ~~The phase-wire exit is located~~ — **trusted from the STEP (owner decision
   2026-08-01,** revision confirmed).
 - Bearing ratings are obtained or accepted as documented residual risk.

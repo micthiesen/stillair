@@ -43,11 +43,12 @@ cleared (parts.md "Fabrication gates" has the full status): revision confirmed e
 face/bore ownership confirmed (Ø50 + bore rotate), axial length measured 34.2–34.3 →
 capture-gap stack derived and inside the 2.0–3.0 band, **no model changes needed**.
 M4 depths waived to assembly-time checks; STEP trusted for positions/wire exit (owner
-decision, recorded in CLAUDE.md + parts.md). Remaining before metal: **measure the
-installed KD-100 washer's thickness** (→ SP-100 cross-hole Z = t + 133.2; then SP-100
-releases), decide the pilot-bore reading (one inside-jaw measurement vs trusting Ø30.0
-nominal; gates RH-100), then the SP-100 + MC-100/RH-100 CNC batch. Bearing data
-(CubeMars email, sent 2026-07-27) is still the one gate calipers can't clear.
+decision, recorded in CLAUDE.md + parts.md). **All caliper gates now closed
+(2026-08-01)**: KD-100 measured t = 3.38 → SP-100 cotter cross-hole **Z136.6**; bore
+measured Ø29.99–30.00 → RH-100 pilot OD **Ø29.85** (29.80–29.90). Remaining before
+metal: model/release SP-100, MC-100, RH-100 in OnShape (drawings + STEP export → CNC
+quotes), and the bearing-data decision — CubeMars email (sent 2026-07-27) still
+unanswered; chase it or accept as documented residual risk per Gate 01.
 
 ## Candidates Not Chosen
 
