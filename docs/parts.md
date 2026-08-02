@@ -173,8 +173,13 @@ Fabrication callouts (pre-order check 2026-07-28):
   from above.
 - Center clearance Ø20.5.
 - Two Ø8.5 tether holes at X±7, Y−76.
-- Two Hall-bracket M3 holes on 12 mm pitch near r71, angle 30° (moved with the tach
-  sensing radius r68 → r76, 2026-07-28).
+- Two Hall-bracket M3 × 0.5 tapped through holes (no counterbore/countersink — heads bear
+  on BR-100's slotted feet) on 12 mm pitch at r71, on the **150° line — the bisector
+  between two adjacent ST-100 standoff holes** (owner move 2026-08-01, from 30°: the
+  sensor angle is free since the magnet sweeps the full r76 circle; clearances unchanged —
+  60° to each adjacent standoff bolt head, 15° min to the nearest ENC-100 tab, ~74° to the
+  phase window. Angular labels are frame-ambiguous across model sketches — the controlling
+  definition is the standoff-bisector, not the number).
 - Nominal phase-lead window 20 × 12 R3; final location from the STEP and physical motor.
 - Use four M4 × 12 A4-80 screws. The counterbore produces approximately 5.5 mm motor-thread
   engagement against the official 6.0 mm maximum. Verify first.
@@ -328,9 +333,10 @@ Tach features:
 
 - 0.8–1.0 mm 304 stainless Z-bracket with a folded return flange.
 - Two 3.4 × 8 mm adjustment slots on 12 mm pitch at MC-100 (±2 mm adjustment).
-- DRV5033 sensing face downward at **r76** on the 30° line (moved with the tach stations
-  2026-07-28; BR-100 and the MC-100 bracket holes were both undesigned, so the move was
-  free).
+- DRV5033 sensing face downward at **r76** on the **150° line** (owner move 2026-08-01,
+  from 30° — see the MC-100 Hall-bracket holes: the controlling definition is the bisector
+  between two adjacent ST-100 standoff holes; the magnet sweeps the full r76 circle so any
+  angle senses).
 - Nominal sensing-face-to-magnet-cap gap 2.5 mm; qualify 1.5–4.0 mm.
 - Sensor face is approximately Z106.9 (hub top Z110.2 − 0.8 mm cap − 2.5 mm gap;
   re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
