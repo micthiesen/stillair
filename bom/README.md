@@ -30,7 +30,8 @@ Notes:
 - **JLCPCB path**: boards come from JLCPCB; PCBA vs hand-population is still open, but the
   owner is comfortable hand-installing SMD (confirmed 2026-07-28), so hand-population and
   the hand-solder-just-the-MCF hybrid are both live options. The 2026-07-28 DigiKey cart
-  (Web ID 374750597) deliberately holds only **LCSC-gap parts**: thin/absent-at-LCSC ICs
+  (Web ID 374750597, salesorder 100668200 — the number on the packing slip; received
+  2026-08-01) deliberately holds only **LCSC-gap parts**: thin/absent-at-LCSC ICs
   and spares, Coilcraft (never on LCSC), Panasonic FR bulk caps, genuine JST PH headers,
   the GCT USB-C, cable-side housings/contacts, and the Hall daughterboard parts. As of 2026-07
   every IC except the exact `MCF8316DULVRGFR` variant is in the LCSC catalog, but all as
@@ -59,6 +60,11 @@ completion headers, the J4 NTC element, EB-100 M3 standoffs, tach-chain 0.1% spa
 the C2 DNP calibration ladder, and bench spares). Electrically nothing is left to buy;
 the remaining hardware (M2 kit for PCB-02, a Micro-Fit-capable crimper) routes via
 Amazon/Accu, not DigiKey.
+
+Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
+ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
+packing slip). Still in transit: PCB-01 (DHL), PCB-02 (Global Standard Direct Line), and
+DigiKey 100723632.
 
 DigiKey cart mechanics (learned building 100723632 via browser automation): the cart
 page's Bulk Add box takes `qty, part-number` lines but **silently drops MPNs that have

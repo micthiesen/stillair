@@ -3,16 +3,19 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-07-30** (session 6 wrap: PCB-02 designed end-to-end and ordered;
-the final electronics order placed — nothing electrical is left to buy.)
+Last updated: **2026-08-01** (arrival day: GL100 motor, Accu fasteners, Titen HD
+anchors, and DigiKey 374750597 — salesorder 100668200 — all received; the
+motor-arrival release sprint is now Next.)
 
 ## Now
 
-- **Everything electrical is bought.** Three parcels in flight: PCB-01
-  (JLCPCB W2026073105230212, DHL, ~days — 2 assembled + 3 bare), PCB-02
-  (JLCPCB W2026073108244536, $3.70, Global Standard Direct Line, 8–12 business days —
-  5 bare), and DigiKey **100723632** ($62.33, 24 lines — should beat the PCB-01 boards;
-  contents inventoried in bom/README.md). Plus the GL100 motor (RobotShop, in transit).
+- **Arrived 2026-08-01**: the GL100 motor (RobotShop), the complete Accu fastener set
+  (incl. KD-100 washers, castellated nut, Nord-Locks), the ohcanadasupply.ca Titen HD
+  anchors, and DigiKey 374750597 (salesorder **100668200** on the packing slip — the
+  LCSC-gap ICs, bulk caps, USB-C, JST housings/contacts, Qwiic cable). Still in flight:
+  PCB-01 (JLCPCB W2026073105230212, DHL — 2 assembled + 3 bare), PCB-02
+  (JLCPCB W2026073108244536, Global Standard Direct Line), and DigiKey **100723632**
+  ($62.33, 24 lines; contents in bom/README.md).
 - **PCB-02 is design-complete**: captured, placed, routed (DRC exactly at the
   `pcb/pcb-02/placement/waivers.md` baseline), swarm-reviewed (no board changes — all
   findings became docs), back-silk probe legend, fab package via the generalized
@@ -35,19 +38,21 @@ the final electronics order placed — nothing electrical is left to buy.)
 
 ## Next
 
-**Bring-up prep, so the bench is ready the day the DHL box lands** (this was the
-standing runner-up, now promoted: the previous Next — the final orders — completed
-2026-07-30). Concretely: commissioning scripts against `--sim` for the PCB-01..03 test
-rows, the tach-chain bench-stim plan (square-wave injection at J3/HALL_TACH per
-TACH-01), the cable build sheets (J1 power, J3 Hall straight-through per TACH-06), and
-the hand-solder sequence for arrival (C1, C2, C34-bridge, J1, J2, U8, F1 bridge).
-Reference: testing/test-matrix.csv + electrical.md "Fabrication". Fully desk-work,
-blocked on nothing.
+**Motor-arrival release sprint** (promoted per the standing rule — the GL100 box
+arrived 2026-08-01): the caliper measurement session against the parts.md "GL100
+release checks" + "Fabrication gates" lists (axial length, face ownership, M4 depths,
+bore/pilot mating diameter, wire-exit clocking, KD-100 measured thickness, fastener
+on-arrival checks), measured values into the OnShape Variable Studio, then SP-100
+release (needs axial length + washer t) and the MC-100/RH-100 CNC batch. Bearing data
+(CubeMars email, sent 2026-07-27) is still the one gate calipers can't clear.
 
 ## Candidates Not Chosen
 
-- **Motor-arrival release sprint**: measurement checklist → SP-100 → MC-100/RH-100 CNC
-  batch. Becomes Next the day the GL100 box arrives (unchanged).
+- **Bring-up prep** (previous Next, still fully desk-work and unblocked): commissioning
+  scripts against `--sim` for the PCB-01..03 test rows, the tach-chain bench-stim plan
+  (TACH-01), cable build sheets (J1 power, J3 Hall straight-through per TACH-06), and
+  the arrival hand-solder sequence (C1, C2, C34-bridge, J1, J2, U8, F1 bridge).
+  Reference: testing/test-matrix.csv + electrical.md "Fabrication".
 - **BR-100 bracket + EB-100 standoff CAD**: now unblocked datum-wise (PCB-02 holes,
   element offset, J1 height all documented in parts.md/electrical.md), but sensibly
   waits for the motor so the wire-exit clocking is real.
