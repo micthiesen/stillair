@@ -290,16 +290,20 @@ Tach features:
   the same installed mass: three equal masses at 120° spacing balance by symmetry, and the
   Hall still sees exactly one magnet per revolution (brass is non-magnetic). r76 centers
   between the r66/r86 dowel holes on the arm centerline (10 mm clear of each).
-- Each station: a 14 radial × 8 tangential × 0.8 mm 316 retaining cap (MR-100 ×3), fixed by
-  **two axial M2 × 5 screws through the cap's radial-end ears into tapped holes in the hub
-  top face** (reworded 2026-07 review: "radial" describes the ear positions, not the screw
-  axis).
+- **MR-100 retaining caps deleted 2026-08-01 (owner decision)**: magnet and slugs are
+  **epoxied** into their pockets — no caps, no M2 taps on RH-100 (6 tapped holes removed;
+  no tapping cost). Basis: retention load is trivial (~0.02 N centrifugal on a ~0.75 g
+  magnet at 170 RPM; the pocket wall takes the radial component, epoxy only carries the
+  axial ~nothing), and the owner accepts epoxy as the retention method. The M2 × 5 screws
+  (Accu, received) are surplus. With the 0.8 mm cap gone the magnet face sits ~0.17 mm
+  below the hub top (3.35 pocket − 3.18 magnet); BR-100 targets the same 2.5 mm nominal
+  air gap at fit-up — effective magnet gap ~2.7 mm, well inside the 1.5–4.0 window.
 - **CW slugs are not same-size copies**: a same-size brass copy is ~13% heavier than the
   magnet (brass 8.5 vs NdFeB ~7.5 g/cm³); trim to ~Ø6.35 × 2.8 mm to match (cut from
-  1/4 in rod), and confirm the resulting ~0.55 mm bondline gap
-  under the slug-side caps is within the adhesive's rated thickness (non-structural).
-- Match complete retained masses within 0.01 g across all three stations. Adhesive controls
-  rattle only; it is not retention.
+  1/4 in rod); the ~0.55 mm recess above each slug fills with epoxy.
+- Match complete station masses (insert + its epoxy) within 0.01 g across all three
+  stations. **Epoxy is the retention** (2026-08-01; supersedes "adhesive controls rattle
+  only").
 
 ## KD-100 catcher disk
 
@@ -337,10 +341,12 @@ Tach features:
   from 30° — see the MC-100 Hall-bracket holes: the controlling definition is the bisector
   between two adjacent ST-100 standoff holes; the magnet sweeps the full r76 circle so any
   angle senses).
-- Nominal sensing-face-to-magnet-cap gap 2.5 mm; qualify 1.5–4.0 mm.
-- Sensor face is approximately Z106.9 (hub top Z110.2 − 0.8 mm cap − 2.5 mm gap;
-  re-derive exactly when BR-100 is drawn); final leg offsets depend on the GL100 wire
-  exit and daughterboard footprint.
+- Nominal sensing-face-to-hub-top gap 2.5 mm (caps deleted 2026-08-01; the magnet face
+  sits ~0.17 mm recessed, so effective magnet gap ~2.7 mm); qualify 1.5–4.0 mm.
+- Sensor face is approximately Z107.7 (hub top Z110.2 − 2.5 mm gap; set at fit-up via
+  the slots). **BR-100 is owner-fabbed by hand, not designed in this repo** (decision
+  2026-08-01) — the repo carries only its interface facts: the MC-100 hole pair, the
+  PCB-02 datums below, and the gap window.
 - PCB-02 datum facts (board captured/placed 2026-07-30, see electrical.md): the Hall
   element sits 4.5 mm from H1 along the M2 hole centerline (holes 6 mm apart, Ø2.2,
   board 24 × 8 mm) with zero cross-axis offset; the gap spec is measured to the SOT-23's
@@ -585,7 +591,7 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
 | KD-100 | 1 | Catcher disk | Ø44 × Ø13.5 × 4, DIN 440 A4 | Purchased (Accu HDW-M12-A4) |
 | BR-100 | 1 | Hall bracket | 0.8–1.0 mm 304 SS | Laser + bend |
-| MR-100 | 3 | Magnet / slug retaining cap | 14 × 8 × 0.8, 316 SS | Laser |
+| ~~MR-100~~ | — | ~~Magnet / slug retaining cap~~ deleted 2026-08-01: inserts epoxied in | | |
 | CW-100 | 2 | Matched balance slugs | Brass, mass-trimmed | Turn + trim |
 | BL-100 | 4 | Wood blade | 9 mm Baltic birch | CNC router |
 | LS-100 | 6 | Load spreader | 65 × 15 × 2, 6061 | Laser/waterjet |
