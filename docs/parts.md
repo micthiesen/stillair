@@ -267,6 +267,10 @@ bearing-face-up against KD-100, castellated crown downward.
 
 ## RH-100 captured rotor hub
 
+> **Status: Rev A released 2026-08-02** — [`cad/RH-100_revA.step`](../cad/RH-100_revA.step)
+> + [`cad/RH-100_revA.pdf`](../cad/RH-100_revA.pdf), pilot at measured-bore-derived
+> Ø29.85 ±0.05. Any change from here is a rev B. Not yet ordered.
+
 - Ø200 × 8.0 mm 6061-T6, flat within 0.08 mm and OD concentric to pilot within 0.05 mm TIR.
 - **Restyled 2026-07-28 (owner, in OnShape)**: no longer a full disk — a three-arm spoke
   plate, arms on the 0/120/240 station lines out to r100 with sculpted concave waists
@@ -281,11 +285,13 @@ bearing-face-up against KD-100, castellated crown downward.
 - Top annular pilot protrudes 1.5 mm into the motor bore. Keep pilot ID Ø20.5. Final OD is
   the measured mating diameter minus 0.10–0.20 mm diametrical clearance. **Released
   2026-08-01: bore measured Ø29.99–30.00 → pilot OD Ø29.85 (band 29.80–29.90).**
-- Three blade-root stations at 0°, 120°, 240°. Each station: Ø5.5 through-holes at local
-  (r62,y−15), (r62,y+15), (r88,y−15), (r88,y+15); blind Ø5 H7 × 4 deep dowel holes at
-  (r66,y0) and (r86,y0). **v3 (2026-07-28): the BP-100 blade bolts here directly** — its
-  printed Ø5 pins engage the dowel holes (steel dowels deleted), M5 bolts from above into
-  nut pockets in the blade root.
+- Three blade-root stations at 0°, 120°, 240°. Each station: 4× Ø5.5 through-holes + 2×
+  blind Ø5 H7 × 4 dowel holes. **v3 (2026-07-28): the BP-100 blade bolts here directly** —
+  its printed Ø5 pins engage the dowel holes (steel dowels deleted), M5 bolts from above
+  into nut pockets in the blade root. **Station hole positions were customized by the
+  owner in-model 2026-08-02** (original nominals were r62/r88 ±15 bolts, r66/r86 dowels);
+  the released STEP is the interface truth, and the matching blade-root pattern is
+  owner-managed in the BP-100 print (not tracked here).
 
 Tach features:
 

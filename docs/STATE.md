@@ -46,9 +46,15 @@ M4 depths waived to assembly-time checks; STEP trusted for positions/wire exit (
 decision, recorded in CLAUDE.md + parts.md). **All caliper gates now closed
 (2026-08-01)**: KD-100 measured t = 3.38 → SP-100 cotter cross-hole **Z136.6**; bore
 measured Ø29.99–30.00 → RH-100 pilot OD **Ø29.85** (29.80–29.90). Remaining before
-metal: model/release SP-100, MC-100, RH-100 in OnShape (drawings + STEP export → CNC
-quotes), and the bearing-data decision — CubeMars email (sent 2026-07-27) still
-unanswered; chase it or accept as documented residual risk per Gate 01.
+metal: model/release SP-100, MC-100, RH-100 in OnShape — **done 2026-08-02: all three
+rev A drawings + STEPs released to `cad/`** (session highlights: MC-100 counterbore was
+M5-defaults in-model, fixed to Ø7.5×1.5; RH-100 tach pockets were stale Ø6.1, fixed to
+Ø6.45; MR-100 caps deleted — epoxy retention; Hall line moved to the standoff bisector;
+RH-100 blade stations owner-customized, STEP is interface truth). **Next: upload the
+three parts to JLCCNC for quotes** (SP-100 17-4PH H1150 passivated; MC-100/RH-100
+6061-T6 clear anodized; qty 1 each), and the bearing-data decision — CubeMars email
+(sent 2026-07-27) still unanswered; chase it or accept as documented residual risk per
+Gate 01.
 
 ## Candidates Not Chosen
 
