@@ -186,6 +186,10 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## SP-100 capture spindle
 
+> **Status: Rev A released 2026-08-02** — [`cad/SP-100_revA.step`](../cad/SP-100_revA.step)
+> + [`cad/SP-100_revA.pdf`](../cad/SP-100_revA.pdf), built on the measured washer
+> (cross-hole Z136.58). Any change from here is a rev B. Not yet ordered.
+
 - One-piece 17-4PH H1150 stainless, passivated.
 - Ø16.0 shank; Ø34 × 3.0 upper flange; straightness 0.10 mm; concentricity 0.05 mm TIR.
 - Ø16 shank runs from Z3 to the disk shoulder at Z120.7.
