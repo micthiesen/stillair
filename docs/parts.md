@@ -20,6 +20,16 @@ drawing):
 
 ## GL100 release checks
 
+> **Status 2026-08-01 (motor in hand)**: current revision **confirmed** (Ø106.8 × 34.2;
+> axial length measured 34.2–34.3 across clockings). Face ownership **confirmed**: Ø50/M4
+> rotates (output face), Ø60/M4 and Ø100/M2.5 are stationary, and the bore surface rotates
+> with the Ø50 face — so the RH-100 pilot mates a rotating surface, as the catcher's
+> clean-drop assumption requires. Owner decision (2026-08-01): with the revision confirmed,
+> STEP-derived geometry (hole positions, PCDs, wire-exit location) is trusted as-is and
+> thread depths are verified at assembly rather than pre-measured — bench measurement is
+> reserved for dimensions feeding non-adjustable machined features (KD-100 thickness →
+> SP-100 cross-hole; pilot bore ID → RH-100 pilot OD, owner's call).
+
 - Official envelope: Ø106.8 × 34.2 mm, Ø30 bore, 698 g, 20 pole pairs.
 - Front interface: 4 × M4 on Ø50 PCD, 3.5 mm maximum thread depth.
 - Rear inner interface: 4 × M4 on Ø60 PCD, 6.0 mm maximum depth.
@@ -574,20 +584,33 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 
 Do not release motor-dependent metal until:
 
-- The purchased motor matches the current Ø106.8 × 34.2 geometry.
-- The current STEP is imported.
-- Rotating and stationary faces are identified.
-- Front and rear M4 depths are measured.
-- Bore diameters and bore ownership are established — **including confirming the RH-100
-  pilot register mates only to rotating surfaces** (2026-07 review: if the ~0.1 mm-clearance
-  pilot faces a stationary feature, a bearing failure binds there before the 2.25 mm
-  spindle float is used, defeating the clean-drop assumption behind the catcher).
-- **The GL100's axial body-length tolerance is measured and a derived tolerance stack for
-  the 2.5 ±0.5 mm capture gap (and the ≥2.0 mm worst-case screw clearance) is recorded** —
-  the ±0.5 is currently asserted, not derived; only ST-100 carries a stated tolerance in
-  the stack today.
-- The pilot diameter is derived from the physical motor.
-- The phase-wire exit is located.
+- ~~The purchased motor matches the current Ø106.8 × 34.2 geometry~~ — **confirmed
+  2026-08-01** on the physical motor.
+- ~~The current STEP is imported~~ — done (the OnShape model is built on it).
+- ~~Rotating and stationary faces are identified~~ — **confirmed 2026-08-01**: Ø50/M4
+  rotates; Ø60/M4 and Ø100/M2.5 stationary.
+- ~~Front and rear M4 depths are measured~~ — **waived 2026-08-01 (owner)**: verified at
+  assembly instead (a bottoming screw is felt at hand-torque; fix is a washer or shorter
+  screw). The subflush-head and engagement notes on MC-100/RH-100 stand as assembly checks.
+- ~~Bore ownership~~ — **confirmed 2026-08-01: the bore rotates with the Ø50 face**, so
+  the RH-100 pilot register mates only rotating surfaces (2026-07 review: if the
+  ~0.1 mm-clearance pilot faced a stationary feature, a bearing failure would bind there
+  before the 2.25 mm spindle float is used, defeating the clean-drop assumption behind
+  the catcher).
+- ~~Axial body-length tolerance measured and capture-gap stack derived~~ — **closed
+  2026-08-01**: measured 34.2–34.3 across clockings (+0.1/−0.0 vs nominal). Stack for the
+  2.5 ±0.5 mm gap: motor +0.1/−0.0 (measured) + ST-100 ±0.10 + MC-100 ±0.1 + RH-100 ±0.1
+  + SP-100 shoulder ±0.1 → worst-case straight sum ~2.0–2.9 mm, inside the 2.0–3.0 band
+  (RSS ~2.3–2.7). KD-100 thickness does not enter (the disk seats on the machined Z120.7
+  shoulder). Nominal 34.2 stands in the model — no Variable Studio change. The ≥2.0 mm
+  screw clearance holds at worst case *only* with the RH-100 heads subflush — that
+  requirement stands.
+- The pilot diameter is derived from the physical motor — **open, owner's call
+  2026-08-01**: one inside-jaw reading of the rotating bore before RH-100 is cut
+  (interference on a machined register is not install-adaptable), or accept the Ø30.0
+  STEP nominal and cut the pilot at 29.8–29.9.
+- ~~The phase-wire exit is located~~ — **trusted from the STEP (owner decision
+  2026-08-01,** revision confirmed).
 - Bearing ratings are obtained or accepted as documented residual risk.
 - PCB connector and heat-management geometry are frozen.
 - Hall sensing is validated with the actual motor, magnet, cap, and bracket.

@@ -51,6 +51,14 @@ blade build, 2026-07):
   Michael models it; rerun when the numbers change. The camber-line-vs-chord-line rod miss
   was caught by a question, not the script — extend the script when a new class of claim
   appears.
+- **Verification effort follows cost asymmetry, not checklists** (Michael, 2026-08-01, GL100
+  arrival). Once a vendor part's revision is physically confirmed, trust its STEP/datasheet
+  for positions and interfaces. Don't pre-measure anything whose failure mode is cheap to
+  adapt at assembly (thread depths, screw lengths — a bottoming screw is felt at hand-torque
+  and fixed with a washer). Reserve bench measurement for dimensions that feed a
+  **non-adjustable machined feature or a safety assumption** (KD-100 thickness → SP-100
+  cross-hole; pilot bore ID → RH-100 pilot OD). When 99% sure, prefer adapting at install
+  over 3× verification work — never generate measurement busywork.
 
 ## Quick reference
 

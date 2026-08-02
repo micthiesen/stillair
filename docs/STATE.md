@@ -38,12 +38,15 @@ motor-arrival release sprint is now Next.)
 
 ## Next
 
-**Motor-arrival release sprint** (promoted per the standing rule — the GL100 box
-arrived 2026-08-01): the caliper measurement session against the parts.md "GL100
-release checks" + "Fabrication gates" lists (axial length, face ownership, M4 depths,
-bore/pilot mating diameter, wire-exit clocking, KD-100 measured thickness, fastener
-on-arrival checks), measured values into the OnShape Variable Studio, then SP-100
-release (needs axial length + washer t) and the MC-100/RH-100 CNC batch. Bearing data
+**Motor-arrival release sprint** — measurement session done 2026-08-01, most gates
+cleared (parts.md "Fabrication gates" has the full status): revision confirmed exact,
+face/bore ownership confirmed (Ø50 + bore rotate), axial length measured 34.2–34.3 →
+capture-gap stack derived and inside the 2.0–3.0 band, **no model changes needed**.
+M4 depths waived to assembly-time checks; STEP trusted for positions/wire exit (owner
+decision, recorded in CLAUDE.md + parts.md). Remaining before metal: **measure the
+installed KD-100 washer's thickness** (→ SP-100 cross-hole Z = t + 133.2; then SP-100
+releases), decide the pilot-bore reading (one inside-jaw measurement vs trusting Ø30.0
+nominal; gates RH-100), then the SP-100 + MC-100/RH-100 CNC batch. Bearing data
 (CubeMars email, sent 2026-07-27) is still the one gate calipers can't clear.
 
 ## Candidates Not Chosen
