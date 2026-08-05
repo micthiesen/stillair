@@ -8,8 +8,10 @@
 > Segments export to `cad/BP-100.step` when re-exported (the committed STEP is still v2 —
 > re-export pending).
 
-A 3D-printed blade (aero/LW-PLA class filament; material for the loaded root print is the
-owner's call) with a Ø3 mm carbon-fiber rod spar, cambered low-Reynolds airfoil sections,
+A 3D-printed blade (V1 test blades: **Bambu PLA Matte**, switched 2026-08-05 from eSUN
+PLA-LWT — LWT was stringy, weak, and near-unsandable; normal PLA is still light and matte
+finishes better. LWT/aero filament remains a later-rev option; material for the loaded root
+print stays the owner's call) with a Ø3 mm carbon-fiber rod spar, cambered low-Reynolds airfoil sections,
 spanwise twist baked in, and an integrated root plate. Overall diameter ~Ø1116 mm (44.0 in
 do-not-exceed; the plan-view tip trim lands the apex just inside r558.8). Structural
 validation of the print + rod + bolted root is explicitly the owner's responsibility and out
@@ -109,7 +111,8 @@ station is deliberately moderate (v2's c14/ys−10/zr−8 hook was unloftable ev
 - Blade tops (Z118.8, sweeping r ≥ 110) vs the future ENC-100 wall (r ≤ 106): ~4 mm radial
   — the binding constraint for the housing design (see parts.md ENC-100).
 - Mass: est. 130–150 g/blade in foaming PLA + 5 g rod (hub/catcher sized for the heavier
-  birch rotor).
+  birch rotor). V1 in solid Bambu PLA Matte (2 walls / 10% gyroid) est. ~220–260 g/blade —
+  still inside the birch-rotor budget.
 
 ## OnShape build sequence (v3, as built)
 
@@ -137,6 +140,25 @@ TE thickness 0.6):
 8. **Scarf split** at r330 (30° plane), Move Face segB −0.10.
 9. Rename **BP-100 segA / segB**, circular pattern ×3 about Z.
 10. Re-export `cad/BP-100.step` from the finished segments.
+
+## V1 print settings (Bambu PLA Matte, 2026-08-05)
+
+Deltas from the stock 0.20 Standard + Bambu PLA Matte profile; everything else stays stock.
+Print segments joint-face down leaning ~30° as planned; seam painted onto the upper
+(ceiling-facing) surface.
+
+- 2 wall loops (stock), **10% gyroid** infill (from 15% grid — no in-layer crossings in the
+  thin cavity, isotropic).
+- **TE bulge mitigation** (0.6 mm TE < two 0.42 walls, so Arachne lays one wide bead and the
+  180° turnaround dumps pressure — LWT foaming amplified this, solid PLA still shows it):
+  calibrate flow dynamics (PA) + flow ratio per spool (the big lever); Arachne **minimum
+  wall width 85% → ~60%**; precise wall on; outer wall ~70 mm/s / 2000 mm/s² accel.
+- **Cooling at thin tip sections**: keep "slow down for better layer cooling" on and print
+  multiple segments per plate, by layer (all three segBs together) so small cross-sections
+  get cooling time — solo parts re-deposit onto molten plastic and the edge slumps.
+- Residual proud edge: sand it (Matte sands well); never negative contour compensation.
+- Optional root reinforcement: box modifier over the root slab, 4 walls / 40% infill.
+- Supports for the 30° lean: tree auto, 0.2 mm top Z distance.
 
 ## Open items
 
