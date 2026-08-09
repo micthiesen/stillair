@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-09** (cancelled DigiKey orders reconstructed; one CAD/DDP reorder
-chosen, with three non-blocking sourcing pins.)
+Last updated: **2026-08-09** (cancelled DigiKey invoices reconciled; 30-line CAD/DDP review
+cart built with no backorders, Marketplace lines, or drop-ship offers.)
 
 ## Now
 
@@ -21,19 +21,20 @@ chosen, with three non-blocking sourcing pins.)
   retention; Hall sensor line moved to the standoff bisector ("150°", relational def
   controls); RH-100 blade stations owner-customized (released STEP is interface truth;
   blade root is owner-managed); BR-100 will be owner hand-fabbed, not designed in repo.
-- **DigiKey reorder is defined but not placed**: cancelled orders **100616913** and
-  **100723632** combine into one DigiKey Canada CAD/DDP warehouse order. Available basket
-  is roughly CAD $140-155 before BC tax and clears free shipping. Pins: the mismatched
-  `0FHA0200Z` fuse-holder selection, 2 loose `DMP6023LE-13` spares, and optional SparkFun
-  `15362` headers. Two depleted commodity passives have stocked direct substitutes.
-  Exact Belden cut length and Micro-Fit contact spare qty need confirmation from cancelled
-  100616913 before cart upload. Full rationale: `bom/README.md`.
+- **DigiKey reorder is built but not placed**: review cart **375208526**, named
+  `stillair-consolidated-reorder`, combines cancelled orders **100616913** and
+  **100723632** as 30 immediate-stock CAD/DDP warehouse lines. It is CAD $225.82 before
+  tax / $252.92 after BC tax with free FedEx International Priority; no Marketplace,
+  drop-ship, or backordered lines. Four same-footprint stock substitutions are documented
+  in `bom/README.md`. Pins: 2 loose `DMP6023LE-13` spares and optional SparkFun `15362`
+  headers. Invoice-confirmed quantities include 25 ft Belden, 100 Micro-Fit contacts,
+  5 each headers, and 11 each housings. The fuse holder is correctly `FHAC0001ZXJ`.
 - **Parcels in flight**: PCB-01 (JLCPCB W2026073105230212, DHL — 2 assembled + 3 bare),
   PCB-02 (W2026073108244536), and the CNC batch. Watches:
   PCB-01 engineering review (J2/J6 overhangs intentional; verify MCF pin-1 corner in the
   placement render), CNC review may flag the SP-100 PDF's 17-4PH note (answer: per order
   config, SUS304).
-- **Procurement reopened only for the consolidated DigiKey reorder and three pins.** M2
+- **Procurement reopened only for the consolidated DigiKey reorder and two pins.** M2
   hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
   other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
   or accept as Gate 01 residual risk).
@@ -60,9 +61,9 @@ testing/test-matrix.csv + electrical.md "Fabrication".
 
 ## Learned Recently
 
-- **Canada distributor terms + cancelled-order reconstruction** (DigiKey CAD is DDP;
-  USD is CPT; combined order wins; fuse-holder mismatch and three pins) → bom/README.md,
-  bom.csv.
+- **Canada distributor terms + invoice-verified replacement cart** (DigiKey CAD is DDP;
+  USD is CPT; combined order wins; 30 immediate lines, four substitutions, two pins) →
+  bom/README.md, bom.csv.
 - **GL100 measurements + gate closures** (axial stack, washer → Z136.6, bore → pilot
   Ø29.85; face/bore ownership confirmed) → parts.md "GL100 release checks" +
   "Fabrication gates".

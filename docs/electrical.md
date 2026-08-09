@@ -274,8 +274,8 @@ NTC circuit (was unspecified): 10 kΩ 1% from 3.3 V to GPIO6, 10 kΩ NTC from GP
 100 nF at the pin (Espressif's ADC filter recommendation), ADC at 11 dB attenuation
 (0–3300 mV, ±40 mV). Sensor element selected 2026-07-30 (the J4 cable had every part
 purchased except the sensor itself — swarm finding): **Vishay NTCALUG01T103G501**, 10 kΩ
-25 °C, B=3984 K ±0.5 %, ring-lug terminal that bolts to the GL100 housing; qty 2 were in
-DigiKey order 100723632, which was cancelled and must be reordered. Exact mounting point is
+25 °C, B=3984 K ±0.5 %, ring-lug terminal that bolts to the GL100 housing; qty 2 from
+cancelled DigiKey order 100723632 are in CAD review cart 375208526. Exact mounting point is
 TBD when EB-100/BR-100 are drawn;
 firmware read remains TODO(temp-sense). VBUS sense divider (was unspecified): 100 kΩ / 100 kΩ to a test pad or
 ADC pin — 5.25 V max lands at 2.6 V, inside the 3.3 V limit.

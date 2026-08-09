@@ -48,22 +48,23 @@ Notes:
 
 ## 2026-08-09 DigiKey reorder decision
 
-DigiKey orders **100616913** and **100723632** were cancelled. The former order ID was
-never recorded in the repo, but its contents reconstruct cleanly from the still-pending
-wall-box power chain, supply, cut cable, and first Micro-Fit quantities. Order 100723632
-is fully reconstructed from its 24 recorded lines. `bom.csv` now reflects the cancelled
-quantities instead of treating them as in hand or in flight.
+DigiKey orders **100616913** and **100723632** were cancelled. Their cancellation invoices
+(`130375795` and `130375791`) were checked line by line on 2026-08-09 and are the source of
+truth for the replacement quantities. Order 100616913 contained 12 lines in CAD/DDP;
+100723632 contained 24 lines in USD/CPT. The four Micro-Fit connector families appeared in
+both orders, so their quantities combine in the replacement cart.
 
 Use **one DigiKey Canada order paid in CAD** for the combined available basket. DigiKey's
 Canadian CAD checkout is DDP, with duty and customs paid by DigiKey, and delivery is free
 above CAD $100. A USD checkout is CPT and leaves tax, duty, and brokerage due on delivery;
 that currency choice, not FedEx itself, caused the separate carrier bill on order 129980940.
 Exclude Marketplace lines because they use supplier shipping and may be CPT even in a CAD
-cart. The combined warehouse basket is comfortably above CAD $100. A stock-price snapshot
-on 2026-08-09 puts it around **CAD $140-155 before BC tax**, excluding the pins below;
-the range remains provisional because order 100616913 did not preserve its Belden cut
-length or Micro-Fit contact spare quantity. Confirm those two quantities in the cancelled
-order before cart upload.
+cart. Browser review cart **375208526**, named `stillair-consolidated-reorder`, contains
+**30 immediate-stock warehouse lines** with no Marketplace or drop-ship offers. It totals
+**CAD $225.82 before tax / $252.92 after BC GST+PST**, with free FedEx International
+Priority. It has not been checked out. The invoice-confirmed larger quantities account for
+the increase from the earlier estimate: 25 ft of Belden cable, 100 contacts, 5 each of the
+two Micro-Fit headers, and 11 each of the two mating housings.
 
 Mouser Canada is the runner-up: CAD orders can also be DDP and ship free above CAD $100,
 but it does not offer the Belden 5300UE in project-sized cut lengths, and its exact E-Switch
@@ -76,14 +77,20 @@ Pinned outside this order:
 - `DMP6023LE-13` qty 2 loose spares: DigiKey stock zero; assembled boards already contain
   the required devices. Mouser had deep stock, so these are easy to revisit later.
 - SparkFun `15362` qty 2: optional DNP scope headers, not normally stocked at DigiKey.
-- The wall-box fuse holder: `0FHA0200Z` is officially an automotive Add-A-Circuit tap,
-  not the covered standalone inline holder described by the BOM, and DigiKey stock is zero.
-  `0FHA0200ZP` is the same tap in retail packaging with four fuses, not a design fix.
 
-Two commodity stock gaps stay in the single DigiKey order via DigiKey-listed direct
-substitutes: KEMET `C0603C104K5RACTU` for the depleted Samsung 100 nF decoupling strip,
-and Taiyo Yuden `EMK107ABJ475KA-T` for the depleted Samsung 4.7 uF DNP-ladder cap. The
-formerly backordered Molex `43650-0300` has recovered to deep stock and is no longer pinned.
+Four stock gaps stay in the single DigiKey order through equivalent, same-footprint parts:
+
+- KEMET `C0603C104K5RACTU` replaces Samsung `CL10B104KB8NNNC` (100 nF, 50 V, X7R, 0603).
+- Vishay `PTN0603Y1002BST1` replaces Yageo `RT0603BRD0710KL` (10 kΩ, 0.1%, thin film,
+  0603; power rating improves from 0.1 W to 0.15 W).
+- KEMET `C0603C105K3RACTU` replaces Samsung `CL10B105KA8NNNC` (1 uF, 25 V, X7R, 0603).
+- Taiyo Yuden `EMK107ABJ475KA-T` replaces Samsung `CL10A475KO8NNNC` (4.7 uF, 16 V,
+  X5R, 0603).
+
+The earlier fuse-holder mismatch was a reconstruction error. Invoice 130375795 confirms
+that cancelled order 100616913 contained Littelfuse `FHAC0001ZXJ` / DigiKey `F3209-ND`, a
+proper inline ATO holder, and it is immediate-stock in the replacement cart. The formerly
+backordered Molex `43650-0300` is also immediate-stock.
 
 Ordered so far: the GL100 KV10 motor (RobotShop), the MP-100 ceiling
 plate (JLCCNC), and — 2026-07-28 — the complete mechanical fastener set including the
