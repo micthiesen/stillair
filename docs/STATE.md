@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-02** (session 7 wrap: motor arrived and was measured, the
-motor-gated CNC batch — SP-100/MC-100/RH-100 — was designed to rev A and **ordered**.)
+Last updated: **2026-08-09** (cancelled DigiKey orders reconstructed; one CAD/DDP reorder
+chosen, with three non-blocking sourcing pins.)
 
 ## Now
 
@@ -21,14 +21,22 @@ motor-gated CNC batch — SP-100/MC-100/RH-100 — was designed to rev A and **o
   retention; Hall sensor line moved to the standoff bisector ("150°", relational def
   controls); RH-100 blade stations owner-customized (released STEP is interface truth;
   blade root is owner-managed); BR-100 will be owner hand-fabbed, not designed in repo.
+- **DigiKey reorder is defined but not placed**: cancelled orders **100616913** and
+  **100723632** combine into one DigiKey Canada CAD/DDP warehouse order. Available basket
+  is roughly CAD $140-155 before BC tax and clears free shipping. Pins: the mismatched
+  `0FHA0200Z` fuse-holder selection, 2 loose `DMP6023LE-13` spares, and optional SparkFun
+  `15362` headers. Two depleted commodity passives have stocked direct substitutes.
+  Exact Belden cut length and Micro-Fit contact spare qty need confirmation from cancelled
+  100616913 before cart upload. Full rationale: `bom/README.md`.
 - **Parcels in flight**: PCB-01 (JLCPCB W2026073105230212, DHL — 2 assembled + 3 bare),
-  PCB-02 (W2026073108244536), DigiKey **100723632**, and now the CNC batch. Watches:
+  PCB-02 (W2026073108244536), and the CNC batch. Watches:
   PCB-01 engineering review (J2/J6 overhangs intentional; verify MCF pin-1 corner in the
   placement render), CNC review may flag the SP-100 PDF's 17-4PH note (answer: per order
   config, SUS304).
-- **Procurement is closed — nothing left to buy** (2026-08-02: M2 hardware and crimpers
-  are owner stock; BR-100 owner-fabbed/untracked). The one open loose end: the CubeMars
-  bearing email (sent 2026-07-27, unanswered — chase or accept as Gate 01 residual risk).
+- **Procurement reopened only for the consolidated DigiKey reorder and three pins.** M2
+  hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
+  other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
+  or accept as Gate 01 residual risk).
 
 ## Next
 
@@ -52,6 +60,9 @@ testing/test-matrix.csv + electrical.md "Fabrication".
 
 ## Learned Recently
 
+- **Canada distributor terms + cancelled-order reconstruction** (DigiKey CAD is DDP;
+  USD is CPT; combined order wins; fuse-holder mismatch and three pins) → bom/README.md,
+  bom.csv.
 - **GL100 measurements + gate closures** (axial stack, washer → Z136.6, bore → pilot
   Ø29.85; face/bore ownership confirmed) → parts.md "GL100 release checks" +
   "Fabrication gates".

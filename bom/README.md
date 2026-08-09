@@ -46,25 +46,61 @@ Notes:
   commodity stock the owner already keeps on hand. Only project-specific or
   uncommon-spec hardware gets a BOM line.
 
-Ordered so far: the wall-box power chain, cable, Micro-Fit connector set, the GST60A24-P1J
-supply (all DigiKey, 2026-07-26), the GL100 KV10 motor (RobotShop), the MP-100 ceiling
+## 2026-08-09 DigiKey reorder decision
+
+DigiKey orders **100616913** and **100723632** were cancelled. The former order ID was
+never recorded in the repo, but its contents reconstruct cleanly from the still-pending
+wall-box power chain, supply, cut cable, and first Micro-Fit quantities. Order 100723632
+is fully reconstructed from its 24 recorded lines. `bom.csv` now reflects the cancelled
+quantities instead of treating them as in hand or in flight.
+
+Use **one DigiKey Canada order paid in CAD** for the combined available basket. DigiKey's
+Canadian CAD checkout is DDP, with duty and customs paid by DigiKey, and delivery is free
+above CAD $100. A USD checkout is CPT and leaves tax, duty, and brokerage due on delivery;
+that currency choice, not FedEx itself, caused the separate carrier bill on order 129980940.
+Exclude Marketplace lines because they use supplier shipping and may be CPT even in a CAD
+cart. The combined warehouse basket is comfortably above CAD $100. A stock-price snapshot
+on 2026-08-09 puts it around **CAD $140-155 before BC tax**, excluding the pins below;
+the range remains provisional because order 100616913 did not preserve its Belden cut
+length or Micro-Fit contact spare quantity. Confirm those two quantities in the cancelled
+order before cart upload.
+
+Mouser Canada is the runner-up: CAD orders can also be DDP and ship free above CAD $100,
+but it does not offer the Belden 5300UE in project-sized cut lengths, and its exact E-Switch
+was not immediately stocked in the comparison snapshot. Newark's small-quantity coverage
+was worse (for example, the recovered 43650-0300 carried a 10-piece minimum from UK stock).
+Splitting the basket loses the landed-price advantage without improving project readiness.
+
+Pinned outside this order:
+
+- `DMP6023LE-13` qty 2 loose spares: DigiKey stock zero; assembled boards already contain
+  the required devices. Mouser had deep stock, so these are easy to revisit later.
+- SparkFun `15362` qty 2: optional DNP scope headers, not normally stocked at DigiKey.
+- The wall-box fuse holder: `0FHA0200Z` is officially an automotive Add-A-Circuit tap,
+  not the covered standalone inline holder described by the BOM, and DigiKey stock is zero.
+  `0FHA0200ZP` is the same tap in retail packaging with four fuses, not a design fix.
+
+Two commodity stock gaps stay in the single DigiKey order via DigiKey-listed direct
+substitutes: KEMET `C0603C104K5RACTU` for the depleted Samsung 100 nF decoupling strip,
+and Taiyo Yuden `EMK107ABJ475KA-T` for the depleted Samsung 4.7 uF DNP-ladder cap. The
+formerly backordered Molex `43650-0300` has recovered to deep stock and is no longer pinned.
+
+Ordered so far: the GL100 KV10 motor (RobotShop), the MP-100 ceiling
 plate (JLCCNC), and — 2026-07-28 — the complete mechanical fastener set including the
 KD-100 catcher washers and Nord-Locks (Accu, $219.45 CAD), CW-100 brass rod (Amazon), and
 the LCSC-gap electronics order 374750597 (DigiKey, ~$63 USD: insurance ICs and spares,
 bulk caps, USB-C, cable-side JST housings/contacts, trimmers, dev cable), and the ST-100
 standoffs (JLCCNC, qty 4, $101.79). The V1 board run went out 2026-07-30 as JLCPCB
 W2026073105230212 (boards + all LCSC-path parts via PCBA) with PCB-02 following the same
-day as W2026073108244536, and the **final electronics order** closed 2026-07-30 as
-DigiKey **100723632** ($62.33, 24 lines: PCB-02's C1/J1, the C34 1206 C0G, board-#2
-completion headers, the J4 NTC element, EB-100 M3 standoffs, tach-chain 0.1% spares,
-the C2 DNP calibration ladder, and bench spares). Electrically nothing is left to buy;
-the remaining-hardware list closed 2026-08-02: the planned M2 kit and crimper purchases
-both died — owner has M2 hardware and crimpers in stock. **Nothing is left to buy.**
+day as W2026073108244536. DigiKey **100723632** ($62.33, 24 lines: PCB-02's C1/J1,
+the C34 1206 C0G, board-#2 completion headers, the J4 NTC element, EB-100 M3 standoffs,
+tach-chain 0.1% spares, the C2 DNP calibration ladder, and bench spares) was placed
+2026-07-30 and cancelled before fulfillment; its available lines now join the consolidated
+CAD reorder above.
 
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
-packing slip). Still in transit: PCB-01 (DHL), PCB-02 (Global Standard Direct Line), and
-DigiKey 100723632.
+packing slip). Still in transit: PCB-01 (DHL) and PCB-02 (Global Standard Direct Line).
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),
