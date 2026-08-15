@@ -52,6 +52,32 @@ A full-size PLA print of MP-100 is available as a lightweight marking template.
   at least 190 mm anchor spacing. The tether termination and routing are also still open.
   Resolve those together before creating the third hole.
 
+## Before MP-100 is anchored
+
+This is a one-way assembly boundary. MP-100's ceiling face becomes inaccessible after the
+two primary Titen HDs clamp it to the slab.
+
+Bench-assemble this plate unit before the overhead lift:
+
+1. Put MP-100 ceiling-face-up.
+2. Insert **SP-100, the center capture spindle**, from the ceiling side. Seat its flange
+   fully in the double-D recess with the flats engaged and the long shank hanging downward.
+3. Install the **three ST-100 standoffs** using **three M6 × 16 A4 flat-head screws from the
+   ceiling face**. Use three standoffs; the fourth is a spare. Tighten to the released joint
+   requirement and confirm all three countersunk heads are flush or slightly below the
+   ceiling face.
+4. Keep the plate ceiling-face-up while handling it. SP-100 has no separate axial retainer
+   until the slab traps its flange, so flipping the unit can release the spindle.
+
+During the overhead lift, each primary stack is Titen head, washer, MP-100, hard spacer,
+then ceiling. The loose hard spacers are positioned at that time, not permanently attached
+to the bench-built plate unit.
+
+Leave these off until the plate is anchored: MC-100 and motor, RH-100 and blades, KD-100 /
+castellated nut / cotter, EB-100 and electronics, cable clamps, and ENC-100. They all install
+from below. Tether hardware is excluded from this checklist until its location and
+termination conflict is resolved.
+
 ## Pick by available energy
 
 - **10 to 20 minutes, low focus**: lay out the exact PCB-02 parts and tools, or hold the PLA

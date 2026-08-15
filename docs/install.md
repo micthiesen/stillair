@@ -50,10 +50,19 @@ assembly. Tether requirement: the calculated dynamic catch peak with ≥2× marg
 Titen HDs are through-fixture fasteners — the plate and anchors go up together (the screw
 head + washer clamps the plate; there is no set-stud-first step as with wedge anchors):
 
-1. **Bench-assemble the plate unit**: SP-100 spindle into its recess (opens toward the
-   ceiling — cannot be added later), clocking its flange flats into the plate's double-D
-   pocket; and the three ST-100 standoffs torqued via their ceiling-face M6 flat-heads (also
-   inaccessible later), plus hard spacers. ~3 kg unit.
+1. **Bench-assemble everything that needs ceiling-face access**:
+
+   - Put MP-100 ceiling-face-up. Insert SP-100 (the center capture spindle) from that side,
+     seat its flange fully in the double-D recess, and leave the long shank hanging down.
+     It cannot be added after anchoring.
+   - Install three ST-100 standoffs with three M6 × 16 A4 flat-head screws inserted from the
+     ceiling face. The fourth standoff is a spare. Tighten to the released joint requirement;
+     verify each countersunk head is flush or slightly below the ceiling face.
+   - Keep the unit ceiling-face-up during handling. Nothing separately retains SP-100 until
+     the slab traps its flange; flipping the plate can release it.
+   - Do not add MC-100/motor, rotor, catcher nut stack, electronics, cable clamps, or housing
+     yet. All remain accessible from below and only make the overhead lift heavier.
+
 2. Mark the two primary drill spots via the plate or the PLA template (the 11 × 20 slots
    absorb ±4–5 mm). Mark the tether only after the location conflict above is resolved.
    Drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 in a rotary
@@ -66,7 +75,10 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    peck-drill to clear dust and cool the tip; if a hole barely progresses, rent an SDS-plus
    rotary hammer instead of forcing it. The M12 impact driver (no axial percussion — cannot
    drill) **drives** the anchors via a 9/16 in socket.
-3. Offer up the plate unit; drive both primaries through washer + slot (socket/impact).
+3. Offer up the plate unit. At each primary location, place the loose hard-spacer washer
+   between MP-100 and the ceiling, then drive the Titen HD through its room-side washer and
+   plate slot (stack: head -> washer -> plate -> hard spacer -> ceiling). The spacers are
+   added during the lift, not attached during bench assembly.
    **Length/stack budget**: the 3 in screws have 12.7 mm of fixture budget above the
    63.5 mm minimum embedment — plate 6 mm leaves ≤6.7 mm for washer + spacers combined.
    Use standard-thickness washers (~2.5 mm) and only as much spacer as the finish demands
