@@ -74,6 +74,7 @@ Slab verification and the local installation-approval path are site-specific exe
 - [electrical.md](electrical.md) — PCB V1/V2 circuit and layout handoff
 - [controls.md](controls.md) — motor-control contract and required state behavior
 - [build.md](build.md) — build sequence, procurement gates, commissioning
+- [integration.md](integration.md) — dependency spine, parallel tracks, and energy-sized next work
 - [install.md](install.md) — anchors, slab verification, Vancouver approval path
 - [../bom/bom.csv](../bom/bom.csv) — BOM with purchase tracking
 - [../testing/test-matrix.csv](../testing/test-matrix.csv) — commissioning matrix with sign-off fields

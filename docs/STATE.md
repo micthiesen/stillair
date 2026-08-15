@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-14** (all expected JLCPCB/JLCCNC and DigiKey parcels received;
-BP-100 blade manufacturing complete.)
+Last updated: **2026-08-14** (integration work organized into dependency-aware tracks;
+site drilling approved, concrete checked, PLA MP-100 marking template printed.)
 
 ## Now
 
@@ -34,18 +34,24 @@ BP-100 blade manufacturing complete.)
   M2 hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
   other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
   or accept as Gate 01 residual risk).
+- **Ceiling drilling is approved and the concrete check is complete; no holes are drilled.**
+  A full-size PLA MP-100 makes orientation and overhead marking easier. The two primary
+  holes can proceed independently. Do not drill the tether hole yet: the plate clearance is
+  ~105 mm from each primary, conflicting with install.md's >=190 mm anchor spacing, and the
+  tether termination/routing is still open.
 
 ## Next
 
-**Board completion and bring-up.** Hand-populate PCB-01 (C1, C2, C34 bridge, J1, J2, U8,
-F1 bridge) and PCB-02 (U1, C1, J1), then begin the PCB-01..03 commissioning sequence.
-Reference:
-testing/test-matrix.csv + electrical.md "Fabrication".
+Work from [integration.md](integration.md). Four tracks are available now: electronics,
+ceiling preparation, mechanical fit-up, and firmware/test preparation. Electronics is the
+main dependency spine; the immediate checkpoint is both boards populated, the two primary
+ceiling holes ready, and PCB-01 passing its first no-motor power/safety checks.
 
 ## Candidates Not Chosen
 
-- **EB-100 PCB-bracket CAD** — fully unblocked now (motor in hand, wire exit real,
-  PCB-01 mounting facts documented); pairs naturally with the owner's BR-100 hand-fab.
+- **EB-100 PCB-bracket CAD** — wait until PCB-01's omitted connectors are populated so the
+  bracket and cable bends are designed around physical geometry; pairs naturally with the
+  owner's BR-100 hand-fab.
 - **TEMP_SENSE firmware** — hardware complete; still parked with `TODO(temp-sense)` in
   `app/src/matter.rs`.
 - **Rotor balance/runout** — blade manufacturing and qualification passed; MEC-05 remains
@@ -70,3 +76,5 @@ testing/test-matrix.csv + electrical.md "Fabrication".
   bom/README.md, bom.csv.
 - **All remaining arrivals + BP-100 manufacturing completion** → STATE.md, bom/README.md,
   bom.csv, parts.md, blade-v2.md.
+- **Integration dependency map + energy-sized work menu; ceiling approval/template and
+  tether-spacing conflict** → integration.md, install.md.

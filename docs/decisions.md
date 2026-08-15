@@ -9,7 +9,7 @@ The design to take into CAD. All items below are **selected**.
 
 | Area | Decision | Note |
 |---|---|---|
-| Mounting | Compact metal plate, two primary anchors, separate tether anchor | Exact anchors remain conditional on the verified slab and load calculation. |
+| Mounting | Compact metal plate, two primary anchors, separate tether anchor | Concrete check and drilling approval complete 2026-08-14; primary holes not yet drilled. Tether termination/location remains open because the plate clearance conflicts with the documented spacing. |
 | Structure | Metal ceiling structure and hub; blades bolt directly to the hub (adapters deleted 2026-07-28, BP-100 v3) | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
 | Rotor | 44-inch maximum, three printed BP-100 v3 cambered-airfoil blades with CF-rod spars, baked-in twist, and integrated bolt-on roots | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27, root integrated 2026-07-28 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |

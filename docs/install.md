@@ -5,6 +5,17 @@ proven otherwise); existing bolts of unknown type in the slab. Anchor engineerin
 ICC-ES ESR-2713 (Simpson Titen HD), design strengths in cracked concrete at f'c 2500 psi —
 the correct conservative assumption for a suspended slab soffit.
 
+**Site status 2026-08-14:** hole drilling is approved and the concrete check is complete;
+no holes have been drilled. A full-size PLA print of MP-100 is available as a lightweight
+overhead marking template. It may be used for the two primary anchor centers.
+
+**Tether-location conflict, resolve before drilling the third hole:** MP-100's tether
+clearance is centered at X0, Y-82, only sqrt(65^2 + 82^2) = 104.6 mm from either primary
+center. That conflicts with the >=190 mm spacing required below. Do not treat the PLA
+template's tether clearance as an approved tether drill location. Choose the termination
+and routing, then reconcile the anchor location and spacing before drilling it. This does
+not block measuring or drilling the two primary holes.
+
 ## Anchor selection
 
 Demand per primary anchor (two on 130 mm centers, from the design envelope of 1.25 kN
@@ -43,8 +54,9 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
    ceiling — cannot be added later), clocking its flange flats into the plate's double-D
    pocket; and the three ST-100 standoffs torqued via their ceiling-face M6 flat-heads (also
    inaccessible later), plus hard spacers. ~3 kg unit.
-2. Mark the drill spots via the plate or a template (the 11 × 20 slots absorb ±4–5 mm),
-   drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 in a rotary
+2. Mark the two primary drill spots via the plate or the PLA template (the 11 × 20 slots
+   absorb ±4–5 mm). Mark the tether only after the location conflict above is resolved.
+   Drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 in a rotary
    hammer (SDS-plus; bit nominal matches the anchor — never substitute a 10 mm metric bit,
    the thread engagement assumes ANSI tolerance), depth-stopped at ~75 mm (primaries) /
    ~95–100 mm (tether), then brush/blow clean per Simpson's instructions. Tooling: M12 Fuel
