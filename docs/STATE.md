@@ -3,16 +3,17 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-09** (consolidated DigiKey replacement order 100888768 placed in
-CAD with all build-critical loose parts in stock.)
+Last updated: **2026-08-14** (all expected JLCPCB/JLCCNC and DigiKey parcels received;
+BP-100 blade manufacturing complete.)
 
 ## Now
 
-- **All motor-gated metal is ordered**: JLCCNC **W2026080301372216**, $204.44 shipped
-  (SP-100 $82.76 / MC-100 $48.83 / RH-100 $42.08). Rev A drawings + STEPs in `cad/`.
-  SP-100 went in **SUS304** (JLCCNC has no 17-4PH; margin math + anti-seize install note
-  in parts.md), RH-100 on the **±0.05 tier** so the measured-bore pilot fit is
-  contractual. Per-part on-arrival checks are in each parts.md status block.
+- **All fabricated parts are received**: both JLCPCB runs (PCB-01
+  **W2026073105230212**, 2 assembled + 3 bare; PCB-02 **W2026073108244536**, 5 bare)
+  and all JLCCNC parts, including MP-100, four ST-100s, and batch
+  **W2026080301372216** (SP-100 / MC-100 / RH-100). Owner accepted the delivered parts
+  as received on 2026-08-14; no separate incoming-inspection pass is planned. SP-100 is
+  **SUS304**; RH-100 used the **±0.05 tier** for the measured-bore pilot fit.
 - **Arrived 2026-08-01**: GL100 motor, the full Accu fastener set, Titen HD anchors,
   DigiKey 374750597 (salesorder 100668200). Measured: axial 34.2–34.3 (nominal stands,
   stack derived), KD-100 t = 3.38 → SP-100 cross-hole Z136.6, bore Ø29.99–30.00 →
@@ -21,31 +22,24 @@ CAD with all build-critical loose parts in stock.)
   retention; Hall sensor line moved to the standoff bisector ("150°", relational def
   controls); RH-100 blade stations owner-customized (released STEP is interface truth;
   blade root is owner-managed); BR-100 will be owner hand-fabbed, not designed in repo.
-- **Consolidated DigiKey reorder placed**: **100888768**, CAD $179.45 before tax /
-  $200.98 after BC tax, free FedEx International Priority. Its 27 immediate-stock
-  warehouse lines replace cancelled orders **100616913** and **100723632**; there are no
-  Marketplace, drop-ship, or backordered lines. Before checkout, $46.37 of precautionary
-  extras was trimmed while the useful connector/calibration stock stayed. Final quantities
-  and four same-footprint stock substitutions are in `bom/README.md` and `bom.csv`.
-  Pins remain 2 loose `DMP6023LE-13` spares and optional SparkFun `15362` headers.
-- **Parcels in flight**: DigiKey 100888768, PCB-01 (JLCPCB W2026073105230212, DHL —
-  2 assembled + 3 bare), PCB-02 (W2026073108244536), and the CNC batch. Watches:
-  PCB-01 engineering review (J2/J6 overhangs intentional; verify MCF pin-1 corner in the
-  placement render), CNC review may flag the SP-100 PDF's 17-4PH note (answer: per order
-  config, SUS304).
-- **Build-critical procurement is closed.** Only the two non-blocking pins above remain.
+- **Consolidated DigiKey reorder received 2026-08-14**: **100888768**, 27 warehouse lines,
+  CAD $200.98 after tax. It replaces cancelled orders **100616913** and **100723632**.
+  Final quantities and four same-footprint substitutions are in `bom/README.md` and
+  `bom.csv`; owner accepted the received order as complete.
+- **BP-100 blade manufacturing and blade-root qualification are complete** (owner,
+  2026-08-14). MEC-01/02/02B passed. Assembled rotor balance/runout remains open under
+  MEC-05.
+- **Build-critical procurement is closed.** Only two non-blocking loose `DMP6023LE-13`
+  spares and optional SparkFun `15362` scope headers remain unsourced.
   M2 hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
   other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
   or accept as Gate 01 residual risk).
 
 ## Next
 
-**Bring-up prep, so the bench is ready the day the DHL box lands** (restored: it was the
-Next before the motor arrived and is still fully desk-work, blocked on nothing).
-Concretely: commissioning scripts against `--sim` for the PCB-01..03 test rows, the
-tach-chain bench-stim plan (square-wave injection at J3/HALL_TACH per TACH-01), the cable
-build sheets (J1 power, J3 Hall straight-through per TACH-06), and the hand-solder
-sequence for arrival (C1, C2, C34-bridge, J1, J2, U8, F1 bridge). Reference:
+**Board completion and bring-up.** Hand-populate PCB-01 (C1, C2, C34 bridge, J1, J2, U8,
+F1 bridge) and PCB-02 (U1, C1, J1), then begin the PCB-01..03 commissioning sequence.
+Reference:
 testing/test-matrix.csv + electrical.md "Fabrication".
 
 ## Candidates Not Chosen
@@ -54,9 +48,8 @@ testing/test-matrix.csv + electrical.md "Fabrication".
   PCB-01 mounting facts documented); pairs naturally with the owner's BR-100 hand-fab.
 - **TEMP_SENSE firmware** — hardware complete; still parked with `TODO(temp-sense)` in
   `app/src/matter.rs`.
-- **Blade prints (BP-100)** — owner print-engineering; materials + CF rods in hand/inbound.
-- **On-arrival check sessions** — each parcel has its checklist (parts.md status blocks,
-  STATE watches); becomes the day's work whenever a box lands.
+- **Rotor balance/runout** — blade manufacturing and qualification passed; MEC-05 remains
+  before any powered rotor run.
 
 ## Learned Recently
 
@@ -75,3 +68,5 @@ testing/test-matrix.csv + electrical.md "Fabrication".
   **±0.05-tier reasoning for the pilot** → parts.md.
 - **Order log + arrivals** (100668200 = 374750597; W2026080301372216 contents) →
   bom/README.md, bom.csv.
+- **All remaining arrivals + BP-100 manufacturing completion** → STATE.md, bom/README.md,
+  bom.csv, parts.md, blade-v2.md.

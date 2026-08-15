@@ -76,7 +76,8 @@ the GL100 transmits torque only through a non-structural coupling.
 
 ## MP-100 ceiling plate
 
-> **Status: ORDERED 2026-07-27** (JLCCNC, SUS304, brushed, qty 1, ~$130). Rev A files are
+> **Status: RECEIVED + OWNER-ACCEPTED 2026-08-14** (JLCCNC, SUS304, brushed,
+> qty 1, ~$130). Rev A files are
 > [`cad/MP-100_revA.step`](../cad/MP-100_revA.step) and
 > [`cad/MP-100_revA.pdf`](../cad/MP-100_revA.pdf) — the first custom part committed to metal.
 > Any change from here is a rev B, not an edit.
@@ -119,7 +120,8 @@ numbers, tether anchor, and the pre-drill verification checklist in
 
 ## ST-100 carrier standoffs
 
-> **Status: ORDERED 2026-07-28** (JLCCNC, 6061-T6 clear anodized, qty 4, $101.79). Rev A
+> **Status: RECEIVED + OWNER-ACCEPTED 2026-08-14** (JLCCNC, 6061-T6 clear
+> anodized, qty 4, $101.79). Rev A
 > files are [`cad/ST-100_revA.step`](../cad/ST-100_revA.step) and
 > [`cad/ST-100_revA.pdf`](../cad/ST-100_revA.pdf). Any change from here is a rev B.
 
@@ -164,7 +166,8 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## MC-100 stationary motor carrier
 
-> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $48.83;
+> **Status: Rev A RECEIVED + OWNER-ACCEPTED 2026-08-14** (JLCCNC
+> W2026080301372216, $48.83;
 > bead blast + natural matte anodize) —
 > [`cad/MC-100_revA.step`](../cad/MC-100_revA.step) +
 > [`cad/MC-100_revA.pdf`](../cad/MC-100_revA.pdf). On arrival: straightedge the motor
@@ -194,7 +197,8 @@ Fabrication callouts (pre-order check 2026-07-28):
 
 ## SP-100 capture spindle
 
-> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $82.76) —
+> **Status: Rev A RECEIVED + OWNER-ACCEPTED 2026-08-14** (JLCCNC
+> W2026080301372216, $82.76) —
 > [`cad/SP-100_revA.step`](../cad/SP-100_revA.step) +
 > [`cad/SP-100_revA.pdf`](../cad/SP-100_revA.pdf), cross-hole at measured Z136.58.
 > **Ordered in SUS304, not 17-4PH** (JLCCNC stocks no 17-4PH; accepted 2026-08-02:
@@ -277,7 +281,8 @@ bearing-face-up against KD-100, castellated crown downward.
 
 ## RH-100 captured rotor hub
 
-> **Status: Rev A released + ORDERED 2026-08-02** (JLCCNC W2026080301372216, $42.08;
+> **Status: Rev A RECEIVED + OWNER-ACCEPTED 2026-08-14** (JLCCNC
+> W2026080301372216, $42.08;
 > bead blast + natural matte anodize; **±0.05 tolerance tier bought deliberately** —
 > 2768-medium would legally allow a Ø30.05 pilot, an interference fit on the measured
 > Ø29.99 bore) — [`cad/RH-100_revA.step`](../cad/RH-100_revA.step) +
@@ -375,6 +380,9 @@ Tach features:
 > and validated at TACH-01/02.
 
 ## Blade root-joint qualification (BA-00 deleted)
+
+> **Status: PASSED 2026-08-14 (owner report).** MEC-01, MEC-02, and MEC-02B are complete;
+> MEC-05 assembled rotor balance/runout remains separate.
 
 > **No adapter exists anymore.** BA-00 (designed 2026-07-27) was deleted 2026-07-28 when
 > BP-100 v3 integrated the mounting plate into the blade print ([blade-v2.md](blade-v2.md)):

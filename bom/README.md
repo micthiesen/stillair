@@ -67,7 +67,8 @@ headers were reduced from 5 each to 2 each; S3B-PH-K-S from 2 to 1; NTCALUG from
 Keystone 24481 from 6 to 4; and C1206C104K3GACTU from 4 to 2. The useful connector
 consumables, calibration parts and bench stock stayed.
 
-The final 27-line basket was placed as DigiKey order **100888768** on 2026-08-09 for
+The final 27-line basket was placed as DigiKey order **100888768** on 2026-08-09 and
+received 2026-08-14 for
 **CAD $179.45 before tax / $200.98 after BC GST+PST**, with free FedEx International
 Priority. All lines were immediate-stock DigiKey warehouse items at checkout.
 
@@ -113,8 +114,11 @@ reconciled into order 100888768 above.
 
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
-packing slip). Still in transit: DigiKey 100888768, PCB-01 (DHL), and PCB-02 (Global
-Standard Direct Line).
+packing slip). Arrivals 2026-08-14: DigiKey 100888768, PCB-01, PCB-02, all JLCCNC parts
+(MP-100, four ST-100s, SP-100, MC-100, RH-100), and the completed owner-manufactured
+BP-100 blade set. The owner accepted the delivered parts and order contents as received;
+blade-root qualification MEC-01/02/02B passed by owner report. MEC-05 assembled rotor
+balance/runout remains open.
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),

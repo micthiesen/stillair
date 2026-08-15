@@ -27,17 +27,15 @@ the bed.
 - **Mock first, cheap**: an MDF or 3D-printed Ø210 disk + three printed/threaded-rod
   Ø16 × 62 standoffs + a blank Ø180 disk, to feel the (now much shallower) drop in the room
   before any stainless is cut.
+- **Received + owner-accepted 2026-08-14**: MP-100, ST-100 (qty 4),
+  SP-100, MC-100, RH-100, PCB-01 (2 assembled + 3 bare), and PCB-02 (5 bare).
 - **Ordered finished**: MP-100 (JLCCNC 2026-07-27), ST-100 (JLCCNC 2026-07-28, qty 4,
   clear anodized), KD-100 (became a purchased DIN 440 washer — Accu 2026-07-28). BP-100
-  blade prints remain fab-any-time; start the blade root-joint filament-qualification
-  program immediately — it is the longest non-motor-gated path in the project.
-- **SP-100 is fully dimensioned but measure-first** (2026-07-28): the cotter-hole Z is set
-  from the measured KD-100 washer thickness, and the capture-gap stack wants the measured
-  GL100 axial body length before metal is cut — both measurements arrive with deliveries
-  already in transit. See parts.md > SP-100.
-- **Stock to order now**: only **Ø38–40 mm** 17-4PH round bar, and only if fabbing SP-100
-  locally rather than ordering it finished (the flange needs the diameter; not Ø16 bar).
-  The Ø16 6061 rod and Ø210 plate lines are dead — ST-100 and MP-100 ship finished.
+  blade manufacturing and blade-root qualification passed 2026-08-14; assembled rotor
+  balance/runout remains under MEC-05.
+- **SP-100 measure-first gates closed before fabrication**: measured KD-100 thickness set
+  the cotter-hole Z; measured GL100 axial length set the capture stack. The finished part
+  arrived with the rest of the JLCCNC batch on 2026-08-14. See parts.md > SP-100.
 - **MP-100 is released** (2026-07-27): both paper decisions landed — ENC tab clocking at
   45/105/165/225/285/345° and a 15° rim cable entry replacing the deleted mid-plate slot.
   See parts.md "ENC-100 tab clocking" and "Cable entry". Never was motor-gated.

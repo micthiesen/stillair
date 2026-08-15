@@ -1,12 +1,15 @@
 # BP-100 printed blade (v3 — integrated root)
 
-> **Status: v3 accepted and modelled in OnShape 2026-07-28.** v3 deletes the blade adapter
+> **Status: V1 blade manufacturing and blade-root qualification complete 2026-08-14;
+> assembled balance/runout remains open.** MEC-01/02/02B passed by owner report. v3 was
+> accepted and modelled in OnShape 2026-07-28. It deletes the blade adapter
 > entirely: the blade root is a flat mounting rectangle, printed as part of the blade, that
 > bolts straight to RH-100's stations. Supersedes same-week v2 (separate pad + flat BA-00
 > adapter — git holds that revision) and the original BL-100 birch blade + LS-100 spreaders
 > + BA-10/12/14 pitch family (their [parts.md](parts.md) sections remain as the fallback).
 > Segments export to `cad/BP-100.step` when re-exported (the committed STEP is still v2 —
-> re-export pending).
+> re-export pending). Before any powered rotor run, complete MEC-05 assembled rotor
+> balance/runout.
 
 A 3D-printed blade (V1 test blades: **Bambu PLA Matte**, switched 2026-08-05 from eSUN
 PLA-LWT — LWT was stringy, weak, and near-unsandable; normal PLA is still light and matte
