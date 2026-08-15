@@ -266,14 +266,19 @@ bearing-face-up against KD-100, castellated crown downward.
   bench.
 - Why keyed rather than wrenched: the flange is bench-assembled into a recess that opens
   toward the ceiling, but the castellated nut goes on at install step 4, *after* the plate is
-  anchored — by then the flange is sandwiched against the slab and unreachable, and the only
-  exposed shank is the 2.5 mm capture gap. Wrench flats alone would have solved the bench
+  anchored — by then the flange is inaccessible above the plate, and the only exposed shank
+  is the 2.5 mm capture gap. The hard ceiling spacers mean the slab does not directly clamp
+  the flange. Wrench flats alone would have solved the bench
   case and left the real one unsolved.
 - Load check (both trivial, recorded so the flats are not re-litigated): flats cost 6% of the
   flange bearing annulus (701.7 → 658.5 mm², **1.9 MPa** at the 1.25 kN static proof); the
   flat/pocket interface sees **13.9 MPa** reacting 20 N·m of nut torque across 2 × 48 mm².
-- Bench note: before ceiling install, nothing retains the spindle axially in the recess — use
-  a simple holding fixture (recess-up, spindle hanging through a hole) when handling.
+- Anti-rattle retention: seat the flange metal-on-metal on the pocket shoulder, then bridge
+  the ceiling-side perimeter seam to MP-100 with three tiny dots of non-corrosive neutral-cure
+  RTV. Do not put elastomer under the flange or in the proof-load bearing interface. Cure
+  fully in air, then tap/shake to verify no metallic click. The RTV is serviceable damping,
+  not structural retention; before it cures, use a simple recess-up holding fixture with the
+  spindle hanging through a hole.
 - The upper flange sits captive in MP-100 (the Ø34.2→Ø16.2 bore step is a real internal
   shoulder — retention is self-contained in the plate, not ceiling-dependent). The disk
   seats on the machined Z120.7 shoulder, so the capture gap is not set by loose washers.

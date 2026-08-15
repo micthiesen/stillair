@@ -61,13 +61,21 @@ Bench-assemble this plate unit before the overhead lift:
 
 1. Put MP-100 ceiling-face-up.
 2. Insert **SP-100, the center capture spindle**, from the ceiling side. Seat its flange
-   fully in the double-D recess with the flats engaged and the long shank hanging downward.
-3. Install the **three ST-100 standoffs** using **three M6 × 16 A4 flat-head screws from the
+   fully in the double-D recess with the flats engaged, metal flange bearing directly on
+   the pocket shoulder, and the long shank hanging downward.
+3. Add **three tiny, spaced dots of non-corrosive neutral-cure RTV across the top perimeter
+   seam** between the flange and MP-100. Do not put silicone under the flange or coat the
+   bearing face. Let it cure fully in air per the product instructions before installation.
+   This is a removable anti-rattle restraint only; the metal shoulder remains the complete
+   capture load path.
+4. Install the **three ST-100 standoffs** using **three M6 × 16 A4 flat-head screws from the
    ceiling face**. Use three standoffs; the fourth is a spare. Tighten to the released joint
    requirement and confirm all three countersunk heads are flush or slightly below the
    ceiling face.
-4. Keep the plate ceiling-face-up while handling it. SP-100 has no separate axial retainer
-   until the slab traps its flange, so flipping the unit can release the spindle.
+5. After the RTV cures, gently tap and shake the plate unit. SP-100 must remain fully seated
+   without a metallic click. Keep it ceiling-face-up before cure so the spindle cannot fall
+   out. The hard spacers leave clearance to the slab, so the ceiling does not clamp the
+   flange after installation.
 
 During the overhead lift, each primary stack is Titen head, washer, MP-100, hard spacer,
 then ceiling. The loose hard spacers are positioned at that time, not permanently attached

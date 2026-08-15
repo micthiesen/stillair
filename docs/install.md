@@ -53,13 +53,19 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
 1. **Bench-assemble everything that needs ceiling-face access**:
 
    - Put MP-100 ceiling-face-up. Insert SP-100 (the center capture spindle) from that side,
-     seat its flange fully in the double-D recess, and leave the long shank hanging down.
-     It cannot be added after anchoring.
+     seat its flange fully in the double-D recess with metal bearing directly on the pocket
+     shoulder, and leave the long shank hanging down. It cannot be added after anchoring.
+   - Add three tiny, spaced dots of non-corrosive neutral-cure RTV across the ceiling-side
+     perimeter seam between the seated flange and MP-100. Do not put silicone under the
+     flange or on its structural bearing face. Cure fully in air per the product instructions,
+     then tap/shake the unit to confirm there is no metallic click. The RTV is removable
+     anti-rattle restraint only; capture loads remain metal-on-metal through the shoulder.
    - Install three ST-100 standoffs with three M6 × 16 A4 flat-head screws inserted from the
      ceiling face. The fourth standoff is a spare. Tighten to the released joint requirement;
      verify each countersunk head is flush or slightly below the ceiling face.
-   - Keep the unit ceiling-face-up during handling. Nothing separately retains SP-100 until
-     the slab traps its flange; flipping the plate can release it.
+   - Keep the unit ceiling-face-up until the RTV cures; flipping the plate can release
+     SP-100 before then. The hard spacers leave clearance above MP-100, so the slab does not
+     directly clamp the flange after installation.
    - Do not add MC-100/motor, rotor, catcher nut stack, electronics, cable clamps, or housing
      yet. All remain accessible from below and only make the overhead lift heavier.
 
