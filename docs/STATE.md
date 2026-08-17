@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-16** (printable integration field-guide binder completed and
-cross-checked; execution gaps are marked as HOLDs rather than filled with assumptions.)
+Last updated: **2026-08-17** (MP-100 ceiling plate installed with the three ST-100
+standoffs and SP-100 spindle in place; tether work remains on HOLD.)
 
 ## Now
 
@@ -34,11 +34,12 @@ cross-checked; execution gaps are marked as HOLDs rather than filled with assump
   M2 hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
   other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
   or accept as Gate 01 residual risk).
-- **Ceiling drilling is approved and the concrete check is complete; no holes are drilled.**
-  A full-size PLA MP-100 makes orientation and overhead marking easier. The two primary
-  holes can proceed independently. Do not drill the tether hole yet: the plate clearance is
-  ~105 mm from each primary, conflicting with install.md's >=190 mm anchor spacing, and the
-  tether termination/routing is still open.
+- **MP-100 is installed on the ceiling** (owner-reported 2026-08-17), with all three ST-100
+  standoffs and SP-100 spindle preinstalled. The two primary holes and primary plate mount
+  are therefore complete. `INS-01` remains open until the installed anchor model,
+  washer/spacer stack, spacing, embedment, and plate seating are recorded. Do not drill the
+  tether hole yet: the plate clearance is ~105 mm from each primary, conflicting with
+  install.md's >=190 mm anchor spacing, and the tether termination/routing is still open.
 - **The 16-page printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. Sheets 0A through 6B cover the parallel electronics, ceiling,
@@ -47,10 +48,11 @@ cross-checked; execution gaps are marked as HOLDs rather than filled with assump
 
 ## Next
 
-Work from [integration.md](integration.md). Four tracks are available now: electronics,
-ceiling preparation, mechanical fit-up, and firmware/test preparation. Electronics is the
-main dependency spine; the immediate checkpoint is both boards populated, the two primary
-ceiling holes ready, and PCB-01 passing its first no-motor power/safety checks.
+Work from [integration.md](integration.md). Ceiling preparation and primary plate mounting
+are complete. Electronics is the main dependency spine; the immediate checkpoint is both
+boards populated and PCB-01 passing its first no-motor power/safety checks. Mechanical
+fit-up and firmware/test preparation can continue in parallel; do not stack the motor or
+rotor onto the installed plate before the required off-ceiling proof work.
 
 ## Candidates Not Chosen
 
@@ -88,3 +90,6 @@ ceiling holes ready, and PCB-01 passing its first no-motor power/safety checks.
   M3 cable-clamp taps, 10 nF C31 delay capacitor, and 30-second tach settling requirement
   → field-guide binder plus integration.md, parts.md, electrical.md, install.md, and the
   test matrix.
+- **Ceiling plate installed** (owner, 2026-08-17): MP-100 is on the slab with the three
+  ST-100 standoffs and SP-100 spindle in place; tether drilling/termination and the detailed
+  `INS-01` installation record remain open → integration.md, install.md.

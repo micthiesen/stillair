@@ -5,9 +5,12 @@ proven otherwise); existing bolts of unknown type in the slab. Anchor engineerin
 ICC-ES ESR-2713 (Simpson Titen HD), design strengths in cracked concrete at f'c 2500 psi —
 the correct conservative assumption for a suspended slab soffit.
 
-**Site status 2026-08-14:** hole drilling is approved and the concrete check is complete;
-no holes have been drilled. A full-size PLA print of MP-100 is available as a lightweight
-overhead marking template. It may be used for the two primary anchor centers.
+**Site status 2026-08-17:** MP-100 is installed on the ceiling (owner report), with all three
+ST-100 standoffs and SP-100 spindle in place. The two primary holes and primary plate mount
+are complete. Record the installed anchor model, washer/hard-spacer stack, spacing,
+embedment basis, and plate seating to close the documentation portion of `INS-01`; do not
+back out the Titen HDs to inspect them. The motor, carrier, rotor, and catcher stack remain
+off the installed plate pending their off-ceiling proof work.
 
 **Tether-location conflict, resolve before drilling the third hole:** MP-100's tether
 clearance is centered at X0, Y-82, only sqrt(65^2 + 82^2) = 104.6 mm from either primary
