@@ -9,13 +9,13 @@ The design to take into CAD. All items below are **selected**.
 
 | Area | Decision | Note |
 |---|---|---|
-| Mounting | Compact metal plate, two primary anchors, separate tether anchor | Concrete check and drilling approval complete 2026-08-14; primary holes not yet drilled. Tether termination/location remains open because the plate clearance conflicts with the documented spacing. |
+| Mounting | Compact metal plate, two primary anchors, separate tether anchor | MP-100 installation and tether proof accepted complete by owner report 2026-08-17. Remaining installation is owner-managed and not an active project gate. |
 | Structure | Metal ceiling structure and hub; blades bolt directly to the hub (adapters deleted 2026-07-28, BP-100 v3) | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
 | Rotor | 44-inch maximum, three printed BP-100 v3 cambered-airfoil blades with CF-rod spars, baked-in twist, and integrated bolt-on roots | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27, root integrated 2026-07-28 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
 | Power | Mean Well GST60A24-P1J, 24 V / 60 W, 3 A source fuse | Only low voltage crosses the ceiling; a physical switch opens the positive conductor. |
 | Control | ESP32-C6, local Matter over Wi-Fi (rs-matter, pure Rust), continuous speed and reverse, used from Apple Home | Replaces the original HomeKit/HAP plan (no maintained no_std HAP exists). Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
-| Duty | 35–170 RPM target range, 180 RPM driver limit, 200 RPM analog trip | Release the actual minimum only after repeatable startup and acoustic qualification. The analog path is an independent runaway backstop, not precision regulation. |
+| Duty | 35–170 RPM target range, 180 RPM driver limit, 200 RPM analog trip | Release the actual minimum after representative startup testing. The analog path is an independent runaway backstop, not precision regulation. |
 | Appearance | Minimal light wood or white blades with consistent stainless hardware | No light; the white printed surface conduit is outside the fan design. |
 
 ## Why GL100 (vs GL80)
@@ -39,27 +39,22 @@ total input estimated (core/bearing losses unpublished). Do not confuse capabili
 requirement: the controller caps current at 1.5 A and disables flux weakening, so peak motor
 torque is not available in the installed fan.
 
-## Release gates (before permanent installation)
+## Active release gates
 
-Six explicit gates. A failed gate has a named fallback; it must not be converted into an
-undocumented assumption.
+Three active gates remain. A failed gate has a named fallback; it must not be converted into
+an undocumented assumption.
 
-1. **Motor bearings** — CubeMars confirms the vertical axial-load basis, or the motor is
-   redesigned around an independently rated bearing path.
-2. **Sensorless control** — the GL100 and representative final rotor pass starts, low-speed
-   acoustics, overnight thermal, reversal, and fault tests on PCB V1.
-3. **Permanent PCB** — V1 proves protection, connectors, power conversion, watchdog, analog
+1. **Sensorless control** — the GL100 and representative final rotor pass representative
+   starts, stable-speed operation, overnight thermal, reversal, and essential shutdown tests
+   on PCB V1.
+2. **Permanent PCB** — V1 proves protection, connectors, power conversion, watchdog, analog
    overspeed, bus-voltage behavior, thermals, RF, and the exact MCF settings before V2 release.
-4. **Concrete interface** — the slab, existing hole, hidden services, anchor geometry,
-   installation torque, and separate tether anchor are physically verified.
-5. **Rotor qualification** — blades, root joints, hub, central capture, balance, proof load,
-   proof speed, controlled imbalance behavior, and dynamic catcher/tether tests are signed off.
-6. **Installation approval** — any required permit, accepted certification mark, or field
-   evaluation for a permanent custom appliance is resolved locally. *(Open gate.)*
+3. **Rotor qualification** — blades, root joints, hub, central capture, and catcher are
+   accepted complete; balance/runout and guarded proof speed remain active.
 
-Anchor selection and mounting sequence are worked in [install.md](install.md). Slab
-verification and any required approvals are owner-tracked outside this repo; gates 4 and 6
-close when the anchors are physically installed and the fan is permanently mounted.
+Anchor selection and mounting sequence remain recorded in [install.md](install.md) as
+reference. Michael owns installation and any local approval decisions; agents must not
+surface them as work unless explicitly asked.
 
 ## Accepted deviations
 
@@ -80,12 +75,13 @@ Constraints that cannot all be optimized.
   the tip stays out of the intake throat.
 - **Certification: a custom assembly is not certified by using a certified power brick.**
   Component approvals reduce risk but do not create an accepted mark for the complete
-  appliance. Confirm the local permanent-installation path before ceiling release (gate 6).
+  appliance. Michael owns any local approval decision; it is outside active project work.
 
 ## Deliverable boundaries
 
 The docs define dimensioned mechanical views, part interfaces, materials, loads, exact
 standard components, a circuit-level PCB handoff, placement zones, controller behavior,
 sources, and acceptance tests. Michael creates the final OnShape models, captures and reviews
-the KiCad schematic/layout in `pcb/`, and implements firmware in `firmware/`. Slab
-verification and local installation approval remain site-specific execution work.
+the KiCad schematic/layout in `pcb/`, and implements firmware in `firmware/`. Installation,
+tether, catcher, slab verification, and local approval are owner-managed and outside the
+active project plan.

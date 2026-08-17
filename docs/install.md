@@ -1,5 +1,10 @@
 # Installation
 
+> **Owner-managed as of 2026-08-17.** This file is retained as technical reference only.
+> MP-100 installation, tether proof, and catcher proof are accepted complete by owner
+> report. Agents must not suggest, audit, schedule, or prompt for installation, tether, or
+> catcher work unless Michael explicitly asks.
+
 Site: 11-storey concrete condo, ceiling slab possibly post-tensioned (treat as PT until
 proven otherwise); existing bolts of unknown type in the slab. Anchor engineering basis:
 ICC-ES ESR-2713 (Simpson Titen HD), design strengths in cracked concrete at f'c 2500 psi —
@@ -7,17 +12,13 @@ the correct conservative assumption for a suspended slab soffit.
 
 **Site status 2026-08-17:** MP-100 is installed on the ceiling (owner report), with all three
 ST-100 standoffs and SP-100 spindle in place. The two primary holes and primary plate mount
-are complete. Record the installed anchor model, washer/hard-spacer stack, spacing,
-embedment basis, and plate seating to close the documentation portion of `INS-01`; do not
-back out the Titen HDs to inspect them. The motor, carrier, rotor, and catcher stack remain
-off the installed plate pending their off-ceiling proof work.
+are complete. `INS-01` is accepted as passed against the documented anchor and spacer stack.
+No further project-side installation record or inspection is required.
 
-**Tether-location conflict, resolve before drilling the third hole:** MP-100's tether
-clearance is centered at X0, Y-82, only sqrt(65^2 + 82^2) = 104.6 mm from either primary
-center. That conflicts with the >=190 mm spacing required below. Do not treat the PLA
-template's tether clearance as an approved tether drill location. Choose the termination
-and routing, then reconcile the anchor location and spacing before drilling it. This does
-not block measuring or drilling the two primary holes.
+**Historical tether note:** the original MP-100 clearance at X0, Y-82 was only
+sqrt(65^2 + 82^2) = 104.6 mm from either primary center, conflicting with the documented
+>=190 mm basis. Michael resolved and tested the final tether arrangement outside the active
+project plan. Its location and termination are not managed here.
 
 ## Anchor selection
 
@@ -43,10 +44,9 @@ assembly. Tether requirement: the calculated dynamic catch peak with ≥2× marg
   permits a one-turn backout only; screw-formed concrete threads are a consumable
   interface). The design already services at the carrier-to-standoff M6 joint from below —
   the anchors and plate stay on the ceiling.
-- **Tether termination (open item)**: a Titen HD ends in a plain hex head. Either clamp a
-  rated pad-eye/anchor plate under the THD37400H head, or use Simpson's Titen HD
-  rod-hanger (internally threaded coupler) variant and thread in a forged 3/8-16 shoulder
-  eyebolt. Decide before the tether hole is drilled.
+- **Tether termination (historical options)**: a rated pad-eye under the THD37400H head or
+  a Titen HD rod-hanger with a forged 3/8-16 shoulder eyebolt were the documented options.
+  Final selection and installation are owner-managed.
 
 ## Mounting sequence
 
@@ -73,7 +73,7 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
      yet. All remain accessible from below and only make the overhead lift heavier.
 
 2. Mark the two primary drill spots via the plate or the PLA template (the 11 × 20 slots
-   absorb ±4–5 mm). Mark the tether only after the location conflict above is resolved.
+   absorb ±4–5 mm). Tether work is outside this archived sequence.
    Drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 (bit nominal
    matches the anchor — never substitute a 10 mm metric bit, the thread engagement assumes
    ANSI tolerance), depth-stopped at ~75 mm (primaries) /

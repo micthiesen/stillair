@@ -236,9 +236,8 @@ def page_0a(c: Canvas, n: int) -> None:
         ("1", "Complete boards and cables"),
         ("2", "Prove PCB-01 without motor"),
         ("3", "Measure bare GL100, no blades"),
-        ("4", "Integrate physical assembly"),
-        ("5", "Prove full rotor off-ceiling"),
-        ("6", "Install and commission"),
+        ("4", "Integrate and balance rotor"),
+        ("5", "Proof, starts, and thermal"),
     ]
     box_w = 160
     box_h = 48
@@ -261,16 +260,16 @@ def page_0a(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("CURRENT CHECKPOINT", 112, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
         "PCB-01 and PCB-02 hand-population complete and inspected.",
-        "Two primary ceiling holes drilled and cleaned; no anchors installed.",
+        "Power, motor, Hall, and programming harnesses built and continuity-checked.",
         "PCB-01 passes PCB-01 through PCB-04 and TACH-01 without the motor.",
     ], x + 14, y + 70, w - 28, 9.5)
 
     x, y, w, h = s.panel("NON-NEGOTIABLE BOUNDARIES", 155, RED_BG, RED, RED)
     s.checkboxes([
         "No blades during bare-motor characterization.",
-        "No permanent ceiling-plate installation before off-ceiling proof, tether, bearing, and approval gates close.",
-        "Do not drill the tether hole until location, spacing, and termination are resolved.",
-        "Do not design ENC-100 before EB-100 and real cable bends exist.",
+        "No powered motor work before the no-motor board and safety-chain checks pass.",
+        "Balance and hand-clearance checks pass before any powered full-rotor run.",
+        "Use a guarded fixture and released procedure for the 216 RPM rotor proof.",
         "Never bypass the 180 RPM controller limit or 200 RPM analog trip without the written guarded two-person procedure.",
     ], x + 14, y + 112, w - 28, 9.1)
     s.footer("docs/integration.md; docs/decisions.md; testing/test-matrix.csv")
@@ -310,7 +309,6 @@ def page_1b(c: Canvas, n: int) -> None:
         ("J1 POWER", "1 RAW24", "2 0V"),
         ("J2 MOTOR", "1 W", "2 V   |   3 U"),
         ("J3 / PCB-02 J1", "1 3V3", "2 HALL_TACH   |   3 AGND"),
-        ("J4 TEMP", "1 TEMP_SENSE", "2 AGND"),
         ("J5 I2C", "GND, 3V3", "SDA, SCL"),
         ("J7 PROGRAM", "3V3, TX, RX", "EN, BOOT, GND"),
     ]
@@ -338,7 +336,6 @@ def page_1b(c: Canvas, n: int) -> None:
         "Power harness: Belden 5300UE 18/2 to Micro-Fit; preserve +24 V and 0 V end-to-end.",
         "Motor harness: use 18 AWG contacts; label connector positions W, V, U even if motor flying leads are initially unlabeled.",
         "Hall harness: PHR-3 to PHR-3 straight-through, using molded No.1 marks at both ends.",
-        "Temperature harness: PHR-2 to the NTC ring lug; exact motor attachment remains TBD.",
         "Programming lead: J7 pin 1 is board 3V3, not a power input.",
         "Pull-test every crimp, then continuity-check each contact and verify no cross-continuity.",
         "Record harness length, wire colors, and contact orientation before sleeving.",
@@ -542,17 +539,17 @@ def page_3a(c: Canvas, n: int) -> None:
         "Hand-start every fastener. Stop if any screw bottoms before clamping.",
         "Verify the three ST-100s seat squarely and MC-100 is not rocked by finish or burrs.",
         "Verify M4 x 12 gives about 5.5 mm engagement and never exceeds the GL100 6.0 mm limit.",
-        "Use the released joint torque only. Do not infer torque from a generic stainless table.",
-        "Apply compatible removable threadlocker and witness marks only at final released assembly.",
+        "Use the owner-selected assembly torque consistently with a calibrated driver.",
+        "Apply compatible removable threadlocker and witness marks at final assembly.",
         "Record stack fit, wire clearance, and any washer/length adaptation before proceeding.",
     ], x + 14, y + 212, w - 28, 8.9)
-    s.warning("Motor M4 installation torque remains a release gate. Use a calibrated driver and the released value when available.", MARGIN, 132, CONTENT_W)
+    s.warning("Torque research is closed. Use the owner-selected value consistently, then witness-mark each fastener.", MARGIN, 132, CONTENT_W)
     s.stop("The stationary stack fits without force, rocking, wire pinch, or bottoming screws. Keep it non-powered.")
     s.footer("docs/parts.md, GL100/ST-100/MC-100 and Fastener release practice; bom/bom.csv")
 
 
 def page_3b(c: Canvas, n: int) -> None:
-    s = Sheet(c, "3B", "Rotor, Tach Inserts, and Catcher Stack", n)
+    s = Sheet(c, "3B", "Rotor and Tach Inserts", n)
     x, y, w, h = s.panel("ROTOR ASSEMBLY", 235)
     s.checkboxes([
         "RH-100 pilot enters the GL100 bore by hand; never press or force it.",
@@ -563,26 +560,28 @@ def page_3b(c: Canvas, n: int) -> None:
         "Install three BP-100 v3 blades using their printed locating pins and 4 x M5 x 22 bolts per blade into the captured M5 nuts.",
     ], x + 14, y + 188, w - 28, 8.9)
 
-    x, y, w, h = s.panel("CATCHER STACK - FROM ROTOR DOWN", 205, PURPLE_BG, PURPLE, PURPLE)
-    stack_boxes(c, ["RH-100 ROTATING HUB", "2.5 +/- 0.5 mm RUNNING GAP", "KD-100, OD 44 / ID 13.5", "M12 CASTELLATED NUT", "3.2 x 32 SPLIT PIN"], x + 30, y + 145, 205, 25, PURPLE_BG)
-    s.text("Nut orientation", x + 280, y + 145, 220, 10, PURPLE, True)
-    s.text("Bearing face up against KD-100. Castellated crown downward. Rotate the nut, not the keyed spindle, to align a slot with the cross-hole.", x + 280, y + 120, 240, 9)
-    s.text("Final checks", x + 280, y + 65, 220, 10, PURPLE, True)
-    s.text("Trim split-pin legs. Confirm no catcher contact or witness marks after rotation.", x + 280, y + 40, 240, 9)
+    x, y, w, h = s.panel("ROTOR FINAL CHECKS", 205, PURPLE_BG, PURPLE, PURPLE)
+    s.checkboxes([
+        "Confirm all three blade stations use the correct fasteners and captured nuts.",
+        "Verify the magnet and both brass stations are fully retained after epoxy cure.",
+        "Apply the owner-selected torque and witness marks to hub and blade fasteners.",
+        "Hand-rotate several revolutions and confirm no rub, click, or changing clearance.",
+        "Photograph the completed rotor before balance measurements begin.",
+    ], x + 14, y + 158, w - 28, 9)
 
     x, y, w, h = s.panel("BEFORE ANY POWER", 105, RED_BG, RED, RED)
     s.checkboxes([
-        "Hand-rotate through multiple revolutions; confirm no rub, click, or changing gap.",
-        "Verify all critical fasteners have the released torque record and witness marks.",
+        "Hand-rotate through multiple revolutions; confirm no rub, click, or changing clearance.",
+        "Verify all critical fasteners have consistent torque and witness marks.",
         "Do not use cad/BP-100.step for current fit; the committed export is stale v2 geometry.",
-        "Do not install the rotor over the bed before off-ceiling proof passes.",
+        "Proceed to balance and runout measurement before powered full-rotor testing.",
     ], x + 14, y + 65, w - 28, 8.7)
-    s.stop("Rotor and catcher stack turn freely by hand with correct gap, retention, and no contact.")
-    s.footer("docs/parts.md, RH-100, KD-100 and SP-100 bottom-end stack; docs/blade-v2.md")
+    s.stop("The complete rotor turns freely by hand with correct retention and no contact.")
+    s.footer("docs/parts.md, RH-100 and tach inserts; docs/blade-v2.md")
 
 
 def page_3c(c: Canvas, n: int) -> None:
-    s = Sheet(c, "3C", "Hall, Electronics Bracket, and Housing", n, "PARTIAL HOLD")
+    s = Sheet(c, "3C", "Hall and Electronics Bracket", n)
     x, y, w, h = s.panel("HALL SENSOR GEOMETRY - RELEASED", 240, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
         "PCB-02 components face the rotor magnet; J1 and cable exit outboard.",
@@ -593,23 +592,23 @@ def page_3c(c: Canvas, n: int) -> None:
         "Hand-turn rotor: one clean pulse per revolution with magnet; no false pulses with magnet removed.",
     ], x + 14, y + 192, w - 28, 9)
 
-    x, y, w, h = s.panel("BLOCKED FABRICATION ITEMS", 200, AMBER_BG, AMBER, AMBER)
+    x, y, w, h = s.panel("EB-100 AFTER CONNECTORS", 200, BLUE_BG, BLUE, BLUE)
     s.checkboxes([
         "BR-100 remains owner hand-fabricated; validate around the physical motor, PCB-02, cable, and Hall gap.",
         "Populate PCB-01 connectors before defining EB-100 and real cable bends.",
-        "Design EB-100 before ENC-100. Reserve 110 x 80 x 25 mm plus service clearance.",
-        "ENC-100 cable notch must remain open at the top rim and align with the 15 deg power-entry line.",
-        "Temperature-sensor motor attachment point remains TBD.",
+        "Reserve 110 x 80 x 25 mm for PCB-01 plus connector and service clearance.",
+        "Use four 6-8 mm M3 standoffs and keep isolated mounting holes clear of circuit ground.",
+        "Provide independent PCB retention and clamp cables independently of the bracket.",
     ], x + 14, y + 154, w - 28, 8.9)
 
     x, y, w, h = s.panel("RELEASE CHECK", 115)
     s.checkboxes([
         "Connector bodies and cable bends clear the rotor and standoffs.",
         "PCB-01 has an independent retention lanyard and independent cable clamps.",
-        "Housing half can be removed without loading or trapping the power cable.",
+        "Hand rotation remains free after the bracket and all cables are fitted.",
     ], x + 14, y + 73, w - 28, 8.8)
-    s.stop("Proceed only with Hall fit-up and pulse verification. Do not fabricate EB-100 or ENC-100 from provisional geometry.")
-    s.footer("docs/electrical.md, Hall daughterboard; docs/parts.md, BR-100 and EB-100/ENC-100", "TACH-03")
+    s.stop("Hall pulses are clean and the retained PCB/cables clear every moving part.")
+    s.footer("docs/electrical.md, Hall daughterboard; docs/parts.md, BR-100 and EB-100", "TACH-03")
 
 
 def page_4a(c: Canvas, n: int) -> None:
@@ -707,7 +706,7 @@ def page_5a(c: Canvas, n: int) -> None:
         "Record each blade mass and first moment; target first moments within 0.5%.",
         "Measure RH-100 OD runout; limit <=0.10 mm TIR.",
         "Measure all blade tips in one indexed setup; spread <=0.5 mm.",
-        "Hand-rotate and verify no catcher or housing contact.",
+        "Hand-rotate and verify no rotating-to-stationary contact.",
         "Correct only with the documented balance-slug method; re-measure after every change.",
         "Photograph witness marks and record final correction masses/locations.",
     ], x + 14, y + 198, w - 28, 9.1)
@@ -730,71 +729,66 @@ def page_5a(c: Canvas, n: int) -> None:
         yy -= 30
 
     x, y, w, h = s.panel("PASS CONDITION", 105, GREEN_BG, GREEN, GREEN)
-    s.text("Hub <=0.10 mm TIR, tips within 0.5 mm, first moments within 0.5%, no objectionable vibration, and no catcher contact.", x + 14, y + 62, w - 28, 10, bold=True)
+    s.text("Hub <=0.10 mm TIR, tips within 0.5 mm, first moments within 0.5%, no objectionable vibration, and no contact.", x + 14, y + 62, w - 28, 10, bold=True)
     s.stop("MEC-05 passes with measurements recorded. Do not advance a rotor that only 'looks balanced.'")
     s.footer("testing/test-matrix.csv; docs/parts.md, RH-100", "MEC-05")
 
 
 def page_5b(c: Canvas, n: int) -> None:
-    s = Sheet(c, "5B", "Proof Fixture and Procedure Gate", n, "HOLD: PROCEDURE MISSING")
-    x, y, w, h = s.panel("ENGINEER BEFORE TESTING", 210, RED_BG, RED, RED)
+    s = Sheet(c, "5B", "Guarded Rotor Proof", n, "HOLD: PROCEDURE MISSING")
+    x, y, w, h = s.panel("ENGINEER BEFORE TESTING", 260, RED_BG, RED, RED)
     s.checkboxes([
         "Release a fixture drawing with rated containment, external drive, remote cutoff/interlock, and instrument mounting.",
         "Write the two-person procedure: roles, callouts, abort criteria, maximum duration, safe positions, and restoration checks.",
         "Define the exact bypass hardware/state if a temporary electronic bypass is unavoidable.",
-        "Define final retained mass, drop geometry, catcher/tether release mechanism, and calibrated load instrumentation.",
-        "Define the conservative trial imbalance mass and a measurable vibration/abort criterion.",
-        "Approve the procedure before any high-energy run or dynamic catch.",
-    ], x + 14, y + 164, w - 28, 8.8)
+        "Provide independent RPM measurement and a measurable vibration/contact abort criterion.",
+        "Record pre-run balance, runout, fastener witness marks, and hand-clearance condition.",
+        "Approve the procedure before any high-energy run.",
+    ], x + 14, y + 210, w - 28, 8.8)
 
-    x, y, w, h = s.panel("REQUIREMENTS THE PROCEDURE MUST SATISFY", 220, PURPLE_BG, PURPLE, PURPLE)
+    x, y, w, h = s.panel("PROOF REQUIREMENTS", 260, PURPLE_BG, PURPLE, PURPLE)
     s.checkboxes([
-        "MEC-04 catcher: 1.25 kN static proof plus guarded dynamic release of the final rotor.",
         "MEC-03 proof requirement: external guarded drive, 216 RPM, 2 minutes each direction.",
-        "MEC-06 imbalance: no loosening, plate motion, housing/catcher contact; no automatic shutdown claim.",
         "After any bypass, restore and independently reverify the 180 RPM MCF limit and 200 RPM analog trip before fixture removal.",
         "Never dynamically test the 270 RPM credible bypass load. It is calculation-only.",
+        "Use the manual cutoff immediately for unexpected vibration, sound, contact, or speed deviation.",
         "Reject damage, opening, permanent set, deformation, balance shift, contact, or loosened witness marks.",
-    ], x + 14, y + 174, w - 28, 8.8)
+        "Repeat balance, runout, witness-mark, and hand-clearance checks after both directions pass.",
+    ], x + 14, y + 210, w - 28, 8.8)
 
-    x, y, w, h = s.panel("TETHER PATH - SEPARATE HOLD", 150, AMBER_BG, AMBER, AMBER)
-    s.text("Resolve the ceiling location, >=190 mm primary spacing basis, termination, exact cable/fittings, MC-100 attachment, slack, and calculated catch peak x2 requirement. Reconcile that calculated requirement with the current >=4.5 kN matrix wording before INS-02 sign-off.", x + 14, y + 105, w - 28, 9.2, bold=True)
-    s.text("Do not use the MP-100 tether clearance as a drill location. Do not perform these tests on the ceiling.", x + 14, y + 52, w - 28, 9.2, RED, True)
     s.stop("No test is authorized by this sheet. Release the fixture and procedures first; then issue an execution revision.")
-    s.footer("testing/test-matrix.csv; docs/parts.md, Tether and design loads", "MEC-03, MEC-04, MEC-06, MEC-07, INS-02")
+    s.footer("testing/test-matrix.csv; docs/parts.md, design loads", "MEC-03, MEC-07")
 
 
 def page_5c(c: Canvas, n: int) -> None:
-    s = Sheet(c, "5C", "Full-Rotor Drive, Acoustic, and Thermal", n, "HOLD: METHODS TO DEFINE")
-    x, y, w, h = s.panel("START AND SPEED QUALIFICATION", 240)
+    s = Sheet(c, "5C", "Representative Starts and Thermal", n, "HOLD: METHODS TO DEFINE")
+    x, y, w, h = s.panel("START AND SPEED QUALIFICATION", 260)
     s.checkboxes([
         "With the representative final rotor guarded, run the released MPET procedure; cross-check R/L/BEMF, then complete and read back the golden image.",
         "Before starts, require config check to report config=verified and independently verify the 180 RPM MCF limit and 200 RPM analog trip.",
-        "Complete 100 randomized-rest starts per direction at 30, 35, and 40 RPM.",
-        "Repeat the start matrix at 23.3, 24.0, and 24.7 V.",
+        "At the intended minimum, complete 20 randomized-rest starts per direction at 24.0 V.",
+        "At the same minimum, complete 5 starts per direction at 23.3 V and 5 per direction at 24.7 V.",
         "Reject any retry, reverse kick, stall, hunting, or objectionable tonal sequence.",
         "Verify steady operation at 30, 40, 55, 70, 120, and 170 RPM.",
         "Verify MCF active-control ceiling never exceeds 180 RPM.",
-        "Test windmilling restart, reversal after verified stop, cutoff at speed, and enabled MCF faults.",
-    ], x + 14, y + 192, w - 28, 9)
+        "Test reversal after verified stop, watchdog shutdown, power recovery, and cutoff at speed.",
+    ], x + 14, y + 212, w - 28, 9)
 
-    x, y, w, h = s.panel("ACOUSTIC AND THERMAL", 210, GREEN_BG, GREEN, GREEN)
+    x, y, w, h = s.panel("THERMAL", 230, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
-        "Before testing, record fixed microphone/listening position, ambient condition, sensor locations, and logging cadence.",
-        "Listen motor-only and complete fan at 30, 40, 60, 80, 120, and 170 RPM from the fixed bed position.",
-        "Release a sleep speed only when no identifiable motor, controller, bearing, or structural tone remains.",
+        "Record ambient condition, temperature-sensor locations, and logging cadence.",
         "Run the complete fan for 8 hours at 170 RPM on the guarded fixture.",
         "Record RMS phase current, MCF q-axis estimate, PWM peak, independent motor/PCB temperatures, ambient, and supply behavior.",
         "Normal RMS phase current <0.8 A; investigate at 1.0 A; 1.5 A limiter must not clip continuously.",
         "Motor <70 C, PCB <85 C, no supply dropout or overtemperature, input power <50 W.",
-    ], x + 14, y + 164, w - 28, 8.8)
+        "After cooldown, repeat hand-clearance and fastener witness-mark checks.",
+    ], x + 14, y + 180, w - 28, 8.8)
 
     x, y, w, h = s.panel("RELEASE SUMMARY", 120)
-    s.text("Released minimum RPM: ______     Released sleep RPM: ______     Max qualified RPM: ______", x + 14, y + 78, w - 28, 10, bold=True)
+    s.text("Released minimum RPM: ______     Max qualified RPM: ______", x + 14, y + 78, w - 28, 10, bold=True)
     s.text("Open anomalies / restrictions: __________________________________________________________", x + 14, y + 43, w - 28, 9.5)
-    s.text("WARNING: TEMP_SENSE firmware is not implemented. Do not treat the wired NTC as active overtemperature protection.", x + 14, y + 18, w - 28, 8.5, RED, True)
-    s.stop("All full-rotor bench tests pass and released speed limits are recorded before permanent installation.")
-    s.footer("testing/test-matrix.csv; docs/build.md, Commissioning", "DRV-02/03/04/05/06/07/08/09, CTL-03/05/06/07")
+    s.stop("Representative starts, stable speeds, essential shutdowns, and the thermal run pass.")
+    s.footer("testing/test-matrix.csv; docs/build.md, Commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
 
 
 def page_6a(c: Canvas, n: int) -> None:
@@ -873,8 +867,6 @@ PAGES: list[Callable[[Canvas, int], None]] = [
     page_1a,
     page_1b,
     page_1c,
-    page_2a,
-    page_2b,
     page_3a,
     page_3b,
     page_3c,
@@ -883,8 +875,6 @@ PAGES: list[Callable[[Canvas, int], None]] = [
     page_5a,
     page_5b,
     page_5c,
-    page_6a,
-    page_6b,
 ]
 
 
@@ -893,7 +883,7 @@ def build() -> Path:
     canvas = Canvas(str(OUTPUT), pagesize=letter, pageCompression=1)
     canvas.setTitle("Stillair Integration Field Guides")
     canvas.setAuthor("Stillair project")
-    canvas.setSubject("Printable integration, test, and installation field guides")
+    canvas.setSubject("Printable active integration and bench-test field guides")
     for page_no, page in enumerate(PAGES, start=1):
         page(canvas, page_no)
         canvas.showPage()

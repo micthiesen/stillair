@@ -16,11 +16,10 @@ the bed.
    interface, destructively test a blade root-joint sample, proof the three installed blade
    roots, and prepare four matched blades.
 4. **Assemble and bench prove** — build on a level fixture, measure runout, balance the
-   rotor, proof-speed it behind a barrier, verify central capture, then complete every
-   control and fault test.
-5. **Verify the slab and install** — anchor selection and mounting sequence are in
-   [install.md](install.md); repeat limited-speed commissioning away from the bed once
-   mounted.
+   rotor, proof-speed it behind a barrier, then complete representative starts, essential
+   shutdown checks, and thermal verification.
+5. **Owner installation** — Michael owns the remaining installation and commissioning.
+   It is not tracked or prompted by the project unless he explicitly requests it.
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
@@ -49,7 +48,7 @@ the bed.
 - **Buy first**: CubeMars GL100 KV10, GST60A24 supply, and the fully populated 78 × 58 mm
   PCB V1. The TI evaluation board is intentionally skipped.
 - **After V1 pass**: controller V2. Same outline and holes; remove only development features
-  proven unnecessary after startup, acoustics, thermal, RF, and fault testing.
+  proven unnecessary after startup, thermal, and essential safety testing.
 - **After CAD review**: custom mechanics. Fabricate plate, carrier, hub, capture hardware,
   blades, and housing only after motor faces, fastener depths, and the slab
   interface are resolved.
@@ -64,11 +63,10 @@ minimum release basis and can be tightened after measured data exists. Highlight
 
 | Test | Acceptance limit |
 |---|---|
-| Cold start (100 starts/direction at 30/35/40 RPM, 23.3/24.0/24.7 V) | No retry, reverse kick, stall, click, or objectionable tonal sequence |
-| Sleep acoustics (motor-only + complete fan at 30/40/60/80/120/170 RPM, listened from bed) | No identifiable motor, controller, bearing, or structural tone at the released sleep speed |
+| Representative starts (20/direction at the intended minimum at 24.0 V; 5/direction at 23.3 and 24.7 V) | No retry, reverse kick, stall, click, or hunting |
 | Speed range (steady at 30/40/55/70/120/170 RPM) | Stable speed and acceptable current waveform; each low speed released only if all starts pass |
 | Hard limit (max command + command-path fault) | Motor controller never exceeds 180 RPM |
 | Rotor proof (external drive, 216 RPM × 2 min/direction, behind barrier) | No damage, loosening, deformation, balance shift, or contact |
 | Bus voltage (≥100 MHz probe at MCF pins during coast/cutoff/stall/reversal) | Peak ≤35 V, no 28 V OVP trip; otherwise redesign suppression |
 | Analog overspeed | Reset near 180 RPM; trip near 200 RPM, never above 220 RPM across voltage and temperature |
-| Fault behavior | Bridge disables on local fault; power returns off; network loss preserves last state; reversal only after stop |
+| Essential fault behavior | Hardware fault or watchdog disables the bridge; power returns off; reversal only after stop |

@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-17** (MP-100 ceiling plate installed with the three ST-100
-standoffs and SP-100 spindle in place; tether work remains on HOLD.)
+Last updated: **2026-08-17** (owner simplified the remaining integration scope; ceiling
+installation, tether, and catcher work are complete or owner-managed.)
 
 ## Now
 
@@ -29,40 +29,42 @@ standoffs and SP-100 spindle in place; tether work remains on HOLD.)
 - **BP-100 blade manufacturing and blade-root qualification are complete** (owner,
   2026-08-14). MEC-01/02/02B passed. Assembled rotor balance/runout remains open under
   MEC-05.
-- **Build-critical procurement is closed.** Only two non-blocking loose `DMP6023LE-13`
-  spares and optional SparkFun `15362` scope headers remain unsourced.
-  M2 hardware and crimpers remain owner stock; BR-100 remains owner-fabbed/untracked. The
-  other open loose end is the CubeMars bearing email (sent 2026-07-27, unanswered — chase
-  or accept as Gate 01 residual risk).
-- **MP-100 is installed on the ceiling** (owner-reported 2026-08-17), with all three ST-100
-  standoffs and SP-100 spindle preinstalled. The two primary holes and primary plate mount
-  are therefore complete. `INS-01` remains open until the installed anchor model,
-  washer/spacer stack, spacing, embedment, and plate seating are recorded. Do not drill the
-  tether hole yet: the plate clearance is ~105 mm from each primary, conflicting with
-  install.md's >=190 mm anchor spacing, and the tether termination/routing is still open.
-- **The 16-page printable integration binder is ready** at
+- **Build-critical procurement is closed.** Two loose `DMP6023LE-13` spares and optional
+  SparkFun `15362` scope headers are not active work. M2 hardware and crimpers remain owner
+  stock; BR-100 remains owner-fabricated and untracked. Do not reopen procurement,
+  incoming inspection, or CubeMars correspondence unless Michael explicitly asks.
+- **MP-100 ceiling installation is complete** (owner-reported 2026-08-17), with all three
+  ST-100 standoffs and SP-100 spindle installed. `INS-01` is accepted as passed against the
+  documented stack. The tether and central catcher tests are also owner-reported passes
+  (`INS-02`, `MEC-04`). Michael owns all remaining installation work; do not plan, suggest,
+  audit, or prompt for ceiling installation, tether, or catcher work.
+- **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
-  `docs/field-guides/`. Sheets 0A through 6B cover the parallel electronics, ceiling,
-  mechanical, firmware, qualification, installation, and sign-off tracks. Unreleased work
-  is explicitly marked HOLD.
+  `docs/field-guides/`. It covers only the active electronics, mechanical integration,
+  firmware, balance, guarded proof-speed, representative-start, and thermal tracks.
 
 ## Next
 
-Work from [integration.md](integration.md). Ceiling preparation and primary plate mounting
-are complete. Electronics is the main dependency spine; the immediate checkpoint is both
-boards populated and PCB-01 passing its first no-motor power/safety checks. Mechanical
-fit-up and firmware/test preparation can continue in parallel; do not stack the motor or
-rotor onto the installed plate before the required off-ceiling proof work.
+Work from [integration.md](integration.md). Electronics is the main dependency spine; the
+immediate checkpoint is both boards populated and PCB-01 passing its first no-motor
+power/safety checks. Then complete motor integration, balance, controller tuning, essential
+hardware safety checks, guarded proof speed, representative starts, and the thermal run.
 
 ## Candidates Not Chosen
 
 - **EB-100 PCB-bracket CAD** — wait until PCB-01's omitted connectors are populated so the
   bracket and cable bends are designed around physical geometry; pairs naturally with the
   owner's BR-100 hand-fab.
-- **TEMP_SENSE firmware** — hardware complete; still parked with `TODO(temp-sense)` in
-  `app/src/matter.rs`.
 - **Rotor balance/runout** — blade manufacturing and qualification passed; MEC-05 remains
   before any powered rotor run.
+
+## Future Only On Explicit Request
+
+Do not suggest, schedule, or use these as blockers unless Michael explicitly asks to resume
+one: ENC-100 cosmetic housing, TEMP_SENSE firmware, intentional-imbalance testing,
+exhaustive start matrices, exhaustive acoustic testing, network/Matter resilience testing,
+and exhaustive fault permutations. Installation, tether, and catcher work are owner-managed
+and must not be surfaced as project tasks.
 
 ## Learned Recently
 
@@ -90,6 +92,7 @@ rotor onto the installed plate before the required off-ceiling proof work.
   M3 cable-clamp taps, 10 nF C31 delay capacitor, and 30-second tach settling requirement
   → field-guide binder plus integration.md, parts.md, electrical.md, install.md, and the
   test matrix.
-- **Ceiling plate installed** (owner, 2026-08-17): MP-100 is on the slab with the three
-  ST-100 standoffs and SP-100 spindle in place; tether drilling/termination and the detailed
-  `INS-01` installation record remain open → integration.md, install.md.
+- **Scope simplification** (owner, 2026-08-17): MP-100 installation, tether proof, and
+  catcher proof accepted complete; remaining installation is owner-managed. Cosmetic
+  housing, TEMP_SENSE, imbalance, and exhaustive test variants are future-only and must not
+  be prompted → integration.md, install.md, decisions.md, test matrix, field-guide binder.
