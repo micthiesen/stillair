@@ -113,6 +113,7 @@ class Sheet:
         y = self.y - height
         self.c.setFillColor(color)
         self.c.setStrokeColor(border)
+        self.c.setLineWidth(1)
         self.c.roundRect(x, y, CONTENT_W, height, 10, stroke=1, fill=1)
         self.c.setFillColor(title_color)
         self.c.setFont("Helvetica-Bold", 12)
@@ -133,7 +134,8 @@ class Sheet:
     def checkboxes(self, items: Iterable[str], x: float, y: float, width: float, size: float = 9.2, gap: float = 7) -> float:
         for item in items:
             lines = wrap(item, "Helvetica", size, width - 24)
-            box_y = y - 8
+            leading = size * 1.22
+            box_y = y + size * 0.72 - 11
             self.c.setStrokeColor(INK)
             self.c.setLineWidth(1.2)
             self.c.rect(x, box_y, 11, 11, stroke=1, fill=0)
@@ -142,8 +144,31 @@ class Sheet:
             line_y = y
             for line in lines:
                 self.c.drawString(x + 20, line_y, line)
-                line_y -= size * 1.22
-            y = min(box_y, line_y) - gap
+                line_y -= leading
+            text_height = size + (len(lines) - 1) * leading
+            y -= max(11, text_height) + gap
+        return y
+
+    def checkbox_grid(self, rows: Iterable[tuple[str, str]], x: float, y: float, column_width: float, size: float = 9, gap: float = 8) -> float:
+        """Draw two checkbox columns on shared row baselines."""
+        leading = size * 1.22
+        for left_text, right_text in rows:
+            row_heights: list[float] = []
+            for column, item in enumerate((left_text, right_text)):
+                item_x = x + column * column_width
+                lines = wrap(item, "Helvetica", size, column_width - 32)
+                box_y = y + size * 0.72 - 11
+                self.c.setStrokeColor(INK)
+                self.c.setLineWidth(1.2)
+                self.c.rect(item_x, box_y, 11, 11, stroke=1, fill=0)
+                self.c.setFillColor(INK)
+                self.c.setFont("Helvetica", size)
+                line_y = y
+                for line in lines:
+                    self.c.drawString(item_x + 20, line_y, line)
+                    line_y -= leading
+                row_heights.append(max(11, size + (len(lines) - 1) * leading))
+            y -= max(row_heights) + gap
         return y
 
     def warning(self, text: str, x: float, y: float, width: float, color=RED, bg=RED_BG) -> float:
@@ -151,6 +176,7 @@ class Sheet:
         height = 18 + len(lines) * 11
         self.c.setFillColor(bg)
         self.c.setStrokeColor(color)
+        self.c.setLineWidth(1)
         self.c.roundRect(x, y - height, width, height, 7, stroke=1, fill=1)
         self.c.setFillColor(color)
         self.c.setFont("Helvetica-Bold", 9)
@@ -165,6 +191,7 @@ class Sheet:
         y = 48
         self.c.setFillColor(BLUE_BG)
         self.c.setStrokeColor(BLUE)
+        self.c.setLineWidth(1)
         self.c.roundRect(MARGIN, y, CONTENT_W, h, 8, stroke=1, fill=1)
         self.c.setFillColor(BLUE)
         self.c.setFont("Helvetica-Bold", 9.5)
@@ -190,10 +217,11 @@ def stack_boxes(c: Canvas, labels: list[str], x: float, y: float, width: float, 
         box_y = y - index * (box_h + 10)
         c.setFillColor(color if index % 2 == 0 else WHITE)
         c.setStrokeColor(BLUE)
+        c.setLineWidth(1.2)
         c.roundRect(x, box_y, width, box_h, 6, stroke=1, fill=1)
         c.setFillColor(INK)
         c.setFont("Helvetica-Bold", 9)
-        c.drawCentredString(x + width / 2, box_y + 11, label)
+        c.drawCentredString(x + width / 2, box_y + box_h / 2 - 2, label)
         if index < len(labels) - 1:
             arrow(c, x + width / 2, box_y - 1, x + width / 2, box_y - 9, BLUE, 2)
 
@@ -221,6 +249,7 @@ def page_0a(c: Canvas, n: int) -> None:
         by = y + 158 - row * 85
         c.setFillColor(BLUE_BG if i < 3 else PURPLE_BG)
         c.setStrokeColor(BLUE if i < 3 else PURPLE)
+        c.setLineWidth(1.2)
         c.roundRect(bx, by, box_w, box_h, 8, stroke=1, fill=1)
         c.setFillColor(BLUE if i < 3 else PURPLE)
         c.setFont("Helvetica-Bold", 15)
@@ -238,7 +267,7 @@ def page_0a(c: Canvas, n: int) -> None:
 
     x, y, w, h = s.panel("NON-NEGOTIABLE BOUNDARIES", 155, RED_BG, RED, RED)
     s.checkboxes([
-        "No blades during bare-motor tuning.",
+        "No blades during bare-motor characterization.",
         "No permanent ceiling-plate installation before off-ceiling proof, tether, bearing, and approval gates close.",
         "Do not drill the tether hole until location, spacing, and termination are resolved.",
         "Do not design ENC-100 before EB-100 and real cable bends exist.",
@@ -253,20 +282,12 @@ def page_1a(c: Canvas, n: int) -> None:
     s.text("ESD mat - microscope - temperature-controlled iron/hot air - flux - solder wick - DMM", x + 14, y + 22, w - 28, 9.5, bold=True)
 
     x, y, w, h = s.panel("PCB-01 HAND-POPULATION", 245)
-    left = x + 14
-    right = x + w / 2 + 5
-    s.checkboxes([
-        "Inspect the assembled board for shipping damage and solder bridges.",
-        "Fit C1 and C2: Panasonic FR 470 uF / 50 V. Observe polarity and silkscreen.",
-        "Fit J1: Molex 43045-0200 power header.",
-        "Fit J2: Molex 43650-0300 phase header.",
-    ], left, y + 195, w / 2 - 25, 8.7)
-    s.checkboxes([
-        "Fit U8: LM2907M/NOPB. Match pin 1 to board marking.",
-        "Bridge C34 with KEMET C1206C104K3GACTU, 100 nF C0G, across the 0603 site.",
-        "Bridge F1 pads. The wall-side 3 A fuse is then mandatory.",
-        "Inspect every hand joint and verify no RAW24-to-ground short.",
-    ], right, y + 195, w / 2 - 25, 8.7)
+    s.checkbox_grid([
+        ("Inspect the assembled board for shipping damage and solder bridges.", "Fit U8: LM2907M/NOPB. Match pin 1 to board marking."),
+        ("Fit C1 and C2: Panasonic FR 470 uF / 50 V. Observe polarity and silkscreen.", "Bridge C34 with KEMET C1206C104K3GACTU, 100 nF C0G, across the 0603 site."),
+        ("Fit J1: Molex 43045-0200 power header.", "Bridge F1 pads. The wall-side 3 A fuse is then mandatory."),
+        ("Fit J2: Molex 43650-0300 phase header.", "Inspect every hand joint and verify no RAW24-to-ground short."),
+    ], x + 14, y + 195, w / 2 - 2, 8.7)
 
     x, y, w, h = s.panel("PCB-02 HAND-ASSEMBLY", 165, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
@@ -302,6 +323,7 @@ def page_1b(c: Canvas, n: int) -> None:
     yy = y + 148
     for ref, a, b in rows:
         c.setStrokeColor(LINE)
+        c.setLineWidth(0.7)
         c.line(x + 14, yy - 5, x + w - 14, yy - 5)
         c.setFillColor(INK)
         c.setFont("Helvetica-Bold", 8.7)
@@ -323,7 +345,7 @@ def page_1b(c: Canvas, n: int) -> None:
     ], x + 14, y + 182, w - 28, 9.2)
 
     s.warning("J7 pin 1 ties directly to board 3V3. Never connect a programmer that actively drives 3.3 V while 24 V is connected.", MARGIN, 181, CONTENT_W)
-    s.warning("A swapped Hall contact can leave the tach silently dead. Require 1-to-1, 2-to-2, 3-to-3 and no cross-continuity before first power.", MARGIN, 135, CONTENT_W)
+    s.warning("A swapped Hall contact can leave the tach silently dead. Require 1-to-1, 2-to-2, 3-to-3 and no cross-continuity before first power.", MARGIN, 140, CONTENT_W)
     s.stop("Every harness is labeled, pull-tested, and has a signed continuity result. No device is powered yet.")
     s.footer("docs/electrical.md, SCH-07 connectors; testing/test-matrix.csv", "TACH-06")
 
@@ -455,6 +477,7 @@ def page_2a(c: Canvas, n: int) -> None:
     ], x + 14, y + 145, w - 220, 8.7)
     c.setFillColor(GRAY_BG)
     c.setStrokeColor(MUTED)
+    c.setLineWidth(1)
     c.rect(x + w - 190, y + 38, 165, 105, stroke=1, fill=1)
     c.setFillColor(INK)
     c.setFont("Helvetica-Bold", 10)
@@ -496,7 +519,7 @@ def page_2b(c: Canvas, n: int) -> None:
         "Follow Simpson installation instructions; the screw anchor has no wedge-anchor set torque.",
         "Record model, spacing, embedment basis, plate seating, and any shimming under INS-01.",
     ], x + 14, y + 100, w - 28, 8.9)
-    s.warning("ONE-INSTALL INTERFACE: do not install, remove, and reinstall Titen HDs. Mounting remains blocked until off-ceiling proof, tether, motor-bearing, and installation-approval gates close.", MARGIN, 131, CONTENT_W)
+    s.warning("ONE-INSTALL INTERFACE: do not install, remove, and reinstall Titen HDs. Mounting remains blocked until off-ceiling proof, tether, motor-bearing, and installation-approval gates close.", MARGIN, 136, CONTENT_W)
     s.stop("MP-100 is permanently seated on hard spacers, SP-100/ST-100 are captive, and INS-01 is recorded.")
     s.footer("docs/install.md, Mounting sequence; docs/integration.md, Before MP-100 is anchored", "INS-01")
 
@@ -593,19 +616,28 @@ def page_4a(c: Canvas, n: int) -> None:
     s = Sheet(c, "4A", "Flash, Console, and CLI Session", n)
     x, y, w, h = s.panel("BUILD AND FLASH", 165)
     commands = [
-        "cd firmware && cargo build",
-        "espflash flash --port /dev/cu.usbmodem2101 --non-interactive app/target/riscv32imac-unknown-none-elf/debug/stillair",
-        "target/debug/stillair --port /dev/cu.usbmodem2101 state",
+        ["cd firmware && cargo build"],
+        [
+            "espflash flash --port /dev/cu.usbmodem2101 --non-interactive",
+            "  app/target/riscv32imac-unknown-none-elf/debug/stillair",
+        ],
+        ["target/debug/stillair --port /dev/cu.usbmodem2101 state"],
     ]
-    yy = y + 112
-    for command in commands:
+    box_top = y + 132
+    for command_lines in commands:
+        box_height = 27 if len(command_lines) == 1 else 38
+        box_y = box_top - box_height
         c.setFillColor(GRAY_BG)
         c.setStrokeColor(LINE)
-        c.roundRect(x + 14, yy - 7, w - 28, 27, 5, stroke=1, fill=1)
+        c.setLineWidth(1)
+        c.roundRect(x + 14, box_y, w - 28, box_height, 5, stroke=1, fill=1)
         c.setFillColor(INK)
         c.setFont("Courier-Bold", 7.8)
-        c.drawString(x + 23, yy + 2, command)
-        yy -= 38
+        line_y = box_top - (14 if len(command_lines) > 1 else 18)
+        for command_line in command_lines:
+            c.drawString(x + 23, line_y, command_line)
+            line_y -= 11
+        box_top = box_y - 11
 
     x, y, w, h = s.panel("BARE DEV-BOARD INPUT SIMULATION", 160, AMBER_BG, AMBER, AMBER)
     s.checkboxes([
@@ -685,8 +717,8 @@ def page_5a(c: Canvas, n: int) -> None:
     c.circle(x + 115, y + 86, 60, stroke=1, fill=0)
     for angle in (0, 120, 240):
         import math
-        ax = x + 115 + 105 * math.cos(math.radians(angle))
-        ay = y + 86 + 105 * math.sin(math.radians(angle))
+        ax = x + 115 + 82 * math.cos(math.radians(angle))
+        ay = y + 86 + 82 * math.sin(math.radians(angle))
         c.line(x + 115, y + 86, ax, ay)
         c.circle(ax, ay, 5, stroke=1, fill=0)
     labels = ["Hub TIR: ______ mm", "Tip spread: ______ mm", "First-moment spread: ______ %", "Correction: _____________________"]
