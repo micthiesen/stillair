@@ -96,7 +96,7 @@ the GL100 transmits torque only through a non-structural coupling.
   M12 castellated nut can be torqued from below with no counter-hold (2026-07-27).
 - Separate tether-anchor clearance at X0, Y−82: 14 × 22 mm.
 - Cable entry: **none in the plate** (the 12 × 20 mm slot was deleted 2026-07-27 — see
-  "Cable entry" below). Instead, two M4 × 0.7 tapped holes on 20 mm pitch in the underside
+  "Cable entry" below). Instead, two M3 × 0.5 tapped holes on 20 mm pitch in the underside
   at r88, straddling the **15°** line, for a P-clip strain relief.
 - EB-100 mounting: two M3 × 0.5 tapped holes at X35, Y±15 from the underside; keep clear of
   ceiling anchors and spindle recess.
@@ -110,7 +110,9 @@ the GL100 transmits torque only through a non-structural coupling.
   meets it exactly for M3, where M4 would not). None break through — a through-tapped hole
   lets an over-length screw protrude into the ceiling seating interface. One tap size across
   all ten holes is also one tool and one setup.
-  Cable-clamp tap centres in Cartesian, for CAD: **(87.03, 13.01)** and **(81.88, 32.25)**.
+  Cable-clamp tap centres from the released drawing: **(87.03, 13.65)** and
+  **(81.88, 32.89)**. Use the relational 15° line for installation orientation rather than
+  reproducing these coordinates on the ceiling.
 - Hard metal spacers bypass any soft ceiling finish.
 
 Anchor gate: the slots accept nominal M10 or 3/8-inch hardware. Selected candidate (2026-07,
@@ -582,7 +584,10 @@ free plate rotation means the whole feature pattern is clocked toward the condui
 
 - 15° is the centre of the 345°/45° tab gap and the nearest clean window to J1 at the PCB's
   top edge — a ~26 mm lateral run off the Y0 plane.
-- Clearance to the nearest anchor washer is ~21 mm at worst-case ±5 mm drill error.
+- Nearest tap-to-anchor centre distance is ~26 mm nominal. With a 12.7 mm-radius washer and
+  worst-case 5 mm anchor-location error, physical washer-edge clearance is only ~8 mm before
+  counting the P-clip and cable envelope. Verify the actual washer/clip/cable fit on the
+  template before routing.
 - Rejected: **135°** is geometrically cleanest but sits on the clamshell seam; **255°** comes
   within 12.8 mm of the tether slot; **75°/315°** give ~19.5 mm and sit further from J1.
 

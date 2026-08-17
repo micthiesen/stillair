@@ -71,13 +71,15 @@ head + washer clamps the plate; there is no set-stud-first step as with wedge an
 
 2. Mark the two primary drill spots via the plate or the PLA template (the 11 × 20 slots
    absorb ±4–5 mm). Mark the tether only after the location conflict above is resolved.
-   Drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 in a rotary
-   hammer (SDS-plus; bit nominal matches the anchor — never substitute a 10 mm metric bit,
-   the thread engagement assumes ANSI tolerance), depth-stopped at ~75 mm (primaries) /
+   Drill **without the plate** using a 3/8 in carbide bit meeting ANSI B212.15 (bit nominal
+   matches the anchor — never substitute a 10 mm metric bit, the thread engagement assumes
+   ANSI tolerance), depth-stopped at ~75 mm (primaries) /
    ~95–100 mm (tether), then brush/blow clean per Simpson's instructions. Tooling: M12 Fuel
    hammer drill (3404) in hammer mode with a **straight-shank** ANSI B212.15 carbide
    percussion bit — Makita B-68812 3/8 × 6 in (verify ANSI marking and ≥100 mm flute length
-   on arrival; SDS bits do not fit a 3-jaw chuck). Expect slow going in tower slab:
+   on arrival). This is the straight-shank option for the 3404's 3-jaw chuck. If renting an
+   SDS-plus rotary hammer instead, use an ANSI B212.15 SDS-plus bit; SDS bits do not fit the
+   3404. Expect slow going in tower slab:
    peck-drill to clear dust and cool the tip; if a hole barely progresses, rent an SDS-plus
    rotary hammer instead of forcing it. The M12 impact driver (no axial percussion — cannot
    drill) **drives** the anchors via a 9/16 in socket.

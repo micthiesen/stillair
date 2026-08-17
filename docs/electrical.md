@@ -483,7 +483,9 @@ VM24 -> 47 Ω / 0.25 W -> TPS7A1601ADGNR -> +12V_TACH (12.049 V nominal)
 - Feedback: 910 kΩ top, 100 kΩ bottom, both 0.1%. Feed-forward 10 nF / 50 V C0G output→FB.
 - Output: 10 µF / 25 V X7R + 100 nF / 25 V.
 - PG: 10 kΩ pull-up to 3.3 V, named `TACH_PGOOD_N`, routed to U6 `/CLR`.
-- DELAY: 100 nF to AGND for a qualified startup delay.
+- DELAY: **10 nF** to AGND (C31 on the released BOM), reduced from the original 100 nF so
+  `TACH_PGOOD_N` releases well before the delayed U6 `/PRE`; PCB-03D qualifies the actual
+  ordering on hardware.
 - Connect both LM2907 pin 9 V+ and pin 8 collector only to +12V_TACH.
 
 ### LM2907M-14

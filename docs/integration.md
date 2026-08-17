@@ -3,6 +3,11 @@
 How the finished parts become a commissioned fan. This is the execution map; detailed
 requirements remain in the linked design docs and `testing/test-matrix.csv`.
 
+For bench and installation use, print
+`output/pdf/stillair-integration-field-guides.pdf`. Its sheets 0A through 6B turn this map
+into concise checklists and diagrams. A HOLD badge is a hard boundary, not a prompt to fill
+in missing engineering at the work site.
+
 ## The dependency spine
 
 These stages are intentionally sequential. Finishing one materially reduces risk or rework
@@ -12,8 +17,11 @@ in the next.
    motor, Hall, and programming cables.
 2. **Prove PCB-01 without the motor**: rails, current draw, DRVOFF, permission latch,
    watchdog, power recovery, console access, and the injected Hall/tach chain.
-3. **Tune the bare motor**: connect the GL100 with no blades, run MPET plus independent
-   checks, capture the golden MCF image, prove starts/stops/reversal, and scope VM transients.
+3. **Characterize the bare motor**: connect the GL100 with no blades, independently measure
+   R, L, and manual-spin BEMF, prove the safe console/control path, and scope the permitted
+   VM transients. Do not run MPET unloaded: `controls.md` requires the representative final
+   rotor because unloaded MPET can produce bad Ke/Kp/Ki. Capture the golden MCF image only
+   after that loaded cross-check.
 4. **Integrate the physical assembly**: fit the Hall bracket and PCB-02, install the hub and
    catcher, make EB-100 around the populated PCB and real cable bends, then make ENC-100
    around the final bracket and routing.
@@ -22,8 +30,10 @@ in the next.
 6. **Install and commission**: permanently mount the plate only after bench release, stack
    the proven assembly from below, then perform limited-speed installed commissioning.
 
-Do not install blades for stage 3. Do not design ENC-100 before EB-100 and cable routing are
-real. Do not permanently mount the ceiling plate before the off-ceiling proof work is done.
+Do not install blades for stage 3; MPET and the final golden image therefore occur after the
+representative rotor is assembled, before full-rotor proof. Do not design ENC-100 before
+EB-100 and cable routing are real. Do not permanently mount the ceiling plate before the
+off-ceiling proof work is done.
 
 ## Tracks available now
 

@@ -3,8 +3,8 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-14** (integration work organized into dependency-aware tracks;
-site drilling approved, concrete checked, PLA MP-100 marking template printed.)
+Last updated: **2026-08-16** (printable integration field-guide binder completed and
+cross-checked; execution gaps are marked as HOLDs rather than filled with assumptions.)
 
 ## Now
 
@@ -39,6 +39,11 @@ site drilling approved, concrete checked, PLA MP-100 marking template printed.)
   holes can proceed independently. Do not drill the tether hole yet: the plate clearance is
   ~105 mm from each primary, conflicting with install.md's >=190 mm anchor spacing, and the
   tether termination/routing is still open.
+- **The 16-page printable integration binder is ready** at
+  `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
+  `docs/field-guides/`. Sheets 0A through 6B cover the parallel electronics, ceiling,
+  mechanical, firmware, qualification, installation, and sign-off tracks. Unreleased work
+  is explicitly marked HOLD.
 
 ## Next
 
@@ -78,3 +83,8 @@ ceiling holes ready, and PCB-01 passing its first no-motor power/safety checks.
   bom.csv, parts.md, blade-v2.md.
 - **Integration dependency map + energy-sized work menu; ceiling approval/template and
   tether-spacing conflict** → integration.md, install.md.
+- **Printable field-guide review** surfaced and recorded the loaded-rotor MPET requirement,
+  unverified golden-image gate, proof-procedure and tether holds, SUS304 SP-100 truth,
+  M3 cable-clamp taps, 10 nF C31 delay capacitor, and 30-second tach settling requirement
+  → field-guide binder plus integration.md, parts.md, electrical.md, install.md, and the
+  test matrix.
