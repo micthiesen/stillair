@@ -1,7 +1,7 @@
 # Integration field guides
 
 `build_field_guides.py` generates the printable Stillair integration binder from the
-canonical requirements in `docs/` and `testing/test-matrix.csv`.
+canonical requirements in `docs/`, `testing/test-matrix.csv`, and the KiCad board files.
 
 ```bash
 UV_CACHE_DIR=/tmp/stillair-uv-cache uv run --with reportlab \
@@ -14,3 +14,8 @@ The generated PDF is written to
 The sheets are intentionally concise. They complement, rather than replace, the detailed
 requirements and vendor procedures. A `HOLD` badge means the guide records the boundary but
 does not authorize work beyond it.
+
+The PCB population pages use top/component-side target renders exported from KiCad and kept
+in `docs/field-guides/assets/`. They are placement aids, not photographs of an already-built
+board. Refresh them whenever either PCB layout changes, and re-check every callout against the
+position export before printing.

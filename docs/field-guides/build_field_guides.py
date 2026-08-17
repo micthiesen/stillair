@@ -10,10 +10,12 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.utils import ImageReader
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "output" / "pdf" / "stillair-integration-field-guides.pdf"
+ASSETS = ROOT / "docs" / "field-guides" / "assets"
 
 PAGE_W, PAGE_H = letter
 MARGIN = 30
@@ -224,6 +226,61 @@ def stack_boxes(c: Canvas, labels: list[str], x: float, y: float, width: float, 
         c.drawCentredString(x + width / 2, box_y + box_h / 2 - 2, label)
         if index < len(labels) - 1:
             arrow(c, x + width / 2, box_y - 1, x + width / 2, box_y - 9, BLUE, 2)
+
+
+def fit_image(c: Canvas, path: Path, x: float, y: float, w: float, h: float) -> tuple[float, float, float, float]:
+    """Fit a transparent image inside a box and return its drawn bounds."""
+    image = ImageReader(str(path))
+    iw, ih = image.getSize()
+    scale = min(w / iw, h / ih)
+    dw, dh = iw * scale, ih * scale
+    dx, dy = x + (w - dw) / 2, y + (h - dh) / 2
+    c.drawImage(image, dx, dy, dw, dh, mask="auto")
+    return dx, dy, dw, dh
+
+
+def numbered(c: Canvas, n: int, x: float, y: float, color=AMBER) -> None:
+    c.setFillColor(color)
+    c.setStrokeColor(WHITE)
+    c.setLineWidth(1)
+    c.circle(x, y, 10, stroke=1, fill=1)
+    c.setFillColor(WHITE)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawCentredString(x, y - 3, str(n))
+
+
+def step_strip(c: Canvas, labels: list[str], x: float, y: float, w: float, color=BLUE) -> None:
+    gap = 8
+    bw = (w - gap * (len(labels) - 1)) / len(labels)
+    for i, label in enumerate(labels):
+        bx = x + i * (bw + gap)
+        c.setFillColor(BLUE_BG if color == BLUE else GREEN_BG)
+        c.setStrokeColor(color)
+        c.roundRect(bx, y, bw, 34, 6, stroke=1, fill=1)
+        c.setFillColor(color)
+        c.setFont("Helvetica-Bold", 7.4)
+        lines = wrap(label, "Helvetica-Bold", 7.4, bw - 8)
+        ty = y + 20 + (len(lines) - 1) * 4
+        for line in lines:
+            c.drawCentredString(bx + bw / 2, ty, line)
+            ty -= 9
+        if i < len(labels) - 1:
+            arrow(c, bx + bw + 1, y + 17, bx + bw + gap - 1, y + 17, color, 1)
+
+
+def mini_card(c: Canvas, title: str, body: str, x: float, y: float, w: float, h: float, color=BLUE, bg=WHITE) -> None:
+    c.setFillColor(bg)
+    c.setStrokeColor(color)
+    c.roundRect(x, y, w, h, 7, stroke=1, fill=1)
+    c.setFillColor(color)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(x + 9, y + h - 16, title)
+    c.setFillColor(INK)
+    c.setFont("Helvetica", 7.8)
+    ty = y + h - 29
+    for line in wrap(body, "Helvetica", 7.8, w - 18):
+        c.drawString(x + 9, ty, line)
+        ty -= 9.5
 
 
 def page_0a(c: Canvas, n: int) -> None:
@@ -862,19 +919,388 @@ def page_6b(c: Canvas, n: int) -> None:
     s.footer("testing/test-matrix.csv; docs/controls.md, Home integration; docs/install.md", "INS-03, PCB-04, CTL-01/02/03/11/12")
 
 
+def page_1a_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "1A", "PCB-01 Population Map", n)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 9)
+    c.drawString(MARGIN, 708, "TOP / COMPONENT SIDE  -  KiCad target appearance")
+    dx, dy, dw, dh = fit_image(c, ASSETS / "pcb01-top.png", 35, 315, 542, 388)
+    # Exact features on the KiCad target view.
+    pts = [(0.16, .71), (0.29, .70), (.24, .61), (.03, .48), (.39, .06), (.86, .42), (.81, .45)]
+    for i, (px, py) in enumerate(pts, 1):
+        numbered(c, i, dx + px * dw, dy + py * dh)
+    c.setFillColor(PAPER); c.setStrokeColor(LINE)
+    c.roundRect(35, 278, 542, 32, 7, stroke=1, fill=1)
+    labels = ["1 C1", "2 C2", "3 F1", "4 J1", "5 J2", "6 U8", "7 C34"]
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 8)
+    for i, label in enumerate(labels): c.drawString(47 + (i % 4) * 128, 296 - (i // 4) * 12, label)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold", 7.5)
+    c.drawString(47, 268, "SOLDER ORDER: U8 -> C34 -> J1/J2 -> C1/C2 -> INSPECT -> F1 LAST")
+
+    mini_card(c, "1 + 2  C1 / C2", "EEU-FR1H471, 470 uF 50 V. Positive lead to board +; negative stripe to pin 2 / PGND. Seat square without crushing bung.", 35, 190, 258, 76, GREEN, GREEN_BG)
+    mini_card(c, "3  F1 - INSTALL LAST", "Low-profile tinned copper link across the 1206 pads. Near-zero ohms after soldering. External wall-side 3 A fuse remains mandatory.", 305, 190, 272, 76, RED, RED_BG)
+    mini_card(c, "4 + 5  CONNECTORS", "J1 43045-0200; J2 43650-0300. Larger chisel tip. Tack one electrical pin, square and fully seat housing, then finish. Locating pegs are not soldered.", 35, 104, 258, 76, BLUE, BLUE_BG)
+    mini_card(c, "6  U8  /  7  C34", "U8 LM2907M/NOPB: notch/dimple to pin-1 marker, tack pin 1 then diagonal pin 8, flux and drag-solder. C34 C1206C104K3GACTU: 100 nF C0G 25 V +/-10%, spanning the smaller 0603 site, not shorting it.", 305, 104, 272, 76, PURPLE, PURPLE_BG)
+    s.warning("PCB-01: USE THE IRON, NOT BROAD HOT AIR. Then clean and dry; inspect under the microscope; verify no hard short from RAW24, VM24, 3V3, or 12V_TACH to ground; photograph the board.", 35, 96, 542)
+    s.footer("pcb/pcb-01/pcb-01.kicad_pcb; bom/bom.csv; docs/electrical.md, SCH-06")
+
+
+def page_1b_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "1B", "PCB-02 Population + Soldering", n)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 9)
+    c.drawString(MARGIN, 708, "TOP / MAGNET-FACING COMPONENT SIDE  -  KiCad target appearance")
+    dx, dy, dw, dh = fit_image(c, ASSETS / "pcb02-top.png", 35, 496, 542, 190)
+    for i, (px, py) in enumerate([(.17, .80), (.14, .45), (.79, .50)], 1): numbered(c, i, dx + px * dw, dy + py * dh)
+    arrow(c, 470, 486, 560, 486, GREEN, 3)
+    c.setFillColor(GREEN); c.setFont("Helvetica-Bold", 8); c.drawRightString(560, 486, "J1 / CABLE OUTBOARD")
+
+    mini_card(c, "1  C1", "C0603C104K5RACTU, 100 nF 50 V X7R, 0603. Pin 1 / 3V3 is left; pin 2 / AGND is right.", 35, 401, 170, 78, GREEN, GREEN_BG)
+    mini_card(c, "2  U1", "DRV5033FAQDBZR, SOT-23. Match package index to board triangle. Pin 1 upper-left = 3V3; pin 2 lower-left = HALL_TACH; pin 3 right = AGND.", 216, 401, 181, 78, PURPLE, PURPLE_BG)
+    mini_card(c, "3  J1", "S3B-PH-K-S side-entry JST-PH. Top to bottom in this view: 3 AGND, 2 HALL_TACH, 1 3V3. Iron-solder last.", 408, 401, 169, 78, BLUE, BLUE_BG)
+
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 11); c.drawString(35, 377, "NO HOT PLATE: CONTROLLED HOT-AIR METHOD")
+    step_strip(c, ["Tiny paste on U1 + C1", "Place under microscope", "Warm board gradually", "Low-airflow reflow", "Cool + inspect", "Iron-solder J1"], 35, 329, 542, PURPLE)
+    mini_card(c, "PASTE", "Only enough to wet each pad, never fill the gaps. Follow the paste maker's reflow profile; the station setpoint is not joint temperature.", 35, 239, 170, 76, AMBER, AMBER_BG)
+    mini_card(c, "HOT AIR", "Low airflow. Warm the whole small board gradually, then approach from above. Let surface tension center U1. Shield plastic and let the board cool before rework.", 216, 239, 181, 76, RED, RED_BG)
+    mini_card(c, "IRON ALTERNATIVE", "Flux, tack U1 pin 3, correct alignment, then solder pins 1 and 2. For J1, tack one pin, square the body, finish, then revisit the tack.", 408, 239, 169, 76, BLUE, BLUE_BG)
+    s.y = 225
+    x, y, w, h = s.panel("FINAL INSPECTION", 125, GREEN_BG, GREEN, GREEN)
+    s.checkbox_grid([
+        ("All parts on magnet-facing side; sensor marked face will face magnet. Do not use magnet polarity as the orientation cue.", "No short: 3V3 to HALL_TACH, 3V3 to AGND, or HALL_TACH to AGND."),
+        ("Flux cleaned using its specified method; board completely dry.", "Microscope: wet fillets, no lifted lead, whisker, ball, or disturbed part; photograph board."),
+    ], x + 14, y + 82, w / 2 - 2, 8.2)
+    s.stop("PCB-02 passes magnified inspection and unpowered three-net short checks. Do not power yet.")
+    s.footer("pcb/pcb-02/pcb-02.kicad_pcb; bom/bom.csv; docs/electrical.md, Hall daughterboard")
+
+
+def connector_face(c: Canvas, x: float, y: float, pins: list[tuple[str, colors.Color]], title: str, note: str) -> None:
+    c.setFillColor(WHITE); c.setStrokeColor(INK); c.roundRect(x, y, 210, 88, 8, stroke=1, fill=1)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 9); c.drawString(x + 10, y + 69, title)
+    pw = min(42, 150 / len(pins))
+    start = x + 10
+    for i, (name, color) in enumerate(pins):
+        px = start + i * (pw + 5)
+        c.setFillColor(color); c.setStrokeColor(INK); c.roundRect(px, y + 29, pw, 28, 4, stroke=1, fill=1)
+        c.setFillColor(WHITE if color != colors.yellow else INK); c.setFont("Helvetica-Bold", 7)
+        c.drawCentredString(px + pw / 2, y + 40, name)
+        c.setFillColor(MUTED); c.setFont("Helvetica", 6.8); c.drawCentredString(px + pw / 2, y + 19, str(i + 1))
+    c.setFillColor(MUTED); c.setFont("Helvetica", 7); c.drawRightString(x + 200, y + 8, note)
+
+
+def page_1c_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "1C", "Harness Build + Pin Proof", n)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(35, 706, "LOOK INTO THE MATING FACE; USE MOLDED PIN-1 MARKS, NOT WIRE COLOR MEMORY")
+    connector_face(c, 35, 590, [("RAW24", RED), ("0V", INK)], "POWER  J1 - 18 AWG", "Micro-Fit 2-way")
+    connector_face(c, 367, 590, [("W", PURPLE), ("V", BLUE), ("U", GREEN)], "MOTOR  J2 - 18 AWG", "Micro-Fit 3-way")
+    arrow(c, 245, 634, 357, 634, MUTED, 2)
+    c.setFillColor(MUTED); c.setFont("Helvetica-Bold", 7); c.drawCentredString(301, 644, "DMM END-TO-END")
+    connector_face(c, 35, 462, [("3V3", RED), ("TACH", colors.yellow), ("AGND", INK)], "HALL  J3 / PCB-02 J1", "PHR-3, straight-through")
+    connector_face(c, 367, 462, [("3V3", RED), ("TX", BLUE), ("RX", GREEN), ("EN", AMBER), ("BOOT", PURPLE), ("GND", INK)], "PROGRAM  J7", "do not drive 3V3")
+    arrow(c, 245, 506, 357, 506, GREEN, 2)
+    c.setFillColor(GREEN); c.setFont("Helvetica-Bold", 7); c.drawCentredString(301, 516, "1-1 / 2-2 / 3-3")
+    s.y = 440
+    x, y, w, h = s.panel("EACH HARNESS: BUILD -> PROVE -> LABEL", 215, BLUE_BG, BLUE, BLUE)
+    step_strip(c, ["Confirm housing view", "Crimp + tug each contact", "Insert to click", "Continuity each pin", "No cross-continuity", "Label both ends"], x + 14, y + 143, w - 28)
+    s.checkbox_grid([
+        ("Power: +24 V and 0 V preserved end-to-end.", "Motor: label positions W / V / U even if flying leads are not yet identified."),
+        ("Hall: exactly 1-to-1, 2-to-2, 3-to-3.", "Record length, gauge, wire colors, contact orientation, and result before sleeving."),
+    ], x + 14, y + 113, w / 2 - 2, 8.5)
+    s.warning("J7 PIN 1 IS BOARD 3V3, NOT A POWER INPUT. Never let the programmer drive it while 24 V is connected.", 35, 220, 542)
+    s.stop("Every harness is labeled, pull-tested, and signed off for pin continuity and no cross-continuity.")
+    s.footer("docs/electrical.md, SCH-07 connectors; testing/test-matrix.csv", "TACH-06")
+
+
+def page_1d_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "1D", "PCB-01 First Power, No Motor", n)
+    # Bench hookup schematic.
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(35, 704, "WIRE THIS FIRST; PLACE PROBES BEFORE POWER")
+    mini_card(c, "24 V BENCH SUPPLY", "current limited", 35, 615, 120, 64, RED, RED_BG)
+    mini_card(c, "3 A FUSE + CUTOFF", "within reach", 185, 615, 120, 64, RED, RED_BG)
+    mini_card(c, "PCB-01 J1", "RAW24 / 0V", 335, 615, 105, 64, BLUE, BLUE_BG)
+    mini_card(c, "J2 MOTOR", "DISCONNECTED", 470, 615, 107, 64, RED, RED_BG)
+    arrow(c, 155, 647, 185, 647, RED, 3); arrow(c, 305, 647, 335, 647, RED, 3)
+    c.setStrokeColor(RED); c.setLineWidth(3); c.line(468, 612, 575, 681); c.line(468, 681, 575, 612)
+    mini_card(c, "PROGRAMMER", "TX / RX / EN / BOOT / GND; 3V3 crossed out", 35, 530, 175, 62, AMBER, AMBER_BG)
+    arrow(c, 210, 561, 335, 561, AMBER, 2)
+    mini_card(c, "PROBES", "DMM rails + scope VM with spring ground", 335, 530, 242, 62, GREEN, GREEN_BG)
+    s.y = 505
+    x, y, w, h = s.panel("NUMBERED TEST FLOW", 330)
+    flows = [
+        ("1  RAILS", "Brief power: 24 V, 3.3 V, AVDD, DVDD, DRVOFF; record current and heat."),
+        ("2  HARDWARE CUTS", "Force PGOOD, WDO, manual clear, OVERSPEED_N low one at a time -> DRVOFF rises without ESP help."),
+        ("3  WATCHDOG", "Static WDI: timeout 1.44-1.76 s, WDO pulse about 200 ms. 2 Hz falling edges prevent timeout."),
+        ("4  STARTUP", "Cold + slow-ramp power-up 20 times: U6 /PRE releases only after TACH_PGOOD_N."),
+        ("5  RECOVERY", "Remove/restore 24 V: disabled >=10 s; requires new command plus explicit arm."),
+        ("6  TACH", "Bridge disabled. Inject 0-3.3 V, 1-3% duty, settle >=30 s: reset ~3.00 Hz, trip ~3.33 Hz."),
+    ]
+    for i, (title, body) in enumerate(flows):
+        col, row = i % 2, i // 2
+        mini_card(c, title, body, x + 14 + col * 260, y + 213 - row * 82, 248, 70, BLUE if i < 5 else PURPLE, WHITE)
+    s.warning("PASS LIMITS: VM <=35 V target; 40 V rejects. Persistent tach lock clears only on a genuine low-voltage power cycle. Any automatic re-arm blocks release.", 35, 198, 542)
+    s.stop("All listed board/safety tests have recorded passes. Do not connect the motor after any failure.")
+    s.footer("testing/test-matrix.csv; docs/electrical.md, safety and tach", "PCB-01, PCB-03/03B/03D, PCB-04, TACH-01")
+
+
+def page_0a_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "0A", "Active Integration Map", n)
+    c.setFillColor(BLUE); c.setFont("Helvetica-Bold", 13); c.drawString(35, 698, "YOU ARE HERE")
+    arrow(c, 92, 688, 92, 650, BLUE, 4)
+    stages = [
+        ("1A-1B", "POPULATE", "two boards", BLUE), ("1C", "HARNESS", "pin proof", BLUE),
+        ("1D", "NO MOTOR", "board proof", PURPLE), ("4B", "BARE MOTOR", "R / L / BEMF", PURPLE),
+        ("3A-3C", "ASSEMBLE", "fit + Hall", GREEN), ("5A", "BALANCE", "measure", GREEN),
+        ("5B-5C", "QUALIFY", "guarded", AMBER),
+    ]
+    for i, (sid, title, sub, color) in enumerate(stages):
+        col, row = i % 4, i // 4
+        x = 35 + col * 138; y = 566 - row * 112
+        c.setFillColor(WHITE); c.setStrokeColor(color); c.setLineWidth(2); c.roundRect(x, y, 118, 76, 9, stroke=1, fill=1)
+        c.setFillColor(color); c.setFont("Helvetica-Bold", 9); c.drawString(x + 9, y + 57, sid)
+        c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(x + 9, y + 38, title)
+        c.setFillColor(MUTED); c.setFont("Helvetica", 8); c.drawString(x + 9, y + 21, sub)
+        if i not in (3, 6): arrow(c, x + 120, y + 38, x + 136, y + 38, color, 1.5)
+    arrow(c, 569, 604, 569, 548, MUTED, 2); arrow(c, 569, 548, 35, 548, MUTED, 2); arrow(c, 35, 548, 35, 528, MUTED, 2)
+    s.y = 430
+    x, y, w, h = s.panel("WHAT COUNTS AS DONE", 145, GREEN_BG, GREEN, GREEN)
+    s.checkbox_grid([
+        ("A result is measured and recorded, not just observed.", "A failed gate stops the next powered stage."),
+        ("Connector polarity and pin order are proved end-to-end.", "Configuration must say verified before representative-rotor qualification."),
+        ("Balance and hand clearance precede powered full-rotor work.", "216 RPM proof uses a released guarded fixture and procedure."),
+    ], x + 14, y + 100, w / 2 - 2, 8.4)
+    x, y, w, h = s.panel("BOUNDARIES KEPT OUT OF THIS ACTIVE BINDER", 120, GRAY_BG)
+    s.text("Owner-managed and deferred scope is intentionally omitted from this binder. It stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
+    s.stop("Start at 1A. Carry only the current sheet, board, and required tools to the bench.")
+    s.footer("docs/STATE.md; docs/integration.md; testing/test-matrix.csv")
+
+
+def page_3a_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "3A", "Stationary Stack Dry-Fit", n)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(35, 704, "EXPLODED SIDE VIEW - NON-POWERED")
+    cx = 205
+    parts = [("MP-100 PLATE", 620, 270, 25, BLUE), ("3 x ST-100", 535, 165, 44, PURPLE), ("MC-100 CARRIER", 438, 270, 32, BLUE), ("GL100 STATIONARY FACE", 335, 205, 62, GREEN)]
+    for label, yy, ww, hh, color in parts:
+        c.setFillColor(WHITE); c.setStrokeColor(color); c.setLineWidth(2); c.roundRect(cx - ww/2, yy, ww, hh, 6, stroke=1, fill=1)
+        c.setFillColor(color); c.setFont("Helvetica-Bold", 9); c.drawCentredString(cx, yy + hh/2 - 3, label)
+    for a, b in [(620,579),(535,470),(438,397)]: arrow(c, cx, a-4, cx, b+4, MUTED, 2)
+    c.setStrokeColor(RED); c.setLineWidth(3); c.line(315, 466, 405, 385); arrow(c, 405, 385, 430, 385, RED, 2)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold", 8); c.drawString(320, 476, "MOTOR WIRES THROUGH MC-100 WINDOW")
+    mini_card(c, "MP-100 -> ST-100", "3 x M6 x 16 flat-head from plate ceiling face; heads flush or below.", 420, 595, 157, 72, BLUE, BLUE_BG)
+    mini_card(c, "ST-100 -> MC-100", "3 x M6 x 20 A4-80 + Nord-Lock pairs. Hand-start, square seating.", 420, 503, 157, 72, PURPLE, PURPLE_BG)
+    mini_card(c, "MC-100 -> GL100", "4 x M4 x 12 A4-80 into the 60 mm stationary pattern. The 50 mm face rotates.", 420, 411, 157, 72, GREEN, GREEN_BG)
+    mini_card(c, "THREAD DEPTH", "Target about 5.5 mm engagement; 6.0 mm motor-thread maximum. A bottoming screw is felt at hand torque: stop and correct.", 420, 319, 157, 72, RED, RED_BG)
+    s.y = 300
+    x, y, w, h = s.panel("RELEASE CHECK", 155)
+    s.checkbox_grid([
+        ("All fasteners hand-start; no rocking or forced alignment.", "Motor wire is unpinched and clear of sharp edges."),
+        ("Owner-selected torque applied consistently; witness marks present.", "Threadlocker only where specified; no screw bottoms."),
+        ("Stationary 60 mm and rotating 50 mm faces confirmed.", "Stack remains non-powered until later gates pass."),
+    ], x + 14, y + 108, w / 2 - 2, 8.5)
+    s.stop("Dry stack sits square without force, rocking, wire pinch, or bottoming screws.")
+    s.footer("docs/parts.md, GL100/ST-100/MC-100; bom/bom.csv")
+
+
+def page_3b_visual(c: Canvas, n: int) -> None:
+    import math
+    s = Sheet(c, "3B", "Rotor + Tach Inserts", n)
+    cx, cy = 220, 505
+    c.setStrokeColor(INK); c.setLineWidth(2); c.circle(cx, cy, 95, stroke=1, fill=0); c.circle(cx, cy, 24, stroke=1, fill=0)
+    for i, (ang, name, color) in enumerate([(90,"MAGNET",RED),(210,"BRASS",AMBER),(330,"BRASS",AMBER)]):
+        px, py = cx + 67*math.cos(math.radians(ang)), cy + 67*math.sin(math.radians(ang))
+        c.setFillColor(color); c.circle(px, py, 13, stroke=0, fill=1); c.setFillColor(WHITE); c.setFont("Helvetica-Bold", 6.8); c.drawCentredString(px, py-2, name)
+    for ang, label in [(0,"A"),(120,"B"),(240,"C")]:
+        x2, y2 = cx+155*math.cos(math.radians(ang)), cy+155*math.sin(math.radians(ang)); c.setStrokeColor(BLUE); c.setLineWidth(8); c.line(cx,cy,x2,y2); c.setFillColor(BLUE); c.setFont("Helvetica-Bold",12); c.drawCentredString(x2,y2+10,label)
+    mini_card(c, "HUB TO MOTOR", "4 x M4 x 10 A4 flat-head from underside into 50 mm rotating pattern; heads 0.1-0.2 mm subflush. Pilot enters bore by hand only.", 405, 574, 172, 105, BLUE, BLUE_BG)
+    mini_card(c, "EACH BLADE", "BP-100 v3 locating pins + captured M5 nuts; 4 x M5 x 22 per blade. Torque consistently and witness-mark.", 405, 455, 172, 105, PURPLE, PURPLE_BG)
+    mini_card(c, "THREE INSERT STATIONS", "Epoxy retains one magnet + two brass slugs. Match complete insert-plus-epoxy station masses within 0.01 g after cure.", 405, 336, 172, 105, AMBER, AMBER_BG)
+    s.y = 315
+    x, y, w, h = s.panel("MASS + FINAL RECORD", 175)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 9)
+    c.drawString(x+18,y+126,"MAGNET ______ g     BRASS B ______ g     BRASS C ______ g     MAX SPREAD ______ g")
+    s.checkbox_grid([
+        ("Pilot hand-fit; all four hub heads subflush.", "All three blade stations have four correct bolts and captured nuts."),
+        ("Epoxy fully cured; inserts cannot move.", "Hand-rotate several revolutions: no rub, click, or changing clearance."),
+        ("Critical fasteners torqued and witness-marked.", "Photograph rotor before balance measurements."),
+    ], x + 14, y + 98, w / 2 - 2, 8.3)
+    s.warning("Do not use cad/BP-100.step for current fit; it is stale v2 geometry.", 35, 152, 542)
+    s.stop("Complete rotor turns freely with correct retention; continue to 5A before powered motion.")
+    s.footer("docs/parts.md, RH-100/tach inserts; docs/blade-v2.md")
+
+
+def page_3c_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "3C", "Hall Gap + Electronics Bracket", n)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(35, 704, "SECTION THROUGH MAGNET AND SENSOR")
+    c.setFillColor(RED); c.roundRect(85, 585, 90, 32, 5, stroke=0, fill=1); c.setFillColor(WHITE); c.setFont("Helvetica-Bold",8); c.drawCentredString(130,597,"MAGNET CAP")
+    c.setFillColor(GREEN_BG); c.setStrokeColor(GREEN); c.roundRect(85, 474, 220, 52, 5, stroke=1, fill=1)
+    c.setFillColor(PURPLE); c.roundRect(112, 512, 36, 16, 3, stroke=0, fill=1); c.setFillColor(INK); c.setFont("Helvetica-Bold",8); c.drawString(155,516,"U1 SOT-23 MARKED FACE")
+    arrow(c, 130, 581, 130, 531, RED, 2); arrow(c, 130, 531, 130, 581, RED, 2)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",9); c.drawString(155,554,"2.5 mm NOMINAL")
+    c.setFont("Helvetica",8); c.drawString(155,542,"allowed 1.5-4.0 mm")
+    arrow(c, 305, 500, 400, 500, GREEN, 3); c.setFillColor(GREEN); c.setFont("Helvetica-Bold",9); c.drawString(410,497,"J1 + CABLE OUTBOARD")
+    mini_card(c, "COMMON CENTERLINE", "Magnet and sensor element at radius 76.0 +/-0.5 mm.", 350, 588, 227, 72, BLUE, BLUE_BG)
+    mini_card(c, "PCB-02 MOUNTING", "M2 holes on 6 mm pitch. At H1 use bare pan head or washer <=4.5 mm OD. Components face magnet.", 350, 504, 227, 72, GREEN, GREEN_BG)
+    mini_card(c, "BR-100", "Strain-relieve Hall cable. Validate bracket around physical motor, board, magnet, and real gap.", 350, 420, 227, 72, PURPLE, PURPLE_BG)
+    s.y = 395
+    x, y, w, h = s.panel("PCB-01 BRACKET ENVELOPE", 140, BLUE_BG, BLUE, BLUE)
+    c.setFillColor(WHITE); c.setStrokeColor(BLUE); c.rect(x+18,y+34,220,72,stroke=1,fill=1)
+    c.setFillColor(BLUE); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+128,y+70,"110 x 80 x 25 mm SERVICE ENVELOPE")
+    s.text("Four 6-8 mm M3 standoffs. Keep isolated mounting holes clear of circuit ground. Independent PCB retention and cable clamps. Preserve connector and cable-bend keepouts.", x+260,y+92,w-280,8.6,bold=True)
+    x, y, w, h = s.panel("HAND-ROTATION RELEASE", 115, GREEN_BG, GREEN, GREEN)
+    s.checkbox_grid([
+        ("One clean pulse/revolution with magnet.", "No false pulse with magnet removed."),
+        ("All cables and connector bodies clear rotor.", "Gap remains in range through full hand rotation."),
+    ], x+14,y+72,w/2-2,8.7)
+    s.stop("Hall pulse is clean; retained PCB and clamped cables clear all moving parts.")
+    s.footer("docs/electrical.md, Hall daughterboard; docs/parts.md, BR-100/EB-100", "TACH-03")
+
+
+def page_4a_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c, "4A", "Flash + One Persistent CLI Session", n)
+    x, y, w, h = s.panel("BUILD / FLASH / TALK", 165)
+    commands = ["cd firmware && cargo build", "espflash flash --port /dev/cu.usbmodem2101 --non-interactive app/target/riscv32imac-unknown-none-elf/debug/stillair", "target/debug/stillair --port /dev/cu.usbmodem2101 state"]
+    for i, cmd in enumerate(commands):
+        yy=y+105-i*41; c.setFillColor(GRAY_BG); c.setStrokeColor(LINE); c.roundRect(x+14,yy,w-28,31,5,stroke=1,fill=1)
+        c.setFillColor(INK); c.setFont("Courier-Bold",7.1 if i==1 else 8); c.drawString(x+23,yy+11,cmd)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",10); c.drawString(35, 507, "BARE DEV-BOARD INPUT JUMPERS")
+    mini_card(c,"GPIO22 -> 3V3","PGOOD good",35,424,160,65,GREEN,GREEN_BG)
+    mini_card(c,"GPIO21 -> 3V3","nFAULT idle high",226,424,160,65,GREEN,GREEN_BG)
+    mini_card(c,"GPIO14 -> GND","ALARM idle low",417,424,160,65,BLUE,BLUE_BG)
+    step_strip(c,["SafeBoot","Starting","15 s, no FG","NoRotation fault"],35,366,542,RED)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawCentredString(306,350,"EXPECTED ON A BARE BOARD; IT DOES NOT GENERATE FG EDGES")
+    s.y = 340
+    x, y, w, h = s.panel("SESSION RULES", 205)
+    mini_card(c,"ONE READER","Stop raw-log capture before espflash or CLI opens the port.",x+14,y+111,160,70,BLUE,BLUE_BG)
+    mini_card(c,"USE SCRIPT","Multi-step simulator work must stay in one session; separate invocations reset it.",x+188,y+111,160,70,PURPLE,PURPLE_BG)
+    mini_card(c,"RELEASE GATE","config check must report config=verified. ok=true plus unverified is not a pass.",x+362,y+111,160,70,RED,RED_BG)
+    s.text("wait <state> --for <seconds> after asynchronous commands  |  stream <hz> --for <seconds> for CSV  |  config capture only after complete measured configuration",x+14,y+89,w-28,8.5,bold=True)
+    s.warning("Never use raw reg write on a spinning motor except under an approved stopped/instrumented procedure. The simulator validates the harness, not the motor.",35,166,542)
+    s.stop("Firmware flashes; one persistent CLI session communicates and preserves scripted state.")
+    s.footer("AGENTS.md, Driving the fan; firmware/cli/src/main.rs")
+
+
+def motor_meter(c: Canvas, x: float, y: float, title: str, symbol: str, color, result: str) -> None:
+    c.setFillColor(WHITE); c.setStrokeColor(color); c.roundRect(x,y,165,150,8,stroke=1,fill=1)
+    c.setFillColor(color); c.setFont("Helvetica-Bold",9); c.drawString(x+10,y+132,title)
+    c.setStrokeColor(INK); c.setLineWidth(2); c.circle(x+82,y+78,30,stroke=1,fill=0)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",13); c.drawCentredString(x+82,y+73,"M")
+    c.line(x+15,y+95,x+52,y+89); c.line(x+15,y+61,x+52,y+70)
+    c.setFillColor(color); c.setFont("Helvetica-Bold",12); c.drawString(x+17,y+105,symbol)
+    c.setFillColor(MUTED); c.setFont("Helvetica-Bold",8); c.drawString(x+10,y+26,result)
+
+
+def page_4b_visual(c: Canvas, n: int) -> None:
+    s = Sheet(c,"4B","Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES  x")
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Guarded motor; manual cutoff ready; board/safety tests already passed")
+    motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"pair / method / R: __________")
+    motor_meter(c,223,518,"2  PHASE INDUCTANCE","L",PURPLE,"pair / frequency / L: ______")
+    motor_meter(c,411,518,"3  MANUAL-SPIN BEMF","~",GREEN,"pair / RPM / Vpp: __________")
+    c.setFillColor(MUTED); c.setFont("Helvetica",8); c.drawCentredString(306,501,"Repeat across phase pairs; record connection and polarity convention. Confirm 20 pole pairs.")
+    s.y = 495
+    x,y,w,h=s.panel("GREEN LANE - DO NOW",145,GREEN_BG,GREEN,GREEN)
+    s.checkbox_grid([
+        ("Measure R and L independently with method recorded.","Manually spin only; scope line-to-line BEMF and convention."),
+        ("Treat register seeds 0xB1 / 0xAE / 0xCA as provisional.","Keep loose hub hardware and blades off the motor."),
+    ],x+14,y+98,w/2-2,8.4)
+    x,y,w,h=s.panel("AMBER LANE - HOLD",145,AMBER_BG,AMBER,AMBER)
+    s.checkbox_grid([
+        ("No unloaded MPET; representative final rotor required.","Golden image needs measured D-generation fields and review."),
+        ("No config apply release until EEPROM completion/readback is proved.","Release requires config check: verified, not merely ok=true."),
+    ],x+14,y+98,w/2-2,8.3)
+    s.warning("No live raw register writes. For any later powered work, VM <=35 V target; 40 V rejects.",35,157,542)
+    s.stop("R / L / BEMF records are complete. Loaded MPET and the golden image remain HOLD.")
+    s.footer("docs/controls.md, measured-data gate; docs/electrical.md", "DRV-01, PCB-02, CTL-08/09/10")
+
+
+def page_5a_visual(c: Canvas, n: int) -> None:
+    import math
+    s=Sheet(c,"5A","Rotor Balance + Runout Record",n)
+    cx,cy=160,535; c.setStrokeColor(INK); c.circle(cx,cy,58,stroke=1,fill=0)
+    for i,(ang,label) in enumerate([(0,"A"),(120,"B"),(240,"C")]):
+        tx,ty=cx+120*math.cos(math.radians(ang)),cy+120*math.sin(math.radians(ang)); c.setStrokeColor(BLUE); c.setLineWidth(6); c.line(cx,cy,tx,ty); c.setFillColor(BLUE); c.setFont("Helvetica-Bold",12); c.drawCentredString(tx,ty+8,label)
+    c.setStrokeColor(RED); c.setLineWidth(2); c.line(cx-70,cy-78,cx-48,cy-42); c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(35,435,"DIAL INDICATOR AT RH-100 OD")
+    mini_card(c,"HUB RUNOUT","<=0.10 mm TIR",340,603,237,64,RED,RED_BG)
+    mini_card(c,"BLADE TIP HEIGHT","all three in one indexed setup; spread <=0.5 mm",340,527,237,64,BLUE,BLUE_BG)
+    mini_card(c,"FIRST MOMENT","each blade; spread <=0.5%",340,451,237,64,PURPLE,PURPLE_BG)
+    s.y = 415
+    x,y,w,h=s.panel("A / B / C MEASUREMENT TABLE",185)
+    cols=["STATION","MASS (g)","FIRST MOMENT","TIP (mm)","CORRECTION"]
+    widths=[70,85,110,85,145]; xx=x+14
+    c.setFillColor(GRAY_BG); c.rect(xx,y+126,sum(widths),27,stroke=0,fill=1)
+    for title,ww in zip(cols,widths): c.setFillColor(INK); c.setFont("Helvetica-Bold",7.5); c.drawCentredString(xx+ww/2,y+136,title); xx+=ww
+    for r,label in enumerate(["A","B","C"]):
+        yy=y+95-r*31; xx=x+14
+        for ww in widths: c.setStrokeColor(LINE); c.rect(xx,yy,ww,28,stroke=1,fill=0); xx+=ww
+        c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+49,yy+9,label)
+    x,y,w,h=s.panel("METHOD CHECK",125,GREEN_BG,GREEN,GREEN)
+    s.checkbox_grid([
+        ("0.01 mm indicator + 0.01 g calibrated scale.","Define vibration rejection before powered motion."),
+        ("Correct only by documented slug method; remeasure.","Hand-clearance pass and witness-mark photo saved."),
+    ],x+14,y+82,w/2-2,8.5)
+    s.stop("MEC-05 passes numerically; do not advance a rotor that only looks balanced.")
+    s.footer("testing/test-matrix.csv; docs/parts.md, RH-100", "MEC-05")
+
+
+def page_5b_visual(c: Canvas, n: int) -> None:
+    s=Sheet(c,"5B","Guarded Rotor Proof",n,"HOLD: PROCEDURE MISSING")
+    c.setFillColor(RED_BG); c.setStrokeColor(RED); c.setLineWidth(3); c.roundRect(75,410,462,260,16,stroke=1,fill=1)
+    c.setFillColor(WHITE); c.setStrokeColor(INK); c.circle(306,540,70,stroke=1,fill=1); c.setFillColor(INK); c.setFont("Helvetica-Bold",12); c.drawCentredString(306,536,"ROTOR + EXTERNAL DRIVE")
+    mini_card(c,"INDEPENDENT TACH","outside containment",90,580,140,58,BLUE,BLUE_BG)
+    mini_card(c,"VIBRATION SENSOR","defined abort level",382,580,140,58,PURPLE,PURPLE_BG)
+    mini_card(c,"REMOTE CUTOFF","interlock + observer",90,438,140,58,RED,WHITE)
+    mini_card(c,"INSTRUMENT POINT","safe cable routing",382,438,140,58,GREEN,WHITE)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(35,385,"OPERATOR A SAFE POSITION"); c.drawRightString(577,385,"OPERATOR B SAFE POSITION")
+    step_strip(c,["216 RPM","2 min CW","STOP + INSPECT","2 min CCW","STOP + INSPECT"],35,321,542,PURPLE)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",11); c.drawCentredString(306,298,"270 RPM = CALCULATION ONLY  x  NEVER DYNAMICALLY TEST")
+    s.y = 275
+    x,y,w,h=s.panel("RELEASE BEFORE RUNNING",145)
+    s.checkbox_grid([
+        ("Rated containment/fixture drawing released.","Two-person roles, callouts, safe positions, duration defined."),
+        ("Exact bypass state and restoration checks written.","Independent RPM and measurable vibration/contact abort set."),
+        ("Pre-run balance, runout, clearance, witness marks recorded.","After bypass, reverify 180 RPM MCF and 200 RPM analog limits."),
+    ],x+14,y+100,w/2-2,8.2)
+    s.stop("This sheet does not authorize the run. Release fixture and procedure first.")
+    s.footer("testing/test-matrix.csv; docs/parts.md, design loads", "MEC-03, MEC-07")
+
+
+def page_5c_visual(c: Canvas, n: int) -> None:
+    s=Sheet(c,"5C","Starts + Thermal Dashboard",n,"HOLD: METHODS TO DEFINE")
+    x,y,w,h=s.panel("START MATRIX - PASSES / TARGET",175)
+    cols=["DIRECTION","23.3 V (5)","24.0 V (20)","24.7 V (5)"]; widths=[110,130,140,130]; xx=x+14
+    c.setFillColor(GRAY_BG); c.rect(xx,y+110,sum(widths),28,stroke=0,fill=1)
+    for title,ww in zip(cols,widths): c.setFillColor(INK); c.setFont("Helvetica-Bold",8); c.drawCentredString(xx+ww/2,y+120,title); xx+=ww
+    for r,label in enumerate(["CW","CCW"]):
+        yy=y+72-r*38; xx=x+14
+        for ww in widths: c.setStrokeColor(LINE); c.rect(xx,yy,ww,34,stroke=1,fill=0); xx+=ww
+        c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+69,yy+12,label)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(x+14,y+13,"REJECT: retry, reverse kick, stall, hunting, or objectionable tonal sequence")
+    x,y,w,h=s.panel("SPEED LADDER",95,BLUE_BG,BLUE,BLUE)
+    step_strip(c,["30","40","55","70","120","170 RPM"],x+14,y+33,w-28,BLUE)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(x+14,y+14,"MCF active-control ceiling <=180 RPM; config must be verified before this stage")
+    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",210,GREEN_BG,GREEN,GREEN)
+    c.setStrokeColor(INK); c.line(x+38,y+118,x+w-38,y+118)
+    for i in range(9):
+        xx=x+38+i*(w-76)/8; c.line(xx,y+113,xx,y+123); c.setFillColor(MUTED); c.setFont("Helvetica",7); c.drawCentredString(xx,y+101,str(i)+"h")
+    s.text("Ambient ____ C   Motor ____ C   PCB ____ C   RMS phase ____ A   Input ____ W   Anomalies __________________",x+14,y+76,w-28,8.8,bold=True)
+    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+14,162,48,BLUE,WHITE)
+    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+14,162,48,RED,WHITE)
+    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+14,162,48,PURPLE,WHITE)
+    s.stop("Starts, speed ladder, essential shutdowns, cooldown inspection, and thermal run all pass.")
+    s.footer("testing/test-matrix.csv; docs/build.md, commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
+
+
 PAGES: list[Callable[[Canvas, int], None]] = [
-    page_0a,
-    page_1a,
-    page_1b,
-    page_1c,
-    page_3a,
-    page_3b,
-    page_3c,
-    page_4a,
-    page_4b,
-    page_5a,
-    page_5b,
-    page_5c,
+    page_0a_visual,
+    page_1a_visual,
+    page_1b_visual,
+    page_1c_visual,
+    page_1d_visual,
+    page_3a_visual,
+    page_3b_visual,
+    page_3c_visual,
+    page_4a_visual,
+    page_4b_visual,
+    page_5a_visual,
+    page_5b_visual,
+    page_5c_visual,
 ]
 
 
