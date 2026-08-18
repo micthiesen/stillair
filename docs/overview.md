@@ -36,7 +36,7 @@ Direct drive, low voltage, simple structure:
   switches motor phases.
 - **Power**: Mean Well GST60A24-P1J 24 V / 60 W certified supply, wall-side 3 A fuse and
   physical cutoff. Only low voltage crosses the ceiling.
-- **Safety**: independent one-pulse Hall tachometer → LM2907 → TLV1701 analog 200 RPM trip,
+- **Safety**: independent one-pulse Hall speed sensor → LM2907 → TLV1701 analog 200 RPM trip,
   hardware watchdog, and a permission latch that firmware can clear but not force. Mechanical
   backstops: a non-contact central rotor catcher and a separate rated whole-assembly tether.
 - **Structure**: compact stainless ceiling plate, three aluminum standoffs, aluminum motor

@@ -294,7 +294,7 @@ def page_0a(c: Canvas, n: int) -> None:
         ("2", "Prove PCB-01 without motor"),
         ("3", "Measure bare GL100, no blades"),
         ("4", "Integrate and balance rotor"),
-        ("5", "Guarded 216 RPM proof"),
+        ("5", "Workshop 216 RPM proof"),
         ("6", "Ceiling loaded commissioning"),
     ]
     box_w = 160
@@ -325,8 +325,8 @@ def page_0a(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("NON-NEGOTIABLE BOUNDARIES", 155, RED_BG, RED, RED)
     s.checkboxes([
         "Desk first: no-motor checks, then only released bare-motor work with no blades.",
-        "Balance and runout pass before the external-drive 216 RPM guarded proof.",
-        "The guarded proof is the first powered full-rotor work; ceiling commissioning comes after it.",
+        "Balance and runout pass before the external-drive 216 RPM workshop proof.",
+        "The observed workshop proof is the first powered full-rotor work; ceiling commissioning comes after it.",
         "Use normal safety firmware plus the persistent CLI; no general permissive build.",
         "Keep long USB J6 outside the sweep; cutoff reachable outside it; unplugging is not braking.",
     ], x + 14, y + 112, w - 28, 9.1)
@@ -724,7 +724,7 @@ def page_4b(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("PREREQUISITES", 100, RED_BG, RED, RED)
     s.checkboxes([
         "PCB-01 through PCB-04 and TACH-01 passed.",
-        "GL100 is rigidly guarded with NO BLADES installed.",
+        "GL100 is rigidly restrained with NO BLADES installed.",
         "VM scope probe and manual cutoff are ready before power.",
     ], x + 14, y + 62, w - 28, 9)
 
@@ -734,7 +734,7 @@ def page_4b(c: Canvas, n: int) -> None:
         "Manually spin the GL100 and scope line-to-line BEMF; record amplitude and phase convention.",
         "Record the measured values beside provisional seeds 0xB1 / 0xAE / 0xCA. Do not call the seeds released.",
         "Confirm 20 pole pairs and inspect console, FG, Hall, watchdog, and stop behavior without raw live register writes.",
-        "Scope only the motor operations already approved by the guarded procedure; VM target <=35 V and 40 V rejects.",
+        "Scope only the motor operations already approved by the bench procedure; VM target <=35 V and 40 V rejects.",
         "Keep blades and loose hub hardware off throughout this bare-motor stage.",
     ], x + 14, y + 158, w - 28, 8.9)
 
@@ -760,7 +760,7 @@ def page_5a(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("MEASURE BEFORE POWER", 245)
     s.checkboxes([
         "Use a released level/indexed fixture, a dial indicator readable to 0.01 mm, and a calibrated scale readable to 0.01 g.",
-        "Define the vibration measurement and rejection criterion before any powered motion.",
+        "For first powered motion, start low and stop for visible wobble, increasing vibration, rubbing, or unusual sound.",
         "Record each blade mass and first moment; target first moments within 0.5%.",
         "Measure RH-100 OD runout; limit <=0.10 mm TIR.",
         "Measure all blade tips in one indexed setup; spread <=0.5 mm.",
@@ -793,28 +793,29 @@ def page_5a(c: Canvas, n: int) -> None:
 
 
 def page_5b(c: Canvas, n: int) -> None:
-    s = Sheet(c, "5B", "Guarded Rotor Proof", n, "HOLD: PROCEDURE MISSING")
-    x, y, w, h = s.panel("ENGINEER BEFORE TESTING", 260, RED_BG, RED, RED)
+    s = Sheet(c, "5B", "Workshop Rotor Proof", n)
+    x, y, w, h = s.panel("SET UP THE TEST YOU WILL ACTUALLY RUN", 260, BLUE_BG, BLUE, BLUE)
     s.checkboxes([
-        "Release a fixture drawing with rated containment, external drive, remote cutoff/interlock, and instrument mounting.",
-        "Write the two-person procedure: roles, callouts, abort criteria, maximum duration, safe positions, and restoration checks.",
-        "Define the exact bypass hardware/state if a temporary electronic bypass is unavoidable.",
-        "Provide independent RPM measurement and a measurable vibration/contact abort criterion.",
+        "Secure the rotor and external drive so the setup cannot walk or tip; clear the rotor plane and nearby loose objects.",
+        "Disconnect GL100 phases from PCB-01. PCB-02 may stay powered for Hall speed; the analog lock may latch without stopping the external drive.",
+        "Use PCB-02 Hall telemetry or the external drive's own credible speed readout; record which source was used.",
+        "Keep the ordinary power switch, low-voltage cutoff, or plug reachable from outside the sweep.",
+        "Start at the lowest useful speed and advance only while motion and sound remain normal.",
         "Record pre-run balance, runout, fastener witness marks, and hand-clearance condition.",
-        "Approve the procedure before any high-energy run.",
+        "Watch and listen continuously; removing power makes the rotor coast rather than stop instantly. No safety bypass is used.",
     ], x + 14, y + 210, w - 28, 8.8)
 
-    x, y, w, h = s.panel("PROOF REQUIREMENTS", 260, PURPLE_BG, PURPLE, PURPLE)
+    x, y, w, h = s.panel("PROOF RUN", 260, PURPLE_BG, PURPLE, PURPLE)
     s.checkboxes([
-        "MEC-03 proof requirement: external guarded drive, 216 RPM, 2 minutes each direction.",
-        "After any bypass, restore and independently reverify the 180 RPM MCF limit and 200 RPM analog trip before fixture removal.",
+        "Run the secured external drive at 216 RPM for 2 minutes in each direction.",
+        "Stop and inspect after the first direction before reversing the setup.",
         "Never dynamically test the 270 RPM credible bypass load. It is calculation-only.",
-        "Use the manual cutoff immediately for unexpected vibration, sound, contact, or speed deviation.",
+        "Cut power immediately for visible wobble, increasing vibration, unusual sound, rubbing, contact, looseness, or speed disagreement.",
         "Reject damage, opening, permanent set, deformation, balance shift, contact, or loosened witness marks.",
         "Repeat balance, runout, witness-mark, and hand-clearance checks after both directions pass.",
     ], x + 14, y + 210, w - 28, 8.8)
 
-    s.stop("No test is authorized by this sheet. Release the fixture and procedures first; then issue an execution revision.")
+    s.stop("Both directions pass with stable reported speed and no abnormal motion, sound, contact, loosening, or damage.")
     s.footer("testing/test-matrix.csv; docs/parts.md, design loads", "MEC-03, MEC-07")
 
 
@@ -822,8 +823,8 @@ def page_5c(c: Canvas, n: int) -> None:
     s = Sheet(c, "5C", "Representative Starts and Thermal", n, "HOLD: METHODS TO DEFINE")
     x, y, w, h = s.panel("START AND SPEED QUALIFICATION", 260)
     s.checkboxes([
-        "With the representative final rotor guarded, run the released MPET procedure; cross-check R/L/BEMF, then complete and read back the golden image.",
-        "Before starts, require config check to report config=verified and independently verify the 180 RPM MCF limit and 200 RPM analog trip.",
+        "With the representative final rotor installed, run the released MPET procedure; cross-check R/L/BEMF, then complete and read back the golden image.",
+        "Before starts, require config check to report config=verified and verify the 180 RPM MCF limit and 200 RPM analog trip from reported diagnostics.",
         "At the intended minimum, complete 20 randomized-rest starts per direction at 24.0 V.",
         "At the same minimum, complete 5 starts per direction at 23.3 V and 5 per direction at 24.7 V.",
         "Reject any retry, reverse kick, stall, hunting, or objectionable tonal sequence.",
@@ -835,7 +836,7 @@ def page_5c(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("THERMAL", 230, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
         "Record ambient condition, temperature-sensor locations, and logging cadence.",
-        "Run the complete fan for 8 hours at 170 RPM on the guarded fixture.",
+        "Run the complete fan for 8 hours at 170 RPM on the installed ceiling plate.",
         "Record RMS phase current, MCF q-axis estimate, PWM peak, independent motor/PCB temperatures, ambient, and supply behavior.",
         "Normal RMS phase current <0.8 A; investigate at 1.0 A; 1.5 A limiter must not clip continuously.",
         "Motor <70 C, PCB <85 C, no supply dropout or overtemperature, input power <50 W.",
@@ -885,7 +886,7 @@ def page_6b(c: Canvas, n: int) -> None:
     s = Sheet(c, "6B", "Installed Commissioning and Sign-Off", n, "HOLD: LADDER TBD")
     x, y, w, h = s.panel("BEFORE FIRST INSTALLED ROTATION", 175)
     s.checkboxes([
-        "Clear the room and establish a manual cutoff observer.",
+        "Clear the room and keep the manual cutoff reachable from outside the rotor sweep.",
         "Confirm plate seating, anchor washers, tether, catcher, Hall gap, wall gap, and housing clearance.",
         "Confirm firmware golden-image verdict is verified and power restoration remains off.",
         "Approve and write the speed ladder, dwell time, maximum, measurements, and abort thresholds before starting: __________________",
@@ -895,7 +896,7 @@ def page_6b(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("INCREASING LIMITED-SPEED CHECKS", 245, GREEN_BG, GREEN, GREEN)
     s.checkboxes([
         "At each step inspect plate movement, tether behavior, catcher clearance, Hall gap, wall gap, and new resonance.",
-        "Verify commanded speed against independent tach and recorded telemetry.",
+        "Verify commanded speed against recorded FG and Hall telemetry; stop if they disagree.",
         "Test normal stop and confirm coast behavior.",
         "Test direction reversal only through ramp-to-zero and verified stop.",
         "Interrupt and restore power; confirm it returns off and requires a fresh command plus explicit arm.",
@@ -1049,7 +1050,7 @@ def page_0a_visual(c: Canvas, n: int) -> None:
         ("1A-1B", "POPULATE", "two boards", BLUE), ("1C", "HARNESS", "pin proof", BLUE),
         ("1D", "NO MOTOR", "board proof", PURPLE), ("4B", "BARE MOTOR", "R / L / BEMF", PURPLE),
         ("3A-3C", "ASSEMBLE", "fit + Hall", GREEN), ("5A", "BALANCE", "measure", GREEN),
-        ("5B", "GUARDED PROOF", "first full rotor", AMBER),
+        ("5B", "WORKSHOP PROOF", "first full rotor", AMBER),
         ("5C", "CEILING TEST", "loaded + thermal", PURPLE),
     ]
     for i, (sid, title, sub, color) in enumerate(stages):
@@ -1066,10 +1067,10 @@ def page_0a_visual(c: Canvas, n: int) -> None:
     s.checkbox_grid([
         ("A result is measured and recorded, not just observed.", "A failed gate stops the next powered stage."),
         ("Connector polarity and pin order are proved end-to-end.", "After loaded MPET, verify config before start/speed qualification."),
-        ("Balance + guarded proof precede ceiling loaded work.", "Normal safety firmware + long USB J6; cutoff outside sweep."),
+        ("Balance + observed workshop proof precede ceiling loaded work.", "Normal safety firmware + long USB J6; cutoff outside sweep."),
     ], x + 14, y + 100, w / 2 - 2, 8.4)
     x, y, w, h = s.panel("BOUNDARIES KEPT OUT OF THIS ACTIVE BINDER", 120, GRAY_BG)
-    s.text("Installed execution remains owner-managed. This binder records the agreed ceiling-commissioning sequence but does not prompt it. Deferred scope stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
+    s.text("Installed execution remains owner-managed. Sheet 5C is an owner-led reference record; it does not initiate or manage installed work. Deferred scope stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
     s.stop("Start at 1A. Carry only the current sheet, board, and required tools to the bench.")
     s.footer("docs/STATE.md; docs/integration.md; testing/test-matrix.csv")
 
@@ -1208,7 +1209,7 @@ def motor_meter(c: Canvas, x: float, y: float, title: str, symbol: str, color, r
 def page_4b_visual(c: Canvas, n: int) -> None:
     s = Sheet(c,"4B","Desk: Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
     c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES  x")
-    c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Guarded motor; manual cutoff ready; board/safety tests already passed")
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Motor secured; manual cutoff ready; board/safety tests already passed")
     motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"method: __________   ohm")
     motor_meter(c,223,518,"2  PHASE INDUCTANCE","L",PURPLE,"frequency: ________   L")
     motor_meter(c,411,518,"3  MANUAL-SPIN BEMF","~",GREEN,"RPM/polarity: ______   Vpp")
@@ -1251,7 +1252,7 @@ def page_5a_visual(c: Canvas, n: int) -> None:
         c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+49,yy+9,label)
     x,y,w,h=s.panel("METHOD CHECK",125,GREEN_BG,GREEN,GREEN)
     s.checkbox_grid([
-        ("0.01 mm indicator + 0.01 g calibrated scale.","Define vibration rejection before powered motion."),
+        ("0.01 mm indicator + 0.01 g calibrated scale.","First powered check starts low; stop for wobble, vibration, rubbing, or unusual sound."),
         ("Correct only by documented slug method; remeasure.","Hand-clearance pass and witness-mark photo saved."),
     ],x+14,y+82,w/2-2,8.5)
     s.stop("MEC-05 passes numerically; do not advance a rotor that only looks balanced.")
@@ -1259,29 +1260,35 @@ def page_5a_visual(c: Canvas, n: int) -> None:
 
 
 def page_5b_visual(c: Canvas, n: int) -> None:
-    s=Sheet(c,"5B","Guarded Rotor Proof",n,"HOLD: PROCEDURE MISSING")
+    s=Sheet(c,"5B","Workshop Rotor Proof",n)
     c.setFillColor(RED_BG); c.setStrokeColor(RED); c.setLineWidth(3); c.roundRect(75,410,462,260,16,stroke=1,fill=1)
-    c.setFillColor(WHITE); c.setStrokeColor(INK); c.circle(306,540,70,stroke=1,fill=1); c.setFillColor(INK); c.setFont("Helvetica-Bold",12); c.drawCentredString(306,536,"ROTOR + EXTERNAL DRIVE")
-    mini_card(c,"INDEPENDENT TACH","outside containment",90,580,140,58,BLUE,BLUE_BG)
-    mini_card(c,"VIBRATION SENSOR","defined abort level",382,580,140,58,PURPLE,PURPLE_BG)
-    mini_card(c,"REMOTE CUTOFF","interlock + observer",90,438,140,58,RED,WHITE)
-    mini_card(c,"INSTRUMENT POINT","safe cable routing",382,438,140,58,GREEN,WHITE)
-    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(35,385,"OPERATOR A SAFE POSITION"); c.drawRightString(577,385,"OPERATOR B SAFE POSITION")
-    step_strip(c,["216 RPM","2 min CW","STOP + INSPECT","2 min CCW","STOP + INSPECT"],35,321,542,PURPLE)
+    c.setFillColor(WHITE); c.setStrokeColor(INK); c.circle(306,540,70,stroke=1,fill=1); c.setFillColor(INK); c.setFont("Helvetica-Bold",12); c.drawCentredString(306,536,"ROTOR + DRIVE")
+    mini_card(c,"REPORTED SPEED","PCB-02 Hall or drive readout",90,580,140,58,BLUE,BLUE_BG)
+    mini_card(c,"WATCH + LISTEN","stop if motion or sound changes",382,580,140,58,PURPLE,PURPLE_BG)
+    mini_card(c,"POWER OFF","reachable; rotor will coast",90,438,140,58,RED,WHITE)
+    mini_card(c,"CLEAR AREA","stay outside rotor plane",382,438,140,58,GREEN,WHITE)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",7.6); c.drawCentredString(306,392,"GL100 PHASES DISCONNECTED FROM PCB-01  |  NO SAFETY BYPASS")
+    c.setFillColor(MUTED); c.setFont("Helvetica-Bold",7.2); c.drawCentredString(306,380,"PCB-02 MAY REPORT HALL SPEED; ANALOG TRIP MAY LATCH BUT WILL NOT STOP THE EXTERNAL DRIVE")
+    step_strip(c,["START LOW","216 RPM","2 min CW","STOP + INSPECT","2 min CCW","STOP + INSPECT"],35,321,542,PURPLE)
     c.setFillColor(RED); c.setFont("Helvetica-Bold",11); c.drawCentredString(306,298,"270 RPM = CALCULATION ONLY  x  NEVER DYNAMICALLY TEST")
-    s.y = 275
-    x,y,w,h=s.panel("RELEASE BEFORE RUNNING",145)
+    s.y = 285
+    x,y,w,h=s.panel("BEFORE, DURING, AND RECORD",170)
     s.checkbox_grid([
-        ("Rated containment/fixture drawing released.","Two-person roles, callouts, safe positions, duration defined."),
-        ("Exact bypass state and restoration checks written.","Independent RPM and measurable vibration/contact abort set."),
-        ("Pre-run balance, runout, clearance, witness marks recorded.","After bypass, reverify 180 RPM MCF and 200 RPM analog limits."),
-    ],x+14,y+100,w/2-2,8.2)
-    s.stop("This sheet does not authorize the run. Release fixture and procedure first.")
+        ("Setup secured; rotor plane and nearby area clear.","Speed source responds and is recorded."),
+        ("Start low; advance only while smooth and quiet.","Watch continuously; cutoff remains reachable."),
+        ("Balance, runout, clearance, witness marks recorded.","Inspect after each direction; stop on any change."),
+    ],x+14,y+125,w/2-2,8.2)
+    c.setFillColor(INK); c.setFont("Helvetica",7.8)
+    c.drawString(x+14,y+56,"Speed source: ____________________________     Setup: __________________________________________")
+    c.drawString(x+14,y+39,"CW actual: ______ RPM   result: __________     CCW actual: ______ RPM   result: __________")
+    c.drawString(x+14,y+22,"Notes: __________________________________________________________________________________")
+    c.drawString(x+14,y+7,"Date / initials: __________________________________")
+    s.stop("Both directions pass with no abnormal motion, sound, contact, loosening, or damage.")
     s.footer("testing/test-matrix.csv; docs/parts.md, design loads", "MEC-03, MEC-07")
 
 
 def page_5c_visual(c: Canvas, n: int) -> None:
-    s=Sheet(c,"5C","Ceiling Loaded Commissioning",n,"HOLD: METHODS TO DEFINE")
+    s=Sheet(c,"5C","Ceiling Loaded Commissioning",n,"OWNER-LED HOLD")
     x,y,w,h=s.panel("FINAL TEST CONNECTION",90,BLUE_BG,BLUE,BLUE)
     step_strip(c,["LAPTOP + CLI","LONG USB J6","PCB-01","MOTOR + ROTOR"],x+14,y+31,w-28,BLUE)
     c.setFillColor(INK); c.setFont("Helvetica-Bold",7.5); c.drawString(x+14,y+14,"NORMAL SAFETY FIRMWARE  |  24 V VIA REACHABLE CUTOFF  |  CABLES OUTSIDE SWEEP")
@@ -1320,7 +1327,7 @@ def page_5c_visual(c: Canvas, n: int) -> None:
     mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+12,162,42,BLUE,WHITE)
     mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+12,162,42,RED,WHITE)
     mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+12,162,42,PURPLE,WHITE)
-    s.stop("Starts, speed ladder, essential shutdowns, cooldown inspection, and thermal run all pass.")
+    s.stop("Reference only. Remains on hold until the MPET and test methods are defined; record results here when Michael chooses to run it.")
     s.footer("testing/test-matrix.csv; docs/build.md, commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
 
 

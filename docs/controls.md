@@ -115,9 +115,10 @@ SLLU335 (gradual-startup recipes).
   PGOOD (GPIO22), watchdog WDO diagnostic (GPIO23), and optional temperature (GPIO6).
 - Configuration and diagnostics: I²C to the MCF8316D (24-bit control-word protocol;
   bus-scan the target address at first bring-up).
-- Convert FG using 20 pole pairs and FG_DIV = 1h (20 pulses/rev). Verify the conversion
-  against an independent optical tachometer during commissioning (the optical tach is a
-  bench instrument, never a state-machine input).
+- Convert FG using 20 pole pairs and FG_DIV = 1h (20 pulses/rev). Cross-check reported FG
+  against the independent PCB-02 Hall channel during motor-driven commissioning. During an
+  external-drive proof, use PCB-02 Hall telemetry or the drive's own speed readout. No
+  separate optical tachometer is assumed.
 - The MCF commutates phases and limits current. The ESP32 never commutates phases.
 - `nFAULT` is diagnostic, not an asynchronous clear input to the external permission latch.
   Configure MCF lock/fault responses to latched Hi-Z.
@@ -300,7 +301,7 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   re-reporting would only re-serve the stale value. Deriving makes the divergence
   unrepresentable. The derivation lives in `stillair-core` (`matter::reported`) so it is
   host-tested — the app crate has no tests, which is precisely how the cache slipped through.
-- **`PercentSetting` is what was asked for; `PercentCurrent` is what the tachometer reads, in
+- **`PercentSetting` is what was asked for; `PercentCurrent` follows reported speed, in
   every state.** A fan ramping down after an Off is still moving air for a minute or more, so
   reporting zero the instant the command lands would claim it had stopped while it was plainly
   still turning. Direction reports the *requested* value, because the applied one lags a
@@ -403,8 +404,8 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 3. **Start**: set direction only while stopped, arm permission, release DRVOFF, ramp slowly.
 4. **Run**: maintain the last local speed when the Matter controller or Wi-Fi disappears.
 5. **Normal stop**: ramp to zero and coast.
-6. **Reverse**: ramp to zero, verify near-zero FG and optical-tach behavior, coast, change
-   DIR, then restart.
+6. **Reverse**: ramp to zero, verify the stopped criterion (no FG edge and no Hall edge for
+   5 seconds), coast, change DIR, then restart.
 7. **Fault**: enter Hi-Z, clear permission where applicable, expose diagnostics, and require
    a fresh user command.
 

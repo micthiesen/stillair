@@ -40,23 +40,28 @@ Last updated: **2026-08-18** (settled the test-location flow and refreshed the p
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
-  firmware, balance, guarded proof-speed, representative-start, and thermal tracks.
+  firmware, balance, workshop proof-speed, representative-start, and thermal tracks.
 - **Curated short SMD technique videos** for one-pad tacking, tack-and-drag, and bridge
   cleanup are indexed in
   [`docs/field-guides/soldering-videos.md`](field-guides/soldering-videos.md). Use them with
   the project-specific component maps on binder sheets 1A and 1B.
 - **The final test-location flow is settled**: no-motor and restrained bare-motor work on
-  the desk; unpowered balance/runout; first powered full-rotor work on the separate guarded
-  216 RPM external-drive fixture; then loaded MPET, tuning, starts, normal speeds, shutdowns,
-  and thermal testing on the installed ceiling plate. Use normal safety firmware plus the
-  host CLI over long USB J6; a controlled MPET workflow is the next software gap.
+  the desk; unpowered balance/runout; first powered full-rotor work on a secured 216 RPM
+  external-drive setup in a cleared area; then loaded MPET, tuning, starts, normal speeds,
+  shutdowns, and thermal testing on the installed ceiling plate. Workshop proof uses PCB-02
+  Hall telemetry or the drive readout, continuous observation, and a reachable cutoff. GL100
+  phases stay disconnected from PCB-01; the expected analog latch does not stop the external
+  drive, and no safety bypass is used. Do not assume a vibration sensor, optical tachometer,
+  remote interlock, or second operator. Use normal safety firmware plus the host CLI over
+  long USB J6 whenever PCB-01 drives the motor; a controlled MPET workflow is the next
+  software gap.
 
 ## Next
 
 Work from [integration.md](integration.md). Electronics is the main dependency spine; the
 immediate checkpoint is both boards populated and PCB-01 passing its first no-motor
 power/safety checks. Then complete motor integration, balance, controller tuning, essential
-hardware safety checks, guarded proof speed, representative starts, and the thermal run.
+hardware safety checks, workshop proof speed, representative starts, and the thermal run.
 
 ## Candidates Not Chosen
 

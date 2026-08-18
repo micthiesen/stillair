@@ -50,7 +50,7 @@ an undocumented assumption.
 2. **Permanent PCB** — V1 proves protection, connectors, power conversion, watchdog, analog
    overspeed, bus-voltage behavior, thermals, RF, and the exact MCF settings before V2 release.
 3. **Rotor qualification** — blades, root joints, hub, central capture, and catcher are
-   accepted complete; balance/runout and guarded proof speed remain active.
+   accepted complete; balance/runout and workshop proof speed remain active.
 
 Anchor selection and mounting sequence remain recorded in [install.md](install.md) as
 reference. Michael owns installation and any local approval decisions; agents must not

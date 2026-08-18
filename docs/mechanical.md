@@ -165,7 +165,7 @@ Measure these before ordering motor-dependent metal:
 | Item | Value |
 |---|---|
 | Runaway load case | 270 RPM (calculation basis, raised from 250 in 2026-07 review — supply-power bound; never dynamically tested) |
-| Guarded rotor proof | 216 RPM × 2 min/direction |
+| Workshop rotor proof | 216 RPM × 2 min/direction on a secured external drive, continuously observed |
 | Installed blade-root joint proof | 500 N radial each (was "adapter proof"; the printed root joint inherits it) |
 | Batch destructive test | >1.0 kN |
 | Hub OD runout | ≤0.10 mm TIR |

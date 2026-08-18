@@ -509,10 +509,13 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   review: the 60 W supply bounds terminal runaway at ~260–270 RPM via the N³ aero-power
   law, and the analog trip only guarantees lock by ~245 RPM for bounded ramps — see
   electrical.md's two-tier trip claim).
-- Guarded rotor proof: 216 RPM, two minutes per direction. Do not conduct this test over the
-  bed. Use an external guarded drive; if the installed drive must be used, a written
-  two-person temporary-limit-bypass procedure is required, followed by restoration and
-  independent re-verification of the 180/200 RPM limits before the rotor leaves the fixture.
+- Workshop rotor proof: 216 RPM, two minutes per direction. Do not conduct this test over the
+  bed. Secure the rotor to an external drive in a cleared work area, start low, and watch and
+  listen continuously. Disconnect the GL100 phases from PCB-01. PCB-01 and PCB-02 may remain
+  powered for Hall telemetry; the analog trip is then expected to latch near 200 RPM without
+  stopping the external drive. Use Hall telemetry or the drive's own speed readout. Stop for
+  wobble, increasing vibration, rubbing, unusual sound, loose hardware, or diagnostic
+  disagreement. This flow does not require a controller-limit bypass.
 - Calculate catcher and tether impact energy from the final retained mass and measured slack.
   Perform guarded off-ceiling dynamic catch tests on the complete catcher and tether
   assemblies, including all fittings and carrier attachments; static ratings alone are not

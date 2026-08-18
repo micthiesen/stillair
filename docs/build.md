@@ -16,8 +16,10 @@ the bed.
    interface, destructively test a blade root-joint sample, proof the three installed blade
    roots, and prepare four matched blades.
 4. **Assemble and mechanically prove** — measure runout and balance unpowered, then make the
-   first powered full-rotor work the external-drive 216 RPM proof behind a barrier.
-5. **Owner-installed commissioning** — after the guarded proof passes, Michael uses the
+   first powered full-rotor work a secured external-drive 216 RPM proof in a cleared area.
+   Keep the GL100 phases disconnected from PCB-01, start low, use PCB-02 Hall telemetry or
+   the drive readout, and watch continuously. No safety bypass is used.
+5. **Owner-installed commissioning** — after the workshop proof passes, Michael uses the
    installed ceiling plate for loaded MPET, tuning, representative starts, normal-range
    speed and shutdown checks, and thermal verification. The project records this flow but
    does not prompt or manage the installed work unless he explicitly requests it.
@@ -67,7 +69,7 @@ minimum release basis and can be tightened after measured data exists. Highlight
 | Representative starts (20/direction at the intended minimum at 24.0 V; 5/direction at 23.3 and 24.7 V) | No retry, reverse kick, stall, click, or hunting |
 | Speed range (steady at 30/40/55/70/120/170 RPM) | Stable speed and acceptable current waveform; each low speed released only if all starts pass |
 | Hard limit (max command + command-path fault) | Motor controller never exceeds 180 RPM |
-| Rotor proof (external drive, 216 RPM × 2 min/direction, behind barrier) | No damage, loosening, deformation, balance shift, or contact |
+| Rotor proof (secured external drive, 216 RPM × 2 min/direction, continuously observed) | No abnormal motion, sound, damage, loosening, deformation, balance shift, or contact |
 | Bus voltage (≥100 MHz probe at MCF pins during coast/cutoff/stall/reversal) | Peak ≤35 V, no 28 V OVP trip; otherwise redesign suppression |
 | Analog overspeed | Reset near 180 RPM; trip near 200 RPM, never above 220 RPM across voltage and temperature |
 | Essential fault behavior | Hardware fault or watchdog disables the bridge; power returns off; reversal only after stop |
