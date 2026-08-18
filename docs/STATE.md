@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-18** (added project-specific SMD technique video references.)
+Last updated: **2026-08-18** (settled the test-location flow and refreshed the printable binder.)
 
 ## Now
 
@@ -45,6 +45,11 @@ Last updated: **2026-08-18** (added project-specific SMD technique video referen
   cleanup are indexed in
   [`docs/field-guides/soldering-videos.md`](field-guides/soldering-videos.md). Use them with
   the project-specific component maps on binder sheets 1A and 1B.
+- **The final test-location flow is settled**: no-motor and restrained bare-motor work on
+  the desk; unpowered balance/runout; first powered full-rotor work on the separate guarded
+  216 RPM external-drive fixture; then loaded MPET, tuning, starts, normal speeds, shutdowns,
+  and thermal testing on the installed ceiling plate. Use normal safety firmware plus the
+  host CLI over long USB J6; a controlled MPET workflow is the next software gap.
 
 ## Next
 

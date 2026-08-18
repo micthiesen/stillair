@@ -294,7 +294,8 @@ def page_0a(c: Canvas, n: int) -> None:
         ("2", "Prove PCB-01 without motor"),
         ("3", "Measure bare GL100, no blades"),
         ("4", "Integrate and balance rotor"),
-        ("5", "Proof, starts, and thermal"),
+        ("5", "Guarded 216 RPM proof"),
+        ("6", "Ceiling loaded commissioning"),
     ]
     box_w = 160
     box_h = 48
@@ -323,11 +324,11 @@ def page_0a(c: Canvas, n: int) -> None:
 
     x, y, w, h = s.panel("NON-NEGOTIABLE BOUNDARIES", 155, RED_BG, RED, RED)
     s.checkboxes([
-        "No blades during bare-motor characterization.",
-        "No powered motor work before the no-motor board and safety-chain checks pass.",
-        "Balance and hand-clearance checks pass before any powered full-rotor run.",
-        "Use a guarded fixture and released procedure for the 216 RPM rotor proof.",
-        "Never bypass the 180 RPM controller limit or 200 RPM analog trip without the written guarded two-person procedure.",
+        "Desk first: no-motor checks, then only released bare-motor work with no blades.",
+        "Balance and runout pass before the external-drive 216 RPM guarded proof.",
+        "The guarded proof is the first powered full-rotor work; ceiling commissioning comes after it.",
+        "Use normal safety firmware plus the persistent CLI; no general permissive build.",
+        "Keep long USB J6 outside the sweep; cutoff reachable outside it; unplugging is not braking.",
     ], x + 14, y + 112, w - 28, 9.1)
     s.footer("docs/integration.md; docs/decisions.md; testing/test-matrix.csv")
 
@@ -957,11 +958,11 @@ def page_1b_visual(c: Canvas, n: int) -> None:
     mini_card(c, "2  U1", "DRV5033FAQDBZR, SOT-23. Match package index to board triangle. Pin 1 upper-left = 3V3; pin 2 lower-left = HALL_TACH; pin 3 right = AGND.", 216, 399, 181, 70, PURPLE, PURPLE_BG)
     mini_card(c, "3  J1", "S3B-PH-K-S side-entry JST-PH. Top to bottom in this view: 3 AGND, 2 HALL_TACH, 1 3V3. Iron-solder last.", 408, 399, 169, 70, BLUE, BLUE_BG)
 
-    c.setFillColor(INK); c.setFont("Helvetica-Bold", 11); c.drawString(35, 377, "NO HOT PLATE: CONTROLLED HOT-AIR METHOD")
-    step_strip(c, ["Tiny paste on U1 + C1", "Place under microscope", "Warm board gradually", "Low-airflow reflow", "Cool + inspect", "Iron-solder J1"], 35, 329, 542, PURPLE)
-    mini_card(c, "PASTE", "Only enough to wet each pad, never fill the gaps. Follow the paste maker's reflow profile; the station setpoint is not joint temperature.", 35, 239, 170, 76, AMBER, AMBER_BG)
-    mini_card(c, "HOT AIR", "Low airflow. Warm the whole small board gradually, then approach from above. Let surface tension center U1. Shield plastic and let the board cool before rework.", 216, 239, 181, 76, RED, RED_BG)
-    mini_card(c, "IRON ALTERNATIVE", "Flux, tack U1 pin 3, correct alignment, then solder pins 1 and 2. For J1, tack one pin, square the body, finish, then revisit the tack.", 408, 239, 169, 76, BLUE, BLUE_BG)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold", 11); c.drawString(35, 377, "IRON METHOD: THIN SOLDER WIRE + FLUX")
+    step_strip(c, ["Flux + tin one pad", "Place under microscope", "Reheat to tack", "Solder remaining pads", "Inspect + wick bridges", "Iron-solder J1"], 35, 329, 542, PURPLE)
+    mini_card(c, "C1 - ONE-PAD TACK", "Tin one pad lightly. Reheat it while placing C1, align the body, then solder the other end. Refresh the tack only if needed.", 35, 239, 170, 76, GREEN, GREEN_BG)
+    mini_card(c, "U1 - THREE LEADS", "Flux, tack pin 3, correct alignment, then solder pins 1 and 2. Reflow the tack last if it needs a cleaner fillet.", 216, 239, 181, 76, PURPLE, PURPLE_BG)
+    mini_card(c, "J1 - LAST", "Tack one pin, reheat while seating the body square and flush, finish the other pins, then revisit the tack.", 408, 239, 169, 76, BLUE, BLUE_BG)
     s.y = 225
     x, y, w, h = s.panel("FINAL INSPECTION", 125, GREEN_BG, GREEN, GREEN)
     s.checkbox_grid([
@@ -1048,7 +1049,8 @@ def page_0a_visual(c: Canvas, n: int) -> None:
         ("1A-1B", "POPULATE", "two boards", BLUE), ("1C", "HARNESS", "pin proof", BLUE),
         ("1D", "NO MOTOR", "board proof", PURPLE), ("4B", "BARE MOTOR", "R / L / BEMF", PURPLE),
         ("3A-3C", "ASSEMBLE", "fit + Hall", GREEN), ("5A", "BALANCE", "measure", GREEN),
-        ("5B-5C", "QUALIFY", "guarded", AMBER),
+        ("5B", "GUARDED PROOF", "first full rotor", AMBER),
+        ("5C", "CEILING TEST", "loaded + thermal", PURPLE),
     ]
     for i, (sid, title, sub, color) in enumerate(stages):
         col, row = i % 4, i // 4
@@ -1057,17 +1059,17 @@ def page_0a_visual(c: Canvas, n: int) -> None:
         c.setFillColor(color); c.setFont("Helvetica-Bold", 9); c.drawString(x + 9, y + 57, sid)
         c.setFillColor(INK); c.setFont("Helvetica-Bold", 10); c.drawString(x + 9, y + 38, title)
         c.setFillColor(MUTED); c.setFont("Helvetica", 8); c.drawString(x + 9, y + 21, sub)
-        if i not in (3, 6): arrow(c, x + 120, y + 38, x + 136, y + 38, color, 1.5)
+        if i not in (3, 7): arrow(c, x + 120, y + 38, x + 136, y + 38, color, 1.5)
     arrow(c, 569, 604, 569, 548, MUTED, 2); arrow(c, 569, 548, 35, 548, MUTED, 2); arrow(c, 35, 548, 35, 528, MUTED, 2)
     s.y = 430
     x, y, w, h = s.panel("WHAT COUNTS AS DONE", 145, GREEN_BG, GREEN, GREEN)
     s.checkbox_grid([
         ("A result is measured and recorded, not just observed.", "A failed gate stops the next powered stage."),
-        ("Connector polarity and pin order are proved end-to-end.", "Configuration must say verified before representative-rotor qualification."),
-        ("Balance and hand clearance precede powered full-rotor work.", "216 RPM proof uses a released guarded fixture and procedure."),
+        ("Connector polarity and pin order are proved end-to-end.", "After loaded MPET, verify config before start/speed qualification."),
+        ("Balance + guarded proof precede ceiling loaded work.", "Normal safety firmware + long USB J6; cutoff outside sweep."),
     ], x + 14, y + 100, w / 2 - 2, 8.4)
     x, y, w, h = s.panel("BOUNDARIES KEPT OUT OF THIS ACTIVE BINDER", 120, GRAY_BG)
-    s.text("Owner-managed and deferred scope is intentionally omitted from this binder. It stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
+    s.text("Installed execution remains owner-managed. This binder records the agreed ceiling-commissioning sequence but does not prompt it. Deferred scope stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
     s.stop("Start at 1A. Carry only the current sheet, board, and required tools to the bench.")
     s.footer("docs/STATE.md; docs/integration.md; testing/test-matrix.csv")
 
@@ -1204,7 +1206,7 @@ def motor_meter(c: Canvas, x: float, y: float, title: str, symbol: str, color, r
 
 
 def page_4b_visual(c: Canvas, n: int) -> None:
-    s = Sheet(c,"4B","Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
+    s = Sheet(c,"4B","Desk: Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
     c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES  x")
     c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Guarded motor; manual cutoff ready; board/safety tests already passed")
     motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"method: __________   ohm")
@@ -1215,7 +1217,7 @@ def page_4b_visual(c: Canvas, n: int) -> None:
     x,y,w,h=s.panel("GREEN LANE - DO NOW",145,GREEN_BG,GREEN,GREEN)
     s.checkbox_grid([
         ("Measure R and L independently with method recorded.","Manually spin only; scope line-to-line BEMF and convention."),
-        ("Treat register seeds 0xB1 / 0xAE / 0xCA as provisional.","Keep loose hub hardware and blades off the motor."),
+        ("Only explicitly released limited rotation; keep current/speed caps.","Keep loose hub hardware and blades off the motor."),
     ],x+14,y+98,w/2-2,8.4)
     x,y,w,h=s.panel("AMBER LANE - HOLD",145,AMBER_BG,AMBER,AMBER)
     s.checkbox_grid([
@@ -1279,26 +1281,28 @@ def page_5b_visual(c: Canvas, n: int) -> None:
 
 
 def page_5c_visual(c: Canvas, n: int) -> None:
-    s=Sheet(c,"5C","Starts + Thermal Dashboard",n,"HOLD: METHODS TO DEFINE")
-    x,y,w,h=s.panel("START MATRIX - PASSES / TARGET",175)
+    s=Sheet(c,"5C","Ceiling Loaded Commissioning",n,"HOLD: METHODS TO DEFINE")
+    x,y,w,h=s.panel("FINAL TEST CONNECTION",90,BLUE_BG,BLUE,BLUE)
+    step_strip(c,["LAPTOP + CLI","LONG USB J6","PCB-01","MOTOR + ROTOR"],x+14,y+31,w-28,BLUE)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",7.5); c.drawString(x+14,y+14,"NORMAL SAFETY FIRMWARE  |  24 V VIA REACHABLE CUTOFF  |  CABLES OUTSIDE SWEEP")
+    x,y,w,h=s.panel("START MATRIX - PASSES / TARGET",155)
     cols=["DIRECTION","23.3 V (5)","24.0 V (20)","24.7 V (5)"]; widths=[110,130,140,130]; xx=x+14
-    c.setFillColor(GRAY_BG); c.rect(xx,y+110,sum(widths),28,stroke=0,fill=1)
-    for title,ww in zip(cols,widths): c.setFillColor(INK); c.setFont("Helvetica-Bold",8); c.drawCentredString(xx+ww/2,y+120,title); xx+=ww
+    c.setFillColor(GRAY_BG); c.rect(xx,y+100,sum(widths),25,stroke=0,fill=1)
+    for title,ww in zip(cols,widths): c.setFillColor(INK); c.setFont("Helvetica-Bold",8); c.drawCentredString(xx+ww/2,y+109,title); xx+=ww
     for r,label in enumerate(["CW","CCW"]):
-        yy=y+72-r*38; xx=x+14
-        for ww in widths: c.setStrokeColor(LINE); c.rect(xx,yy,ww,34,stroke=1,fill=0); xx+=ww
-        c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+69,yy+12,label)
-    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(x+14,y+13,"REJECT: retry, reverse kick, stall, hunting, or objectionable tonal sequence")
-    x,y,w,h=s.panel("SPEED LADDER",95,BLUE_BG,BLUE,BLUE)
-    step_strip(c,["30","40","55","70","120","170 RPM"],x+14,y+33,w-28,BLUE)
-    c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(x+14,y+14,"MCF active-control ceiling <=180 RPM; config must be verified before this stage")
-    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",290,GREEN_BG,GREEN,GREEN)
+        yy=y+62-r*34; xx=x+14
+        for ww in widths: c.setStrokeColor(LINE); c.rect(xx,yy,ww,30,stroke=1,fill=0); xx+=ww
+        c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+69,yy+10,label)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",7.5); c.drawString(x+14,y+10,"REJECT: retry, reverse kick, stall, hunting, or objectionable tonal sequence")
+    x,y,w,h=s.panel("LOADED MPET + VERIFIED CONFIG, THEN SPEED LADDER <=180 RPM",72,BLUE_BG,BLUE,BLUE)
+    step_strip(c,["30","40","55","70","120","170 RPM"],x+14,y+15,w-28,BLUE)
+    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",240,GREEN_BG,GREEN,GREEN)
     row_labels = ["AMBIENT C", "MOTOR C", "PCB C", "RMS A", "INPUT W", "ANOMALY"]
     label_w = 62
     cell_w = (w - 28 - label_w) / 9
     table_x = x + 14
-    table_top = y + 247
-    row_h = 24
+    table_top = y + 195
+    row_h = 20
     c.setFillColor(GRAY_BG); c.setStrokeColor(LINE)
     c.rect(table_x, table_top - 18, label_w, 18, stroke=1, fill=1)
     for hour in range(9):
@@ -1313,9 +1317,9 @@ def page_5c_visual(c: Canvas, n: int) -> None:
         for hour in range(9):
             cell_x = table_x + label_w + hour * cell_w
             c.setFillColor(WHITE); c.rect(cell_x, row_y, cell_w, row_h, stroke=1, fill=1)
-    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+16,162,48,BLUE,WHITE)
-    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+16,162,48,RED,WHITE)
-    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+16,162,48,PURPLE,WHITE)
+    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+12,162,42,BLUE,WHITE)
+    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+12,162,42,RED,WHITE)
+    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+12,162,42,PURPLE,WHITE)
     s.stop("Starts, speed ladder, essential shutdowns, cooldown inspection, and thermal run all pass.")
     s.footer("testing/test-matrix.csv; docs/build.md, commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
 

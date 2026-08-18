@@ -19,12 +19,40 @@ thermal sheets. A HOLD badge means an active prerequisite is unresolved.
 4. **Integrate the physical assembly**: fit PCB-02 and the owner-made Hall bracket, install
    the hub and rotor, make EB-100 around the populated PCB and real cable bends, then balance
    and check runout.
-5. **Bench release**: verify the 180 RPM controller limit and 200 RPM analog trip, complete
-   the guarded 216 RPM proof, run the reduced representative-start set, verify stable speed
-   and essential shutdown behavior, then complete the eight-hour thermal run.
+5. **Guarded mechanical proof**: after MEC-05 balance/runout passes, use the released
+   external-drive fixture and barrier for the first powered full-rotor work: 216 RPM for two
+   minutes in each direction. This is not a ceiling test.
+6. **Ceiling-mounted loaded commissioning**: use the installed plate for loaded MPET,
+   startup tuning, the 180 RPM controller-limit check, representative starts, stable-speed
+   checks through 170 RPM, essential shutdown behavior, and the eight-hour thermal run.
+   Michael executes this installed work after the earlier gates pass. The real 200 RPM
+   analog-trip run remains guarded bare-motor work, never an overhead loaded test.
 
 Electronics is the immediate dependency. Mechanical dry-fit and firmware preparation can
 proceed in parallel, but powered motor work waits for the no-motor board checks.
+
+## Final test locations and control path
+
+| Stage | Location and configuration | Allowed work |
+|---|---|---|
+| Board bring-up | Desk; motor phases disconnected | Rails, current draw, permission latch, watchdog, power recovery, console, and injected tach tests |
+| Bare motor | Desk; GL100 rigidly restrained and guarded; no hub or blades | R/L measurements, manual-spin BEMF, feedback/stop behavior, explicitly released limited rotation, and the separately guarded physical analog-trip test; no unloaded MPET |
+| Rotor preparation | Unpowered assembly | Retention, hand clearance, balance, and runout |
+| Mechanical proof | Separate guarded fixture with external drive | First powered full-rotor work and 216 RPM proof in both directions |
+| Loaded commissioning | Final assembly on the installed ceiling plate | Loaded MPET and tuning, golden-image capture, then normal-range starts/speeds through 170 RPM under the 180 RPM ceiling, shutdown checks, and thermal run |
+
+Use the normal safety firmware throughout. The host `stillair` CLI remains the commissioning
+harness for scripts, telemetry, configuration work, and record capture; the simulator proves
+the harness but never the motor. Before loaded commissioning, add a controlled MPET command
+and procedure to that interface. Do not create a general permissive or safety-bypass firmware
+build for routine testing.
+
+For ceiling work, connect the laptop to PCB-01 J6 with a quality long USB cable; use an active
+USB extension if the passive link is unreliable. USB carries communication only, so PCB-01
+still uses the fused 24 V path. Keep USB outside the rotor sweep and strain-relieve it. Keep
+the motor, Hall, and 24 V harnesses at their intended final lengths. Place the low-voltage
+cutoff within reach from outside the sweep; the accessible mains plug is a backup power
+disconnect, not a rotor brake.
 
 ## Current checkpoint
 

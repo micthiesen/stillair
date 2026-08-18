@@ -15,11 +15,12 @@ the bed.
 3. **Fabricate and inspect** — make the metal and printed parts, inspect every critical
    interface, destructively test a blade root-joint sample, proof the three installed blade
    roots, and prepare four matched blades.
-4. **Assemble and bench prove** — build on a level fixture, measure runout, balance the
-   rotor, proof-speed it behind a barrier, then complete representative starts, essential
-   shutdown checks, and thermal verification.
-5. **Owner installation** — Michael owns the remaining installation and commissioning.
-   It is not tracked or prompted by the project unless he explicitly requests it.
+4. **Assemble and mechanically prove** — measure runout and balance unpowered, then make the
+   first powered full-rotor work the external-drive 216 RPM proof behind a barrier.
+5. **Owner-installed commissioning** — after the guarded proof passes, Michael uses the
+   installed ceiling plate for loaded MPET, tuning, representative starts, normal-range
+   speed and shutdown checks, and thermal verification. The project records this flow but
+   does not prompt or manage the installed work unless he explicitly requests it.
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 

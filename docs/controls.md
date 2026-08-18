@@ -28,6 +28,26 @@ mounted** — MPET's known failure modes (garbage Ke, missing Kp/Ki) occur on un
 and the rotor is our load. Independently scope line-to-line BEMF while manually spinning.
 Measured values replace the provisional registers before final EEPROM release.
 
+### Commissioning interface and build policy
+
+Use the normal safety firmware for both bare-motor and ceiling-mounted loaded work. The host
+`stillair` CLI is the commissioning harness: it keeps multi-step scripts in one session,
+streams telemetry, checks and captures the configuration, and returns nonzero on a failed
+step. A separate permissive firmware build would create a second safety behavior to validate
+and is not the default plan.
+
+The current CLI does not yet expose a controlled MPET operation. Add that workflow before
+loaded commissioning, with explicit preconditions, telemetry, abort behavior, and result
+capture. If the MCF requires a direct register sequence, contain it behind that operation
+rather than asking the operator to issue live raw writes. MPET remains a loaded-rotor
+cross-check; independent R/L/manual-spin BEMF measurements remain primary.
+
+During ceiling commissioning, use PCB-01 J6 and a quality long USB cable to keep the laptop
+and operator outside the rotor sweep; use an active extension if the passive link is
+unreliable. USB supplies communication only because J6 VBUS does not power the board. Route
+and strain-relieve the cable outside all moving geometry, and keep the physical low-voltage
+cutoff reachable without entering the sweep.
+
 **Headroom check during tuning**: at 170 RPM the BEMF is roughly 17 V against the 24 V bus —
 the tightest margin in the system with flux weakening disabled. A 20% error in the Ke
 convention (phase vs line) erases it, so pin the convention down against measured BEMF
