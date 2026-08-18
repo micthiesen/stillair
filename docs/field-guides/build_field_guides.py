@@ -950,12 +950,12 @@ def page_1b_visual(c: Canvas, n: int) -> None:
     c.drawString(MARGIN, 708, "TOP / MAGNET-FACING COMPONENT SIDE  -  KiCad target appearance")
     dx, dy, dw, dh = fit_image(c, ASSETS / "pcb02-top.png", 35, 496, 542, 190)
     for i, (px, py) in enumerate([(.17, .80), (.14, .45), (.79, .50)], 1): numbered(c, i, dx + px * dw, dy + py * dh)
-    arrow(c, 470, 486, 560, 486, GREEN, 3)
-    c.setFillColor(GREEN); c.setFont("Helvetica-Bold", 8); c.drawRightString(560, 486, "J1 / CABLE OUTBOARD")
+    arrow(c, 488, 484, 560, 484, GREEN, 2)
+    c.setFillColor(GREEN); c.setFont("Helvetica-Bold", 7.5); c.drawRightString(480, 482, "J1 / CABLE EXITS RIGHT")
 
-    mini_card(c, "1  C1", "C0603C104K5RACTU, 100 nF 50 V X7R, 0603. Pin 1 / 3V3 is left; pin 2 / AGND is right.", 35, 401, 170, 78, GREEN, GREEN_BG)
-    mini_card(c, "2  U1", "DRV5033FAQDBZR, SOT-23. Match package index to board triangle. Pin 1 upper-left = 3V3; pin 2 lower-left = HALL_TACH; pin 3 right = AGND.", 216, 401, 181, 78, PURPLE, PURPLE_BG)
-    mini_card(c, "3  J1", "S3B-PH-K-S side-entry JST-PH. Top to bottom in this view: 3 AGND, 2 HALL_TACH, 1 3V3. Iron-solder last.", 408, 401, 169, 78, BLUE, BLUE_BG)
+    mini_card(c, "1  C1", "C0603C104K5RACTU, 100 nF 50 V X7R, 0603. Pin 1 / 3V3 is left; pin 2 / AGND is right.", 35, 399, 170, 70, GREEN, GREEN_BG)
+    mini_card(c, "2  U1", "DRV5033FAQDBZR, SOT-23. Match package index to board triangle. Pin 1 upper-left = 3V3; pin 2 lower-left = HALL_TACH; pin 3 right = AGND.", 216, 399, 181, 70, PURPLE, PURPLE_BG)
+    mini_card(c, "3  J1", "S3B-PH-K-S side-entry JST-PH. Top to bottom in this view: 3 AGND, 2 HALL_TACH, 1 3V3. Iron-solder last.", 408, 399, 169, 70, BLUE, BLUE_BG)
 
     c.setFillColor(INK); c.setFont("Helvetica-Bold", 11); c.drawString(35, 377, "NO HOT PLATE: CONTROLLED HOT-AIR METHOD")
     step_strip(c, ["Tiny paste on U1 + C1", "Place under microscope", "Warm board gradually", "Low-airflow reflow", "Cool + inspect", "Iron-solder J1"], 35, 329, 542, PURPLE)
@@ -1081,8 +1081,10 @@ def page_3a_visual(c: Canvas, n: int) -> None:
         c.setFillColor(WHITE); c.setStrokeColor(color); c.setLineWidth(2); c.roundRect(cx - ww/2, yy, ww, hh, 6, stroke=1, fill=1)
         c.setFillColor(color); c.setFont("Helvetica-Bold", 9); c.drawCentredString(cx, yy + hh/2 - 3, label)
     for a, b in [(620,579),(535,470),(438,397)]: arrow(c, cx, a-4, cx, b+4, MUTED, 2)
-    c.setStrokeColor(RED); c.setLineWidth(3); c.line(315, 466, 405, 385); arrow(c, 405, 385, 430, 385, RED, 2)
-    c.setFillColor(RED); c.setFont("Helvetica-Bold", 8); c.drawString(320, 476, "MOTOR WIRES THROUGH MC-100 WINDOW")
+    c.setFillColor(RED_BG); c.setStrokeColor(RED); c.setLineWidth(2); c.rect(318, 445, 22, 15, stroke=1, fill=1)
+    arrow(c, 329, 463, 370, 493, RED, 2)
+    c.setFillColor(RED); c.setFont("Helvetica-Bold", 8); c.drawRightString(368, 508, "MOTOR WIRES")
+    c.drawRightString(368, 498, "THROUGH RED WINDOW")
     mini_card(c, "MP-100 -> ST-100", "3 x M6 x 16 flat-head from plate ceiling face; heads flush or below.", 420, 595, 157, 72, BLUE, BLUE_BG)
     mini_card(c, "ST-100 -> MC-100", "3 x M6 x 20 A4-80 + Nord-Lock pairs. Hand-start, square seating.", 420, 503, 157, 72, PURPLE, PURPLE_BG)
     mini_card(c, "MC-100 -> GL100", "4 x M4 x 12 A4-80 into the 60 mm stationary pattern. The 50 mm face rotates.", 420, 411, 157, 72, GREEN, GREEN_BG)
@@ -1134,7 +1136,8 @@ def page_3c_visual(c: Canvas, n: int) -> None:
     arrow(c, 130, 581, 130, 531, RED, 2); arrow(c, 130, 531, 130, 581, RED, 2)
     c.setFillColor(RED); c.setFont("Helvetica-Bold",9); c.drawString(155,554,"2.5 mm NOMINAL")
     c.setFont("Helvetica",8); c.drawString(155,542,"allowed 1.5-4.0 mm")
-    arrow(c, 305, 500, 400, 500, GREEN, 3); c.setFillColor(GREEN); c.setFont("Helvetica-Bold",9); c.drawString(410,497,"J1 + CABLE OUTBOARD")
+    arrow(c, 282, 486, 328, 458, GREEN, 2)
+    c.setFillColor(GREEN); c.setFont("Helvetica-Bold",8); c.drawRightString(328,445,"J1 / CABLE OUTBOARD")
     mini_card(c, "COMMON CENTERLINE", "Magnet and sensor element at radius 76.0 +/-0.5 mm.", 350, 588, 227, 72, BLUE, BLUE_BG)
     mini_card(c, "PCB-02 MOUNTING", "M2 holes on 6 mm pitch. At H1 use bare pan head or washer <=4.5 mm OD. Components face magnet.", 350, 504, 227, 72, GREEN, GREEN_BG)
     mini_card(c, "BR-100", "Strain-relieve Hall cable. Validate bracket around physical motor, board, magnet, and real gap.", 350, 420, 227, 72, PURPLE, PURPLE_BG)
@@ -1155,10 +1158,22 @@ def page_3c_visual(c: Canvas, n: int) -> None:
 def page_4a_visual(c: Canvas, n: int) -> None:
     s = Sheet(c, "4A", "Flash + One Persistent CLI Session", n)
     x, y, w, h = s.panel("BUILD / FLASH / TALK", 165)
-    commands = ["cd firmware && cargo build", "espflash flash --port /dev/cu.usbmodem2101 --non-interactive app/target/riscv32imac-unknown-none-elf/debug/stillair", "target/debug/stillair --port /dev/cu.usbmodem2101 state"]
-    for i, cmd in enumerate(commands):
-        yy=y+105-i*41; c.setFillColor(GRAY_BG); c.setStrokeColor(LINE); c.roundRect(x+14,yy,w-28,31,5,stroke=1,fill=1)
-        c.setFillColor(INK); c.setFont("Courier-Bold",7.1 if i==1 else 8); c.drawString(x+23,yy+11,cmd)
+    commands = [
+        ["cargo build --manifest-path firmware/Cargo.toml"],
+        ["espflash flash --port /dev/cu.usbmodem2101 --non-interactive", "  firmware/app/target/riscv32imac-unknown-none-elf/debug/stillair"],
+        ["firmware/target/debug/stillair --port /dev/cu.usbmodem2101 state"],
+    ]
+    box_top = y + 132
+    for command_lines in commands:
+        box_height = 27 if len(command_lines) == 1 else 38
+        box_y = box_top - box_height
+        c.setFillColor(GRAY_BG); c.setStrokeColor(LINE); c.roundRect(x+14, box_y, w-28, box_height, 5, stroke=1, fill=1)
+        c.setFillColor(INK); c.setFont("Courier-Bold", 7.5)
+        line_y = box_top - (14 if len(command_lines) > 1 else 18)
+        for command_line in command_lines:
+            c.drawString(x+23, line_y, command_line)
+            line_y -= 11
+        box_top = box_y - 11
     c.setFillColor(INK); c.setFont("Helvetica-Bold",10); c.drawString(35, 507, "BARE DEV-BOARD INPUT JUMPERS")
     mini_card(c,"GPIO22 -> 3V3","PGOOD good",35,424,160,65,GREEN,GREEN_BG)
     mini_card(c,"GPIO21 -> 3V3","nFAULT idle high",226,424,160,65,GREEN,GREEN_BG)
@@ -1183,16 +1198,18 @@ def motor_meter(c: Canvas, x: float, y: float, title: str, symbol: str, color, r
     c.setFillColor(INK); c.setFont("Helvetica-Bold",13); c.drawCentredString(x+82,y+73,"M")
     c.line(x+15,y+95,x+52,y+89); c.line(x+15,y+61,x+52,y+70)
     c.setFillColor(color); c.setFont("Helvetica-Bold",12); c.drawString(x+17,y+105,symbol)
-    c.setFillColor(MUTED); c.setFont("Helvetica-Bold",8); c.drawString(x+10,y+26,result)
+    c.setFillColor(MUTED); c.setFont("Helvetica-Bold",7); c.drawString(x+10,y+42,result)
+    for row, pair in enumerate(("U-V", "V-W", "W-U")):
+        c.drawString(x+10, y+30-row*10, f"{pair}: __________________")
 
 
 def page_4b_visual(c: Canvas, n: int) -> None:
     s = Sheet(c,"4B","Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
     c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES  x")
     c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Guarded motor; manual cutoff ready; board/safety tests already passed")
-    motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"pair / method / R: __________")
-    motor_meter(c,223,518,"2  PHASE INDUCTANCE","L",PURPLE,"pair / frequency / L: ______")
-    motor_meter(c,411,518,"3  MANUAL-SPIN BEMF","~",GREEN,"pair / RPM / Vpp: __________")
+    motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"method: __________   ohm")
+    motor_meter(c,223,518,"2  PHASE INDUCTANCE","L",PURPLE,"frequency: ________   L")
+    motor_meter(c,411,518,"3  MANUAL-SPIN BEMF","~",GREEN,"RPM/polarity: ______   Vpp")
     c.setFillColor(MUTED); c.setFont("Helvetica",8); c.drawCentredString(306,501,"Repeat across phase pairs; record connection and polarity convention. Confirm 20 pole pairs.")
     s.y = 495
     x,y,w,h=s.panel("GREEN LANE - DO NOW",145,GREEN_BG,GREEN,GREEN)
@@ -1275,14 +1292,30 @@ def page_5c_visual(c: Canvas, n: int) -> None:
     x,y,w,h=s.panel("SPEED LADDER",95,BLUE_BG,BLUE,BLUE)
     step_strip(c,["30","40","55","70","120","170 RPM"],x+14,y+33,w-28,BLUE)
     c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawString(x+14,y+14,"MCF active-control ceiling <=180 RPM; config must be verified before this stage")
-    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",210,GREEN_BG,GREEN,GREEN)
-    c.setStrokeColor(INK); c.line(x+38,y+118,x+w-38,y+118)
-    for i in range(9):
-        xx=x+38+i*(w-76)/8; c.line(xx,y+113,xx,y+123); c.setFillColor(MUTED); c.setFont("Helvetica",7); c.drawCentredString(xx,y+101,str(i)+"h")
-    s.text("Ambient ____ C   Motor ____ C   PCB ____ C   RMS phase ____ A   Input ____ W   Anomalies __________________",x+14,y+76,w-28,8.8,bold=True)
-    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+14,162,48,BLUE,WHITE)
-    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+14,162,48,RED,WHITE)
-    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+14,162,48,PURPLE,WHITE)
+    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",290,GREEN_BG,GREEN,GREEN)
+    row_labels = ["AMBIENT C", "MOTOR C", "PCB C", "RMS A", "INPUT W", "ANOMALY"]
+    label_w = 62
+    cell_w = (w - 28 - label_w) / 9
+    table_x = x + 14
+    table_top = y + 247
+    row_h = 24
+    c.setFillColor(GRAY_BG); c.setStrokeColor(LINE)
+    c.rect(table_x, table_top - 18, label_w, 18, stroke=1, fill=1)
+    for hour in range(9):
+        cell_x = table_x + label_w + hour * cell_w
+        c.rect(cell_x, table_top - 18, cell_w, 18, stroke=1, fill=1)
+        c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.5); c.drawCentredString(cell_x + cell_w/2, table_top - 12, f"{hour}h")
+        c.setFillColor(GRAY_BG)
+    for row, label in enumerate(row_labels):
+        row_y = table_top - 18 - (row + 1) * row_h
+        c.setFillColor(WHITE); c.setStrokeColor(LINE); c.rect(table_x, row_y, label_w, row_h, stroke=1, fill=1)
+        c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.5); c.drawString(table_x + 4, row_y + 9, label)
+        for hour in range(9):
+            cell_x = table_x + label_w + hour * cell_w
+            c.setFillColor(WHITE); c.rect(cell_x, row_y, cell_w, row_h, stroke=1, fill=1)
+    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+16,162,48,BLUE,WHITE)
+    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+16,162,48,RED,WHITE)
+    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+16,162,48,PURPLE,WHITE)
     s.stop("Starts, speed ladder, essential shutdowns, cooldown inspection, and thermal run all pass.")
     s.footer("testing/test-matrix.csv; docs/build.md, commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
 
