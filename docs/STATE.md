@@ -3,8 +3,7 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-17** (owner simplified the remaining integration scope; ceiling
-installation, tether, and catcher work are complete or owner-managed.)
+Last updated: **2026-08-18** (added project-specific SMD technique video references.)
 
 ## Now
 
@@ -42,6 +41,10 @@ installation, tether, and catcher work are complete or owner-managed.)
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
   firmware, balance, guarded proof-speed, representative-start, and thermal tracks.
+- **Curated SMD technique videos** for one-pad tacking, tack-and-drag, bridge cleanup, and
+  paste/hot-air reflow are indexed in
+  [`docs/field-guides/soldering-videos.md`](field-guides/soldering-videos.md). Use them with
+  the project-specific component maps on binder sheets 1A and 1B.
 
 ## Next
 

@@ -19,3 +19,6 @@ The PCB population pages use top/component-side target renders exported from KiC
 in `docs/field-guides/assets/`. They are placement aids, not photographs of an already-built
 board. Refresh them whenever either PCB layout changes, and re-check every callout against the
 position export before printing.
+
+For the fine-pitch techniques used on sheets 1A and 1B, see the curated
+[SMD soldering video references](soldering-videos.md).
