@@ -167,6 +167,8 @@ impl Board {
                 // not block on a bus that may be exactly what is broken.
                 crate::mcf::CLEAR_FAULT_REQUEST.signal(());
             }
+            Action::StartMpet => crate::mcf::MPET_START_REQUEST.signal(()),
+            Action::AbortMpet => crate::mcf::MPET_ABORT_REQUEST.signal(()),
         }
     }
 }

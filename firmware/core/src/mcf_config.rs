@@ -134,6 +134,11 @@ pub enum ConfigFault {
     Mismatch { address: u16 },
     /// The register could not be read at all.
     Unreadable { address: u16 },
+    /// Shadow values were written, but the explicit EEPROM commit did not complete and
+    /// self-clear within the bounded confirmation window.
+    CommitUnconfirmed,
+    /// The commit command or its completion poll could not reach the device.
+    CommitUnreadable,
     /// The check did not finish in time. Reported by the supervisor, not by [`check`].
     TimedOut,
 }
@@ -243,12 +248,6 @@ pub struct Applied {
 /// pass produced — so a caller that needs to publish it does not have to run a second full pass
 /// over the block to learn what this one already established.
 ///
-/// **Known gap: EEPROM write completion is not polled.** `docs/controls.md` gives ~750 ms per
-/// configuration write *with completion polling*, and the mechanism for observing that
-/// completion has not been derived from silicon — inventing one here would be exactly the guess
-/// this module exists to avoid. With [`IMAGE`] empty the loop below writes nothing, so nothing
-/// is at risk today; whoever populates the image must confirm the read-back cannot race the
-/// device's internal commit, or a good write will report as a mismatch.
 pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, ConfigCheck) {
     let mut applied = Applied::default();
 
@@ -281,6 +280,14 @@ pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, 
         applied.written += 1;
     }
 
+    if applied.written != 0 {
+        match commit(bus).await {
+            Ok(true) => {}
+            Ok(false) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnconfirmed)),
+            Err(_) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnreadable)),
+        }
+    }
+
     // Re-read everything rather than trusting the writes. `RegisterBus::write` promises
     // nothing about the value sticking, and a configuration that silently did not take is the
     // failure this whole module exists to make impossible.
@@ -309,6 +316,30 @@ pub async fn write_and_recheck<B: RegisterBus>(
         return Ok(None);
     }
     Ok(Some(check(bus, image).await))
+}
+
+/// Commit the shadow configuration once, wait TI's minimum programming interval, then poll
+/// the self-clearing command register. `false` is distinct from a bus error: the device kept
+/// answering but never confirmed that the persistent write completed.
+async fn commit<B: RegisterBus>(bus: &mut B) -> Result<bool, B::Error> {
+    const POLL_MS: u32 = 25;
+    const TIMEOUT_MS: u32 = 2_000;
+
+    bus.write(reg::ALGO_CTRL1, crate::mcf8316::EEPROM_WRITE_COMMAND)
+        .await?;
+    bus.delay_ms(crate::mcf8316::EEPROM_WRITE_MIN_MS).await;
+
+    let mut waited = crate::mcf8316::EEPROM_WRITE_MIN_MS;
+    loop {
+        if bus.read(reg::ALGO_CTRL1).await? == 0 {
+            return Ok(true);
+        }
+        if waited >= TIMEOUT_MS {
+            return Ok(false);
+        }
+        bus.delay_ms(POLL_MS).await;
+        waited += POLL_MS;
+    }
 }
 
 #[cfg(test)]
@@ -344,8 +375,11 @@ mod tests {
         /// Writes of this address are accepted and silently discarded, the way a locked or
         /// unwritable register behaves.
         write_ignored: Option<u16>,
+        /// Leave the EEPROM command set after delays, simulating a commit that never ends.
+        commit_stuck: bool,
         reads: usize,
         writes: usize,
+        delayed_ms: u32,
     }
 
     impl FakeBus {
@@ -377,6 +411,16 @@ mod tests {
                 self.registers.insert(address, value);
             }
             Ok(())
+        }
+
+        async fn delay_ms(&mut self, milliseconds: u32) {
+            self.delayed_ms += milliseconds;
+            if !self.commit_stuck
+                && self.registers.get(&reg::ALGO_CTRL1)
+                    == Some(&crate::mcf8316::EEPROM_WRITE_COMMAND)
+            {
+                self.registers.insert(reg::ALGO_CTRL1, 0);
+            }
         }
     }
 
@@ -618,8 +662,42 @@ mod tests {
             }
         );
         assert_eq!(check, ConfigCheck::Verified);
-        assert_eq!(bus.writes, 1, "wrote a register that was already correct");
+        assert_eq!(bus.writes, 2, "expected one shadow write and one commit");
+        assert!(
+            bus.delayed_ms >= crate::mcf8316::EEPROM_WRITE_MIN_MS,
+            "read back before TI's minimum EEPROM interval"
+        );
         assert_eq!(bus.registers[&B], 0x2222);
+    }
+
+    #[test]
+    fn apply_does_not_burn_an_eeprom_cycle_when_everything_matches() {
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus::with(&[(A, 0x1111)]);
+        let (applied, check) = block_on(apply(&mut bus, &image));
+        assert_eq!(applied.written, 0);
+        assert_eq!(check, ConfigCheck::Verified);
+        assert_eq!(bus.writes, 0);
+        assert_eq!(bus.delayed_ms, 0);
+    }
+
+    #[test]
+    fn apply_fails_if_the_eeprom_command_never_self_clears() {
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus::with(&[(A, 0)]);
+        bus.commit_stuck = true;
+        let (_, check) = block_on(apply(&mut bus, &image));
+        assert_eq!(check, ConfigCheck::Failed(ConfigFault::CommitUnconfirmed));
+        assert!(bus.delayed_ms >= 2_000);
+    }
+
+    #[test]
+    fn apply_distinguishes_a_commit_bus_failure() {
+        let image = [Setting::whole("A", A, 0x1111)];
+        let mut bus = FakeBus::with(&[(A, 0)]);
+        bus.write_fails = Some(reg::ALGO_CTRL1);
+        let (_, check) = block_on(apply(&mut bus, &image));
+        assert_eq!(check, ConfigCheck::Failed(ConfigFault::CommitUnreadable));
     }
 
     #[test]
@@ -685,6 +763,14 @@ mod tests {
         assert_eq!(
             bus.registers[&A], 0x2222,
             "the write itself must still land"
+        );
+        assert_eq!(
+            bus.writes, 1,
+            "an exploratory shadow write also committed EEPROM"
+        );
+        assert_eq!(
+            bus.delayed_ms, 0,
+            "a raw shadow write entered the commit path"
         );
     }
 

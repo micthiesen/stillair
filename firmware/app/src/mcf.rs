@@ -17,7 +17,8 @@ use esp_hal::i2c::master::{Error as I2cError, I2c};
 use esp_hal::Async;
 use stillair_core::console::Reply;
 use stillair_core::mcf8316::{
-    self, reg, value_from_bytes32, verify_read, write_frame, CrcMismatch, FaultStatus, RegisterBus,
+    self, reg, value_from_bytes32, verify_read, write_frame, CrcMismatch, FaultStatus, MpetReport,
+    RegisterBus,
 };
 use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::state::StatusRead;
@@ -32,6 +33,8 @@ pub static STATUS: Signal<CriticalSectionRawMutex, StatusRead> = Signal::new();
 /// Raised by the control loop when the supervisor emits `ClearMcfFault`, serviced by the
 /// I²C task. Crossing tasks like this keeps the blocking-free control loop free of I²C.
 pub static CLEAR_FAULT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+pub static MPET_START_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+pub static MPET_ABORT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
 /// The standing verdict on the MCF's stored configuration.
 ///
@@ -65,6 +68,10 @@ pub enum Access {
     ConfigApply,
     /// Emit the whole EEPROM configuration block, one register per line.
     ConfigDump,
+    /// Read the extraction flags and all result registers as one report.
+    MpetStatus,
+    /// Clear MPET_CMD and confirm the bus accepted the write.
+    MpetAbort,
 }
 
 /// What an [`Access`] produced.
@@ -77,6 +84,8 @@ pub enum Answer {
         written: u16,
         unchanged: u16,
     },
+    Mpet(MpetReport),
+    MpetAborted,
 }
 
 /// Requests and replies carry a generation so a reply cannot be misattributed.
@@ -101,6 +110,8 @@ pub async fn request_read(address: u16) -> Result<u32, &'static str> {
     match exchange(Access::Read(address)).await? {
         Answer::Value(value) => Ok(value),
         Answer::Config { .. } => Err("wrong answer for a register read"),
+        Answer::Mpet(_) => Err("wrong answer for a register read"),
+        Answer::MpetAborted => Err("wrong answer for a register read"),
     }
 }
 
@@ -122,15 +133,20 @@ async fn exchange(access: Access) -> Result<Answer, &'static str> {
     ACCESS_REPLY.reset();
     ACCESS_REQUEST.signal((generation, access));
 
-    let deadline = deadline_for(access);
-    loop {
-        match with_timeout(deadline, ACCESS_REPLY.wait()).await {
-            // A reply from an abandoned earlier request: discard it and keep waiting for
-            // ours rather than reporting it as ours.
-            Ok((answered, _)) if answered != generation => continue,
-            Ok((_, reply)) => return reply,
-            Err(_) => return Err("register access timed out"),
+    match with_timeout(deadline_for(access), async {
+        loop {
+            match ACCESS_REPLY.wait().await {
+                // A reply from an abandoned earlier request: discard it and keep waiting for
+                // ours rather than reporting it as ours.
+                (answered, _) if answered != generation => continue,
+                (_, reply) => break reply,
+            }
         }
+    })
+    .await
+    {
+        Ok(reply) => reply,
+        Err(_) => Err("register access timed out"),
     }
 }
 
@@ -140,18 +156,14 @@ async fn exchange(access: Access) -> Result<Answer, &'static str> {
 /// single register read turns a wedged bus into a console that appears to have hung.
 fn deadline_for(access: Access) -> Duration {
     match access {
-        // A configuration write is EEPROM-backed at roughly 750 ms (`docs/controls.md`) —
-        // already past the plain-write budget on its own — and it is followed by a full
-        // re-verification pass over the block. Budgeting it as an ordinary write would report
-        // "register access timed out" for an operation that completed correctly, on exactly
-        // the bench workflow this feature exists for. An operator who believes that and
-        // retries burns another cycle of 20k-cycle EEPROM endurance.
+        // A configuration shadow write is followed by a full image re-check. It does not
+        // commit EEPROM, but it still needs the multi-register budget.
         Access::Write { address, .. } if mcf8316::is_configuration(address) => {
             Duration::from_secs(10)
         }
-        Access::Read(_) | Access::Write { .. } => Duration::from_millis(500),
+        Access::Read(_) | Access::Write { .. } | Access::MpetAbort => Duration::from_millis(500),
         // Two dozen reads apiece.
-        Access::ConfigCheck | Access::ConfigDump => Duration::from_secs(5),
+        Access::ConfigCheck | Access::ConfigDump | Access::MpetStatus => Duration::from_secs(5),
         // Reads, writes and re-reads two dozen EEPROM-backed registers.
         Access::ConfigApply => Duration::from_secs(60),
     }
@@ -198,6 +210,12 @@ pub async fn service_access(mcf: &mut Mcf) {
             })
         }
         Access::ConfigDump => dump(mcf).await.map(Answer::Value).map_err(describe),
+        Access::MpetStatus => mcf.mpet_status().await.map(Answer::Mpet).map_err(describe),
+        Access::MpetAbort => mcf
+            .abort_mpet()
+            .await
+            .map(|()| Answer::MpetAborted)
+            .map_err(describe),
     };
     ACCESS_REPLY.signal((generation, reply));
 }
@@ -295,13 +313,32 @@ impl Mcf {
         self.write(reg::ALGO_CTRL1, mcf8316::CLR_FLT_COMMAND).await
     }
 
+    pub async fn start_mpet(&mut self) -> Result<(), BusError> {
+        self.write(reg::ALGO_DEBUG2, mcf8316::MPET_START_COMMAND)
+            .await
+    }
+
+    pub async fn abort_mpet(&mut self) -> Result<(), BusError> {
+        self.write(reg::ALGO_DEBUG2, mcf8316::MPET_ABORT_COMMAND)
+            .await
+    }
+
+    pub async fn mpet_status(&mut self) -> Result<MpetReport, BusError> {
+        Ok(MpetReport {
+            status: self.read(reg::ALGO_STATUS_MPET).await?,
+            motor_params: self.read(reg::MTR_PARAMS).await?,
+            current_pi: self.read(reg::CURRENT_PI).await?,
+            speed_pi: self.read(reg::SPEED_PI).await?,
+        })
+    }
+
     /// Attempt to free a bus a confused target is holding low.
     ///
-    /// The standard nine-clock recovery needs to bit-bang SCL, which means taking the pins
-    /// back from the peripheral. That is not expressible with the pins owned by [`I2c`], so
-    /// what this does instead is reset the controller's own state machine by re-issuing a
-    /// transfer after a pause — enough for a controller-side hang, not enough for a target
-    /// holding SDA down.
+    /// The configured software deadline turns a stuck transfer into `I2cError::Timeout`.
+    /// On a timeout, the pinned esp-hal path resets the controller, emits nine SCL recovery
+    /// pulses, generates STOP, and reconnects the pins before returning the error. This follow-up
+    /// transfer both exercises the recovered bus and also invokes the same nine-clock clear
+    /// if the controller still reports the bus busy.
     ///
     /// The supervisor does not depend on this working: [`BusError`]s accumulate and become
     /// `BusUnreachable`, which stops the fan and requires a power cycle. That is the
@@ -337,5 +374,9 @@ impl RegisterBus for Mcf {
         let frame = write_frame(self.target, address, value, self.crc);
         self.i2c.write_async(self.target, &frame).await?;
         Ok(())
+    }
+
+    async fn delay_ms(&mut self, milliseconds: u32) {
+        Timer::after(Duration::from_millis(u64::from(milliseconds))).await;
     }
 }

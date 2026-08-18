@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-18** (settled the test-location flow and refreshed the printable binder.)
+Last updated: **2026-08-18** (completed the software commissioning workflow.)
 
 ## Now
 
@@ -53,8 +53,13 @@ Last updated: **2026-08-18** (settled the test-location flow and refreshed the p
   phases stay disconnected from PCB-01; the expected analog latch does not stop the external
   drive, and no safety bypass is used. Do not assume a vibration sensor, optical tachometer,
   remote interlock, or second operator. Use normal safety firmware plus the host CLI over
-  long USB J6 whenever PCB-01 drives the motor; a controlled MPET workflow is the next
-  software gap.
+  long USB J6 whenever PCB-01 drives the motor.
+- **Commissioning software is ready for hardware values**: the normal firmware now has a
+  fault-aware `Mpet` service state and bounded `mpet run`, confirmed EEPROM commits with
+  the required 750 ms wait and self-clear poll, nine-clock I2C recovery through the
+  pinned ESP HAL, `wait speed`, and six numbered scripts under `firmware/scripts/`. The host
+  and target builds are covered by tests; only real motor results and the resulting golden
+  configuration image remain hardware-gated.
 
 ## Next
 

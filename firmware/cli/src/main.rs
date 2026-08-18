@@ -94,6 +94,7 @@ fn drain(link: &mut dyn Link) {
 fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
     drain(link);
     match words[0] {
+        "wait" if words.get(1) == Some(&"speed") => wait_speed(link, &words[2..]),
         "wait" => wait(link, &words[1..]),
         // `stream on 10` / `stream off` are the device's own syntax and must reach it; the
         // host verb is `stream <hz>`, distinguished by its argument being a number.
@@ -105,6 +106,7 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
         // `config check` and `config apply` are single-reply and pass straight through.
         "config" if words.get(1) == Some(&"capture") => capture(link),
         "config" if words.get(1) == Some(&"dump") => dump(link),
+        "mpet" if words.get(1) == Some(&"run") => mpet_run(link, &words[2..]),
         // Everything else goes to the device verbatim, so the CLI never has to grow a case
         // for a console command it does not need to interpret.
         _ => passthrough(link, &words.join(" ")),
@@ -156,9 +158,11 @@ fn usage() {
     eprintln!();
     eprintln!("host commands:");
     eprintln!("  wait <state> [--for <secs>]   block until the fan reaches a state");
+    eprintln!("  wait speed <rpm> [--within <rpm>] [--for <secs>]");
     eprintln!("  stream <hz> [--for <secs>]    telemetry as CSV on stdout");
     eprintln!("      (`stream on <hz>`/`stream off` pass through to the device instead)");
     eprintln!("  config capture                print the device's config block as an IMAGE table");
+    eprintln!("  mpet run [--for <secs>]       run MPET safely, report results, then disarm");
     eprintln!("  script <file|->               run a sequence against one session");
     eprintln!();
     eprintln!("device commands (passed through):");
@@ -233,6 +237,66 @@ fn wait(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     Err(format!(
         "timed out after {seconds}s waiting for {wanted}; last state {}",
         field(&last, "state").unwrap_or("unknown")
+    ))
+}
+
+/// Wait for three consecutive FG measurements around a target. A single sample is too easy
+/// to satisfy during a ramp; Hall remains in the CSV as an independent diagnostic but is too
+/// coarse at low speed to be the arrival gate.
+fn wait_speed(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
+    let wanted_rpm: u32 = arguments
+        .first()
+        .ok_or("wait speed needs an RPM")?
+        .parse()
+        .map_err(|_| "wait speed RPM must be a number")?;
+    let within_rpm = flag(arguments, "--within")?.unwrap_or(3);
+    let seconds = flag(arguments, "--for")?.unwrap_or(120);
+    let wanted = u64::from(wanted_rpm) * 1_000;
+    let tolerance = within_rpm
+        .checked_mul(1_000)
+        .ok_or_else(|| "--within is too large".to_string())?;
+
+    link.send("stream on 10")
+        .map_err(|error| error.to_string())?;
+    let deadline = link.elapsed() + Duration::from_secs(seconds);
+    let mut consecutive = 0;
+    let mut last = String::new();
+    while link.elapsed() < deadline {
+        if let Some(line) = link
+            .receive(Duration::from_millis(250))
+            .map_err(|error| error.to_string())?
+        {
+            if field(&line, "type") != Some("telemetry") {
+                continue;
+            }
+            last = line.clone();
+            if field(&line, "state") == Some("fault") {
+                stop_stream(link);
+                return Err(format!(
+                    "faulted while waiting for {wanted_rpm} rpm: {}",
+                    field(&line, "fault").unwrap_or("unknown")
+                ));
+            }
+            let measured = field(&line, "fg_mrpm")
+                .ok_or("telemetry omitted fg_mrpm")?
+                .parse::<u64>()
+                .map_err(|_| "telemetry carried invalid fg_mrpm")?;
+            if measured.abs_diff(wanted) <= tolerance {
+                consecutive += 1;
+                if consecutive == 3 {
+                    stop_stream(link);
+                    println!("{line}");
+                    return Ok(());
+                }
+            } else {
+                consecutive = 0;
+            }
+        }
+    }
+    stop_stream(link);
+    Err(format!(
+        "timed out after {seconds}s waiting for {wanted_rpm} +/- {within_rpm} rpm; last FG {} mrpm",
+        field(&last, "fg_mrpm").unwrap_or("unknown")
     ))
 }
 
@@ -367,6 +431,52 @@ fn capture(link: &mut dyn Link) -> Result<(), String> {
     Ok(())
 }
 
+/// Run motor-parameter extraction as one bounded service operation.
+///
+/// The device owns the permission and fault behavior; the host owns completion polling and
+/// the deadline. Results are left in shadow only, so a successful extraction never consumes
+/// EEPROM endurance until the operator reviews and explicitly applies a captured image.
+fn mpet_run(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
+    let seconds = flag(arguments, "--for")?.unwrap_or(120);
+    passthrough(link, "mpet start")?;
+    let result = mpet_session(link, seconds);
+    let abort = passthrough(link, "mpet abort");
+    result?;
+    abort?;
+    wait(link, &["idle_off", "--for", "20"])
+}
+
+fn mpet_session(link: &mut dyn Link, seconds: u64) -> Result<(), String> {
+    wait(link, &["mpet", "--for", "20"])?;
+
+    let deadline = link.elapsed() + Duration::from_secs(seconds);
+    while link.elapsed() < deadline {
+        drain(link);
+        link.send("mpet status")
+            .map_err(|error| error.to_string())?;
+        let reply = link
+            .receive(REPLY_TIMEOUT)
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| format!("no MPET status from {}", link.describe()))?;
+        if field(&reply, "ok") == Some("false") {
+            return Err(field(&reply, "error")
+                .unwrap_or("MPET status failed")
+                .to_string());
+        }
+        if field(&reply, "type") != Some("mpet") {
+            return Err(format!("expected MPET status, got {reply}"));
+        }
+        if field(&reply, "complete") == Some("true") {
+            println!("{reply}");
+            return Ok(());
+        }
+        // Advance real or simulated time without leaving a telemetry stream behind.
+        let _ = link.receive(Duration::from_millis(250));
+    }
+
+    Err(format!("MPET did not complete within {seconds}s"))
+}
+
 /// Stop a telemetry stream and swallow everything still in flight, so the next step starts
 /// from a quiet link.
 fn stop_stream(link: &mut dyn Link) {
@@ -440,6 +550,24 @@ mod tests {
         let result = wait(&mut sim, &["running", "--for", "20"]);
         assert!(result.is_err(), "wait should have timed out");
         assert!(result.unwrap_err().contains("timed out"));
+    }
+
+    #[test]
+    fn waiting_for_speed_requires_and_detects_arrival() {
+        let mut sim = Simulator::new();
+        assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
+        assert!(passthrough(&mut sim, "run 60").is_ok());
+        assert!(wait_speed(&mut sim, &["60", "--within", "2", "--for", "120"]).is_ok());
+    }
+
+    #[test]
+    fn an_impossible_speed_tolerance_is_rejected_without_overflowing() {
+        let mut sim = Simulator::new();
+        let too_large = (u64::MAX / 1_000 + 1).to_string();
+        assert_eq!(
+            wait_speed(&mut sim, &["60", "--within", &too_large]),
+            Err("--within is too large".to_string())
+        );
     }
 
     #[test]
@@ -577,5 +705,15 @@ reg read ISD_CONFIG
         // checked via the frame counter rather than by capturing stdout.
         let mut sim = Simulator::new();
         assert!(stream(&mut sim, &["20", "--for", "5"]).is_ok());
+    }
+
+    #[test]
+    fn controlled_mpet_completes_and_returns_to_idle() {
+        let mut sim = Simulator::new();
+        assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
+        assert!(mpet_run(&mut sim, &["--for", "5"]).is_ok());
+        sim.send("state").unwrap();
+        let reply = sim.receive(Duration::from_millis(50)).unwrap().unwrap();
+        assert_eq!(field(&reply, "state"), Some("idle_off"));
     }
 }

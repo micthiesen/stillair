@@ -39,6 +39,11 @@ pub enum FanState {
     Starting,
     /// Maintain the last local speed even if the Matter controller/Wi-Fi disappears.
     Running,
+    /// Permission is armed and settling before the MPET command is issued.
+    MpetArming,
+    /// Motor-parameter extraction service mode. SPEED stays at zero; the MCF owns the
+    /// measurement motion while the normal fault chain and permission latch remain active.
+    Mpet,
     /// Ramp to zero and coast (never brake into the supply).
     Stopping,
     /// Ramp to zero, verify near-zero FG, coast, flip DIR, then restart.
@@ -73,6 +78,8 @@ pub enum FaultReason {
     NoRotation,
     /// The rotor would not go quiet, so the start could never be armed.
     NeverStopped,
+    /// The host disappeared or extraction did not complete before the device-side limit.
+    MpetTimedOut,
     /// The MCF's stored configuration is not the one this firmware is qualified against —
     /// or the device says its own EEPROM is unusable. Every limit the supervisor layers on
     /// top (the 180 RPM stored ceiling, latched fault responses, the external watchdog) lives
@@ -90,6 +97,10 @@ pub enum Command {
     /// Matter PercentSetting 1–100 maps linearly onto [released minimum, 170].
     SetSpeed(MilliRpm),
     SetDirection(Direction),
+    /// Enter the controlled motor-parameter extraction service mode from `IdleOff`.
+    StartMpet,
+    /// Stop motor-parameter extraction and revoke drive permission.
+    AbortMpet,
 }
 
 /// What the supervisor wants the caller to do. The caller applies these in order.
@@ -107,6 +118,10 @@ pub enum Action {
     SetDirection(Direction),
     /// Issue CLR_FLT over I²C. Only ever emitted in response to a fresh user command.
     ClearMcfFault,
+    /// Tell the I²C task to start all MPET measurements into shadow registers.
+    StartMpet,
+    /// Tell the I²C task to clear MPET_CMD.
+    AbortMpet,
 }
 
 /// Room for the largest single-poll burst (direction + duty + arm, plus slack).
@@ -204,6 +219,8 @@ pub struct Supervisor {
     /// Latest configuration verdict, kept so telemetry can report it without the caller
     /// having to carry the input through separately.
     config: ConfigCheck,
+    mpet_requested: bool,
+    mpet_started: bool,
 }
 
 impl Supervisor {
@@ -230,6 +247,8 @@ impl Supervisor {
             bus_failures: 0,
             last_status_at: now,
             config: inputs.config,
+            mpet_requested: false,
+            mpet_started: false,
         }
     }
 
@@ -322,9 +341,16 @@ impl Supervisor {
             self.fault_ack = true;
         }
         match command {
-            Command::Off => self.desired.on = false,
-            Command::On => self.desired.on = true,
+            Command::Off => {
+                self.desired.on = false;
+                self.mpet_requested = false;
+            }
+            Command::On => {
+                self.mpet_requested = false;
+                self.desired.on = true;
+            }
             Command::SetSpeed(speed) => {
+                self.mpet_requested = false;
                 if speed.is_zero() {
                     self.desired.on = false;
                 } else {
@@ -332,7 +358,17 @@ impl Supervisor {
                     self.desired.on = true;
                 }
             }
-            Command::SetDirection(direction) => self.desired.direction = direction,
+            Command::SetDirection(direction) => {
+                self.mpet_requested = false;
+                self.desired.direction = direction;
+            }
+            Command::StartMpet => {
+                if self.state == FanState::IdleOff {
+                    self.desired.on = false;
+                    self.mpet_requested = true;
+                }
+            }
+            Command::AbortMpet => self.mpet_requested = false,
         }
     }
 
@@ -363,6 +399,8 @@ impl Supervisor {
             FanState::IdleOff => self.poll_idle(now, &mut actions),
             FanState::Starting => self.poll_starting(now, dt, &mut actions),
             FanState::Running => self.poll_running(now, dt, &mut actions),
+            FanState::MpetArming => self.poll_mpet_arming(now, &mut actions),
+            FanState::Mpet => self.poll_mpet(now, &mut actions),
             FanState::Stopping | FanState::Reversing => {
                 self.poll_winding_down(now, dt, &mut actions)
             }
@@ -419,6 +457,14 @@ impl Supervisor {
     }
 
     fn poll_idle(&mut self, now: Millis, actions: &mut Actions) {
+        if self.mpet_requested {
+            if self.tach.is_quiet(now) {
+                self.begin_mpet(now, actions);
+            } else if now.since(self.state_entered) >= config::START_QUIET_TIMEOUT_MS {
+                self.enter_fault(now, FaultReason::NeverStopped, actions);
+            }
+            return;
+        }
         if !self.desired.on || self.desired.speed.is_zero() {
             self.state_entered = now;
             return;
@@ -468,6 +514,34 @@ impl Supervisor {
         self.advance_ramp(dt, actions);
     }
 
+    fn poll_mpet(&mut self, now: Millis, actions: &mut Actions) {
+        if now.since(self.state_entered) >= config::MPET_TIMEOUT_MS {
+            self.enter_fault(now, FaultReason::MpetTimedOut, actions);
+            return;
+        }
+        if !self.mpet_requested {
+            if self.mpet_started {
+                self.push(actions, Action::AbortMpet);
+            }
+            self.push(actions, Action::ClearPermission);
+            self.mpet_started = false;
+            self.transition(FanState::SafeBoot, now);
+        }
+    }
+
+    fn poll_mpet_arming(&mut self, now: Millis, actions: &mut Actions) {
+        if !self.mpet_requested {
+            self.push(actions, Action::ClearPermission);
+            self.transition(FanState::SafeBoot, now);
+            return;
+        }
+        if now.since(self.state_entered) >= config::ARM_SETTLE_MS {
+            self.mpet_started = true;
+            self.push(actions, Action::StartMpet);
+            self.transition(FanState::Mpet, now);
+        }
+    }
+
     /// [`FanState::Stopping`] and [`FanState::Reversing`] differ only in what happens after
     /// the rotor is verified stopped, and that difference falls out of `desired` on its own
     /// — so they share one body.
@@ -513,7 +587,12 @@ impl Supervisor {
     const fn armed(&self) -> bool {
         matches!(
             self.state,
-            FanState::Starting | FanState::Running | FanState::Stopping | FanState::Reversing
+            FanState::Starting
+                | FanState::Running
+                | FanState::Stopping
+                | FanState::Reversing
+                | FanState::MpetArming
+                | FanState::Mpet
         )
     }
 
@@ -608,7 +687,16 @@ impl Supervisor {
         self.transition(FanState::Starting, now);
     }
 
+    fn begin_mpet(&mut self, now: Millis, actions: &mut Actions) {
+        self.ramp.reset();
+        self.emit_duty(SpeedDuty::ZERO, actions);
+        self.mpet_started = false;
+        self.push(actions, Action::ArmPulse);
+        self.transition(FanState::MpetArming, now);
+    }
+
     fn enter_fault(&mut self, now: Millis, reason: FaultReason, actions: &mut Actions) {
+        let was_mpet = matches!(self.state, FanState::MpetArming | FanState::Mpet);
         self.fault = Some(reason);
         self.fault_ack = false;
         self.ramp.reset();
@@ -617,6 +705,11 @@ impl Supervisor {
         // pin, and putting the safety-critical action at the head of the buffer means it
         // survives even if some future path overflows the rest.
         self.push(actions, Action::ClearPermission);
+        if was_mpet {
+            self.push(actions, Action::AbortMpet);
+            self.mpet_requested = false;
+            self.mpet_started = false;
+        }
         self.emit_duty(SpeedDuty::ZERO, actions);
         self.transition(FanState::Fault, now);
     }
@@ -838,6 +931,82 @@ mod tests {
         assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
         bench.tick();
         assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn mpet_arms_from_idle_with_zero_speed_then_starts_after_settle() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.take_log();
+        bench.supervisor.command(Command::StartMpet);
+        let actions = bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::MpetArming);
+        assert!(actions.contains(&Action::ArmPulse));
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::ZERO);
+        assert!(!actions.contains(&Action::StartMpet));
+
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::Mpet);
+        assert!(bench.saw(Action::StartMpet));
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::ZERO);
+    }
+
+    #[test]
+    fn aborting_mpet_clears_the_command_and_permission_then_pays_safe_boot() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.supervisor.command(Command::StartMpet);
+        bench.tick();
+        bench.tick();
+        bench.take_log();
+
+        bench.supervisor.command(Command::AbortMpet);
+        let actions = bench.tick();
+        assert!(actions.contains(&Action::AbortMpet));
+        assert!(actions.contains(&Action::ClearPermission));
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+    }
+
+    #[test]
+    fn a_new_run_command_cancels_pending_mpet() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.supervisor.command(Command::StartMpet);
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(60)));
+        let actions = bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::Starting);
+        assert!(!actions.contains(&Action::StartMpet));
+    }
+
+    #[test]
+    fn a_fault_during_mpet_revokes_permission_and_aborts_extraction() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.supervisor.command(Command::StartMpet);
+        bench.tick();
+        bench.tick();
+        bench.take_log();
+        bench.inputs.pgood = false;
+
+        let actions = bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::Fault);
+        assert_eq!(actions.first(), Some(&Action::ClearPermission));
+        assert!(actions.contains(&Action::AbortMpet));
+    }
+
+    #[test]
+    fn an_abandoned_mpet_session_times_out_on_the_device() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.supervisor.command(Command::StartMpet);
+        bench.run_until(config::MPET_TIMEOUT_MS + 1_000, "MPET timeout fault", |s| {
+            s.state() == FanState::Fault
+        });
+        assert_eq!(bench.supervisor.fault(), Some(FaultReason::MpetTimedOut));
+        assert!(bench.saw(Action::AbortMpet));
+        assert!(bench.saw(Action::ClearPermission));
     }
 
     #[test]

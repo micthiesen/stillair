@@ -17,12 +17,12 @@ use std::task::{Context, Poll, Waker};
 use std::time::Duration;
 
 use stillair_core::config;
-use stillair_core::console::{self, ConfigOp, Reply, Request, Telemetry};
+use stillair_core::console::{self, ConfigOp, MpetOp, Reply, Request, Telemetry};
 use stillair_core::matter;
-use stillair_core::mcf8316::{reg, FaultStatus, RegisterBus};
+use stillair_core::mcf8316::{reg, FaultStatus, MpetReport, RegisterBus};
 use stillair_core::mcf_config;
 use stillair_core::speed::{self, MilliRpm};
-use stillair_core::state::{Command, Inputs, StatusRead, Supervisor};
+use stillair_core::state::{Action, Command, FanState, Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 use crate::link::Link;
@@ -59,10 +59,18 @@ impl RegisterBus for SimBus<'_> {
     }
 
     async fn write(&mut self, address: u16, value: u32) -> Result<(), Self::Error> {
+        // ALGO_CTRL1 commands are write-only and self-clearing on silicon. Keeping them in
+        // the register file would make the real completion polling fail only in simulation.
+        if address == reg::ALGO_CTRL1 {
+            self.0.retain(|(known, _)| *known != address);
+            return Ok(());
+        }
         self.0.retain(|(known, _)| *known != address);
         self.0.push((address, value));
         Ok(())
     }
+
+    async fn delay_ms(&mut self, _milliseconds: u32) {}
 }
 
 /// Control-loop period, matching the firmware's.
@@ -83,6 +91,7 @@ pub struct Simulator {
     hall_residual: u64,
     /// Register file. Reads and writes land here; nothing interprets them.
     registers: Vec<(u16, u32)>,
+    mpet_started_at: Option<Millis>,
     stream_period_ms: Option<u64>,
     next_stream_at: Millis,
     outbox: VecDeque<String>,
@@ -116,6 +125,7 @@ impl Simulator {
             fg_residual: 0,
             hall_residual: 0,
             registers,
+            mpet_started_at: None,
             stream_period_ms: None,
             next_stream_at: Millis::ZERO,
             outbox: VecDeque::new(),
@@ -176,9 +186,15 @@ impl Simulator {
             StatusRead::Stale
         };
 
-        // The supervisor's own actions are applied by observing `commanded()` above; the
-        // rest (arm pulses, permission) have no simulated hardware to reach.
-        let _ = self.supervisor.poll(self.now, &self.inputs);
+        // Observe service actions even though ordinary arm/pin actions have no simulated
+        // hardware to reach. This keeps MPET scripts honest about admission and abort flow.
+        for action in self.supervisor.poll(self.now, &self.inputs) {
+            match action {
+                Action::StartMpet => self.mpet_started_at = Some(self.now),
+                Action::AbortMpet => self.mpet_started_at = None,
+                _ => {}
+            }
+        }
 
         if let Some(period) = self.stream_period_ms {
             if self.now >= self.next_stream_at {
@@ -202,6 +218,13 @@ impl Simulator {
             .find(|(known, _)| *known == address)
             .map(|(_, value)| *value)
             .unwrap_or(0)
+    }
+
+    fn stopped_for_write(&self) -> bool {
+        matches!(
+            self.supervisor.state(),
+            FanState::IdleOff | FanState::SafeBoot | FanState::Fault
+        )
     }
 
     /// Configuration operations, run through the real `mcf_config` code against the
@@ -280,6 +303,10 @@ impl Simulator {
                 self.emit(&Reply::Register { address, value });
             }
             Request::RegWrite { address, value } => {
+                if !self.stopped_for_write() {
+                    self.emit(&Reply::Error("registers are writable only while stopped"));
+                    return;
+                }
                 // CLR_FLT is write-only and self-clearing on real silicon, so the model
                 // does not store it — otherwise a read-back would show a bit the device
                 // never holds.
@@ -299,7 +326,36 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
+            Request::Config(ConfigOp::Apply) if !self.stopped_for_write() => self.emit(
+                &Reply::Error("configuration registers are writable only while stopped"),
+            ),
             Request::Config(operation) => self.config(operation),
+            Request::Mpet(operation) => match operation {
+                MpetOp::Start => {
+                    self.supervisor.command(Command::StartMpet);
+                    self.emit(&Reply::Ok);
+                }
+                MpetOp::Abort => {
+                    self.supervisor.command(Command::AbortMpet);
+                    self.mpet_started_at = None;
+                    self.emit(&Reply::Ok);
+                }
+                MpetOp::Status => {
+                    let complete = self
+                        .mpet_started_at
+                        .is_some_and(|started| self.now.since(started) >= 500);
+                    self.emit(&Reply::Mpet(MpetReport {
+                        status: if complete {
+                            stillair_core::mcf8316::MPET_COMPLETE_MASK
+                        } else {
+                            0
+                        },
+                        motor_params: 0x1122_3300,
+                        current_pi: 0x4455_6600,
+                        speed_pi: 0x7788_9900,
+                    }))
+                }
+            },
             Request::Help => {
                 for line in console::HELP {
                     eprintln!("{line}");
@@ -415,6 +471,27 @@ mod tests {
         let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
         assert_eq!(field(&reply, "value"), Some("305419896"));
         assert_eq!(field(&reply, "name"), Some("ISD_CONFIG"));
+    }
+
+    #[test]
+    fn writes_are_refused_while_the_simulated_fan_is_running() {
+        let mut sim = Simulator::new();
+        run_until(&mut sim, 30_000, |line| {
+            field(line, "state") == Some("idle_off")
+        })
+        .expect("idle");
+        sim.send("run 60").unwrap();
+        run_until(&mut sim, 300_000, |line| {
+            field(line, "state") == Some("running")
+        })
+        .expect("running");
+
+        sim.send("reg write ISD_CONFIG 0x12345678").unwrap();
+        let raw = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&raw, "ok"), Some("false"));
+        sim.send("config apply").unwrap();
+        let apply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&apply, "ok"), Some("false"));
     }
 
     #[test]

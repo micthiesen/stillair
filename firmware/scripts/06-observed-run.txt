@@ -1,0 +1,8 @@
+# Final observed run at a moderate speed. Increase duration only when this is uneventful.
+wait idle_off --for 30
+run 120
+wait running --for 30
+wait speed 120 --within 5 --for 120
+stream 1 --for 1800
+stop
+wait idle_off --for 180

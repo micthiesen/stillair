@@ -36,10 +36,13 @@ streams telemetry, checks and captures the configuration, and returns nonzero on
 step. A separate permissive firmware build would create a second safety behavior to validate
 and is not the default plan.
 
-The current CLI does not yet expose a controlled MPET operation. Add that workflow before
-loaded commissioning, with explicit preconditions, telemetry, abort behavior, and result
-capture. If the MCF requires a direct register sequence, contain it behind that operation
-rather than asking the operator to issue live raw writes. MPET remains a loaded-rotor
+The CLI exposes MPET as the bounded `mpet run` host operation. It starts only from
+`IdleOff`, keeps the SPEED command at zero, arms through the normal permission latch, waits
+for the MCF's four completion flags, prints the raw result registers, clears `MPET_CMD`, and
+revokes permission. A fault takes the same revoke-and-abort path. Results remain in shadow;
+MPET never commits EEPROM automatically. A 130-second device-side timeout also aborts and
+faults if the host disappears. Run
+`firmware/scripts/02-mpet-and-capture.txt` only with the loaded rotor. MPET remains a
 cross-check; independent R/L/manual-spin BEMF measurements remain primary.
 
 During ceiling commissioning, use PCB-01 J6 and a quality long USB cable to keep the laptop
@@ -103,7 +106,9 @@ SLLU335 (gradual-startup recipes).
   windmilling restart (DRV-06); `DIR_CHANGE_MODE` = full stop sequence.
 - `FG_DIV` = 1h (20 pulses/rev; see electrical.md).
 - EEPROM discipline: write only with the motor stopped and the device idle/faulted, VM ≥ 6 V
-  throughout, ~750 ms per write (poll completion), 20k-cycle endurance so never write on a
+  throughout, then write `0x8A500000` to `ALGO_CTRL1`, wait at least 750 ms, and poll until
+  that register self-clears. Firmware commits one changed shadow block once, then verifies
+  the entire image by read-back. Endurance is 20k cycles, so never write on a
   power-up path; an interrupted write is caught by CRC at next boot and EEP_FAULT_MODE = 0b
   holds Hi-Z. The register map is D-generation-specific — never reuse A1/C dumps.
 
@@ -190,13 +195,8 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
   gating lives in the app crate (`firmware/app/src/main.rs`) and is therefore **not** covered
   by a host test — unlike every other item in this section, it is verified only by CTL-02.
 
-### Known gaps in the current implementation
+### Hardware-derived gap
 
-- **Nine-clock I²C bus recovery is not implemented.** Freeing a bus a target is holding low
-  requires bit-banging SCL, which means taking the pins back from the peripheral; that is not
-  expressible while `I2c` owns them. `Mcf::recover` resets the controller side only. The
-  documented fallback is what actually protects us: repeated failures become
-  `BusUnreachable`, which stops the fan and needs a power cycle.
 - **No golden image has been captured yet**, so the boot-time configuration gate below
   reports `unverified` rather than `verified`. The mechanism is real and the gate holds; what
   is missing is a device to capture from. See "Stored-configuration verification" below.
@@ -226,6 +226,11 @@ example packets byte for byte.
 - Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
 - Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
   first bring-up rather than trusting it.
+- Every transaction has a 20 ms software deadline. A timeout enters the pinned esp-hal bus
+  clear path, which resets the controller, sends nine SCL pulses, generates STOP, reconnects
+  SDA/SCL, and returns the failure for normal retry accounting. A follow-up status transfer
+  confirms recovery; sustained failures still become `BusUnreachable` and revoke permission.
+
 ### Stored-configuration verification (2026-07-27)
 
 The last clause of the safe-boot step ("stored configuration verified") is enforced by
@@ -242,7 +247,12 @@ The last clause of the safe-boot step ("stored configuration verified") is enfor
   device idle or faulted, 20k-cycle endurance) makes a power-up write path unacceptable, and
   whether a configuration write lands in a volatile shadow or burns an EEPROM cycle is a
   bench question, not an assumption. `config apply` therefore exists as a deliberate console
-  operation, gated on the fan being stopped; boot only reads.
+  operation, gated on the fan being stopped; boot only reads. It writes changed shadow
+  registers, performs one explicit `ALGO_CTRL1` commit, waits the required 750 ms, polls for
+  the self-clearing zero with a two-second bound, and only then verifies by read-back. A
+  service interlock first forces and confirms a stopped supervisor state, then rejects or
+  drains concurrent normal commands until the write finishes, so a stale telemetry snapshot
+  cannot race a Matter start.
 - **The device's own verdict outranks ours.** The check reads `CONTROLLER_FAULT_STATUS` first
   and fails on `EEPROM_ERR` / `EEPROM_WRITE_LOCK` / `EEPROM_READ_LOCK`. The MCF CRCs its
   EEPROM at boot; if that failed, no amount of read-back agreement from us redeems the block.
@@ -255,8 +265,10 @@ The last clause of the safe-boot step ("stored configuration verified") is enfor
   an unverified configuration is identifiable as one six months later.
 - **A configuration write invalidates the verdict.** Any successful `reg write` into
   `0x080..=0x0AE` re-runs the check automatically rather than leaving a stale `verified`
-  standing. During bench derivation against an empty image this is harmless; once an image
-  exists, deliberately diverging from it stops the fan, which is the point.
+  standing. Raw writes change shadow only and deliberately do not spend an EEPROM cycle.
+  During bench derivation against an empty image this is harmless; once an image exists,
+  deliberately diverging from it stops the fan, which is the point. Persistence happens only
+  through the reviewed `config apply` path.
 - **Capturing the image is a bench step, not a code change**:
   `stillair --port … config capture` prints a paste-ready table. The host knows how many
   registers to expect (it shares `reg::configuration()` with the firmware), so a dump cut
@@ -381,6 +393,15 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 - **CRC is enabled on every transaction and verified on every read.** A mismatch is a
   reported failure, never a silent retry: it means either the bus is corrupting data or our
   framing is wrong, and neither may reach the state machine as truth.
+
+### Ready-made commissioning sequences
+
+The numbered files in [`firmware/scripts/`](../firmware/scripts/) are the executable test
+flow. They cover board-only diagnostics, loaded MPET plus capture, unloaded low-speed smoke,
+the loaded speed ladder, reversal, and an observed run. `wait speed` requires three
+consecutive FG samples within tolerance, so merely crossing a setpoint during a ramp cannot
+pass a step. The same files run against `--sim` to validate protocol and sequencing, but a
+simulator pass says nothing about motor constants or physical behavior.
 
 ## Independent limits
 

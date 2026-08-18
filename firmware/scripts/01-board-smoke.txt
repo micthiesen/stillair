@@ -1,0 +1,7 @@
+# Electronics powered, motor disconnected or stopped.
+wait idle_off --for 30
+state
+config check
+reg read VM_VOLTAGE
+reg read GATE_DRIVER_FAULT_STATUS
+reg read CONTROLLER_FAULT_STATUS

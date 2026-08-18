@@ -1,0 +1,24 @@
+# Fan mounted on the ceiling plate, watched continuously, clear area below.
+wait idle_off --for 30
+config check
+run 35
+wait running --for 30
+wait speed 35 --within 5 --for 90
+stream 5 --for 10
+run 60
+wait speed 60 --within 5 --for 90
+stream 5 --for 10
+run 90
+wait speed 90 --within 5 --for 90
+stream 5 --for 10
+run 120
+wait speed 120 --within 5 --for 90
+stream 5 --for 10
+run 150
+wait speed 150 --within 5 --for 90
+stream 5 --for 10
+run 170
+wait speed 170 --within 5 --for 90
+stream 5 --for 15
+stop
+wait idle_off --for 180

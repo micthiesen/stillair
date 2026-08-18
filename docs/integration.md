@@ -50,7 +50,10 @@ Whenever PCB-01 drives the motor, use the normal safety firmware. During the ext
 proof its motor phases remain disconnected; PCB-01 may be powered only to report Hall data.
 The host `stillair` CLI remains the commissioning harness for scripts, telemetry,
 configuration work, and record capture; the simulator proves the harness but never the motor.
-Before loaded commissioning, add a controlled MPET command and procedure to that interface.
+Use the numbered sequences in `firmware/scripts/`. Controlled MPET is `mpet run`: it enters
+an explicit service state from `IdleOff`, uses the ordinary permission and fault paths,
+reports the raw result registers, aborts on its deadline, and leaves results uncommitted for
+review and capture.
 Do not create a general permissive or safety-bypass firmware build for routine testing.
 
 ## Practical workshop test policy

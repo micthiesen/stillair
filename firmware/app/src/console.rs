@@ -20,7 +20,7 @@ use embedded_io_async::Read;
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
-use stillair_core::console::{self, ConfigOp, Reply, Request, Telemetry};
+use stillair_core::console::{self, ConfigOp, MpetOp, Reply, Request, Telemetry};
 use stillair_core::matter;
 use stillair_core::state::{Command, FanState};
 
@@ -40,6 +40,27 @@ static STREAM_HZ: AtomicU32 = AtomicU32::new(0);
 
 /// Set once the control loop has published at least one snapshot.
 static TELEMETRY_READY: AtomicBool = AtomicBool::new(false);
+
+/// Excludes normal control commands while a stopped-only configuration write is active.
+/// The control loop also forces `Off` while this is set, closing the gap between a telemetry
+/// snapshot and a concurrent Matter command.
+static CONFIG_SERVICE_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Lossless urgent path from the console or I2C task to the supervisor. A bounded normal
+/// command queue is the wrong place for a request whose job is to revoke permission.
+static MPET_ABORT_CONTROL: AtomicBool = AtomicBool::new(false);
+
+pub fn config_service_active() -> bool {
+    CONFIG_SERVICE_ACTIVE.load(Ordering::Acquire)
+}
+
+pub fn take_mpet_abort() -> bool {
+    MPET_ABORT_CONTROL.swap(false, Ordering::AcqRel)
+}
+
+pub fn request_mpet_abort() {
+    MPET_ABORT_CONTROL.store(true, Ordering::Release);
+}
 
 /// Called by the control loop after every poll.
 pub fn publish(telemetry: Telemetry) {
@@ -160,13 +181,20 @@ async fn dispatch(line: &str) {
             if let Some(refusal) = refuse_write(address) {
                 emit(&Reply::Error(refusal));
             } else {
-                match mcf::request_write(address, value).await {
+                if let Err(error) = begin_config_service().await {
+                    emit(&Reply::Error(error));
+                    return;
+                }
+                let result = mcf::request_write(address, value).await;
+                CONFIG_SERVICE_ACTIVE.store(false, Ordering::Release);
+                match result {
                     Ok(()) => emit(&Reply::Ok),
                     Err(error) => emit(&Reply::Error(error)),
                 }
             }
         }
         Request::Config(operation) => config(operation).await,
+        Request::Mpet(operation) => mpet(operation).await,
         Request::Help => {
             for text in console::HELP {
                 let mut help = console::Line::new();
@@ -175,6 +203,32 @@ async fn dispatch(line: &str) {
             }
             emit(&Reply::Ok);
         }
+    }
+}
+
+async fn mpet(operation: MpetOp) {
+    match operation {
+        MpetOp::Start => match latest().map(|telemetry| telemetry.state) {
+            Some(FanState::IdleOff) => command(Command::StartMpet),
+            Some(_) => emit(&Reply::Error("MPET starts only from idle_off")),
+            None => emit(&Reply::Error("state unknown; refusing MPET")),
+        },
+        MpetOp::Abort => {
+            // Revoke permission even when the I2C write fails. Report success only after
+            // both the supervisor accepted the abort and ALGO_DEBUG2 accepted MPET_CMD=0.
+            request_mpet_abort();
+            let cleared = mcf::request_config(mcf::Access::MpetAbort).await;
+            match cleared {
+                Ok(mcf::Answer::MpetAborted) => emit(&Reply::Ok),
+                Ok(_) => emit(&Reply::Error("wrong answer for MPET abort")),
+                Err(error) => emit(&Reply::Error(error)),
+            }
+        }
+        MpetOp::Status => match mcf::request_config(mcf::Access::MpetStatus).await {
+            Ok(mcf::Answer::Mpet(report)) => emit(&Reply::Mpet(report)),
+            Ok(_) => emit(&Reply::Error("wrong answer for MPET status")),
+            Err(error) => emit(&Reply::Error(error)),
+        },
     }
 }
 
@@ -198,11 +252,19 @@ async fn config(operation: ConfigOp) {
                 emit(&Reply::Error(refusal));
                 return;
             }
+            if let Err(error) = begin_config_service().await {
+                emit(&Reply::Error(error));
+                return;
+            }
             mcf::Access::ConfigApply
         }
     };
 
-    match mcf::request_config(access).await {
+    let result = mcf::request_config(access).await;
+    if matches!(operation, ConfigOp::Apply) {
+        CONFIG_SERVICE_ACTIVE.store(false, Ordering::Release);
+    }
+    match result {
         Ok(mcf::Answer::Config {
             check,
             written,
@@ -217,6 +279,8 @@ async fn config(operation: ConfigOp) {
         // dump cut short by a bus error is caught there rather than needing a count here,
         // which would be indistinguishable from one more register line.
         Ok(mcf::Answer::Value(_)) => emit(&Reply::Ok),
+        Ok(mcf::Answer::Mpet(_)) => emit(&Reply::Error("wrong answer for config operation")),
+        Ok(mcf::Answer::MpetAborted) => emit(&Reply::Error("wrong answer for config operation")),
         Err(error) => emit(&Reply::Error(error)),
     }
 }
@@ -227,20 +291,48 @@ async fn config(operation: ConfigOp) {
 /// `run` is clamped, `reg write` is not. Two of those registers decide what a clamped duty
 /// actually means (`MAX_SPEED`) or how faults are handled at all (`FAULT_CONFIG*`), so
 /// writing them under a spinning rotor could defeat the layered limits from the outside.
-/// The configuration block is also EEPROM-backed, and the datasheet requires writes happen
-/// only with the motor stopped and the device idle or faulted.
-fn refuse_write(address: u16) -> Option<&'static str> {
-    if !stillair_core::mcf8316::is_configuration(address) {
-        return None;
-    }
+/// The configuration block is the shadow of EEPROM-backed settings, and changing live motor
+/// parameters while spinning is unsafe even though persistence remains a separate
+/// `config apply` operation.
+fn refuse_write(_address: u16) -> Option<&'static str> {
     match latest().map(|telemetry| telemetry.state) {
         Some(FanState::IdleOff | FanState::SafeBoot | FanState::Fault) => None,
-        Some(_) => Some("configuration registers are writable only while stopped"),
-        None => Some("state unknown; refusing a configuration write"),
+        Some(_) => Some("registers are writable only while stopped"),
+        None => Some("state unknown; refusing a register write"),
     }
 }
 
+async fn begin_config_service() -> Result<(), &'static str> {
+    if CONFIG_SERVICE_ACTIVE
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return Err("another configuration write is active");
+    }
+
+    let starting_at = latest().map(|telemetry| telemetry.uptime_ms).unwrap_or(0);
+    for _ in 0..600 {
+        if let Some(telemetry) = latest() {
+            if telemetry.uptime_ms > starting_at
+                && matches!(
+                    telemetry.state,
+                    FanState::IdleOff | FanState::SafeBoot | FanState::Fault
+                )
+            {
+                return Ok(());
+            }
+        }
+        Timer::after(Duration::from_millis(50)).await;
+    }
+    CONFIG_SERVICE_ACTIVE.store(false, Ordering::Release);
+    Err("fan did not reach a stopped state for configuration")
+}
+
 fn command(command: Command) {
+    if config_service_active() {
+        emit(&Reply::Error("configuration write in progress"));
+        return;
+    }
     // `try_send`, never `send`: a full queue means the control loop is not draining, and
     // blocking here would take the console down with it.
     if COMMANDS.try_send(command).is_err() {

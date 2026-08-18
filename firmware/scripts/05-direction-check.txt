@@ -1,0 +1,15 @@
+# Loaded ceiling test. One low-speed reversal in each direction.
+wait idle_off --for 30
+dir fwd
+run 60
+wait running --for 30
+wait speed 60 --within 5 --for 90
+dir rev
+wait running --for 180
+wait speed 60 --within 5 --for 90
+stream 5 --for 15
+dir fwd
+wait running --for 180
+wait speed 60 --within 5 --for 90
+stop
+wait idle_off --for 180

@@ -1,0 +1,9 @@
+# Bare motor secured and unloaded. Start at the provisional minimum only.
+wait idle_off --for 30
+config check
+run 35
+wait running --for 30
+wait speed 35 --within 5 --for 90
+stream 5 --for 15
+stop
+wait idle_off --for 60

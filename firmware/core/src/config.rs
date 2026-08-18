@@ -57,6 +57,11 @@ pub const HALL_PULSES_PER_REV: u32 = 1;
 /// Covers the latch propagating to DRVOFF; not a datasheet number, just slack.
 pub const ARM_SETTLE_MS: u64 = 50;
 
+/// Device-side backstop for an abandoned MPET host session. The host normally uses a
+/// 120-second deadline and aborts first; this ensures a disconnected laptop cannot leave
+/// extraction armed indefinitely.
+pub const MPET_TIMEOUT_MS: u64 = 130_000;
+
 /// Firmware-defined start supervision: if the rotor shows no FG motion this long after
 /// the ramp begins, the start failed (permission never took, rotor jammed, or the
 /// analog lock is latched) and the supervisor faults rather than commanding into a

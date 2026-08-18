@@ -100,6 +100,16 @@ pub mod reg {
     pub const ALGO_STATUS: u16 = 0x0E4;
     /// Device control, home of `CLR_FLT` (§9.3.1).
     pub const ALGO_CTRL1: u16 = 0x0EA;
+    /// Motor-parameter extraction results.
+    pub const MTR_PARAMS: u16 = 0x0E6;
+    /// Motor-parameter extraction completion flags and recommended PWM frequency.
+    pub const ALGO_STATUS_MPET: u16 = 0x0E8;
+    /// Motor-parameter extraction command register.
+    pub const ALGO_DEBUG2: u16 = 0x0EE;
+    /// Current-loop gains calculated by MPET.
+    pub const CURRENT_PI: u16 = 0x0F0;
+    /// Speed-loop gains calculated by MPET.
+    pub const SPEED_PI: u16 = 0x0F2;
     /// Speed-loop gains and the `MAX_SPEED` stored ceiling (§8.3, Table 8-10).
     pub const CLOSED_LOOP4: u16 = 0x08E;
     /// Sleep/CSA/clock and the external-watchdog fields (§8.3.3, Table 8-25).
@@ -148,6 +158,11 @@ pub mod reg {
         ("CONTROLLER_FAULT_STATUS", CONTROLLER_FAULT_STATUS),
         ("ALGO_STATUS", ALGO_STATUS),
         ("ALGO_CTRL1", ALGO_CTRL1),
+        ("MTR_PARAMS", MTR_PARAMS),
+        ("ALGO_STATUS_MPET", ALGO_STATUS_MPET),
+        ("ALGO_DEBUG2", ALGO_DEBUG2),
+        ("CURRENT_PI", CURRENT_PI),
+        ("SPEED_PI", SPEED_PI),
         ("ALGORITHM_STATE", 0x18E),
         ("FG_SPEED_FDBK", 0x194),
         ("EEPROM_FAULT_STATUS", 0x24C),
@@ -231,6 +246,39 @@ pub mod reg {
 /// it back proves nothing. Latched faults can take **up to 200 ms** to clear afterwards
 /// (§8.x note); the supervisor's ten-second safe-boot hold covers that comfortably.
 pub const CLR_FLT_COMMAND: u32 = (1 << 29) | (1 << 28);
+
+/// Commit the configuration shadow registers to EEPROM through `ALGO_CTRL1`.
+pub const EEPROM_WRITE_COMMAND: u32 = 0x8A50_0000;
+
+/// Minimum time TI requires before checking whether an EEPROM write completed.
+pub const EEPROM_WRITE_MIN_MS: u32 = 750;
+
+/// Start every MPET measurement and copy its estimates into the shadow registers.
+/// Persistence remains a separate, explicit `config apply` operation.
+pub const MPET_START_COMMAND: u32 = 0x0000_003F;
+
+/// Clear `MPET_CMD`; the SPEED input is independently held at zero by the supervisor.
+pub const MPET_ABORT_COMMAND: u32 = 0;
+
+/// Completion bits for resistance, inductance, BEMF constant, and mechanical parameters.
+pub const MPET_COMPLETE_MASK: u32 = 0xF000_0000;
+
+/// One coherent MPET result snapshot. Raw register values are intentional: the final motor
+/// numbers are bench-derived, and preserving silicon output losslessly is more useful than
+/// prematurely converting fields whose engineering units still need qualification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MpetReport {
+    pub status: u32,
+    pub motor_params: u32,
+    pub current_pi: u32,
+    pub speed_pi: u32,
+}
+
+impl MpetReport {
+    pub const fn complete(self) -> bool {
+        self.status & MPET_COMPLETE_MASK == MPET_COMPLETE_MASK
+    }
+}
 
 /// Default 7-bit I²C target address (SLLA662 §2.1). Configurable in `DEVICE_CONFIG1` and
 /// only effective after an EEPROM write plus a power cycle, so bus-scan at first bring-up
@@ -595,6 +643,11 @@ pub trait RegisterBus {
     /// Write one register. Callers that need the write to have stuck must read it back —
     /// this makes no such guarantee on its own.
     async fn write(&mut self, address: u16, value: u32) -> Result<(), Self::Error>;
+
+    /// Wait without holding up unrelated executor tasks. Configuration commit completion
+    /// is time-based silicon behavior, so it belongs in the bus abstraction beside reads
+    /// and writes rather than in target-only code.
+    async fn delay_ms(&mut self, milliseconds: u32);
 }
 
 #[cfg(test)]
@@ -706,6 +759,27 @@ mod tests {
     fn the_clear_fault_command_sets_both_documented_bits() {
         // §9.3.1 Table 9-13: CLR_FLT is bit 29, CLR_FLT_RETRY_COUNT is bit 28.
         assert_eq!(CLR_FLT_COMMAND, 0x3000_0000);
+    }
+
+    #[test]
+    fn service_commands_match_the_documented_register_values() {
+        assert_eq!(EEPROM_WRITE_COMMAND, 0x8A50_0000);
+        assert_eq!(MPET_START_COMMAND, 0x0000_003F);
+        assert_eq!(MPET_ABORT_COMMAND, 0);
+        assert!(MpetReport {
+            status: MPET_COMPLETE_MASK,
+            motor_params: 0,
+            current_pi: 0,
+            speed_pi: 0,
+        }
+        .complete());
+        assert!(!MpetReport {
+            status: MPET_COMPLETE_MASK & !(1 << 29),
+            motor_params: 0,
+            current_pi: 0,
+            speed_pi: 0,
+        }
+        .complete());
     }
 
     #[test]

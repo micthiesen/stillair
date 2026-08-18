@@ -1,0 +1,4 @@
+# Representative loaded rotor secured on the installed ceiling plate. MPET will turn it.
+wait idle_off --for 30
+mpet run --for 120
+config capture

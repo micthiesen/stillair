@@ -97,6 +97,8 @@ target/debug/stillair --sim script my-sequence.txt   # a sequence in ONE session
 target/debug/stillair --port /dev/cu.usbmodem2101 wait running --for 30
 target/debug/stillair --sim stream 10 --for 120 > sweep.csv
 target/debug/stillair --port /dev/cu.usbmodem2101 config capture   # golden image, paste-ready
+target/debug/stillair --port /dev/cu.usbmodem2101 mpet run --for 120
+target/debug/stillair --sim script scripts/04-loaded-speed-ladder.txt
 ```
 
 **Flashing the C6 dev board**: `espflash flash --port /dev/cu.usbmodem2101 --non-interactive

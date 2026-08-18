@@ -36,7 +36,7 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embassy_time::{Duration, Instant, Timer};
 use esp_backtrace as _;
 use esp_hal::gpio::{DriveMode, Input, InputConfig, Level, Output, OutputConfig, Pull};
-use esp_hal::i2c::master::{Config as I2cConfig, I2c};
+use esp_hal::i2c::master::{Config as I2cConfig, I2c, SoftwareTimeout};
 use esp_hal::interrupt::Priority;
 use esp_hal::ledc::channel::ChannelIFace;
 use esp_hal::ledc::timer::TimerIFace;
@@ -51,7 +51,7 @@ use stillair_core::console::Telemetry;
 use stillair_core::mcf8316;
 use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::speed;
-use stillair_core::state::{Inputs, StatusRead, Supervisor};
+use stillair_core::state::{Command, Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 mod board;
@@ -163,7 +163,14 @@ async fn main(spawner: embassy_executor::Spawner) {
     // services its own interrupts, and there is nothing here worth hurrying.
     let i2c = I2c::new(
         peripherals.I2C0,
-        I2cConfig::default().with_frequency(Rate::from_khz(100)),
+        I2cConfig::default()
+            .with_frequency(Rate::from_khz(100))
+            // Convert a target holding the bus into a HAL Timeout. For a timed-out transfer,
+            // this pinned HAL resets the controller, issues nine SCL pulses plus STOP, and
+            // reconnects the pins before the error reaches our recovery loop.
+            .with_software_timeout(SoftwareTimeout::Transaction(
+                esp_hal::time::Duration::from_millis(20),
+            )),
     )
     .expect("I2C0 must configure")
     .with_sda(peripherals.GPIO0)
@@ -212,8 +219,17 @@ async fn control_task(mut board: Board) {
     let mut reported = supervisor.state();
 
     loop {
+        let config_service = console::config_service_active();
         while let Ok(command) = console::COMMANDS.try_receive() {
-            supervisor.command(command);
+            if !config_service {
+                supervisor.command(command);
+            }
+        }
+        if config_service {
+            supervisor.command(Command::Off);
+        }
+        if console::take_mpet_abort() {
+            supervisor.command(Command::AbortMpet);
         }
 
         let mut inputs: Inputs = board.inputs();
@@ -334,6 +350,23 @@ async fn mcf_task(mut mcf: Mcf) {
                 // ten-second safe-boot hold covers that with room to spare.
                 Ok(()) => log::info!("CLR_FLT issued"),
                 Err(error) => log::error!("CLR_FLT failed: {error:?}"),
+            }
+        }
+
+        // Abort first if both signals raced: a stop/fault must win over a stale start.
+        if mcf::MPET_ABORT_REQUEST.try_take().is_some() {
+            mcf::MPET_START_REQUEST.reset();
+            match mcf.abort_mpet().await {
+                Ok(()) => log::info!("MPET aborted"),
+                Err(error) => log::error!("MPET abort failed: {error:?}"),
+            }
+        } else if mcf::MPET_START_REQUEST.try_take().is_some() {
+            match mcf.start_mpet().await {
+                Ok(()) => log::info!("MPET started; results remain in shadow until committed"),
+                Err(error) => {
+                    log::error!("MPET start failed: {error:?}");
+                    console::request_mpet_abort();
+                }
             }
         }
 

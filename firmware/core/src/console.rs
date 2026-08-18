@@ -14,7 +14,7 @@ use core::fmt::Write;
 
 use heapless::String;
 
-use crate::mcf8316::{reg, McfCondition};
+use crate::mcf8316::{reg, McfCondition, MpetReport};
 use crate::mcf_config::{ConfigCheck, ConfigFault};
 use crate::speed::{MilliRpm, SpeedDuty};
 use crate::state::{Direction, FanState, FaultReason};
@@ -57,6 +57,8 @@ pub enum Request {
     ClearFault,
     /// Operate on the MCF's stored configuration.
     Config(ConfigOp),
+    /// Controlled motor-parameter extraction service operations.
+    Mpet(MpetOp),
     /// List the commands.
     Help,
 }
@@ -72,6 +74,13 @@ pub enum ConfigOp {
     /// Read the whole EEPROM configuration block out, one register per line. This is how a
     /// golden image gets captured off a tuned device.
     Dump,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MpetOp {
+    Start,
+    Status,
+    Abort,
 }
 
 /// Why a request could not be understood. Reported back rather than ignored, so a script
@@ -138,6 +147,17 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
             Ok(Request::Config(ConfigOp::Apply))
         } else if is(operation, "dump") {
             Ok(Request::Config(ConfigOp::Dump))
+        } else {
+            Err(ParseError::BadArgument)
+        }
+    } else if is(command, "mpet") {
+        let operation = argument()?;
+        if is(operation, "start") {
+            Ok(Request::Mpet(MpetOp::Start))
+        } else if is(operation, "status") {
+            Ok(Request::Mpet(MpetOp::Status))
+        } else if is(operation, "abort") {
+            Ok(Request::Mpet(MpetOp::Abort))
         } else {
             Err(ParseError::BadArgument)
         }
@@ -314,6 +334,7 @@ pub enum Reply<'a> {
         /// Registers an apply found already correct.
         unchanged: u16,
     },
+    Mpet(MpetReport),
     Error(&'a str),
 }
 
@@ -343,6 +364,16 @@ impl Reply<'_> {
                 OptionalName(config_fault_name(*check)),
                 config_fault_address(*check).unwrap_or(0),
             ),
+            Self::Mpet(report) => write!(
+                line,
+                "{PREFIX}{{\"ok\":true,\"type\":\"mpet\",\"complete\":{},\
+                 \"status\":{},\"motor_params\":{},\"current_pi\":{},\"speed_pi\":{}}}",
+                report.complete(),
+                report.status,
+                report.motor_params,
+                report.current_pi,
+                report.speed_pi,
+            ),
             Self::Error(message) => {
                 write!(line, "{PREFIX}{{\"ok\":false,\"error\":\"{message}\"}}")
             }
@@ -360,6 +391,7 @@ pub const HELP: &[&str] = &[
     "config check              re-verify the MCF's stored configuration",
     "config apply              write the golden image (only while stopped)",
     "config dump               read the whole EEPROM configuration block",
+    "mpet start|status|abort   controlled motor-parameter extraction service",
     "dir fwd|rev               set direction (takes effect from a verified stop)",
     "reg read <name|addr>      read a 32-bit register",
     "reg write <name|addr> <v> write a 32-bit register",
@@ -373,6 +405,8 @@ pub const fn state_name(state: FanState) -> &'static str {
         FanState::IdleOff => "idle_off",
         FanState::Starting => "starting",
         FanState::Running => "running",
+        FanState::MpetArming => "mpet_arming",
+        FanState::Mpet => "mpet",
         FanState::Stopping => "stopping",
         FanState::Reversing => "reversing",
         FanState::Fault => "fault",
@@ -392,6 +426,8 @@ pub const fn config_fault_name(check: ConfigCheck) -> Option<&'static str> {
         ConfigCheck::Failed(ConfigFault::DeviceEeprom) => Some("device_eeprom"),
         ConfigCheck::Failed(ConfigFault::Mismatch { .. }) => Some("mismatch"),
         ConfigCheck::Failed(ConfigFault::Unreadable { .. }) => Some("unreadable"),
+        ConfigCheck::Failed(ConfigFault::CommitUnconfirmed) => Some("commit_unconfirmed"),
+        ConfigCheck::Failed(ConfigFault::CommitUnreadable) => Some("commit_unreadable"),
         ConfigCheck::Failed(ConfigFault::TimedOut) => Some("timed_out"),
         ConfigCheck::Pending | ConfigCheck::Unverified | ConfigCheck::Verified => None,
     }
@@ -416,9 +452,14 @@ pub const fn fault_name(fault: FaultReason) -> &'static str {
         FaultReason::HallImplausible => "hall_implausible",
         FaultReason::NoRotation => "no_rotation",
         FaultReason::NeverStopped => "never_stopped",
+        FaultReason::MpetTimedOut => "mpet_timed_out",
         FaultReason::ConfigUnverified(ConfigFault::DeviceEeprom) => "config_device_eeprom",
         FaultReason::ConfigUnverified(ConfigFault::Mismatch { .. }) => "config_mismatch",
         FaultReason::ConfigUnverified(ConfigFault::Unreadable { .. }) => "config_unreadable",
+        FaultReason::ConfigUnverified(ConfigFault::CommitUnconfirmed) => {
+            "config_commit_unconfirmed"
+        }
+        FaultReason::ConfigUnverified(ConfigFault::CommitUnreadable) => "config_commit_unreadable",
         FaultReason::ConfigUnverified(ConfigFault::TimedOut) => "config_timed_out",
     }
 }
@@ -604,6 +645,31 @@ mod tests {
         assert_eq!(parse("config dump"), Ok(Request::Config(ConfigOp::Dump)));
         assert_eq!(parse("config"), Err(ParseError::MissingArgument));
         assert_eq!(parse("config erase"), Err(ParseError::BadArgument));
+    }
+
+    #[test]
+    fn mpet_operations_parse_and_report_all_raw_results() {
+        assert_eq!(parse("mpet start"), Ok(Request::Mpet(MpetOp::Start)));
+        assert_eq!(parse("MPET Status"), Ok(Request::Mpet(MpetOp::Status)));
+        assert_eq!(parse("mpet abort"), Ok(Request::Mpet(MpetOp::Abort)));
+        assert_eq!(parse("mpet"), Err(ParseError::MissingArgument));
+
+        let line = Reply::Mpet(MpetReport {
+            status: crate::mcf8316::MPET_COMPLETE_MASK,
+            motor_params: 1,
+            current_pi: 2,
+            speed_pi: 3,
+        })
+        .to_line();
+        for field in [
+            "\"complete\":true",
+            "\"status\":4026531840",
+            "\"motor_params\":1",
+            "\"current_pi\":2",
+            "\"speed_pi\":3",
+        ] {
+            assert!(line.contains(field), "missing {field} in {line}");
+        }
     }
 
     #[test]
