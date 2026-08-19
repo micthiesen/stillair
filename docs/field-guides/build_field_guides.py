@@ -1051,7 +1051,7 @@ def page_0a_visual(c: Canvas, n: int) -> None:
         ("1D", "NO MOTOR", "board proof", PURPLE), ("4B", "BARE MOTOR", "R / L / BEMF", PURPLE),
         ("3A-3C", "ASSEMBLE", "fit + Hall", GREEN), ("5A", "BALANCE", "measure", GREEN),
         ("5B", "WORKSHOP PROOF", "first full rotor", AMBER),
-        ("5C", "CEILING TEST", "loaded + thermal", PURPLE),
+        ("5C", "LOADED TEST", "MPET + scripts", PURPLE),
     ]
     for i, (sid, title, sub, color) in enumerate(stages):
         col, row = i % 4, i // 4
@@ -1188,8 +1188,9 @@ def page_4a_visual(c: Canvas, n: int) -> None:
     mini_card(c,"ONE READER","Stop raw-log capture before espflash or CLI opens the port.",x+14,y+111,160,70,BLUE,BLUE_BG)
     mini_card(c,"USE SCRIPT","Multi-step simulator work must stay in one session; separate invocations reset it.",x+188,y+111,160,70,PURPLE,PURPLE_BG)
     mini_card(c,"RELEASE GATE","config check must report config=verified. ok=true plus unverified is not a pass.",x+362,y+111,160,70,RED,RED_BG)
-    s.text("wait <state> --for <seconds> after asynchronous commands  |  stream <hz> --for <seconds> for CSV  |  config capture only after complete measured configuration",x+14,y+89,w-28,8.5,bold=True)
-    s.warning("Never use raw reg write on a spinning motor except under an approved stopped/instrumented procedure. The simulator validates the harness, not the motor.",35,166,542)
+    s.text("wait <state> --for <seconds>  |  wait speed <rpm> --within <rpm> --for <seconds>",x+14,y+91,w-28,8.5,bold=True)
+    s.text("stream <hz> --for <seconds> for CSV  |  config capture after complete measured configuration",x+14,y+76,w-28,8.5,bold=True)
+    s.warning("Firmware refuses raw register/config writes unless stopped. Use controlled mpet run, not live raw commands. Simulator passes validate the harness, not the motor.",35,166,542)
     s.stop("Firmware flashes; one persistent CLI session communicates and preserves scripted state.")
     s.footer("AGENTS.md, Driving the fan; firmware/cli/src/main.rs")
 
@@ -1218,15 +1219,15 @@ def page_4b_visual(c: Canvas, n: int) -> None:
     x,y,w,h=s.panel("GREEN LANE - DO NOW",145,GREEN_BG,GREEN,GREEN)
     s.checkbox_grid([
         ("Measure R and L independently with method recorded.","Manually spin only; scope line-to-line BEMF and convention."),
-        ("Only explicitly released limited rotation; keep current/speed caps.","Keep loose hub hardware and blades off the motor."),
+        ("Use script 03 at the provisional minimum only; keep current/speed caps.","Keep loose hub hardware and blades off the motor."),
     ],x+14,y+98,w/2-2,8.4)
-    x,y,w,h=s.panel("AMBER LANE - HOLD",145,AMBER_BG,AMBER,AMBER)
+    x,y,w,h=s.panel("LOADED-STAGE HANDOFF",145,AMBER_BG,AMBER,AMBER)
     s.checkbox_grid([
-        ("No unloaded MPET; representative final rotor required.","Golden image needs measured D-generation fields and review."),
-        ("No config apply release until EEPROM completion/readback is proved.","Release requires config check: verified, not merely ok=true."),
+        ("No unloaded MPET; script 02 requires the representative loaded rotor.","Golden image still needs measured D-generation fields and review."),
+        ("config apply is stopped-only and confirms commit + readback.","After power cycle require config check: verified, not merely ok=true."),
     ],x+14,y+98,w/2-2,8.3)
     s.warning("No live raw register writes. For any later powered work, VM <=35 V target; 40 V rejects.",35,157,542)
-    s.stop("R / L / BEMF records are complete. Loaded MPET and the golden image remain HOLD.")
+    s.stop("R / L / BEMF records are complete. Loaded MPET waits for the rotor, not for more software.")
     s.footer("docs/controls.md, measured-data gate; docs/electrical.md", "DRV-01, PCB-02, CTL-08/09/10")
 
 
@@ -1288,47 +1289,39 @@ def page_5b_visual(c: Canvas, n: int) -> None:
 
 
 def page_5c_visual(c: Canvas, n: int) -> None:
-    s=Sheet(c,"5C","Ceiling Loaded Commissioning",n,"OWNER-LED HOLD")
+    s=Sheet(c,"5C","Loaded Commissioning Script Card",n,"HARDWARE VALUES PENDING")
     x,y,w,h=s.panel("FINAL TEST CONNECTION",90,BLUE_BG,BLUE,BLUE)
     step_strip(c,["LAPTOP + CLI","LONG USB J6","PCB-01","MOTOR + ROTOR"],x+14,y+31,w-28,BLUE)
     c.setFillColor(INK); c.setFont("Helvetica-Bold",7.5); c.drawString(x+14,y+14,"NORMAL SAFETY FIRMWARE  |  24 V VIA REACHABLE CUTOFF  |  CABLES OUTSIDE SWEEP")
-    x,y,w,h=s.panel("START MATRIX - PASSES / TARGET",155)
-    cols=["DIRECTION","23.3 V (5)","24.0 V (20)","24.7 V (5)"]; widths=[110,130,140,130]; xx=x+14
-    c.setFillColor(GRAY_BG); c.rect(xx,y+100,sum(widths),25,stroke=0,fill=1)
-    for title,ww in zip(cols,widths): c.setFillColor(INK); c.setFont("Helvetica-Bold",8); c.drawCentredString(xx+ww/2,y+109,title); xx+=ww
-    for r,label in enumerate(["CW","CCW"]):
-        yy=y+62-r*34; xx=x+14
-        for ww in widths: c.setStrokeColor(LINE); c.rect(xx,yy,ww,30,stroke=1,fill=0); xx+=ww
-        c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+69,yy+10,label)
-    c.setFillColor(RED); c.setFont("Helvetica-Bold",7.5); c.drawString(x+14,y+10,"REJECT: retry, reverse kick, stall, hunting, or objectionable tonal sequence")
-    x,y,w,h=s.panel("LOADED MPET + VERIFIED CONFIG, THEN SPEED LADDER <=180 RPM",72,BLUE_BG,BLUE,BLUE)
-    step_strip(c,["30","40","55","70","120","170 RPM"],x+14,y+15,w-28,BLUE)
-    x,y,w,h=s.panel("8-HOUR THERMAL RUN @ 170 RPM",240,GREEN_BG,GREEN,GREEN)
-    row_labels = ["AMBIENT C", "MOTOR C", "PCB C", "RMS A", "INPUT W", "ANOMALY"]
-    label_w = 62
-    cell_w = (w - 28 - label_w) / 9
-    table_x = x + 14
-    table_top = y + 195
-    row_h = 20
-    c.setFillColor(GRAY_BG); c.setStrokeColor(LINE)
-    c.rect(table_x, table_top - 18, label_w, 18, stroke=1, fill=1)
-    for hour in range(9):
-        cell_x = table_x + label_w + hour * cell_w
-        c.rect(cell_x, table_top - 18, cell_w, 18, stroke=1, fill=1)
-        c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.5); c.drawCentredString(cell_x + cell_w/2, table_top - 12, f"{hour}h")
-        c.setFillColor(GRAY_BG)
-    for row, label in enumerate(row_labels):
-        row_y = table_top - 18 - (row + 1) * row_h
-        c.setFillColor(WHITE); c.setStrokeColor(LINE); c.rect(table_x, row_y, label_w, row_h, stroke=1, fill=1)
-        c.setFillColor(INK); c.setFont("Helvetica-Bold", 6.5); c.drawString(table_x + 4, row_y + 9, label)
-        for hour in range(9):
-            cell_x = table_x + label_w + hour * cell_w
-            c.setFillColor(WHITE); c.rect(cell_x, row_y, cell_w, row_h, stroke=1, fill=1)
-    mini_card(c,"CURRENT","<0.8 A normal | 1.0 A investigate | 1.5 A limiter not continuous",x+14,y+12,162,42,BLUE,WHITE)
-    mini_card(c,"TEMPERATURE","motor <70 C | PCB <85 C",x+188,y+12,162,42,RED,WHITE)
-    mini_card(c,"POWER","input <50 W; no dropout/overtemp",x+362,y+12,162,42,PURPLE,WHITE)
-    s.stop("Reference only. Remains on hold until the MPET and test methods are defined; record results here when Michael chooses to run it.")
-    s.footer("testing/test-matrix.csv; docs/build.md, commissioning", "DRV-02/03/05/07/09, CTL-02/03/05/07")
+    x,y,w,h=s.panel("CONTROLLED MPET + GOLDEN IMAGE",220,BLUE_BG,BLUE,BLUE)
+    s.checkbox_grid([
+        ("Run scripts/02-mpet-and-capture.txt only with the representative loaded rotor.", "Review MTR_PARAMS, CURRENT_PI, and SPEED_PI against independent R / L / BEMF."),
+        ("Put only reviewed D-generation values into the golden IMAGE.", "While stopped, config apply performs one commit, waits 750 ms, polls self-clear, then verifies readback."),
+        ("Power-cycle after apply; config check must report verified.", "If MPET faults or times out, firmware aborts it and revokes drive permission."),
+    ],x+14,y+172,w/2-2,8.15)
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",8.2)
+    c.drawString(x+14,y+24,"MPET result / image revision: _________________________________________________________________")
+
+    x,y,w,h=s.panel("RUN THE NUMBERED FILES",140,GREEN_BG,GREEN,GREEN)
+    script_rows = [
+        ("02", "mpet-and-capture.txt", "loaded MPET + config capture"),
+        ("04", "loaded-speed-ladder.txt", "35 / 60 / 90 / 120 / 150 / 170 RPM ladder"),
+        ("05", "direction-check.txt", "low-speed direction check through verified stop"),
+        ("06", "observed-run.txt", "30-minute continuously observed run"),
+    ]
+    for row,(number,filename,label) in enumerate(script_rows):
+        yy=y+92-row*24
+        c.setFillColor(BLUE); c.setFont("Helvetica-Bold",9); c.drawString(x+16,yy,number)
+        c.setFillColor(INK); c.setFont("Courier-Bold",7.4); c.drawString(x+43,yy,f"scripts/{number}-{filename}")
+        c.setFont("Helvetica",7.7); c.drawString(x+300,yy,label)
+
+    x,y,w,h=s.panel("WATCHED STOP RULES",120,AMBER_BG,AMBER,AMBER)
+    s.checkbox_grid([
+        ("Keep the ordinary plug/cutoff reachable and watch continuously.", "Stop for visible wobble, increasing vibration, rubbing, or unusual sound."),
+        ("Use reported FG diagnostics and your own observation; no external tachometer is required.", "No permissive firmware or safety bypass. A stopped run may be repeated after inspection."),
+    ],x+14,y+77,w/2-2,8.1)
+    s.stop("Loaded MPET, verified config, speed ladder, direction check, and observed run have recorded results.")
+    s.footer("firmware/scripts/README.md; docs/controls.md, commissioning", "CTL-13/14; DRV-02/03/05/07/09")
 
 
 PAGES: list[Callable[[Canvas, int], None]] = [
