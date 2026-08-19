@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-18** (completed the software commissioning workflow.)
+Last updated: **2026-08-19** (completed PCB-01 and PCB-02 hand-population.)
 
 ## Now
 
@@ -37,6 +37,11 @@ Last updated: **2026-08-18** (completed the software commissioning workflow.)
   documented stack. The tether and central catcher tests are also owner-reported passes
   (`INS-02`, `MEC-04`). Michael owns all remaining installation work; do not plan, suggest,
   audit, or prompt for ceiling installation, tether, or catcher work.
+- **PCB-01 and PCB-02 hand-population is complete** (owner-reported 2026-08-19). PCB-01 has
+  C1, C2, C34, J1, J2, U8, and the F1 link fitted; the C36-C40 timing-calibration bank and
+  C6 spare bulk-cap site remain intentionally DNP. PCB-02 has U1, C1, and J1 fitted. Both
+  boards passed the practical unpowered continuity and no-hard-short checks in binder sheets
+  1A and 1B. Harness fabrication and the controlled no-motor first power remain next.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
@@ -64,8 +69,8 @@ Last updated: **2026-08-18** (completed the software commissioning workflow.)
 ## Next
 
 Work from [integration.md](integration.md). Electronics is the main dependency spine; the
-immediate checkpoint is both boards populated and PCB-01 passing its first no-motor
-power/safety checks. Then complete motor integration, balance, controller tuning, essential
+immediate checkpoint is harness fabrication followed by PCB-01's first no-motor power and
+safety checks. Then complete motor integration, balance, controller tuning, essential
 hardware safety checks, workshop proof speed, representative starts, and the thermal run.
 
 ## Candidates Not Chosen
