@@ -127,7 +127,7 @@ pub const PROVISIONAL_SENTINEL: Setting =
 
 pub const PROVISIONAL_IMAGE: &[Setting] = &[
     Setting::masked("MOTOR_STARTUP1", 0x084, 0x7FFF_FFFF, 0x22E4_0004),
-    Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1101_C002),
+    Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1101_A002),
     Setting::masked("CLOSED_LOOP1", 0x088, 0x7FFF_FFFF, 0x0003_0108),
     Setting::masked("CLOSED_LOOP2", 0x08A, 0x7FFF_FFFF, 0x0000_B1AE),
     Setting::masked("CLOSED_LOOP3", 0x08C, 0x7FFF_FFFF, 0x6500_0004),
@@ -645,7 +645,7 @@ mod tests {
     fn provisional_words_match_the_reviewed_datasheet_transcription() {
         let expected = [
             (0x084, 0x22E4_0004),
-            (0x086, 0x1101_C002),
+            (0x086, 0x1101_A002),
             (0x088, 0x0003_0108),
             (0x08A, 0x0000_B1AE),
             (0x08C, 0x6500_0004),
@@ -687,8 +687,8 @@ mod tests {
         assert_eq!((startup2 >> 18) & 0x1, 0, "manual handoff");
         assert_eq!(
             (startup2 >> 13) & 0x1F,
-            0xE,
-            "15 percent of 180 RPM is a 27 RPM handoff"
+            0xD,
+            "14 percent of 180 RPM is a 25.2 RPM handoff"
         );
         assert_eq!(startup2 & 0x7, 2, "0.1 degree/ms theta ramp");
 
