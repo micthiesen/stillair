@@ -417,6 +417,8 @@ async fn mcf_task(mut mcf: Mcf) {
     // than no log. The supervisor gets every reading regardless — this only decides what a
     // human is told.
     let mut reported = None;
+    let mut last_digital_speed = None;
+    let mut digital_speed_healthy = true;
 
     loop {
         // `try_take` rather than `signaled()` + `reset()`: the control loop runs as a
@@ -451,6 +453,19 @@ async fn mcf_task(mut mcf: Mcf) {
         // Console register accesses are serviced between status polls, so a tuning session
         // never has to wait a full poll interval for an answer.
         service_access(&mut mcf).await;
+
+        match mcf::service_digital_speed(&mut mcf, &mut last_digital_speed).await {
+            Ok(()) if !digital_speed_healthy => {
+                log::info!("MCF digital speed writes recovered");
+                digital_speed_healthy = true;
+            }
+            Ok(()) => {}
+            Err(error) if digital_speed_healthy => {
+                log::warn!("MCF digital speed write failed: {error:?}");
+                digital_speed_healthy = false;
+            }
+            Err(_) => {}
+        }
 
         // An internal MCF reset can reload EEPROM without dropping PGOOD. One critical
         // provisional word is enough to detect that all-shadow reset cheaply; a mismatch

@@ -44,6 +44,25 @@ impl SpeedDuty {
     pub const ZERO: Self = Self(0);
 }
 
+/// Encode a normalized speed reference for `ALGO_DEBUG1` commissioning control.
+///
+/// TI defines `DIGITAL_SPEED_CTRL` as a 15-bit fraction of 32768 in bits 30:16 and
+/// `OVERRIDE` in bit 31. Our 11-bit duty denominator is 2048, so the conversion is an
+/// exact left shift by four. [`config::SPEED_DUTY_MAX`] keeps the result below the
+/// unrepresentable 32768 endpoint.
+pub const fn mcf_digital_speed_word(duty: SpeedDuty) -> u32 {
+    const OVERRIDE: u32 = 1 << 31;
+    const DIGITAL_SPEED_SHIFT: u32 = 16;
+    const DUTY_TO_DIGITAL_SHIFT: u32 = 4;
+
+    let clamped = if duty.0 > config::SPEED_DUTY_MAX {
+        config::SPEED_DUTY_MAX
+    } else {
+        duty.0
+    };
+    OVERRIDE | ((clamped as u32) << DUTY_TO_DIGITAL_SHIFT << DIGITAL_SPEED_SHIFT)
+}
+
 /// Convert a mechanical speed command into SPEED-pin duty.
 ///
 /// `SPEED_MODE` = 01b means commanded speed = duty × `MAX_SPEED`, and `MAX_SPEED` is the
@@ -203,6 +222,17 @@ mod tests {
         assert_eq!(duty_for(MilliRpm::ZERO), SpeedDuty(0));
         // 170 of 180 RPM = 94.4% of full scale.
         assert_eq!(duty_for(MilliRpm::from_rpm(170)), SpeedDuty(1934));
+    }
+
+    #[test]
+    fn digital_speed_override_preserves_the_same_normalized_command() {
+        assert_eq!(mcf_digital_speed_word(SpeedDuty::ZERO), 0x8000_0000);
+        assert_eq!(mcf_digital_speed_word(SpeedDuty(398)), 0x98E0_0000);
+        assert_eq!(
+            mcf_digital_speed_word(SpeedDuty(config::SPEED_DUTY_MAX)),
+            0xFFF0_0000
+        );
+        assert_eq!(mcf_digital_speed_word(SpeedDuty(u16::MAX)), 0xFFF0_0000);
     }
 
     #[test]

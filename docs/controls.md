@@ -111,10 +111,12 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
 - **Speed input** (added 2026-07 review — previously unconfigured): `SPEED_MODE` = 01b (PWM
   duty on the SPEED pin) and `SPEED_RANGE_SEL` = 0h (325 Hz–100 kHz band). Carrier: 1 kHz,
   moved from the initially planned 200 Hz low band after live commissioning proved the MCF
-  reported zero duty despite a verified 0.63 V average waveform at its SPEED pin. Duty →
-  speed mapping = duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the
-  180 RPM ceiling), and the I²C speed/DIR override bits left off so the pins are
-  authoritative.
+  reported zero duty despite a verified 0.63 V average waveform at its SPEED pin. The
+  provisional commissioning path therefore holds the physical pin at zero and writes the
+  same normalized ramp through volatile `ALGO_DEBUG1.OVERRIDE` + `DIGITAL_SPEED_CTRL` at
+  5 Hz. Stop/fault revokes the hardware permission latch first and then commands digital
+  zero; any non-provisional configuration clears the override. Duty → speed mapping remains
+  duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the 180 RPM ceiling).
 - **External watchdog** (previously unconfigured — without these the EXT_WD path silently
   doesn't exist): `EXT_WDT_EN` = 1, input mode = pin, `EXT_WDT_CONFIG` = 1000 ms,
   `EXT_WDT_FAULT_MODE` = 1b.

@@ -6,7 +6,7 @@
 //! what a silent drive means.
 
 use core::cell::Cell;
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicU16, AtomicU32, Ordering};
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::blocking_mutex::CriticalSectionMutex;
@@ -23,6 +23,7 @@ use stillair_core::mcf8316::{
     RegisterBus,
 };
 use stillair_core::mcf_config::{self, ConfigCheck};
+use stillair_core::speed::{mcf_digital_speed_word, SpeedDuty};
 use stillair_core::state::StatusRead;
 
 /// Latest fault-status read, published by the I²C task and consumed by the control loop.
@@ -37,6 +38,39 @@ pub static STATUS: Signal<CriticalSectionRawMutex, StatusRead> = Signal::new();
 pub static CLEAR_FAULT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 pub static MPET_START_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 pub static MPET_ABORT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();
+
+/// Latest supervisor-owned speed reference for the volatile I2C commissioning override.
+///
+/// The high-priority control task publishes this while holding the physical SPEED pin at zero.
+/// The I2C task may lag by one service interval, but stop/fault revokes the hardware permission
+/// latch synchronously before publishing zero, so bus latency can never keep drive permission on.
+static DIGITAL_SPEED_DUTY: AtomicU16 = AtomicU16::new(0);
+
+pub fn set_digital_speed(duty: SpeedDuty) {
+    DIGITAL_SPEED_DUTY.store(duty.0.min(config::SPEED_DUTY_MAX), Ordering::Release);
+}
+
+/// Apply the latest normalized speed through TI's volatile `ALGO_DEBUG1` override.
+///
+/// The override exists only for the reviewed provisional commissioning image. Any other
+/// verdict writes zero and selects the physical SPEED pin again. Failed writes are retried
+/// because `last_written` advances only after the bus accepts the command.
+pub async fn service_digital_speed(
+    mcf: &mut Mcf,
+    last_written: &mut Option<u32>,
+) -> Result<(), BusError> {
+    let word = if verdict() == ConfigCheck::Provisional {
+        mcf_digital_speed_word(SpeedDuty(DIGITAL_SPEED_DUTY.load(Ordering::Acquire)))
+    } else {
+        0
+    };
+    if *last_written == Some(word) {
+        return Ok(());
+    }
+    mcf.write(reg::ALGO_DEBUG1, word).await?;
+    *last_written = Some(word);
+    Ok(())
+}
 
 /// The standing verdict on the MCF's stored configuration.
 ///

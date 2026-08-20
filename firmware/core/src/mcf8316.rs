@@ -102,6 +102,8 @@ pub mod reg {
     pub const CONTROLLER_FAULT_STATUS: u16 = 0x0E2;
     /// System status (§9.2.1).
     pub const ALGO_STATUS: u16 = 0x0E4;
+    /// Volatile speed-reference override and commissioning diagnostics (§9.4.1).
+    pub const ALGO_DEBUG1: u16 = 0x0EC;
     /// Device control, home of `CLR_FLT` (§9.3.1).
     pub const ALGO_CTRL1: u16 = 0x0EA;
     /// Motor-parameter extraction results.
@@ -164,6 +166,7 @@ pub mod reg {
         ("ALGO_CTRL1", ALGO_CTRL1),
         ("MTR_PARAMS", MTR_PARAMS),
         ("ALGO_STATUS_MPET", ALGO_STATUS_MPET),
+        ("ALGO_DEBUG1", ALGO_DEBUG1),
         ("ALGO_DEBUG2", ALGO_DEBUG2),
         ("CURRENT_PI", CURRENT_PI),
         ("SPEED_PI", SPEED_PI),

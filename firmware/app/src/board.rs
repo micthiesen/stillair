@@ -166,22 +166,14 @@ impl Board {
                 self.clear_n.set_high();
             }
             Action::SetSpeedDuty(duty) => {
-                // Deliberately *not* `Channel::set_duty`, which takes whole percent: 1%
-                // steps are 1.8 RPM, far too coarse to tune a fan whose whole range starts
-                // at 35 RPM. `SetDutyCycle` writes the raw 11-bit value the supervisor
-                // already works in.
-                //
-                // `duty_for` already clamps below full scale; clamping again against what
-                // the peripheral reports keeps the two from drifting apart if the timer is
-                // ever reconfigured to a different resolution.
-                let max = self.speed.0.max_duty_cycle().saturating_sub(1);
-                // Never silently dropped: the supervisor caches the last duty it emitted
-                // and will not re-send an unchanged value, so a swallowed failure would
-                // leave the SPEED pin at a stale duty — including a nonzero one on the
-                // stop and fault paths — with nothing to notice it.
-                if let Err(error) = self.speed.0.set_duty_cycle(duty.0.min(max)) {
-                    log::error!("SPEED duty write failed ({error:?}); pin may be stale");
+                // Live commissioning proved that the MCF sees the physical PWM waveform but
+                // decodes its duty as zero. Keep that pin at zero while the provisional image
+                // uses the volatile I2C override. This also makes an unexpected MCF reset safe:
+                // its default analog-input mode sees a stopped command, not an averaged PWM.
+                if let Err(error) = self.speed.0.set_duty_cycle(0) {
+                    log::error!("SPEED zero write failed ({error:?}); pin may be stale");
                 }
+                crate::mcf::set_digital_speed(duty);
             }
             Action::SetDirection(direction) => self.dir.set_level(match direction {
                 Direction::Forward => Level::Low,

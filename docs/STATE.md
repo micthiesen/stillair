@@ -95,6 +95,12 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   voltage, and bus current all stayed zero. PIN_CONFIG, PERI_CONFIG1, and ALGO_DEBUG1 read
   back correctly. The next diagnostic moves the carrier from the 200 Hz low band to 1 kHz in
   the normal 325 Hz–100 kHz band without changing requested speed or motor PWM frequency.
+- **The 1 kHz retry produced the same result**, closing the PWM-input branch (2026-08-19).
+  J8.6 again followed the requested ramp, while the MCF reported zero decoded duty, idle
+  algorithm state, zero applied voltage, and zero bus current with no fault. The supervised
+  provisional path now sends that same ramp through TI's volatile I²C speed override while
+  holding the physical SPEED pin at zero. This isolates motor/startup tuning from the failed
+  pin decoder without bypassing the permission latch, 0.5 A limit, or stop/fault handling.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,

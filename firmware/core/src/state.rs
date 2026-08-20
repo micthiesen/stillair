@@ -123,7 +123,8 @@ pub enum Action {
     ArmPulse,
     /// Revoke drive permission by pulling the open-drain MCU_CLEAR_N low.
     ClearPermission,
-    /// Set the SPEED-pin PWM duty.
+    /// Set the normalized MCF speed reference. The hardware adapter decides whether the
+    /// qualified control path is the SPEED pin or the volatile commissioning override.
     SetSpeedDuty(SpeedDuty),
     /// Set the DIR pin. Only ever emitted while verified stopped.
     SetDirection(Direction),
