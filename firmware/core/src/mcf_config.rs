@@ -134,6 +134,7 @@ pub const PROVISIONAL_IMAGE: &[Setting] = &[
     PROVISIONAL_SENTINEL,
     Setting::masked("FAULT_CONFIG1", 0x090, 0x7FFF_FFFF, 0x12A8_0000),
     Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x7000_47C0),
+    Setting::masked("INT_ALGO_1", 0x0A0, 0x7FFF_FFFF, 0x0008_0000),
     Setting::masked("INT_ALGO_2", 0x0A2, 0x7FFF_FFFF, 0x0000_0000),
     Setting::masked("PIN_CONFIG", 0x0A4, 0x7FFF_FFFF, 0x0020_0041),
     Setting::masked("DEVICE_CONFIG2", 0x0A8, 0x7FFF_FFFF, 0x0000_001F),
@@ -651,6 +652,7 @@ mod tests {
             (0x08E, 0x50C2_0168),
             (0x090, 0x12A8_0000),
             (0x092, 0x7000_47C0),
+            (0x0A0, 0x0008_0000),
             (0x0A2, 0x0000_0000),
             (0x0A4, 0x0020_0041),
             (0x0A8, 0x0000_001F),
@@ -698,7 +700,10 @@ mod tests {
             "2 microsecond hardware-current deglitch"
         );
 
-        let peri_config1 = PROVISIONAL_IMAGE[11].value;
+        let int_algo1 = PROVISIONAL_IMAGE[8].value;
+        assert_eq!((int_algo1 >> 17) & 0x7, 4, "500 mV automatic-handoff floor");
+
+        let peri_config1 = PROVISIONAL_IMAGE[12].value;
         assert_eq!(
             (peri_config1 >> 9) & 0x1,
             0,
