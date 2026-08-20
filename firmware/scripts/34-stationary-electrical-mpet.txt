@@ -1,0 +1,5 @@
+# Stationary resistance/inductance extraction only. The electrical MPET command omits BEMF,
+# mechanical, and shadow-write bits, so it performs winding pulses without a spin sequence.
+fault clear
+wait idle_off --for 20
+mpet run --electrical --for 30

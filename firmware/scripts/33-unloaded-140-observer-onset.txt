@@ -1,0 +1,14 @@
+# Capture the MCF observer/current signals continuously through the delayed physical hunting
+# onset. The camera guard remains the physical authority and ends the run at the first failed
+# five-second segment; a clean four-minute trace is equally useful evidence.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+run 140
+wait speed 140 --within 3 --for 40
+dwell 5
+estimator sample --for 240 --interval-ms 1000
+stop
+wait idle_off --for 120

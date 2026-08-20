@@ -1,0 +1,13 @@
+# Efficient follow-up for PWM candidates after low-speed behavior has already been shown
+# invariant. The long initial ramp captures startup, then matched 160/170 RPM windows isolate
+# the top-speed electrical whine and regulation.
+fault clear
+wait idle_off --for 20
+run 160
+wait speed 160 --within 3 --for 120
+stream 10 --for 20
+run 170
+wait speed 170 --within 3 --for 30
+stream 10 --for 20
+stop
+wait idle_off --for 120

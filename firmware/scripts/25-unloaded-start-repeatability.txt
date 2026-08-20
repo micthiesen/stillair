@@ -1,0 +1,26 @@
+# Two complete starts and verified stops in each direction.
+fault clear
+wait idle_off --for 20
+dir forward
+run 35
+wait speed 35 --within 2 --for 70
+dwell 8
+stop
+wait idle_off --for 60
+run 35
+wait speed 35 --within 2 --for 70
+dwell 8
+stop
+wait idle_off --for 60
+dir reverse
+run 35
+wait speed 35 --within 2 --for 70
+dwell 8
+stop
+wait idle_off --for 60
+run 35
+wait speed 35 --within 2 --for 70
+dwell 8
+stop
+wait idle_off --for 60
+dir forward

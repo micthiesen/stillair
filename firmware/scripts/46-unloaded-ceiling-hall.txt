@@ -1,0 +1,14 @@
+# Cross-check the flexible camera stick against the independent one-pulse/revolution Hall
+# period while accelerating through the apparent 145 RPM resonance.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+run 140
+wait speed 140 --within 3 --for 50
+dwell 10
+run 160
+stream 10 --for 45
+stop
+wait idle_off --for 120

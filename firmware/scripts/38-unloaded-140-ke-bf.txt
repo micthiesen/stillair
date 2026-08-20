@@ -1,0 +1,19 @@
+# Isolate the closest lower BEMF table entry while retaining the best current-sense gain.
+# BF = 205 mV/eHz, matching the 204-206 mV/eHz live estimate at 140 RPM. Both writes are
+# volatile and are erased by the guarded supply-off path.
+reg write GD_CONFIG1 0x00010003
+reg write CLOSED_LOOP3 0x5F800004
+reg read GD_CONFIG1
+reg read CLOSED_LOOP3
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+run 140
+wait speed 140 --within 3 --for 40
+dwell 5
+reg read CURRENT_PI
+estimator sample --for 240 --interval-ms 1000
+stop
+wait idle_off --for 120

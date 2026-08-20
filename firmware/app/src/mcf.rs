@@ -6,7 +6,7 @@
 //! what a silent drive means.
 
 use core::cell::Cell;
-use core::sync::atomic::{AtomicU16, AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU16, AtomicU32, AtomicU8, Ordering};
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::blocking_mutex::CriticalSectionMutex;
@@ -24,7 +24,7 @@ use stillair_core::mcf8316::{
 };
 use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::speed::{mcf_digital_speed_word, SpeedDuty};
-use stillair_core::state::StatusRead;
+use stillair_core::state::{CurrentProfile, StatusRead};
 
 /// Latest fault-status read, published by the I²C task and consumed by the control loop.
 ///
@@ -45,9 +45,91 @@ pub static MPET_ABORT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new
 /// The I2C task may lag by one service interval, but stop/fault revokes the hardware permission
 /// latch synchronously before publishing zero, so bus latency can never keep drive permission on.
 static DIGITAL_SPEED_DUTY: AtomicU16 = AtomicU16::new(0);
+static CURRENT_PROFILE: AtomicU8 = AtomicU8::new(CurrentProfile::Acquisition as u8);
+static CURRENT_PROFILE_READY: AtomicBool = AtomicBool::new(false);
+static MPET_COMMAND: AtomicU32 = AtomicU32::new(mcf8316::MPET_START_COMMAND);
+
+pub fn set_mpet_command(command: u32) {
+    MPET_COMMAND.store(command, Ordering::Release);
+}
+
+pub fn mpet_command() -> u32 {
+    MPET_COMMAND.load(Ordering::Acquire)
+}
 
 pub fn set_digital_speed(duty: SpeedDuty) {
     DIGITAL_SPEED_DUTY.store(duty.0.min(config::SPEED_DUTY_MAX), Ordering::Release);
+}
+
+pub fn set_current_profile(profile: CurrentProfile) {
+    CURRENT_PROFILE.store(profile as u8, Ordering::Release);
+    if profile == CurrentProfile::Acquisition {
+        CURRENT_PROFILE_READY.store(false, Ordering::Release);
+    }
+}
+
+pub fn current_profile_ready() -> bool {
+    CURRENT_PROFILE_READY.load(Ordering::Acquire)
+}
+
+/// Forget readiness tied to the previous MCF power epoch.
+pub fn invalidate_current_profile_readiness() {
+    CURRENT_PROFILE_READY.store(false, Ordering::Release);
+}
+
+/// Apply the reviewed live ILIMIT variant without disturbing the other protection fields.
+///
+/// The staged image starts with a brief 0.25 A acquisition ceiling. Tach-confirmed rotation
+/// requests a 0.125 A settling ceiling, and stable tracking restores 0.25 A for the operating
+/// range. Stop and fault paths request acquisition again before another arm is possible.
+/// Read-back keeps an ignored shadow write from looking done.
+pub async fn service_current_profile(
+    mcf: &mut Mcf,
+    last_written: &mut Option<CurrentProfile>,
+) -> Result<(), BusError> {
+    if verdict() != ConfigCheck::Provisional {
+        *last_written = None;
+        CURRENT_PROFILE_READY.store(false, Ordering::Release);
+        return Ok(());
+    }
+    let profile = match CURRENT_PROFILE.load(Ordering::Acquire) {
+        value if value == CurrentProfile::Settling as u8 => CurrentProfile::Settling,
+        value if value == CurrentProfile::Running as u8 => CurrentProfile::Running,
+        _ => CurrentProfile::Acquisition,
+    };
+    if *last_written == Some(profile) {
+        if profile == CurrentProfile::Acquisition {
+            CURRENT_PROFILE_READY.store(true, Ordering::Release);
+        }
+        return Ok(());
+    }
+    let desired = match profile {
+        CurrentProfile::Acquisition => mcf_config::ACQUISITION_FAULT_CONFIG1,
+        CurrentProfile::Settling => mcf_config::SETTLING_FAULT_CONFIG1,
+        CurrentProfile::Running => mcf_config::RUNNING_FAULT_CONFIG1,
+    };
+    if profile == CurrentProfile::Acquisition {
+        // Every new acquisition request must earn readiness from a fresh readback. Clear it
+        // before the first fallible bus operation so read, write, and readback errors all
+        // leave startup inhibited rather than preserving readiness from an earlier run.
+        CURRENT_PROFILE_READY.store(false, Ordering::Release);
+    }
+    let address = reg::FAULT_CONFIG1;
+    let mask = mcf8316::fields::ILIMIT_MASK;
+    let current = mcf.read(address).await?;
+    let next = (current & !mask) | (desired & mask);
+    if next != current {
+        mcf.write(address, next).await?;
+    }
+    let readback = mcf.read(address).await?;
+    if readback & mask != desired & mask {
+        return Err(BusError::ReadbackMismatch);
+    }
+    *last_written = Some(profile);
+    if profile == CurrentProfile::Acquisition {
+        CURRENT_PROFILE_READY.store(true, Ordering::Release);
+    }
+    Ok(())
 }
 
 /// Apply the latest normalized speed through TI's volatile `ALGO_DEBUG1` override.
@@ -68,6 +150,9 @@ pub async fn service_digital_speed(
         return Ok(());
     }
     mcf.write(reg::ALGO_DEBUG1, word).await?;
+    if mcf.read(reg::ALGO_DEBUG1).await? != word {
+        return Err(BusError::ReadbackMismatch);
+    }
     *last_written = Some(word);
     Ok(())
 }
@@ -291,6 +376,7 @@ const fn describe(error: BusError) -> &'static str {
     match error {
         BusError::Transfer(_) => "i2c transfer failed",
         BusError::Crc(_) => "reply failed its checksum",
+        BusError::ReadbackMismatch => "register write failed read-back",
     }
 }
 
@@ -530,6 +616,8 @@ pub enum BusError {
     /// rather than retried silently — a wrong checksum means either the bus is corrupting
     /// data or our framing is wrong, and neither should reach the state machine as truth.
     Crc(CrcMismatch),
+    /// The transfer succeeded but the shadow register did not retain the requested field.
+    ReadbackMismatch,
 }
 
 impl From<SoftI2cError> for BusError {
@@ -601,9 +689,8 @@ impl Mcf {
         self.write(reg::ALGO_CTRL1, mcf8316::CLR_FLT_COMMAND).await
     }
 
-    pub async fn start_mpet(&mut self) -> Result<(), BusError> {
-        self.write(reg::ALGO_DEBUG2, mcf8316::MPET_START_COMMAND)
-            .await
+    pub async fn start_mpet(&mut self, command: u32) -> Result<(), BusError> {
+        self.write(reg::ALGO_DEBUG2, command).await
     }
 
     pub async fn abort_mpet(&mut self) -> Result<(), BusError> {

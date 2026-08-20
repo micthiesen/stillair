@@ -114,32 +114,65 @@ pub const IMAGE: &[Setting] = &[];
 /// Volatile-only first-spin configuration for the unloaded GL100 commissioning bench.
 ///
 /// This is deliberately separate from [`IMAGE`]. It uses vendor motor data and conservative
-/// first-spin gains, not values qualified with the final rotor, so it must never be committed
-/// to EEPROM or described as the golden configuration. `config stage` writes these settings
-/// to the MCF shadow registers and a power cycle erases them.
+/// unloaded commissioning gains, not values qualified with the final rotor, so it must never
+/// be committed to EEPROM or described as the golden configuration. `config stage` writes
+/// these settings to the MCF shadow registers and a power cycle erases them.
 ///
 /// Values are lower-31-bit register words from MCF8316D SLLSFX9A Tables 8-5 through 8-32;
-/// bit 31 is the silicon's read-only parity bit. The 0.5 A speed-loop seed uses TI tuning-guide
-/// equations Kp = Iq / maximum electrical Hz and Ki = 0.1 Kp, rounded down to Kp=0.008 and
-/// Ki=0.0008. It is only a controlled first-spin starting point.
+/// bit 31 is the silicon's read-only parity bit. Speed-loop gains and current headroom are
+/// iterated against synchronized physical-motion, phase-current, and supply-current traces.
 pub const PROVISIONAL_SENTINEL: Setting =
     Setting::masked("CLOSED_LOOP4", 0x08E, 0x7FFF_FFFF, 0x50C2_0168);
 
+/// Staged FAULT_CONFIG1 word and its reviewed runtime variants. Only ILIMIT differs.
+pub const ACQUISITION_FAULT_CONFIG1: u32 = 0x0AA8_4000;
+pub const SETTLING_FAULT_CONFIG1: u32 = 0x02A8_4000;
+pub const RUNNING_FAULT_CONFIG1: u32 = 0x0AA8_4000;
+
 pub const PROVISIONAL_IMAGE: &[Setting] = &[
-    Setting::masked("MOTOR_STARTUP1", 0x084, 0x7FFF_FFFF, 0x22E4_0004),
-    Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1101_A002),
-    Setting::masked("CLOSED_LOOP1", 0x088, 0x7FFF_FFFF, 0x0003_0108),
+    Setting::masked("MOTOR_STARTUP1", 0x084, 0x7FFF_FFFF, 0x22E6_0000),
+    Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1101_28AB),
+    Setting::masked(
+        "CLOSED_LOOP1",
+        0x088,
+        0x7FFF_FFFF,
+        0x0000_0108
+            | crate::mcf8316::fields::CL_ACC_NO_LIMIT
+            | crate::mcf8316::fields::PWM_FREQ_OUT_25_KHZ
+            | crate::mcf8316::fields::DEADTIME_COMP_EN,
+    ),
+    // The stationary B7/B4 model and both one-variable isolations were worse than the
+    // vendor 1.35-ohm / 1.20-mH phase model.
     Setting::masked("CLOSED_LOOP2", 0x08A, 0x7FFF_FFFF, 0x0000_B1AE),
-    Setting::masked("CLOSED_LOOP3", 0x08C, 0x7FFF_FFFF, 0x6500_0004),
+    Setting::masked("CLOSED_LOOP3", 0x08C, 0x7FFF_FFFF, 0x6000_0004),
     PROVISIONAL_SENTINEL,
-    Setting::masked("FAULT_CONFIG1", 0x090, 0x7FFF_FFFF, 0x12A8_0000),
-    Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x71C0_47C0),
-    Setting::masked("INT_ALGO_1", 0x0A0, 0x7FFF_FFFF, 0x000A_0000),
+    Setting::masked(
+        "FAULT_CONFIG1",
+        0x090,
+        0x7FFF_FFFF,
+        ACQUISITION_FAULT_CONFIG1,
+    ),
+    Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x31C0_47C0),
+    Setting::masked("INT_ALGO_1", 0x0A0, 0x7FFF_FFFF, 0x000E_0000),
     Setting::masked("INT_ALGO_2", 0x0A2, 0x7FFF_FFFF, 0x0000_0000),
     Setting::masked("PIN_CONFIG", 0x0A4, 0x7FFF_FFFF, 0x0020_0041),
+    Setting::masked(
+        "DEVICE_CONFIG1",
+        0x0A6,
+        0x7FFF_FFFF,
+        crate::mcf8316::fields::BUS_VOLT_30_V,
+    ),
     Setting::masked("DEVICE_CONFIG2", 0x0A8, 0x7FFF_FFFF, 0x0000_001F),
     Setting::masked("PERI_CONFIG1", 0x0AA, 0x7FFF_FFFF, 0x0022_0000),
-    Setting::masked("GD_CONFIG1", 0x0AC, 0x7FFF_FFFF, 0x0001_0000),
+    // The reset 0.15 V/A gain became unstable within 20 s at 140 RPM after the final rig
+    // rebuild. The maximum 1.2 V/A gain outlasted the lower settings, so retain it while
+    // isolating motor-model candidates.
+    Setting::masked(
+        "GD_CONFIG1",
+        0x0AC,
+        0x7FFF_FFFF,
+        0x0001_0000 | crate::mcf8316::fields::CSA_GAIN_1P2_V_PER_A,
+    ),
 ];
 
 /// Put the live configuration shadow into standby mode without committing EEPROM.
@@ -354,8 +387,9 @@ pub async fn check_provisional<B: RegisterBus>(bus: &mut B) -> ConfigCheck {
 /// Cheaply detect an MCF reset that silently reloaded EEPROM while its rail stayed high.
 ///
 /// CLOSED_LOOP4 contains both nonzero speed-loop gains and the 180 RPM ceiling, and reset
-/// silicon does not reproduce this word. The full image is still checked by `config stage`
-/// and an explicit `config check`; this sentinel runs on every status cycle.
+/// silicon does not reproduce this reviewed word. The full image is still
+/// checked by `config stage` and an explicit `config check`; this sentinel runs on every
+/// status cycle.
 pub async fn check_provisional_sentinel<B: RegisterBus>(bus: &mut B) -> ConfigCheck {
     match bus.read(PROVISIONAL_SENTINEL.address).await {
         Ok(value) if PROVISIONAL_SENTINEL.matches(value) => ConfigCheck::Provisional,
@@ -644,24 +678,31 @@ mod tests {
     #[test]
     fn provisional_words_match_the_reviewed_datasheet_transcription() {
         let expected = [
-            (0x084, 0x22E4_0004),
-            (0x086, 0x1101_A002),
-            (0x088, 0x0003_0108),
+            (0x084, 0x22E6_0000),
+            (0x086, 0x1101_28AB),
+            (0x088, 0x3E01_810C),
             (0x08A, 0x0000_B1AE),
-            (0x08C, 0x6500_0004),
+            (0x08C, 0x6000_0004),
             (0x08E, 0x50C2_0168),
-            (0x090, 0x12A8_0000),
-            (0x092, 0x71C0_47C0),
-            (0x0A0, 0x000A_0000),
+            (0x090, ACQUISITION_FAULT_CONFIG1),
+            (0x092, 0x31C0_47C0),
+            (0x0A0, 0x000E_0000),
             (0x0A2, 0x0000_0000),
             (0x0A4, 0x0020_0041),
+            (0x0A6, 0x0000_0001),
             (0x0A8, 0x0000_001F),
             (0x0AA, 0x0022_0000),
-            (0x0AC, 0x0001_0000),
+            (0x0AC, 0x0001_0003),
         ];
         assert_eq!(PROVISIONAL_IMAGE.len(), expected.len());
         for (setting, (address, value)) in PROVISIONAL_IMAGE.iter().zip(expected) {
             assert_eq!(setting.address, address, "{} address", setting.name);
+            assert_eq!(
+                crate::mcf8316::reg::by_name(setting.name),
+                Some(setting.address),
+                "{} register-map address",
+                setting.name
+            );
             assert_eq!(setting.mask, 0x7FFF_FFFF, "{} parity mask", setting.name);
             assert_eq!(setting.value, value, "{} value", setting.name);
             assert!(crate::mcf8316::is_configuration(setting.address));
@@ -677,8 +718,12 @@ mod tests {
         assert_eq!((startup1 >> 29) & 0x3, 1, "double align");
         assert_eq!((startup1 >> 25) & 0xF, 1, "1 A/s align ramp");
         assert_eq!((startup1 >> 21) & 0xF, 7, "750 ms align time");
-        assert_eq!((startup1 >> 17) & 0xF, 2, "0.5 A align current");
-        assert_eq!((startup1 >> 2) & 0x1, 1, "Iq ramp enabled");
+        assert_eq!((startup1 >> 17) & 0xF, 3, "1 A align current");
+        assert_eq!(
+            (startup1 >> 2) & 0x1,
+            0,
+            "Iq ramp disabled because it traps later speed changes on this motor"
+        );
 
         let startup2 = PROVISIONAL_IMAGE[1].value;
         assert_eq!((startup2 >> 27) & 0xF, 2, "0.5 A open-loop current");
@@ -687,18 +732,104 @@ mod tests {
         assert_eq!((startup2 >> 18) & 0x1, 0, "manual handoff");
         assert_eq!(
             (startup2 >> 13) & 0x1F,
-            0xD,
-            "14 percent of 180 RPM is a 25.2 RPM handoff"
+            0x9,
+            "10 percent of 180 RPM is an 18 RPM handoff"
         );
-        assert_eq!(startup2 & 0x7, 2, "0.1 degree/ms theta ramp");
+        assert_eq!((startup2 >> 8) & 0x1F, 0x8, "90 degree align angle");
+        assert_eq!(
+            (startup2 >> 4) & 0xF,
+            0xA,
+            "5 percent first-cycle frequency"
+        );
+        assert_eq!(
+            (startup2 >> 3) & 0x1,
+            1,
+            "start open loop at the configured first-cycle frequency"
+        );
+        assert_eq!(startup2 & 0x7, 3, "0.15 degree/ms theta ramp");
+
+        let closed_loop1 = PROVISIONAL_IMAGE[2].value;
+        assert_eq!(
+            closed_loop1 & crate::mcf8316::fields::CL_ACC_MASK,
+            crate::mcf8316::fields::CL_ACC_NO_LIMIT,
+            "firmware owns the single acceleration ramp"
+        );
+        assert_ne!(
+            closed_loop1 & crate::mcf8316::fields::DEADTIME_COMP_EN,
+            0,
+            "TI-recommended dead-time compensation must not silently return to reset zero"
+        );
+        assert_eq!(
+            closed_loop1 & crate::mcf8316::fields::PWM_FREQ_OUT_MASK,
+            crate::mcf8316::fields::PWM_FREQ_OUT_25_KHZ,
+            "25 kHz acoustically qualified phase PWM"
+        );
+        assert_ne!(closed_loop1 & (1 << 3), 0, "AVS baseline remains enabled");
 
         let fault1 = PROVISIONAL_IMAGE[6].value;
-        assert_eq!((fault1 >> 27) & 0xF, 2, "0.5 A closed-loop current");
+        assert_eq!((fault1 >> 27) & 0xF, 1, "0.25 A startup current");
         assert_eq!((fault1 >> 23) & 0xF, 5, "2 A hardware lock threshold");
         assert_eq!((fault1 >> 19) & 0xF, 5, "2 A software lock threshold");
+        assert_eq!(
+            RUNNING_FAULT_CONFIG1 & !crate::mcf8316::fields::ILIMIT_MASK,
+            ACQUISITION_FAULT_CONFIG1 & !crate::mcf8316::fields::ILIMIT_MASK,
+            "the running profile may change only ILIMIT"
+        );
+        assert_eq!(
+            RUNNING_FAULT_CONFIG1 & crate::mcf8316::fields::ILIMIT_MASK,
+            crate::mcf8316::fields::ILIMIT_0P25_A
+        );
+        assert_eq!(
+            SETTLING_FAULT_CONFIG1 & !crate::mcf8316::fields::ILIMIT_MASK,
+            ACQUISITION_FAULT_CONFIG1 & !crate::mcf8316::fields::ILIMIT_MASK,
+            "the settling profile may change only ILIMIT"
+        );
+        assert_eq!(
+            SETTLING_FAULT_CONFIG1 & crate::mcf8316::fields::ILIMIT_MASK,
+            crate::mcf8316::fields::ILIMIT_0P125_A
+        );
+        let closed_loop3 = PROVISIONAL_IMAGE[4].value;
+        let closed_loop4 = PROVISIONAL_IMAGE[5].value;
+        assert_eq!(
+            ((closed_loop3 & 0x7) << 7) | ((closed_loop4 >> 24) & 0x7F),
+            0x250,
+            "0.008 speed-loop Kp"
+        );
+        assert_eq!((closed_loop4 >> 14) & 0x3FF, 0x308, "0.0016 speed-loop Ki");
+
+        let device_config1 = PROVISIONAL_IMAGE[11].value;
+        assert_eq!(
+            device_config1 & crate::mcf8316::fields::BUS_VOLT_MASK,
+            crate::mcf8316::fields::BUS_VOLT_30_V,
+            "24 V supply requires the 30 V measurement range"
+        );
+        let device_config2 = PROVISIONAL_IMAGE[12].value;
+        assert_eq!(
+            device_config2 & crate::mcf8316::fields::DYNAMIC_VOLTAGE_GAIN_EN,
+            0,
+            "dynamic voltage gain selected the same 30 V range and regressed startup"
+        );
+        assert_eq!(
+            device_config2 & crate::mcf8316::fields::DYNAMIC_CSA_GAIN_EN,
+            0
+        );
+        let pin_config = PROVISIONAL_IMAGE[10].value;
+        assert_eq!(pin_config & crate::mcf8316::fields::VDC_FILTER_MASK, 0);
+
+        let gd_config1 = PROVISIONAL_IMAGE[14].value;
+        assert_eq!(gd_config1 & crate::mcf8316::fields::SLEW_RATE_MASK, 0);
+        assert_eq!(
+            gd_config1 & crate::mcf8316::fields::CSA_GAIN_MASK,
+            crate::mcf8316::fields::CSA_GAIN_1P2_V_PER_A,
+            "maximum current gain outlasted the lower-gain candidates"
+        );
 
         let fault2 = PROVISIONAL_IMAGE[7].value;
-        assert_eq!((fault2 >> 28) & 0x7, 0x7, "all three motor locks enabled");
+        assert_eq!(
+            (fault2 >> 28) & 0x7,
+            0x3,
+            "abnormal-BEMF and no-motor locks enabled; false-prone abnormal-speed lock disabled"
+        );
         assert_eq!(
             (fault2 >> 22) & 0x7,
             7,
@@ -711,9 +842,9 @@ mod tests {
         );
 
         let int_algo1 = PROVISIONAL_IMAGE[8].value;
-        assert_eq!((int_algo1 >> 17) & 0x7, 5, "1 V automatic-handoff floor");
+        assert_eq!((int_algo1 >> 17) & 0x7, 7, "1.5 V automatic-handoff floor");
 
-        let peri_config1 = PROVISIONAL_IMAGE[12].value;
+        let peri_config1 = PROVISIONAL_IMAGE[13].value;
         assert_eq!(
             (peri_config1 >> 9) & 0x1,
             0,

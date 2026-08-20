@@ -17,8 +17,9 @@ use std::io::Write;
 use std::process::ExitCode;
 use std::time::Duration;
 
+use stillair_core::config;
 use stillair_core::console;
-use stillair_core::mcf8316::reg;
+use stillair_core::mcf8316::{max_speed_to_milli_rpm, reg, seeds};
 
 mod link;
 mod sim;
@@ -94,6 +95,7 @@ fn drain(link: &mut dyn Link) {
 fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
     drain(link);
     match words[0] {
+        "dwell" => dwell(link, &words[1..]),
         "wait" if words.get(1) == Some(&"speed") => wait_speed(link, &words[2..]),
         "wait" => wait(link, &words[1..]),
         // `stream on 10` / `stream off` are the device's own syntax and must reach it; the
@@ -101,6 +103,8 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
         "stream" if !matches!(words.get(1), Some(&"on") | Some(&"off")) => {
             stream(link, &words[1..])
         }
+        "speed" if words.get(1) == Some(&"sample") => sample_speed(link, &words[2..]),
+        "estimator" if words.get(1) == Some(&"sample") => sample_estimator(link, &words[2..]),
         // `config capture` is a host verb, and `config dump` needs host-side collection
         // because it is the one device command whose reply is many lines rather than one.
         // `config check`, `config stage`, and `config apply` are single-reply and pass
@@ -130,6 +134,7 @@ fn script(link: &mut dyn Link, path: &str) -> Result<(), String> {
         std::fs::read_to_string(path).map_err(|error| format!("{path}: {error}"))?
     };
 
+    let started = link.elapsed();
     for (number, raw) in source.lines().enumerate() {
         let line = raw.split('#').next().unwrap_or("").trim();
         if line.is_empty() {
@@ -144,7 +149,10 @@ fn script(link: &mut dyn Link, path: &str) -> Result<(), String> {
             continue;
         }
 
-        eprintln!("# {line}");
+        eprintln!(
+            "# t={:.3}s {line}",
+            (link.elapsed() - started).as_secs_f64()
+        );
         match step(link, &words) {
             Ok(()) => {}
             Err(error) if optional => eprintln!("# (ignored) {error}"),
@@ -158,18 +166,76 @@ fn usage() {
     eprintln!("usage: stillair (--sim | --port <device>) <command>");
     eprintln!();
     eprintln!("host commands:");
+    eprintln!("  dwell <secs>                  hold the current command with 1 Hz monitoring");
     eprintln!("  wait <state> [--for <secs>]   block until the fan reaches a state");
     eprintln!("  wait speed <rpm> [--within <rpm>] [--for <secs>]");
     eprintln!("  stream <hz> [--for <secs>]    telemetry as CSV on stdout");
     eprintln!("      (`stream on <hz>`/`stream off` pass through to the device instead)");
+    eprintln!("  speed sample [--for <secs>]   live MCF speed feedback as CSV");
+    eprintln!("  estimator sample [--for <secs>] [--interval-ms <ms>]  angle/current trace as CSV");
     eprintln!("  config capture                print the device's config block as an IMAGE table");
-    eprintln!("  mpet run [--for <secs>]       run MPET safely, report results, then disarm");
+    eprintln!("  mpet run [--electrical] [--for <secs>]  run MPET safely, report, then disarm");
     eprintln!("  script <file|->               run a sequence against one session");
     eprintln!();
     eprintln!("device commands (passed through):");
     for line in console::HELP {
         eprintln!("  {line}");
     }
+}
+
+/// Hold the current device command for a fixed interval while watching for faults.
+///
+/// A speed-arrival gate proves that a ramp crossed its target, not that the motor stayed
+/// there. A one-hertz stream gives physical camera and power logging a real plateau without
+/// recreating the high-rate serial pressure of an estimator capture.
+fn dwell(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
+    let seconds: u64 = arguments
+        .first()
+        .ok_or("dwell needs a duration in seconds")?
+        .parse()
+        .map_err(|_| "dwell duration must be a number")?;
+    if seconds == 0 {
+        return Err("dwell duration must be greater than zero".into());
+    }
+
+    link.send("stream on 1")
+        .map_err(|error| error.to_string())?;
+    let deadline = link.elapsed() + Duration::from_secs(seconds);
+    let mut last = None;
+    let mut last_telemetry_at = link.elapsed();
+    while link.elapsed() < deadline {
+        let received = link
+            .receive(Duration::from_millis(250))
+            .map_err(|error| error.to_string())?;
+        if let Some(line) = received {
+            if field(&line, "type") != Some("telemetry") {
+                continue;
+            }
+            last_telemetry_at = link.elapsed();
+            if field(&line, "state") == Some("fault") {
+                let _ = stop_stream(link);
+                return Err(format!(
+                    "faulted during {seconds}s dwell: {}",
+                    field(&line, "fault").unwrap_or("unknown")
+                ));
+            }
+            if field(&line, "state") != Some("running") || field(&line, "on") != Some("true") {
+                let state = field(&line, "state").unwrap_or("unknown");
+                let _ = stop_stream(link);
+                return Err(format!(
+                    "left running state during {seconds}s dwell: {state}"
+                ));
+            }
+            last = Some(line);
+        } else if link.elapsed().saturating_sub(last_telemetry_at) > Duration::from_secs(3) {
+            let _ = stop_stream(link);
+            return Err(format!("no telemetry heartbeat during {seconds}s dwell"));
+        }
+    }
+    stop_stream(link)?;
+    let line = last.ok_or_else(|| format!("no telemetry during {seconds}s dwell"))?;
+    println!("{line}");
+    Ok(())
 }
 
 /// Send one request and print its reply.
@@ -217,14 +283,14 @@ fn wait(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             }
             last = line.clone();
             if field(&line, "state") == Some(*wanted) {
-                stop_stream(link);
+                stop_stream(link)?;
                 println!("{line}");
                 return Ok(());
             }
             // A fault will never become the state being waited for; say so immediately
             // rather than burning the whole timeout.
             if field(&line, "state") == Some("fault") && *wanted != "fault" {
-                stop_stream(link);
+                let _ = stop_stream(link);
                 println!("{line}");
                 return Err(format!(
                     "faulted while waiting for {wanted}: {}",
@@ -234,7 +300,7 @@ fn wait(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
         }
     }
 
-    stop_stream(link);
+    let _ = stop_stream(link);
     Err(format!(
         "timed out after {seconds}s waiting for {wanted}; last state {}",
         field(&last, "state").unwrap_or("unknown")
@@ -272,7 +338,7 @@ fn wait_speed(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             }
             last = line.clone();
             if field(&line, "state") == Some("fault") {
-                stop_stream(link);
+                let _ = stop_stream(link);
                 return Err(format!(
                     "faulted while waiting for {wanted_rpm} rpm: {}",
                     field(&line, "fault").unwrap_or("unknown")
@@ -282,10 +348,14 @@ fn wait_speed(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
                 .ok_or("telemetry omitted fg_mrpm")?
                 .parse::<u64>()
                 .map_err(|_| "telemetry carried invalid fg_mrpm")?;
-            if measured.abs_diff(wanted) <= tolerance {
+            let commanded = field(&line, "cmd_mrpm")
+                .ok_or("telemetry omitted cmd_mrpm")?
+                .parse::<u64>()
+                .map_err(|_| "telemetry carried invalid cmd_mrpm")?;
+            if measured.abs_diff(wanted) <= tolerance && commanded.abs_diff(wanted) <= tolerance {
                 consecutive += 1;
                 if consecutive == 3 {
-                    stop_stream(link);
+                    stop_stream(link)?;
                     println!("{line}");
                     return Ok(());
                 }
@@ -294,10 +364,11 @@ fn wait_speed(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
             }
         }
     }
-    stop_stream(link);
+    let _ = stop_stream(link);
     Err(format!(
-        "timed out after {seconds}s waiting for {wanted_rpm} +/- {within_rpm} rpm; last FG {} mrpm",
-        field(&last, "fg_mrpm").unwrap_or("unknown")
+        "timed out after {seconds}s waiting for {wanted_rpm} +/- {within_rpm} rpm; last command {} mrpm, FG {} mrpm",
+        field(&last, "cmd_mrpm").unwrap_or("unknown"),
+        field(&last, "fg_mrpm").unwrap_or("unknown"),
     ))
 }
 
@@ -353,11 +424,289 @@ fn stream(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
         }
     }
 
-    stop_stream(link);
+    stop_stream(link)?;
     if frames == 0 {
         return Err(format!("no telemetry from {}", link.describe()));
     }
     Ok(())
+}
+
+/// Sample the MCF's internal speed estimator as quickly as the I2C service allows.
+///
+/// FG and rotor-Hall telemetry are necessarily sparse at first-spin speeds. `SPEED_FDBK`
+/// is the controller's live estimate, so a dense capture exposes speed ripple during the
+/// open-loop handoff ramp instead of asking a person to judge jitter by eye.
+fn sample_speed(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
+    let seconds = flag(arguments, "--for")?.unwrap_or(10);
+    let max_mrpm = i64::from(max_speed_to_milli_rpm(seeds::MAX_SPEED, config::POLE_PAIRS).0);
+    let deadline = link.elapsed() + Duration::from_secs(seconds);
+    let mut total_samples = 0u64;
+    let mut tracking_samples = 0u64;
+    let mut mean = 0.0f64;
+    let mut sum_squared_delta = 0.0f64;
+    let mut minimum_error = i64::MAX;
+    let mut maximum_error = i64::MIN;
+    let mut maximum_absolute_error = 0i64;
+    let mut out = std::io::stdout().lock();
+    writeln!(
+        out,
+        "t_ms,algorithm_state,open_ref_raw,closed_ref_raw,feedback_raw,open_ref_mrpm,closed_ref_mrpm,active_ref_mrpm,feedback_mrpm,error_mrpm,controller_fault"
+    )
+    .map_err(|error| error.to_string())?;
+
+    while link.elapsed() < deadline {
+        let algorithm_state = read_register(link, "ALGORITHM_STATE")?;
+        let reference_raw = read_register(link, "SPEED_REF_OPEN_LOOP")?;
+        let closed_reference_raw = read_register(link, "SPEED_REF_CLOSED_LOOP")?;
+        let feedback_raw = read_register(link, "SPEED_FDBK")?;
+        let controller_fault = read_register(link, "CONTROLLER_FAULT_STATUS")?;
+        let reference_mrpm = q27_speed_mrpm(reference_raw, max_mrpm);
+        let closed_reference_mrpm = q27_speed_mrpm(closed_reference_raw, max_mrpm);
+        let feedback_mrpm = q27_speed_mrpm(feedback_raw, max_mrpm);
+        let active_reference =
+            active_speed_reference(algorithm_state, reference_mrpm, closed_reference_mrpm);
+        let error = active_reference
+            .map(|reference| feedback_mrpm.abs() - reference.abs())
+            .unwrap_or(0);
+        if active_reference.is_some_and(|reference| reference.abs() >= 5_000)
+            && controller_fault == 0
+        {
+            minimum_error = minimum_error.min(error);
+            maximum_error = maximum_error.max(error);
+            maximum_absolute_error = maximum_absolute_error.max(error.abs());
+            let value = error as f64;
+            let delta = value - mean;
+            mean += delta / (tracking_samples + 1) as f64;
+            sum_squared_delta += delta * (value - mean);
+            tracking_samples += 1;
+        }
+        writeln!(
+            out,
+            "{},{algorithm_state},{reference_raw},{closed_reference_raw},{feedback_raw},{reference_mrpm},{closed_reference_mrpm},{},{feedback_mrpm},{error},{controller_fault}",
+            link.elapsed().as_millis(),
+            active_reference.unwrap_or(0),
+        )
+        .map_err(|error| error.to_string())?;
+        total_samples += 1;
+    }
+
+    if tracking_samples == 0 {
+        return Err(format!("no SPEED_FDBK samples from {}", link.describe()));
+    }
+    let stddev = (sum_squared_delta / tracking_samples as f64).sqrt();
+    writeln!(
+        out,
+        "{{\"type\":\"speed_tracking_summary\",\"samples\":{total_samples},\
+         \"tracking_samples\":{tracking_samples},\
+         \"mean_error_mrpm\":{mean:.0},\"min_error_mrpm\":{minimum_error},\
+         \"max_error_mrpm\":{maximum_error},\"max_abs_error_mrpm\":{maximum_absolute_error},\
+         \"stddev_error_mrpm\":{stddev:.0}}}",
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+/// Capture the signals that distinguish observer loss from speed-loop or current-loop loss.
+///
+/// These are deliberately read in the same order on every pass. The serial console adds
+/// more latency than the MCF I2C reads, but a single row still brackets the sub-second
+/// open-to-closed-loop transition without asking a person to infer it from motion.
+fn sample_estimator(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
+    let seconds = flag(arguments, "--for")?.unwrap_or(10);
+    let interval_ms = flag(arguments, "--interval-ms")?.unwrap_or(500);
+    if !(50..=5_000).contains(&interval_ms) {
+        return Err("--interval-ms must be between 50 and 5000".into());
+    }
+    let max_mrpm = i64::from(max_speed_to_milli_rpm(seeds::MAX_SPEED, config::POLE_PAIRS).0);
+    let deadline = link.elapsed() + Duration::from_secs(seconds);
+    let mut samples = 0u64;
+    let mut max_abs_iq_ref_ma = 0i64;
+    let mut max_abs_iq_ma = 0i64;
+    let mut previous_transition_speed: Option<i64> = None;
+    let mut transition_decelerations = 0u64;
+    let mut direction_reversals = 0u64;
+    let mut dropped_samples = 0u64;
+    let mut consecutive_drops = 0u64;
+    let mut out = std::io::stdout().lock();
+    writeln!(
+        out,
+        "t_ms,algorithm_state,speed_raw,open_iq_ref_raw,closed_iq_ref_raw,id_raw,iq_raw,vd_raw,vq_raw,theta_raw,ed_raw,eq_raw,algo_status_raw,vm_raw,speed_mrpm,open_iq_ref_ma,closed_iq_ref_ma,id_ma,iq_ma,vd_mv,vq_mv,theta_mdeg,ed_mv,eq_mv,ke_mv_per_ehz,modulation_per_mille,vm_mv,fg_mrpm,hall_mrpm,controller_fault"
+    )
+    .map_err(|error| error.to_string())?;
+
+    while link.elapsed() < deadline {
+        let row = (|| {
+            let registers = (
+                read_register(link, "ALGORITHM_STATE")?,
+                read_register(link, "SPEED_FDBK")?,
+                read_register(link, "IQ_REF_OPEN_LOOP")?,
+                read_register(link, "IQ_REF_CLOSED_LOOP")?,
+                read_register(link, "ID")?,
+                read_register(link, "IQ")?,
+                read_register(link, "VD")?,
+                read_register(link, "VQ")?,
+                read_register(link, "THETA_EST")?,
+                read_register(link, "ED")?,
+                read_register(link, "EQ")?,
+                read_register(link, "ALGO_STATUS")?,
+                read_register(link, "VM_VOLTAGE")?,
+                read_register(link, "CONTROLLER_FAULT_STATUS")?,
+            );
+            let (fg_mrpm, hall_mrpm) = read_tach_telemetry(link)?;
+            Ok::<_, String>((registers, fg_mrpm, hall_mrpm))
+        })();
+        let (
+            (
+                algorithm_state,
+                speed_raw,
+                open_iq_ref_raw,
+                iq_ref_raw,
+                id_raw,
+                iq_raw,
+                vd_raw,
+                vq_raw,
+                theta_raw,
+                ed_raw,
+                eq_raw,
+                algo_status_raw,
+                vm_raw,
+                controller_fault,
+            ),
+            fg_mrpm,
+            hall_mrpm,
+        ) = match row {
+            Ok(row) => row,
+            Err(error) => {
+                dropped_samples += 1;
+                consecutive_drops += 1;
+                eprintln!("estimator sample dropped: {error}");
+                if consecutive_drops >= 3 {
+                    return Err(format!(
+                        "estimator link failed {consecutive_drops} consecutive rows on {}",
+                        link.describe()
+                    ));
+                }
+                continue;
+            }
+        };
+        consecutive_drops = 0;
+        let speed_mrpm = q27_speed_mrpm(speed_raw, max_mrpm);
+        let open_iq_ref_ma = q27_scaled(open_iq_ref_raw, 1_250);
+        let iq_ref_ma = q27_scaled(iq_ref_raw, 1_250);
+        let id_ma = q27_scaled(id_raw, 1_250);
+        let iq_ma = q27_scaled(iq_raw, 1_250);
+        let vd_mv = q27_scaled(vd_raw, 34_641);
+        let vq_mv = q27_scaled(vq_raw, 34_641);
+        let theta_mdeg = q27_scaled(theta_raw, 360_000);
+        let ed_mv = q27_scaled(ed_raw, 34_641);
+        let eq_mv = q27_scaled(eq_raw, 34_641);
+        let ke_mv_per_ehz = if speed_mrpm == 0 {
+            0
+        } else {
+            eq_mv.abs() * 60_000 / (speed_mrpm.abs() * i64::from(config::POLE_PAIRS))
+        };
+        let modulation_per_mille = i64::from(algo_status_raw >> 16) * 1_000 / 32_768;
+        let vm_mv = q27_scaled(vm_raw, 60_000);
+        if controller_fault == 0 {
+            max_abs_iq_ref_ma = max_abs_iq_ref_ma.max(iq_ref_ma.abs());
+            max_abs_iq_ma = max_abs_iq_ma.max(iq_ma.abs());
+            if matches!(algorithm_state, 7 | 8) {
+                if let Some(previous) = previous_transition_speed {
+                    if previous.signum() != speed_mrpm.signum()
+                        && previous.abs() >= 1_000
+                        && speed_mrpm.abs() >= 1_000
+                    {
+                        direction_reversals += 1;
+                    }
+                    if previous.abs() - speed_mrpm.abs() >= 2_000 {
+                        transition_decelerations += 1;
+                    }
+                }
+                previous_transition_speed = Some(speed_mrpm);
+            }
+        }
+        writeln!(
+            out,
+            "{},{algorithm_state},{speed_raw},{open_iq_ref_raw},{iq_ref_raw},{id_raw},{iq_raw},{vd_raw},{vq_raw},{theta_raw},{ed_raw},{eq_raw},{algo_status_raw},{vm_raw},{speed_mrpm},{open_iq_ref_ma},{iq_ref_ma},{id_ma},{iq_ma},{vd_mv},{vq_mv},{theta_mdeg},{ed_mv},{eq_mv},{ke_mv_per_ehz},{modulation_per_mille},{vm_mv},{fg_mrpm},{hall_mrpm},{controller_fault}",
+            link.elapsed().as_millis()
+        )
+        .map_err(|error| error.to_string())?;
+        samples += 1;
+        // Do not saturate the USB console and I2C service with an unbroken request burst.
+        let _ = link.receive(Duration::from_millis(interval_ms));
+    }
+
+    writeln!(
+        out,
+        "{{\"type\":\"estimator_summary\",\"samples\":{samples},\"dropped_samples\":{dropped_samples},\"max_abs_iq_ref_ma\":{max_abs_iq_ref_ma},\"max_abs_iq_ma\":{max_abs_iq_ma},\"transition_decelerations\":{transition_decelerations},\"direction_reversals\":{direction_reversals}}}"
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+fn read_tach_telemetry(link: &mut dyn Link) -> Result<(i64, i64), String> {
+    link.send("state").map_err(|error| error.to_string())?;
+    for _ in 0..3 {
+        let line = link
+            .receive(Duration::from_millis(250))
+            .map_err(|error| error.to_string())?
+            .ok_or("state telemetry timed out")?;
+        if field(&line, "type") != Some("telemetry") {
+            continue;
+        }
+        let parse = |key: &str| {
+            field(&line, key)
+                .ok_or_else(|| format!("state telemetry omitted {key}"))?
+                .parse::<i64>()
+                .map_err(|_| format!("state telemetry carried invalid {key}"))
+        };
+        return Ok((parse("fg_mrpm")?, parse("hall_mrpm")?));
+    }
+    Err("state produced no telemetry frame".into())
+}
+
+fn q27_scaled(raw: u32, scale: i64) -> i64 {
+    i64::from(raw as i32) * scale / (1_i64 << 27)
+}
+
+fn read_register(link: &mut dyn Link, name: &str) -> Result<u32, String> {
+    let expected_address = reg::by_name(name).ok_or_else(|| format!("unknown register {name}"))?;
+    link.send(&format!("reg read {name}"))
+        .map_err(|error| error.to_string())?;
+    for _ in 0..3 {
+        let reply = link
+            .receive(REPLY_TIMEOUT)
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| format!("no {name} reply from {}", link.describe()))?;
+        if field(&reply, "ok") == Some("false") {
+            return Err(field(&reply, "error")
+                .unwrap_or("register read failed")
+                .to_string());
+        }
+        let address = field(&reply, "addr").and_then(|value| value.parse::<u16>().ok());
+        if address != Some(expected_address) {
+            continue;
+        }
+        return field(&reply, "value")
+            .ok_or_else(|| format!("{name} reply omitted value"))?
+            .parse()
+            .map_err(|_| format!("{name} reply carried an invalid value"));
+    }
+    Err(format!("no matching {name} reply from {}", link.describe()))
+}
+
+fn q27_speed_mrpm(raw: u32, max_mrpm: i64) -> i64 {
+    (i64::from(raw as i32) * max_mrpm) / (1_i64 << 27)
+}
+
+fn active_speed_reference(algorithm_state: u32, open_mrpm: i64, closed_mrpm: i64) -> Option<i64> {
+    // MCF8316D ALGORITHM_STATE: 7 is open loop, 8/9 are closed-loop unaligned/aligned.
+    // Stopping and fault states are deliberately excluded from tracking statistics.
+    match algorithm_state {
+        7 => Some(open_mrpm),
+        8 | 9 => Some(closed_mrpm),
+        _ => None,
+    }
 }
 
 /// Read the whole EEPROM configuration block off the device.
@@ -439,15 +788,28 @@ fn capture(link: &mut dyn Link) -> Result<(), String> {
 /// EEPROM endurance until the operator reviews and explicitly applies a captured image.
 fn mpet_run(link: &mut dyn Link, arguments: &[&str]) -> Result<(), String> {
     let seconds = flag(arguments, "--for")?.unwrap_or(120);
-    passthrough(link, "mpet start")?;
-    let result = mpet_session(link, seconds);
+    let electrical = arguments.contains(&"--electrical");
+    passthrough(
+        link,
+        if electrical {
+            "mpet electrical"
+        } else {
+            "mpet start"
+        },
+    )?;
+    let completion_mask = if electrical {
+        stillair_core::mcf8316::MPET_ELECTRICAL_COMPLETE_MASK
+    } else {
+        stillair_core::mcf8316::MPET_COMPLETE_MASK
+    };
+    let result = mpet_session(link, seconds, completion_mask);
     let abort = passthrough(link, "mpet abort");
     result?;
     abort?;
     wait(link, &["idle_off", "--for", "20"])
 }
 
-fn mpet_session(link: &mut dyn Link, seconds: u64) -> Result<(), String> {
+fn mpet_session(link: &mut dyn Link, seconds: u64, completion_mask: u32) -> Result<(), String> {
     wait(link, &["mpet", "--for", "20"])?;
 
     let deadline = link.elapsed() + Duration::from_secs(seconds);
@@ -467,7 +829,10 @@ fn mpet_session(link: &mut dyn Link, seconds: u64) -> Result<(), String> {
         if field(&reply, "type") != Some("mpet") {
             return Err(format!("expected MPET status, got {reply}"));
         }
-        if field(&reply, "complete") == Some("true") {
+        let status = field(&reply, "status")
+            .and_then(|value| value.parse::<u32>().ok())
+            .ok_or_else(|| format!("MPET status omitted a valid status word: {reply}"))?;
+        if status & completion_mask == completion_mask {
             println!("{reply}");
             return Ok(());
         }
@@ -478,11 +843,32 @@ fn mpet_session(link: &mut dyn Link, seconds: u64) -> Result<(), String> {
     Err(format!("MPET did not complete within {seconds}s"))
 }
 
-/// Stop a telemetry stream and swallow everything still in flight, so the next step starts
-/// from a quiet link.
-fn stop_stream(link: &mut dyn Link) {
-    let _ = link.send("stream off");
-    drain(link);
+/// Stop a telemetry stream and require the device to acknowledge it.
+fn stop_stream(link: &mut dyn Link) -> Result<(), String> {
+    link.send("stream off").map_err(|error| error.to_string())?;
+    let deadline = link.elapsed() + REPLY_TIMEOUT;
+    while link.elapsed() < deadline {
+        let Some(line) = link
+            .receive(Duration::from_millis(100))
+            .map_err(|error| error.to_string())?
+        else {
+            continue;
+        };
+        if field(&line, "type") == Some("telemetry") {
+            continue;
+        }
+        if field(&line, "ok") == Some("true") {
+            drain(link);
+            return Ok(());
+        }
+        return Err(field(&line, "error")
+            .unwrap_or("stream-off command failed")
+            .to_string());
+    }
+    Err(format!(
+        "no stream-off acknowledgement from {}",
+        link.describe()
+    ))
 }
 
 /// Read a `--flag <number>` out of the argument list.
@@ -523,12 +909,40 @@ mod tests {
     }
 
     #[test]
+    fn q27_speed_conversion_preserves_direction_and_scale() {
+        assert_eq!(q27_speed_mrpm(1 << 26, 180_000), 90_000);
+        assert_eq!(q27_speed_mrpm((-67_108_864i32) as u32, 180_000), -90_000);
+    }
+
+    #[test]
+    fn speed_tracking_uses_the_reference_owned_by_the_algorithm_state() {
+        assert_eq!(active_speed_reference(7, 11, 22), Some(11));
+        assert_eq!(active_speed_reference(8, 11, 22), Some(22));
+        assert_eq!(active_speed_reference(9, 11, 22), Some(22));
+        assert_eq!(active_speed_reference(6, 11, 22), None);
+        assert_eq!(active_speed_reference(10, 11, 22), None);
+    }
+
+    #[test]
     fn a_broken_flag_value_is_an_error_not_a_silent_default() {
         assert!(flag(&["--for"], "--for").is_err(), "a flag with no value");
         assert!(flag(&["--for", "36000o"], "--for").is_err(), "a typo");
         // And it reaches the caller rather than being swallowed into the default.
         let mut sim = Simulator::new();
         assert!(stream(&mut sim, &["20", "--for", "x"]).is_err());
+    }
+
+    #[test]
+    fn estimator_interval_is_bounded_before_any_device_access() {
+        let mut sim = Simulator::new();
+        assert_eq!(
+            sample_estimator(&mut sim, &["--interval-ms", "49"]),
+            Err("--interval-ms must be between 50 and 5000".into())
+        );
+        assert_eq!(
+            sample_estimator(&mut sim, &["--interval-ms", "5001"]),
+            Err("--interval-ms must be between 50 and 5000".into())
+        );
     }
 
     #[test]
@@ -565,6 +979,59 @@ mod tests {
         assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
         assert!(passthrough(&mut sim, "run 60").is_ok());
         assert!(wait_speed(&mut sim, &["60", "--within", "2", "--for", "120"]).is_ok());
+    }
+
+    #[test]
+    fn dwell_holds_a_running_command_without_changing_it() {
+        let mut sim = staged_simulator();
+        assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
+        assert!(passthrough(&mut sim, "run 60").is_ok());
+        assert!(wait_speed(&mut sim, &["60", "--within", "2", "--for", "120"]).is_ok());
+        assert!(dwell(&mut sim, &["3"]).is_ok());
+        sim.send("state").unwrap();
+        let reply = sim.receive(Duration::from_millis(50)).unwrap().unwrap();
+        assert_eq!(field(&reply, "state"), Some("running"));
+        assert_eq!(field(&reply, "tgt_mrpm"), Some("60000"));
+    }
+
+    #[test]
+    fn dwell_rejects_missing_zero_and_invalid_durations() {
+        let mut sim = Simulator::new();
+        assert!(dwell(&mut sim, &[]).is_err());
+        assert!(dwell(&mut sim, &["0"]).is_err());
+        assert!(dwell(&mut sim, &["later"]).is_err());
+    }
+
+    #[test]
+    fn dwell_fails_closed_when_telemetry_goes_silent() {
+        struct SilentLink {
+            elapsed: Duration,
+        }
+
+        impl Link for SilentLink {
+            fn send(&mut self, _: &str) -> std::io::Result<()> {
+                Ok(())
+            }
+
+            fn receive(&mut self, timeout: Duration) -> std::io::Result<Option<String>> {
+                self.elapsed += timeout;
+                Ok(None)
+            }
+
+            fn describe(&self) -> String {
+                "silent test link".into()
+            }
+
+            fn elapsed(&self) -> Duration {
+                self.elapsed
+            }
+        }
+
+        let mut link = SilentLink {
+            elapsed: Duration::ZERO,
+        };
+        let error = dwell(&mut link, &["10"]).expect_err("silent dwell must fail");
+        assert!(error.contains("heartbeat"), "{error}");
     }
 
     #[test]
@@ -723,5 +1190,22 @@ reg read ISD_CONFIG
         sim.send("state").unwrap();
         let reply = sim.receive(Duration::from_millis(50)).unwrap().unwrap();
         assert_eq!(field(&reply, "state"), Some("idle_off"));
+    }
+
+    #[test]
+    fn electrical_mpet_completes_and_returns_to_idle() {
+        let mut sim = staged_simulator();
+        assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
+        assert!(mpet_run(&mut sim, &["--electrical", "--for", "5"]).is_ok());
+        sim.send("state").unwrap();
+        let reply = sim.receive(Duration::from_millis(50)).unwrap().unwrap();
+        assert_eq!(field(&reply, "state"), Some("idle_off"));
+    }
+
+    #[test]
+    fn q27_diagnostics_decode_signed_current_and_angle() {
+        assert_eq!(q27_scaled(1 << 27, 1_000), 1_000);
+        assert_eq!(q27_scaled((-67_108_864_i32) as u32, 1_000), -500);
+        assert_eq!(q27_scaled(1 << 26, 360_000), 180_000);
     }
 }

@@ -165,6 +165,7 @@ async fn dispatch(line: &str) {
             None => emit(&Reply::Error("control loop has not run yet")),
         },
         Request::Stop => command(Command::Off),
+        Request::Disarm => command(Command::Disarm),
         Request::SetDirection(direction) => command(Command::SetDirection(direction)),
         // Any user command licenses a fault clear; `Off` is the one that cannot also start
         // the fan as a side effect of clearing it.
@@ -208,11 +209,20 @@ async fn dispatch(line: &str) {
 
 async fn mpet(operation: MpetOp) {
     match operation {
-        MpetOp::Start => match latest().map(|telemetry| telemetry.state) {
-            Some(FanState::IdleOff) => command(Command::StartMpet),
-            Some(_) => emit(&Reply::Error("MPET starts only from idle_off")),
-            None => emit(&Reply::Error("state unknown; refusing MPET")),
-        },
+        MpetOp::Start | MpetOp::Electrical => {
+            let start_command = match operation {
+                MpetOp::Electrical => stillair_core::mcf8316::MPET_ELECTRICAL_START_COMMAND,
+                _ => stillair_core::mcf8316::MPET_START_COMMAND,
+            };
+            match latest().map(|telemetry| telemetry.state) {
+                Some(FanState::IdleOff) => {
+                    mcf::set_mpet_command(start_command);
+                    command(Command::StartMpet);
+                }
+                Some(_) => emit(&Reply::Error("MPET starts only from idle_off")),
+                None => emit(&Reply::Error("state unknown; refusing MPET")),
+            }
+        }
         MpetOp::Abort => {
             // Revoke permission even when the I2C write fails. Report success only after
             // both the supervisor accepted the abort and ALGO_DEBUG2 accepted MPET_CMD=0.

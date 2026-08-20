@@ -1,0 +1,15 @@
+# Matched-speed PWM acoustic comparison. Hall/FG quantify shaft regulation while the camera
+# microphone captures stable windows below and above the observed 160 RPM whine onset.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+stream 10 --for 12
+run 160
+wait speed 160 --within 3 --for 55
+stream 10 --for 20
+run 170
+wait speed 170 --within 3 --for 30
+stream 10 --for 20
+stop
+wait idle_off --for 120

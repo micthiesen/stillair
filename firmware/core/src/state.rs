@@ -91,6 +91,9 @@ pub enum FaultReason {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Command {
     Off,
+    /// Immediately revoke hardware drive permission. Commissioning-only escape hatch for
+    /// aborting MCF-owned startup ramps; normal user off remains [`Command::Off`].
+    Disarm,
     /// FanMode On without a percent write: resume the last non-zero setting.
     On,
     /// Target speed in mechanical RPM, clamped to the released user range.
@@ -109,9 +112,21 @@ impl Command {
         match self {
             Self::On | Self::StartMpet => true,
             Self::SetSpeed(speed) => !speed.is_zero(),
-            Self::Off | Self::SetDirection(_) | Self::AbortMpet => false,
+            Self::Off | Self::Disarm | Self::SetDirection(_) | Self::AbortMpet => false,
         }
     }
+}
+
+/// Which reviewed closed-loop current ceiling the MCF shadow register should use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum CurrentProfile {
+    /// Brief torque authority for alignment, open-loop acceleration, and closed-loop capture.
+    Acquisition,
+    /// Gentle ceiling immediately after physical rotation is established.
+    Settling,
+    /// Additional unloaded high-speed authority after closed loop is established.
+    Running,
 }
 
 /// What the supervisor wants the caller to do. The caller applies these in order.
@@ -128,6 +143,9 @@ pub enum Action {
     SetSpeedDuty(SpeedDuty),
     /// Set the DIR pin. Only ever emitted while verified stopped.
     SetDirection(Direction),
+    /// Select the one reviewed live variant of FAULT_CONFIG1. The I2C task changes only
+    /// ILIMIT and retries until the shadow register accepts it.
+    SetCurrentProfile(CurrentProfile),
     /// Issue CLR_FLT over I²C. Only ever emitted in response to a fresh user command.
     ClearMcfFault,
     /// Tell the I²C task to start all MPET measurements into shadow registers.
@@ -161,8 +179,15 @@ pub struct Inputs {
     /// this is a level, not an event: it is produced once at boot (and again after anything
     /// writes the configuration block) and holds until something changes it.
     pub config: ConfigCheck,
+    /// Whether the requested startup-current profile has been written and read back.
+    /// This only gates a new arm; a failed running-profile promotion safely leaves the
+    /// lower ceiling in force while the I2C task retries.
+    pub current_profile_ready: bool,
     pub fg_pulses: u32,
     pub hall_pulses: u32,
+    /// Latest one-pulse/revolution Hall edge period, captured at the edge in milliseconds.
+    /// Zero means unavailable; the core then falls back to its poll-time estimate.
+    pub hall_period_ms: u32,
 }
 
 /// The outcome of a fault-status register read.
@@ -190,8 +215,10 @@ impl Default for Inputs {
             mcf_alarm: false,
             mcf_status: StatusRead::Stale,
             config: ConfigCheck::Verified,
+            current_profile_ready: true,
             fg_pulses: 0,
             hall_pulses: 0,
+            hall_period_ms: 0,
         }
     }
 }
@@ -233,6 +260,9 @@ pub struct Supervisor {
     config: ConfigCheck,
     mpet_requested: bool,
     mpet_started: bool,
+    disarm_requested: bool,
+    current_profile: CurrentProfile,
+    current_ready_since: Option<Millis>,
 }
 
 impl Supervisor {
@@ -261,6 +291,9 @@ impl Supervisor {
             config: inputs.config,
             mpet_requested: false,
             mpet_started: false,
+            disarm_requested: false,
+            current_profile: CurrentProfile::Acquisition,
+            current_ready_since: None,
         }
     }
 
@@ -357,6 +390,10 @@ impl Supervisor {
                 self.desired.on = false;
                 self.mpet_requested = false;
             }
+            Command::Disarm => {
+                self.desired.on = false;
+                self.disarm_requested = true;
+            }
             Command::On => {
                 self.mpet_requested = false;
                 self.desired.on = true;
@@ -389,7 +426,12 @@ impl Supervisor {
     pub fn poll(&mut self, now: Millis, inputs: &Inputs) -> Actions {
         let dt = now.since(self.last_poll);
         self.last_poll = now;
-        self.tach.update(inputs.fg_pulses, inputs.hall_pulses, now);
+        self.tach.update_with_hall_period(
+            inputs.fg_pulses,
+            inputs.hall_pulses,
+            inputs.hall_period_ms,
+            now,
+        );
         self.observe_bus(now, inputs);
         self.config = inputs.config;
 
@@ -413,6 +455,22 @@ impl Supervisor {
             self.desired.on = false;
             self.mpet_requested = false;
             self.push(&mut actions, Action::ClearPermission);
+            self.set_current_profile(CurrentProfile::Acquisition, &mut actions);
+            self.emit_duty(SpeedDuty::ZERO, &mut actions);
+            self.transition(FanState::SafeBoot, now);
+            return actions;
+        }
+
+        if self.disarm_requested {
+            self.disarm_requested = false;
+            let was_mpet = matches!(self.state, FanState::MpetArming | FanState::Mpet);
+            self.mpet_requested = false;
+            self.mpet_started = false;
+            self.push(&mut actions, Action::ClearPermission);
+            self.set_current_profile(CurrentProfile::Acquisition, &mut actions);
+            if was_mpet {
+                self.push(&mut actions, Action::AbortMpet);
+            }
             self.emit_duty(SpeedDuty::ZERO, &mut actions);
             self.transition(FanState::SafeBoot, now);
             return actions;
@@ -439,6 +497,7 @@ impl Supervisor {
     /// Hold for the full TI window, then require healthy rails before proceeding. A rail
     /// that never comes good simply keeps us here, which is already the safe outcome.
     fn poll_safe_boot(&mut self, now: Millis, inputs: &Inputs, actions: &mut Actions) {
+        self.set_current_profile(CurrentProfile::Acquisition, actions);
         if now.since(self.state_entered) < config::SAFE_BOOT_HOLD_MS || !inputs.pgood {
             return;
         }
@@ -479,7 +538,12 @@ impl Supervisor {
                 self.mpet_requested = false;
                 return;
             }
-            ConfigCheck::Provisional | ConfigCheck::Verified => {}
+            ConfigCheck::Provisional => {
+                if !inputs.current_profile_ready {
+                    return;
+                }
+            }
+            ConfigCheck::Verified => {}
         }
         self.transition(FanState::IdleOff, now);
     }
@@ -508,15 +572,30 @@ impl Supervisor {
 
     fn poll_starting(&mut self, now: Millis, dt: u64, actions: &mut Actions) {
         if !self.desired.on || self.desired.speed.is_zero() {
-            self.transition(FanState::Stopping, now);
+            // The MCF's open-loop startup owns its forced electrical ramp until handoff;
+            // lowering the final speed reference does not abort that ramp. A normal
+            // `Stopping` transition can therefore accelerate a starting motor toward the
+            // handoff threshold after the user asked it to stop. Revoke hardware permission
+            // immediately instead. SafeBoot provides the coast/hold before any re-arm.
+            self.push(actions, Action::ClearPermission);
+            self.emit_duty(SpeedDuty::ZERO, actions);
+            self.transition(FanState::SafeBoot, now);
             return;
         }
         let elapsed = now.since(self.state_entered);
         if elapsed < config::ARM_SETTLE_MS {
             return;
         }
-        self.ramp.set_target(self.desired.speed);
-        self.advance_ramp(dt, actions);
+        if self.ramp.current().is_zero() {
+            // Present a valid final reference before triggering the MCF startup routine.
+            // The driver's own CL_ACC shapes physical acceleration from zero; this outer
+            // ramp resumes only after the minimum command has been established.
+            self.ramp.start_at(self.released_min);
+            self.emit_duty(speed::duty_for(self.released_min), actions);
+        } else {
+            self.ramp.set_target(self.desired.speed);
+            self.advance_ramp(dt, actions);
+        }
 
         if self.tach.fg_total() > self.start_fg_mark {
             self.transition(FanState::Running, now);
@@ -538,6 +617,7 @@ impl Supervisor {
             self.transition(FanState::Reversing, now);
             return;
         }
+        self.update_run_current(now, actions);
         self.ramp.set_target(self.desired.speed);
         self.advance_ramp(dt, actions);
     }
@@ -581,13 +661,23 @@ impl Supervisor {
             && self.desired.on
             && !self.desired.speed.is_zero()
             && self.desired.direction == self.applied_direction
+            && !self.ramp.current().is_zero()
         {
             self.transition(FanState::Running, now);
             return;
         }
 
-        self.ramp.set_target(MilliRpm::ZERO);
-        self.advance_ramp(dt, actions);
+        // Sensorless control is not qualified below the released minimum. Ramp to that
+        // floor, then command zero and let the MCF's configured coast stop own the rest.
+        // Asking the estimator to regulate the last few RPM can lose BEMF and latch a
+        // motor-lock fault, which reverse bench qualification reproduced at 3 RPM.
+        if self.ramp.current() > self.released_min {
+            self.ramp.set_target(self.released_min);
+            self.advance_ramp(dt, actions);
+        } else if !self.ramp.current().is_zero() {
+            self.ramp.reset();
+            self.emit_duty(SpeedDuty::ZERO, actions);
+        }
 
         if !self.ramp.current().is_zero() || !self.tach.is_quiet(now) {
             return;
@@ -595,6 +685,7 @@ impl Supervisor {
         // A normal stop revokes permission. Every restart therefore re-arms and pays the
         // ten-second DRVOFF hold — a deliberate safety-over-UX choice (docs/controls.md).
         self.push(actions, Action::ClearPermission);
+        self.set_current_profile(CurrentProfile::Acquisition, actions);
         self.transition(FanState::SafeBoot, now);
     }
 
@@ -709,6 +800,7 @@ impl Supervisor {
             self.push(actions, Action::SetDirection(self.applied_direction));
         }
         self.ramp.reset();
+        self.set_current_profile(CurrentProfile::Acquisition, actions);
         self.emit_duty(SpeedDuty::ZERO, actions);
         self.push(actions, Action::ArmPulse);
         self.start_fg_mark = self.tach.fg_total();
@@ -717,6 +809,7 @@ impl Supervisor {
 
     fn begin_mpet(&mut self, now: Millis, actions: &mut Actions) {
         self.ramp.reset();
+        self.set_current_profile(CurrentProfile::Acquisition, actions);
         self.emit_duty(SpeedDuty::ZERO, actions);
         self.mpet_started = false;
         self.push(actions, Action::ArmPulse);
@@ -733,6 +826,7 @@ impl Supervisor {
         // pin, and putting the safety-critical action at the head of the buffer means it
         // survives even if some future path overflows the rest.
         self.push(actions, Action::ClearPermission);
+        self.set_current_profile(CurrentProfile::Acquisition, actions);
         if was_mpet {
             self.push(actions, Action::AbortMpet);
             self.mpet_requested = false;
@@ -758,10 +852,52 @@ impl Supervisor {
     fn transition(&mut self, state: FanState, now: Millis) {
         self.state = state;
         self.state_entered = now;
+        if state != FanState::Running {
+            self.current_ready_since = None;
+        }
         if state == FanState::SafeBoot {
             self.ramp.reset();
             self.last_duty = SpeedDuty::ZERO;
         }
+    }
+
+    fn update_run_current(&mut self, now: Millis, actions: &mut Actions) {
+        if self.current_profile == CurrentProfile::Running {
+            return;
+        }
+        if self.current_profile == CurrentProfile::Acquisition {
+            let capture = MilliRpm::from_rpm(config::RUN_CURRENT_CAPTURE_RPM);
+            if self.tach.measured() < capture {
+                return;
+            }
+            self.set_current_profile(CurrentProfile::Settling, actions);
+            self.current_ready_since = None;
+            return;
+        }
+        let minimum = MilliRpm::from_rpm(config::RUN_CURRENT_PROMOTE_MIN_RPM);
+        if self.ramp.current() < minimum {
+            self.current_ready_since = None;
+            return;
+        }
+        if self.ramp.current().0.abs_diff(self.tach.measured().0)
+            > config::RUN_CURRENT_PROMOTE_TOLERANCE_MRPM
+        {
+            self.current_ready_since = None;
+            return;
+        }
+        let ready_since = *self.current_ready_since.get_or_insert(now);
+        if now.since(ready_since) >= config::RUN_CURRENT_PROMOTE_HOLD_MS {
+            self.set_current_profile(CurrentProfile::Running, actions);
+            self.current_ready_since = None;
+        }
+    }
+
+    fn set_current_profile(&mut self, profile: CurrentProfile, actions: &mut Actions) {
+        if self.current_profile == profile {
+            return;
+        }
+        self.current_profile = profile;
+        self.push(actions, Action::SetCurrentProfile(profile));
     }
 
     fn clamp_speed(&self, speed: MilliRpm) -> MilliRpm {
@@ -825,12 +961,74 @@ mod tests {
     #[test]
     fn every_drive_starting_command_is_classified_for_the_configuration_gate() {
         assert!(!Command::Off.starts_drive());
+        assert!(!Command::Disarm.starts_drive());
         assert!(Command::On.starts_drive());
         assert!(!Command::SetSpeed(MilliRpm::ZERO).starts_drive());
         assert!(Command::SetSpeed(MilliRpm::from_rpm(35)).starts_drive());
         assert!(!Command::SetDirection(Direction::Reverse).starts_drive());
         assert!(Command::StartMpet.starts_drive());
         assert!(!Command::AbortMpet.starts_drive());
+    }
+
+    #[test]
+    fn safe_boot_waits_for_the_startup_current_profile_readback() {
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Provisional;
+        bench.inputs.current_profile_ready = false;
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS + 1_000);
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+
+        bench.inputs.current_profile_ready = true;
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn verified_image_does_not_depend_on_the_provisional_current_profile() {
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Verified;
+        bench.inputs.current_profile_ready = false;
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS + 1_000);
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn running_current_is_promoted_only_after_stable_minimum_speed() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(35)));
+        bench.run_until(300_000, "settling current", |s| {
+            s.current_profile == CurrentProfile::Settling
+        });
+        assert!(bench.saw(Action::SetCurrentProfile(CurrentProfile::Settling)));
+        assert!(!bench.saw(Action::SetCurrentProfile(CurrentProfile::Running)));
+
+        bench.run_ms(config::RUN_CURRENT_PROMOTE_HOLD_MS - bench.tick_ms);
+        assert!(!bench.saw(Action::SetCurrentProfile(CurrentProfile::Running)));
+        bench.run_until(5_000, "running current", |s| {
+            s.current_profile == CurrentProfile::Running
+        });
+        assert!(bench.saw(Action::SetCurrentProfile(CurrentProfile::Running)));
+    }
+
+    #[test]
+    fn stop_demotes_current_before_the_next_start() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(35);
+        bench.run_until(
+            config::RUN_CURRENT_PROMOTE_HOLD_MS + 5_000,
+            "running current",
+            |s| s.current_profile == CurrentProfile::Running,
+        );
+        assert!(bench.saw(Action::SetCurrentProfile(CurrentProfile::Running)));
+
+        bench.take_log();
+        bench.supervisor.command(Command::Off);
+        bench.run_until(300_000, "SafeBoot", |s| s.state() == FanState::SafeBoot);
+        assert!(bench.saw(Action::SetCurrentProfile(CurrentProfile::Acquisition)));
     }
 
     /// What the simulated status-reading task is doing.
@@ -1242,8 +1440,10 @@ mod tests {
         bench.run_until(120_000, "60 RPM", |s| {
             s.commanded() == MilliRpm::from_rpm(60)
         });
-        // 60 RPM at 1.5 RPM/s is 40 s; the arm settle adds a tick or two.
-        let expected = 60_000 * 1_000 / u64::from(config::RAMP_MILLI_RPM_PER_S);
+        // The MCF receives the qualified 35 RPM startup floor immediately, then this outer
+        // ramp limits only the remaining 25 RPM. The driver's own CL_ACC limits the physical
+        // zero-to-floor acceleration.
+        let expected = (60_000 - 35_000) * 1_000 / u64::from(config::RAMP_MILLI_RPM_PER_S);
         assert!(
             bench.now.0 >= config::SAFE_BOOT_HOLD_MS + expected,
             "reached speed in {} ms, faster than the ramp allows",
@@ -1276,6 +1476,43 @@ mod tests {
     }
 
     #[test]
+    fn stopping_during_startup_revokes_permission_immediately() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(35)));
+        bench.run_until(5_000, "nonzero startup command", |s| {
+            s.state() == FanState::Starting && !s.commanded().is_zero()
+        });
+        bench.take_log();
+
+        bench.supervisor.command(Command::Off);
+        let actions = bench.tick();
+
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::ZERO);
+        assert_eq!(actions.first(), Some(&Action::ClearPermission));
+        assert!(actions.contains(&Action::SetSpeedDuty(SpeedDuty::ZERO)));
+    }
+
+    #[test]
+    fn commissioning_disarm_revokes_permission_immediately_while_running() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(40);
+        bench.take_log();
+
+        bench.supervisor.command(Command::Disarm);
+        let actions = bench.tick();
+
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::ZERO);
+        assert_eq!(actions.first(), Some(&Action::ClearPermission));
+        assert!(actions.contains(&Action::SetSpeedDuty(SpeedDuty::ZERO)));
+    }
+
+    #[test]
     fn a_stop_does_not_complete_until_the_rotor_is_verified_stopped() {
         let mut bench = Bench::new();
         bench.boot();
@@ -1292,6 +1529,24 @@ mod tests {
         bench.run_until(config::STOPPED_QUIET_MS + 1_000, "SafeBoot", |s| {
             s.state() == FanState::SafeBoot
         });
+    }
+
+    #[test]
+    fn a_normal_stop_never_commands_the_unqualified_subminimum_range() {
+        let mut bench = Bench::new();
+        bench.boot();
+        bench.run_at(60);
+        bench.supervisor.command(Command::Off);
+
+        while !bench.supervisor.commanded().is_zero() {
+            bench.tick();
+            let commanded = bench.supervisor.commanded();
+            assert!(
+                commanded.is_zero() || commanded >= bench.supervisor.released_min(),
+                "commanded {} milli-RPM below the sensorless floor",
+                commanded.0
+            );
+        }
     }
 
     #[test]

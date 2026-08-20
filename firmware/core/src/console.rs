@@ -40,6 +40,8 @@ pub enum Request {
     /// script can exercise the percent mapping rather than only the RPM one it bypasses.
     Percent(u8),
     Stop,
+    /// Commissioning-only immediate hardware permission revocation.
+    Disarm,
     SetDirection(Direction),
     RegRead(u16),
     /// Raw configuration-shadow access for deriving settings at the bench. The device
@@ -79,6 +81,7 @@ pub enum ConfigOp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MpetOp {
     Start,
+    Electrical,
     Status,
     Abort,
 }
@@ -124,10 +127,12 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
     // `str::to_ascii_lowercase` would need one.
     let is = |word: &str, expected: &str| word.eq_ignore_ascii_case(expected);
 
-    if is(command, "state") {
+    let parsed = if is(command, "state") {
         Ok(Request::State)
     } else if is(command, "stop") {
         Ok(Request::Stop)
+    } else if is(command, "disarm") {
+        Ok(Request::Disarm)
     } else if is(command, "help") {
         Ok(Request::Help)
     } else if is(command, "run") {
@@ -156,6 +161,8 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
         let operation = argument()?;
         if is(operation, "start") {
             Ok(Request::Mpet(MpetOp::Start))
+        } else if is(operation, "electrical") {
+            Ok(Request::Mpet(MpetOp::Electrical))
         } else if is(operation, "status") {
             Ok(Request::Mpet(MpetOp::Status))
         } else if is(operation, "abort") {
@@ -204,6 +211,12 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
         }
     } else {
         Err(ParseError::UnknownCommand)
+    };
+
+    if parsed.is_ok() && words.next().is_some() {
+        Err(ParseError::BadArgument)
+    } else {
+        parsed
     }
 }
 
@@ -390,11 +403,12 @@ pub const HELP: &[&str] = &[
     "run <rpm>                 command a speed (clamped to the released range)",
     "pct <0-100>               command a Matter PercentSetting (0 = off)",
     "stop                      command off",
+    "disarm                    immediately revoke drive permission",
     "config check              re-verify the MCF's stored configuration",
     "config stage              load the volatile first-spin image (stopped only)",
     "config apply              write the golden image (only while stopped)",
     "config dump               read the whole EEPROM configuration block",
-    "mpet start|status|abort   controlled motor-parameter extraction service",
+    "mpet start|electrical|status|abort   controlled parameter extraction service",
     "dir fwd|rev               set direction (takes effect from a verified stop)",
     "reg read <name|addr>      read a 32-bit register",
     "reg write <config> <value> write a volatile configuration register",
@@ -517,6 +531,7 @@ mod tests {
     fn simple_commands_parse() {
         assert_eq!(parse("state"), Ok(Request::State));
         assert_eq!(parse("stop"), Ok(Request::Stop));
+        assert_eq!(parse("disarm"), Ok(Request::Disarm));
         assert_eq!(parse("help"), Ok(Request::Help));
         assert_eq!(parse("fault clear"), Ok(Request::ClearFault));
     }
@@ -549,6 +564,14 @@ mod tests {
         assert_eq!(parse("run"), Err(ParseError::MissingArgument));
         assert_eq!(parse("run fast"), Err(ParseError::BadArgument));
         assert_eq!(parse("run -5"), Err(ParseError::BadArgument));
+    }
+
+    #[test]
+    fn oversized_run_command_saturates_before_supervisor_clamping() {
+        assert_eq!(
+            parse("run 4294967295"),
+            Ok(Request::Run(MilliRpm(u32::MAX)))
+        );
     }
 
     #[test]
@@ -632,6 +655,24 @@ mod tests {
     }
 
     #[test]
+    fn trailing_words_are_rejected_for_every_command_shape() {
+        for command in [
+            "state now",
+            "run 60 now",
+            "dir forward now",
+            "config stage now",
+            "mpet status now",
+            "fault clear now",
+            "stream off now",
+            "stream on 10 now",
+            "reg read ISD_CONFIG now",
+            "reg write ISD_CONFIG 1 now",
+        ] {
+            assert_eq!(parse(command), Err(ParseError::BadArgument), "{command}");
+        }
+    }
+
+    #[test]
     fn percent_commands_cover_the_matter_range_and_nothing_else() {
         assert_eq!(parse("pct 0"), Ok(Request::Percent(0)));
         assert_eq!(parse("pct 100"), Ok(Request::Percent(100)));
@@ -657,6 +698,10 @@ mod tests {
     #[test]
     fn mpet_operations_parse_and_report_all_raw_results() {
         assert_eq!(parse("mpet start"), Ok(Request::Mpet(MpetOp::Start)));
+        assert_eq!(
+            parse("mpet electrical"),
+            Ok(Request::Mpet(MpetOp::Electrical))
+        );
         assert_eq!(parse("MPET Status"), Ok(Request::Mpet(MpetOp::Status)));
         assert_eq!(parse("mpet abort"), Ok(Request::Mpet(MpetOp::Abort)));
         assert_eq!(parse("mpet"), Err(ParseError::MissingArgument));

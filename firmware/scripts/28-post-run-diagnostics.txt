@@ -1,0 +1,26 @@
+# Read-only post-run controller snapshot. This must never issue a run or arm command.
+state
+reg read GATE_DRIVER_FAULT_STATUS
+reg read CONTROLLER_FAULT_STATUS
+reg read ALGO_STATUS
+reg read ALGORITHM_STATE
+reg read SPEED_FDBK
+reg read FG_SPEED_FDBK
+reg read BUS_CURRENT
+reg read VM_VOLTAGE
+reg read ID
+reg read IQ
+reg read VD
+reg read VQ
+reg read ED
+reg read EQ
+reg read CURRENT_PI
+reg read SPEED_PI
+reg read MOTOR_STARTUP1
+reg read MOTOR_STARTUP2
+reg read CLOSED_LOOP1
+reg read CLOSED_LOOP2
+reg read CLOSED_LOOP3
+reg read CLOSED_LOOP4
+reg read FAULT_CONFIG1
+reg read FAULT_CONFIG2

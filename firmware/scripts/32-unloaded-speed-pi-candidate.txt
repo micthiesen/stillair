@@ -1,0 +1,19 @@
+# Fast comparison for one speed-PI candidate. A clean 100 RPM reference, a 130 RPM control,
+# and the guarded 140 RPM threshold are enough to accept or reject a gain change.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+estimator sample --for 5
+run 130
+wait speed 130 --within 3 --for 35
+dwell 5
+estimator sample --for 5
+run 140
+wait speed 140 --within 3 --for 25
+dwell 10
+estimator sample --for 8
+dwell 5
+stop
+wait idle_off --for 120

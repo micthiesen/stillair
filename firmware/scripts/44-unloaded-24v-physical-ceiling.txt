@@ -1,0 +1,19 @@
+# Full intended-bus ceiling qualification without intensive estimator traffic. Camera motion,
+# normal supervisor telemetry, and wall power remain independent authorities at every rung.
+fault clear
+wait idle_off --for 20
+dir forward
+run 100
+wait speed 100 --within 2 --for 80
+dwell 10
+run 140
+wait speed 140 --within 3 --for 50
+dwell 15
+run 160
+wait speed 160 --within 3 --for 45
+dwell 20
+run 170
+wait speed 170 --within 3 --for 45
+dwell 30
+stop
+wait idle_off --for 120

@@ -1,0 +1,13 @@
+# Isolate current-sense resolution at a known-stable physical operating point before any
+# high-speed trial. Read back the gain decisions and then capture one-minute observer data.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 10
+reg read CSA_GAIN_FEEDBACK
+reg read 0x477
+reg read VM_VOLTAGE
+estimator sample --for 60 --interval-ms 1000
+stop
+wait idle_off --for 120

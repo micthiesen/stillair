@@ -73,6 +73,10 @@ impl SpeedPwm {
 /// the supervisor only ever asks whether they advanced.
 pub static FG_PULSES: AtomicU32 = AtomicU32::new(0);
 pub static HALL_PULSES: AtomicU32 = AtomicU32::new(0);
+/// Most recent Hall edge-to-edge period, timestamped in the edge task rather than inferred
+/// from the slower control-loop sampling cadence. Zero means fewer than two edges observed.
+pub static HALL_PERIOD_MS: AtomicU32 = AtomicU32::new(0);
+pub static HALL_LAST_EDGE_MS: AtomicU32 = AtomicU32::new(0);
 /// Current PGOOD level and a sticky falling-edge latch, maintained by `pgood_task`.
 pub static PGOOD_HIGH: AtomicBool = AtomicBool::new(false);
 pub static PGOOD_FELL: AtomicBool = AtomicBool::new(false);
@@ -142,8 +146,10 @@ impl Board {
             // about either.
             mcf_status: StatusRead::Stale,
             config: ConfigCheck::Pending,
+            current_profile_ready: crate::mcf::current_profile_ready(),
             fg_pulses: FG_PULSES.load(Ordering::Relaxed),
             hall_pulses: HALL_PULSES.load(Ordering::Relaxed),
+            hall_period_ms: HALL_PERIOD_MS.load(Ordering::Relaxed),
         }
     }
 
@@ -179,6 +185,7 @@ impl Board {
                 Direction::Forward => Level::Low,
                 Direction::Reverse => Level::High,
             }),
+            Action::SetCurrentProfile(profile) => crate::mcf::set_current_profile(profile),
             Action::ClearMcfFault => {
                 // Handed to the I²C task rather than performed here: the control loop must
                 // not block on a bus that may be exactly what is broken.

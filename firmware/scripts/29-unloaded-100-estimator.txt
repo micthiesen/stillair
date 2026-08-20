@@ -1,0 +1,11 @@
+# Known-stable 100 RPM point. Capture the observer/current signals needed to diagnose the
+# 24 V high-speed instability without revisiting the noisy 170 RPM operating point.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 70
+dwell 6
+estimator sample --for 20
+dwell 6
+stop
+wait idle_off --for 60

@@ -1,0 +1,32 @@
+# Physical calibration and hysteresis ladder with timestamped six-second plateaus.
+fault clear
+wait idle_off --for 20
+run 35
+wait speed 35 --within 2 --for 70
+dwell 6
+run 60
+wait speed 60 --within 2 --for 50
+dwell 6
+run 100
+wait speed 100 --within 2 --for 60
+dwell 6
+run 140
+wait speed 140 --within 2 --for 60
+dwell 6
+run 170
+wait speed 170 --within 3 --for 70
+dwell 10
+run 140
+wait speed 140 --within 2 --for 60
+dwell 6
+run 100
+wait speed 100 --within 2 --for 60
+dwell 6
+run 60
+wait speed 60 --within 2 --for 60
+dwell 6
+run 35
+wait speed 35 --within 2 --for 70
+dwell 6
+stop
+wait idle_off --for 60

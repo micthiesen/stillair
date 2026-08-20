@@ -47,7 +47,7 @@ pub const STOPPED_QUIET_MS: u64 = STOPPED_QUIET_SECS * 1_000;
 pub const HALL_PLAUSIBILITY_REVS: u32 = 5;
 
 /// FG pulses per mechanical revolution, with `FG_DIV` = 1h (docs/electrical.md).
-pub const FG_PULSES_PER_REV: u32 = 20;
+pub const FG_PULSES_PER_REV: u32 = POLE_PAIRS;
 
 /// The rotor Hall tach is deliberately one pulse per revolution — the same signal the
 /// analog overspeed chain integrates.
@@ -56,6 +56,17 @@ pub const HALL_PULSES_PER_REV: u32 = 1;
 /// Settling time between arming the permission latch and commanding a nonzero speed.
 /// Covers the latch propagating to DRVOFF; not a datasheet number, just slack.
 pub const ARM_SETTLE_MS: u64 = 50;
+
+/// Drop the acquisition torque ceiling as soon as tach feedback proves that the rotor has
+/// accelerated beyond the configured 9 RPM first cycle. This retains 0.25 A for capture but
+/// prevents it from driving the low-inertia rotor through the 35 RPM target during settling.
+pub const RUN_CURRENT_CAPTURE_RPM: u32 = 10;
+
+/// Restore the 0.25 A torque ceiling only after sensorless closed loop is established and
+/// the normal 35 RPM floor has tracked closely for two seconds.
+pub const RUN_CURRENT_PROMOTE_MIN_RPM: u32 = RPM_USER_MIN_TARGET;
+pub const RUN_CURRENT_PROMOTE_TOLERANCE_MRPM: u32 = 5_000;
+pub const RUN_CURRENT_PROMOTE_HOLD_MS: u64 = 2_000;
 
 /// Device-side backstop for an abandoned MPET host session. The host normally uses a
 /// 120-second deadline and aborts first; this ensures a disconnected laptop cannot leave

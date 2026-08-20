@@ -732,7 +732,7 @@ def page_4b(c: Canvas, n: int) -> None:
     s.checkboxes([
         "Measure phase R and L independently with the method and connection convention recorded.",
         "Manually spin the GL100 and scope line-to-line BEMF; record amplitude and phase convention.",
-        "Record the measured values beside provisional seeds 0xB1 / 0xAE / 0xCA. Do not call the seeds released.",
+        "Record the measured values beside provisional seeds 0xB1 / 0xAE / 0xC0. Do not call the seeds released.",
         "Confirm 20 pole pairs and inspect console, FG, Hall, watchdog, and stop behavior without raw live register writes.",
         "Scope only the motor operations already approved by the bench procedure; VM target <=35 V and 40 V rejects.",
         "Keep blades and loose hub hardware off throughout this bare-motor stage.",

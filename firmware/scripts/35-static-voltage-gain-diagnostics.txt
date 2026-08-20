@@ -1,0 +1,8 @@
+# No motor command: verify the configured bus range, the dynamic voltage-gain selection,
+# and the controller's DC-bus measurement while stationary.
+fault clear
+wait idle_off --for 20
+reg read DEVICE_CONFIG1
+reg read DEVICE_CONFIG2
+reg read 0x477
+reg read VM_VOLTAGE

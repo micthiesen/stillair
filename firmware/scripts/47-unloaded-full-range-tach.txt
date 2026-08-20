@@ -1,0 +1,19 @@
+# Full-range qualification with sampled Hall edge-period estimates and MCF FG telemetry as
+# the shaft-speed authorities. Camera guards gross stop/reversal only; audio is retained for
+# matched-speed spectral comparison.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+stream 10 --for 15
+run 140
+wait speed 140 --within 3 --for 50
+stream 10 --for 20
+run 160
+wait speed 160 --within 3 --for 45
+stream 10 --for 30
+run 170
+wait speed 170 --within 3 --for 45
+stream 10 --for 60
+stop
+wait idle_off --for 120

@@ -1,0 +1,15 @@
+# Capture the controller's observer and current-loop state through the repeatable physical
+# oscillation above 140 RPM. The camera guard remains authoritative and cuts wall power if
+# the transient exceeds the already-qualified envelope.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+run 140
+wait speed 140 --within 3 --for 50
+dwell 10
+run 160
+estimator sample --for 45 --interval-ms 500
+stop
+wait idle_off --for 120

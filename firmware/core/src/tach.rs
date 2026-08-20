@@ -22,6 +22,11 @@ struct Channel {
     window_start: Millis,
     window_pulses: u32,
     estimate: MilliRpm,
+    /// Edge-period estimate, used by the one-pulse/revolution Hall channel. A fixed
+    /// counting window quantizes that channel into meaningless integer pulses per window.
+    period_anchor: Millis,
+    period_ready: bool,
+    period_estimate: MilliRpm,
 }
 
 impl Channel {
@@ -34,6 +39,9 @@ impl Channel {
             window_start: now,
             window_pulses: 0,
             estimate: MilliRpm::ZERO,
+            period_anchor: now,
+            period_ready: false,
+            period_estimate: MilliRpm::ZERO,
         }
     }
 
@@ -44,6 +52,20 @@ impl Channel {
         self.total = self.total.saturating_add(u64::from(delta));
         if delta > 0 {
             self.last_change = now;
+            if self.period_ready {
+                self.period_estimate = milli_rpm_from_pulses(
+                    delta,
+                    now.since(self.period_anchor),
+                    self.pulses_per_rev,
+                );
+            }
+            self.period_anchor = now;
+            self.period_ready = true;
+        } else if self.silent_for(now) >= config::STOPPED_QUIET_MS {
+            // A period estimate is only evidence while edges keep arriving. In particular,
+            // do not keep publishing the final moving period after the rotor has stopped.
+            self.period_estimate = MilliRpm::ZERO;
+            self.period_ready = false;
         }
         self.window_pulses = self.window_pulses.saturating_add(delta);
 
@@ -89,6 +111,23 @@ impl Tach {
         }
     }
 
+    /// Update both counters and, when supplied by hardware, use the precisely timestamped
+    /// Hall edge period instead of the control-loop-quantized fallback.
+    pub fn update_with_hall_period(
+        &mut self,
+        fg_raw: u32,
+        hall_raw: u32,
+        hall_period_ms: u32,
+        now: Millis,
+    ) {
+        let previous_hall_total = self.hall.total;
+        self.update(fg_raw, hall_raw, now);
+        if self.hall.total != previous_hall_total && hall_period_ms > 0 {
+            self.hall.period_estimate =
+                milli_rpm_from_pulses(1, u64::from(hall_period_ms), config::HALL_PULSES_PER_REV);
+        }
+    }
+
     /// Wrap-corrected FG total. Snapshot it and compare later to ask "did the rotor move
     /// at all since then?" without inventing a motion-detection window.
     pub const fn fg_total(&self) -> u64 {
@@ -106,7 +145,7 @@ impl Tach {
 
     /// The independent Hall estimate, for telemetry and for eyeballing FG agreement.
     pub const fn measured_hall(&self) -> MilliRpm {
-        self.hall.estimate
+        self.hall.period_estimate
     }
 
     /// "Verified stopped": neither channel has produced an edge for the full quiet
@@ -219,6 +258,19 @@ mod tests {
         spin(&mut tach, &mut now, 10, 1_000);
         assert_eq!(tach.measured().whole_rpm(), 60);
         assert_eq!(tach.measured_hall().whole_rpm(), 60);
+    }
+
+    #[test]
+    fn hall_period_estimate_expires_after_edge_silence() {
+        let mut now = Millis::ZERO;
+        let mut tach = Tach::new(0, 0, now);
+        now = now.plus_ms(1_000);
+        tach.update_with_hall_period(20, 1, 1_000, now);
+        assert_eq!(tach.measured_hall().whole_rpm(), 60);
+
+        now = now.plus_ms(config::STOPPED_QUIET_MS);
+        tach.update_with_hall_period(20, 1, 1_000, now);
+        assert_eq!(tach.measured_hall(), MilliRpm::ZERO);
     }
 
     #[test]

@@ -1,0 +1,10 @@
+# Final worst-case unloaded endurance qualification at the user ceiling. Continuous camera,
+# Hall/FG telemetry, fault monitoring, and wall-power evidence remain active for the full hold.
+fault clear
+wait idle_off --for 20
+dir forward
+run 170
+wait speed 170 --within 3 --for 120
+dwell 600
+stop
+wait idle_off --for 120

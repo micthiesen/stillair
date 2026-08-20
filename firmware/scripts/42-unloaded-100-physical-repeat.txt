@@ -1,0 +1,10 @@
+# Cold-start and sustained low-speed regulation check. The long dwell distinguishes a real
+# 100 RPM bias from the final seconds of the deliberately gentle acceleration ramp.
+fault clear
+wait idle_off --for 20
+dir forward
+run 100
+wait speed 100 --within 2 --for 80
+dwell 60
+stop
+wait idle_off --for 100

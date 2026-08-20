@@ -22,13 +22,15 @@ use crate::speed::MilliRpm;
 
 /// Provisional register seeds (measured values win — see docs/controls.md).
 pub mod seeds {
-    /// MOTOR_RES seed: 1.35 Ω (phase-neutral, from 2.65 Ω line-to-line star).
+    /// MOTOR_RES: selected unloaded baseline 1.35 Ω. Stationary electrical MPET's 1.65 Ω
+    /// result made the delayed observer instability substantially worse.
     pub const MOTOR_RES: u8 = 0xB1;
-    /// MOTOR_IND seed: 1.20 mH (phase-neutral, from 2.35 mH line-to-line star).
+    /// MOTOR_IND: selected unloaded baseline 1.20 mH. Stationary electrical MPET's 1.50 mH
+    /// result made the delayed observer instability substantially worse.
     pub const MOTOR_IND: u8 = 0xAE;
-    /// MOTOR_BEMF_CONST seed: 320 mV/electrical-Hz. Unverified convention;
-    /// treat strictly as a V1 commissioning guess.
-    pub const MOTOR_BEMF_CONST: u8 = 0xCA;
+    /// MOTOR_BEMF_CONST: 210 mV/electrical-Hz, the nearest Table 7-4 code to synchronized
+    /// physical shaft speed versus live q-axis BEMF with the GL100's 20 pole pairs.
+    pub const MOTOR_BEMF_CONST: u8 = 0xC0;
     /// MAX_SPEED: decimal 360 = 60 electrical Hz = 180 mechanical RPM
     /// (TI scaling: electrical Hz = MAX_SPEED / 6). Verify against silicon rev.
     pub const MAX_SPEED: u16 = 0x0168;
@@ -41,10 +43,60 @@ pub const MAX_SPEED_PER_ELECTRICAL_HZ: u32 = 6;
 /// makes load-bearing. Everything here is pinned to a specific SLLSFX9A table — the rest of
 /// the configuration block stays deliberately untranscribed (see the module doc).
 pub mod fields {
+    /// `CLOSED_LOOP1.CL_ACC`, bits 29-25 (Table 8-7). Firmware already produces the
+    /// released 1.5 mechanical-RPM/s trajectory. `0x1f` removes the MCF's second slew
+    /// limiter so it follows that trajectory instead of chasing an equal-rate inner ramp.
+    pub const CL_ACC_MASK: u32 = 0x1F << 25;
+    pub const CL_ACC_NO_LIMIT: u32 = 0x1F << 25;
+
+    /// `CLOSED_LOOP1.DEADTIME_COMP_EN`, bit 2 (Table 8-7). TI's acoustic-performance
+    /// guidance recommends enabling it; phase-current distortion from uncompensated FET
+    /// dead time becomes audible torque ripple below the silicon's 102 eHz disable point.
+    pub const DEADTIME_COMP_EN: u32 = 1 << 2;
+
+    /// `CLOSED_LOOP1.PWM_FREQ_OUT`, bits 18-15 (Table 8-7). Higher switching frequency
+    /// trades switching loss for lower phase-current ripple.
+    pub const PWM_FREQ_OUT_MASK: u32 = 0xF << 15;
+    pub const PWM_FREQ_OUT_20_KHZ: u32 = 0x2 << 15;
+    pub const PWM_FREQ_OUT_25_KHZ: u32 = 0x3 << 15;
+    pub const PWM_FREQ_OUT_30_KHZ: u32 = 0x4 << 15;
+    pub const PWM_FREQ_OUT_40_KHZ: u32 = 0x6 << 15;
+    pub const PWM_FREQ_OUT_50_KHZ: u32 = 0x8 << 15;
+    pub const PWM_FREQ_OUT_60_KHZ: u32 = 0xA << 15;
+
+    /// `FAULT_CONFIG1.ILIMIT`, bits 30-27 (Table 8-19): closed-loop Iq reference ceiling.
+    pub const ILIMIT_MASK: u32 = 0xF << 27;
+    pub const ILIMIT_0P125_A: u32 = 0x0 << 27;
+    pub const ILIMIT_0P25_A: u32 = 0x1 << 27;
+
+    /// `GD_CONFIG1.SLEW_RATE`, bits 27-26 (Table 8-27).
+    pub const SLEW_RATE_MASK: u32 = 0b11 << 26;
+    pub const SLEW_RATE_125_V_PER_US: u32 = 0b10 << 26;
+    pub const SLEW_RATE_200_V_PER_US: u32 = 0b11 << 26;
+
     /// `CLOSED_LOOP4.MAX_SPEED`, bits 13–0 (Table 8-10): the 14-bit stored speed ceiling,
     /// electrical Hz × 6. The upper bits of the register are the speed-loop Kp/Ki gains,
     /// which a `MAX_SPEED`-only setting must not claim.
     pub const MAX_SPEED_MASK: u32 = 0x3FFF;
+
+    /// `DEVICE_CONFIG1.BUS_VOLT`, bits 1-0 (Table 8-24): 15/30/40 V gain selections.
+    pub const BUS_VOLT_MASK: u32 = 0b11;
+    pub const BUS_VOLT_30_V: u32 = 0b01;
+
+    /// `DEVICE_CONFIG2.DYNAMIC_VOLTAGE_GAIN_EN`, bit 12 (Table 8-25).
+    pub const DYNAMIC_VOLTAGE_GAIN_EN: u32 = 1 << 12;
+
+    /// `DEVICE_CONFIG2.DYNAMIC_CSA_GAIN_EN`, bit 13 (Table 8-25).
+    pub const DYNAMIC_CSA_GAIN_EN: u32 = 1 << 13;
+
+    /// `PIN_CONFIG.VDC_FILTER`, bits 28-27 (Table 8-23).
+    pub const VDC_FILTER_MASK: u32 = 0b11 << 27;
+    pub const VDC_FILTER_100_HZ: u32 = 0b10 << 27;
+
+    /// `GD_CONFIG1.CSA_GAIN`, bits 1-0 (Table 8-27).
+    pub const CSA_GAIN_MASK: u32 = 0b11;
+    pub const CSA_GAIN_0P6_V_PER_A: u32 = 0b10;
+    pub const CSA_GAIN_1P2_V_PER_A: u32 = 0b11;
 
     /// `DEVICE_CONFIG2.DEV_MODE`, bit 11 (Table 8-25): 0h = standby, 1h = sleep.
     /// Standby keeps I2C alive when SPEED is zero; sleep disables it.
@@ -96,6 +148,10 @@ pub fn milli_rpm_to_max_speed(rpm: MilliRpm, pole_pairs: u32) -> u16 {
 /// whole 32-bit values whose meaning is derived at the bench with the console, not from
 /// guesses committed to source.
 pub mod reg {
+    /// Lower speed-Kp bits, speed Ki, and MAX_SPEED (§8.1.10).
+    pub const CLOSED_LOOP4: u16 = 0x08E;
+    /// Closed-loop current ceiling and lock-current protection configuration (§8.2.1).
+    pub const FAULT_CONFIG1: u16 = 0x090;
     /// Gate-driver fault status (§9.1.1).
     pub const GATE_DRIVER_FAULT_STATUS: u16 = 0x0E0;
     /// Controller fault status (§9.1.2).
@@ -116,8 +172,6 @@ pub mod reg {
     pub const CURRENT_PI: u16 = 0x0F0;
     /// Speed-loop gains calculated by MPET.
     pub const SPEED_PI: u16 = 0x0F2;
-    /// Speed-loop gains and the `MAX_SPEED` stored ceiling (§8.3, Table 8-10).
-    pub const CLOSED_LOOP4: u16 = 0x08E;
     /// Sleep/CSA/clock and the external-watchdog fields (§8.3.3, Table 8-25).
     pub const DEVICE_CONFIG2: u16 = 0x0A8;
     /// Pin muxing: `SPEED_MODE`, `ALARM_PIN_EN`, brake/dir input selects (§8.3).
@@ -264,11 +318,17 @@ pub const EEPROM_WRITE_MIN_MS: u32 = 750;
 /// Persistence remains a separate, explicit `config apply` operation.
 pub const MPET_START_COMMAND: u32 = 0x0000_003F;
 
+/// Measure only stationary winding resistance and inductance. This runs the MPET IPD pulse
+/// sequence but bypasses open-loop acceleration, BEMF, mechanical measurement, and shadow
+/// replacement because the corresponding request bits and `MPET_WRITE_SHADOW` remain clear.
+pub const MPET_ELECTRICAL_START_COMMAND: u32 = 0x0000_0038;
+
 /// Clear `MPET_CMD`; the SPEED input is independently held at zero by the supervisor.
 pub const MPET_ABORT_COMMAND: u32 = 0;
 
 /// Completion bits for resistance, inductance, BEMF constant, and mechanical parameters.
 pub const MPET_COMPLETE_MASK: u32 = 0xF000_0000;
+pub const MPET_ELECTRICAL_COMPLETE_MASK: u32 = 0xC000_0000;
 
 /// One coherent MPET result snapshot. Raw register values are intentional: the final motor
 /// numbers are bench-derived, and preserving silicon output losslessly is more useful than
@@ -772,6 +832,9 @@ mod tests {
     fn service_commands_match_the_documented_register_values() {
         assert_eq!(EEPROM_WRITE_COMMAND, 0x8A50_0000);
         assert_eq!(MPET_START_COMMAND, 0x0000_003F);
+        assert_eq!(MPET_ELECTRICAL_START_COMMAND, 0x0000_0038);
+        assert_eq!(MPET_ELECTRICAL_COMPLETE_MASK, 0xC000_0000);
+        assert_eq!(MPET_ELECTRICAL_START_COMMAND & 0x07, 0);
         assert_eq!(MPET_ABORT_COMMAND, 0);
         assert!(MpetReport {
             status: MPET_COMPLETE_MASK,

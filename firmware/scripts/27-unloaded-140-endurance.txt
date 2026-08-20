@@ -1,0 +1,10 @@
+# Five-minute upper-range endurance hold at the highest speed that the 19.4 V bench
+# source can regulate without voltage saturation. Use the 24 V ladder for 170 RPM.
+fault clear
+wait idle_off --for 20
+dir forward
+run 140
+wait speed 140 --within 2 --for 120
+dwell 300
+stop
+wait idle_off --for 120

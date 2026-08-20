@@ -9,6 +9,8 @@ use std::time::Duration;
 
 use stillair_core::console::PREFIX;
 
+const MAX_PENDING_BYTES: usize = 8 * 1024;
+
 /// A bidirectional console link.
 pub trait Link {
     /// Send one request line (without a trailing newline).
@@ -87,9 +89,19 @@ impl Link for SerialLink {
             let mut chunk = [0u8; 256];
             match self.port.read(&mut chunk) {
                 Ok(0) => {}
-                Ok(read) => self
-                    .pending
-                    .push_str(&String::from_utf8_lossy(&chunk[..read])),
+                Ok(read) => {
+                    self.pending
+                        .push_str(&String::from_utf8_lossy(&chunk[..read]));
+                    if self.pending.len() > MAX_PENDING_BYTES
+                        && !self.pending.as_bytes().contains(&b'\n')
+                    {
+                        self.pending.clear();
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "serial input exceeded the maximum line length",
+                        ));
+                    }
+                }
                 Err(error) if error.kind() == io::ErrorKind::TimedOut => {}
                 Err(error) => return Err(error),
             }

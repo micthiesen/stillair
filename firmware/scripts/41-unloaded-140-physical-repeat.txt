@@ -1,0 +1,12 @@
+# Physical/audio repeatability cycle without intensive estimator-register sampling. The live
+# guard, normal supervisor telemetry, and wall-power logger remain authoritative.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 5
+run 140
+wait speed 140 --within 3 --for 40
+dwell 65
+stop
+wait idle_off --for 100

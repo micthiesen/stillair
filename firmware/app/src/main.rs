@@ -47,8 +47,8 @@ use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
 use stillair_core::config;
 use stillair_core::console::Telemetry;
-use stillair_core::mcf8316;
-use stillair_core::mcf_config::{self, ConfigCheck};
+use stillair_core::mcf8316::{self, reg};
+use stillair_core::mcf_config::{self, ConfigCheck, ConfigFault};
 use stillair_core::speed;
 use stillair_core::state::{Command, FanState, Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
@@ -59,7 +59,9 @@ mod matter;
 mod mcf;
 mod output;
 
-use board::{Board, FG_PULSES, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH};
+use board::{
+    Board, FG_PULSES, HALL_LAST_EDGE_MS, HALL_PERIOD_MS, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH,
+};
 use mcf::{service_access, Mcf};
 
 esp_bootloader_esp_idf::esp_app_desc!();
@@ -303,8 +305,11 @@ async fn control_task(mut board: Board) {
         // The MCF shadow registers disappear with its rail even if USB keeps the ESP alive.
         // Invalidate both provisional and stored verdicts on the falling edge. A provisional
         // image must be staged again; a stored image must be checked again after power returns.
-        let verdict =
-            mcf_config::after_pgood_loss(PGOOD_FELL.swap(false, Ordering::AcqRel), mcf::verdict());
+        let pgood_fell = PGOOD_FELL.swap(false, Ordering::AcqRel);
+        if pgood_fell {
+            mcf::invalidate_current_profile_readiness();
+        }
+        let verdict = mcf_config::after_pgood_loss(pgood_fell, mcf::verdict());
         if verdict != mcf::verdict() {
             mcf::publish_verdict(verdict);
         }
@@ -405,6 +410,37 @@ async fn heartbeat_task(mut heartbeat: Output<'static>) {
 /// accumulating `BusError`s, which becomes a stop after
 /// [`config::BUS_FAILURES_BEFORE_FAULT`] — the drive is not commanded by something that can
 /// no longer interrogate it.
+async fn service_digital_speed_override(
+    mcf_device: &mut Mcf,
+    last_digital_speed: &mut Option<u32>,
+    digital_speed_healthy: &mut bool,
+) {
+    match mcf::service_digital_speed(mcf_device, last_digital_speed).await {
+        Ok(()) if !*digital_speed_healthy => {
+            log::info!("MCF digital speed writes recovered");
+            *digital_speed_healthy = true;
+        }
+        Ok(()) => {}
+        Err(error) if *digital_speed_healthy => {
+            log::warn!("MCF digital speed write failed: {error:?}");
+            *digital_speed_healthy = false;
+            mcf::invalidate_current_profile_readiness();
+            let fault = match error {
+                mcf::BusError::ReadbackMismatch => ConfigFault::Mismatch {
+                    address: reg::ALGO_DEBUG1,
+                },
+                _ => ConfigFault::Unreadable {
+                    address: reg::ALGO_DEBUG1,
+                },
+            };
+            mcf::publish_verdict(ConfigCheck::Failed(fault));
+        }
+        Err(_) => {
+            mcf::invalidate_current_profile_readiness();
+        }
+    }
+}
+
 #[embassy_executor::task]
 async fn mcf_task(mut mcf: Mcf) {
     // What the last poll reported, so a standing condition is logged once rather than five
@@ -418,6 +454,7 @@ async fn mcf_task(mut mcf: Mcf) {
     // human is told.
     let mut reported = None;
     let mut last_digital_speed = None;
+    let mut last_current_profile = None;
     let mut digital_speed_healthy = true;
 
     loop {
@@ -441,7 +478,7 @@ async fn mcf_task(mut mcf: Mcf) {
                 Err(error) => log::error!("MPET abort failed: {error:?}"),
             }
         } else if mcf::MPET_START_REQUEST.try_take().is_some() {
-            match mcf.start_mpet().await {
+            match mcf.start_mpet(mcf::mpet_command()).await {
                 Ok(()) => log::info!("MPET started; results remain in shadow until committed"),
                 Err(error) => {
                     log::error!("MPET start failed: {error:?}");
@@ -454,17 +491,9 @@ async fn mcf_task(mut mcf: Mcf) {
         // never has to wait a full poll interval for an answer.
         service_access(&mut mcf).await;
 
-        match mcf::service_digital_speed(&mut mcf, &mut last_digital_speed).await {
-            Ok(()) if !digital_speed_healthy => {
-                log::info!("MCF digital speed writes recovered");
-                digital_speed_healthy = true;
-            }
-            Ok(()) => {}
-            Err(error) if digital_speed_healthy => {
-                log::warn!("MCF digital speed write failed: {error:?}");
-                digital_speed_healthy = false;
-            }
-            Err(_) => {}
+        if let Err(error) = mcf::service_current_profile(&mut mcf, &mut last_current_profile).await
+        {
+            log::warn!("MCF current-profile write failed: {error:?}");
         }
 
         // An internal MCF reset can reload EEPROM without dropping PGOOD. One critical
@@ -510,6 +539,14 @@ async fn mcf_task(mut mcf: Mcf) {
         // Split so a console access is picked up promptly rather than at the poll edge.
         for _ in 0..4 {
             service_access(&mut mcf).await;
+            // Check the 20 Hz firmware ramp at every 50 ms service slice. An unchanged word
+            // performs no I²C, while a change no longer waits behind an entire status cycle.
+            service_digital_speed_override(
+                &mut mcf,
+                &mut last_digital_speed,
+                &mut digital_speed_healthy,
+            )
+            .await;
             Timer::after(Duration::from_millis(config::STATUS_POLL_MS / 4)).await;
         }
     }
@@ -531,6 +568,11 @@ async fn fg_task(mut fg: Input<'static>) {
 async fn hall_task(mut hall: Input<'static>) {
     loop {
         hall.wait_for_rising_edge().await;
+        let edge_ms = Instant::now().as_millis() as u32;
+        let previous = HALL_LAST_EDGE_MS.swap(edge_ms, Ordering::Relaxed);
+        if previous != 0 {
+            HALL_PERIOD_MS.store(edge_ms.wrapping_sub(previous), Ordering::Relaxed);
+        }
         HALL_PULSES.fetch_add(1, Ordering::Relaxed);
     }
 }

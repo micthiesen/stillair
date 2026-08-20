@@ -16,7 +16,7 @@ impl MilliRpm {
     pub const ZERO: Self = Self(0);
 
     pub const fn from_rpm(rpm: u32) -> Self {
-        Self(rpm * 1_000)
+        Self(rpm.saturating_mul(1_000))
     }
 
     pub const fn is_zero(self) -> bool {
@@ -30,6 +30,16 @@ impl MilliRpm {
     /// reported as "stopped" is the one wrong answer this function can give.
     pub const fn whole_rpm(self) -> u32 {
         self.0.saturating_add(500) / 1_000
+    }
+}
+
+#[cfg(test)]
+mod conversion_tests {
+    use super::*;
+
+    #[test]
+    fn whole_rpm_conversion_saturates_instead_of_wrapping() {
+        assert_eq!(MilliRpm::from_rpm(u32::MAX), MilliRpm(u32::MAX));
     }
 }
 
@@ -178,6 +188,17 @@ impl Ramp {
         self.owed = 0;
     }
 
+    /// Seed a nonzero command while the rotor is known stopped.
+    ///
+    /// The MCF owns the physical sensorless-start ramp. Its first reference must already be
+    /// above the configured first-cycle and handoff thresholds; externally creeping the
+    /// reference up from zero can start that routine with an impossible final target.
+    pub fn start_at(&mut self, speed: MilliRpm) {
+        self.current = speed;
+        self.target = speed;
+        self.owed = 0;
+    }
+
     /// Advance by `dt_ms` and return the new commanded speed.
     pub fn step(&mut self, dt_ms: u64) -> MilliRpm {
         if self.at_target() {
@@ -318,9 +339,9 @@ mod tests {
 
     #[test]
     fn pulses_convert_at_both_tach_ratios() {
-        // 20 FG pulses in one second = one rev/s = 60 RPM.
+        // One revolution's worth of FG pulses in one second = 60 RPM.
         assert_eq!(
-            milli_rpm_from_pulses(20, 1_000, config::FG_PULSES_PER_REV),
+            milli_rpm_from_pulses(config::FG_PULSES_PER_REV, 1_000, config::FG_PULSES_PER_REV,),
             MilliRpm::from_rpm(60)
         );
         // The rotor Hall is one pulse per rev.
@@ -356,6 +377,17 @@ mod tests {
                 "tick {tick} took {elapsed} ms, expected ~{expected} ms"
             );
         }
+    }
+
+    #[test]
+    fn a_seeded_start_begins_at_the_requested_floor_then_ramps_normally() {
+        let mut ramp = Ramp::new();
+        ramp.start_at(MIN);
+        assert_eq!(ramp.current(), MIN);
+        assert!(ramp.at_target());
+
+        ramp.set_target(MilliRpm::from_rpm(40));
+        assert_eq!(ramp.step(1_000), MilliRpm(36_500));
     }
 
     #[test]

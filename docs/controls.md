@@ -19,8 +19,9 @@ An implementation contract, not firmware. Application code lives in
 CubeMars publishes 2.650 Ω line resistance, 2.350 mH line inductance, 1.030 N·m/A torque
 constant, 102.4 V/krpm BEMF, and 20 pole pairs. For a star connection, begin with 1.325 Ω and
 1.175 mH phase-neutral. CubeMars does not state the amplitude/phase convention needed to
-translate its BEMF number into TI's phase-neutral peak convention, so treat 320
-mV/electrical-Hz as an unverified V1 commissioning guess.
+translate its BEMF number into TI's phase-neutral peak convention. Synchronized unloaded
+camera/estimator trials selected 210 mV/electrical-Hz (`0xC0`) for the volatile bench image;
+it remains a commissioning fit, not a substitute for the loaded measurement.
 
 Enter R/L/Ke manually as the primary values (nonzero MOTOR_RES/MOTOR_IND/MOTOR_BEMF_CONST
 disables the corresponding MPET steps), and use MPET only as a cross-check **with the blades
@@ -67,14 +68,21 @@ SLLU335 (gradual-startup recipes).
 
 ## Initial MCF8316D configuration
 
-This is the eventual loaded/release baseline. The volatile first-spin stage below deliberately
-uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
+This is the eventual loaded/release envelope. The volatile stage below deliberately uses
+0.5 A open loop, a brief 0.25 A closed-loop acquisition ceiling until Hall confirms roughly
+10 RPM, 0.125 A while closed loop settles, and 0.25 A after stable tracking on the restrained
+unloaded bench.
 
 - Provisional `MOTOR_RES`: `0xB1` (1.35 Ω; measured value wins).
 - Provisional `MOTOR_IND`: `0xAE` (1.20 mH; measured value wins).
-- Provisional `MOTOR_BEMF_CONST`: `0xCA` (320 mV/electrical-Hz; measured value wins).
+- Unloaded `MOTOR_BEMF_CONST`: `0xC0` (210 mV/electrical-Hz; loaded measurement wins).
 - Pole pairs: 20.
-- PWM frequency: 40 kHz starting point.
+- Unloaded PWM frequency: 25 kHz. Matched-speed camera audio showed the former 3.36 kHz
+  electrical whine at the room floor at both 160 and 170 RPM. It was 11.7/4.7 dB quieter
+  than 40 kHz at those speeds and avoids the stronger 1.36 kHz tone observed at 20 kHz.
+- Continuous space-vector PWM with dead-time compensation enabled. TI identifies
+  uncompensated dead-time current distortion as a direct acoustic-noise source; the D silicon
+  applies compensation through this motor's entire 11.7–56.7 electrical-Hz operating range.
 - Open-loop current limit: 1.5 A (`0x4`). Closed-loop current limit: 1.5 A (`0x4`).
 - Lock-detection current limits: 2.0 A (`0x5`), latched Hi-Z response, no automatic retry.
 - Bus power limiting enabled, initial maximum 50 W (`0x400`).
@@ -116,9 +124,10 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   moved from the initially planned 200 Hz low band after live commissioning proved the MCF
   reported zero duty despite a verified 0.63 V average waveform at its SPEED pin. The
   provisional commissioning path therefore holds the physical pin at zero and writes the
-  same normalized ramp through volatile `ALGO_DEBUG1.OVERRIDE` + `DIGITAL_SPEED_CTRL` at
-  5 Hz. Stop/fault revokes the hardware permission latch first and then commands digital
-  zero; any non-provisional configuration clears the override. Duty → speed mapping remains
+  same normalized ramp through volatile `ALGO_DEBUG1.OVERRIDE` + `DIGITAL_SPEED_CTRL`.
+  The MCF task checks the 20 Hz firmware ramp at each 50 ms service slice and performs I²C
+  only when the word changes. Stop/fault revokes the hardware permission latch first and
+  then commands digital zero; any non-provisional configuration clears the override. Duty → speed mapping remains
   duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the 180 RPM ceiling).
 - **External watchdog** (previously unconfigured — without these the EXT_WD path silently
   doesn't exist): `EXT_WDT_EN` = 1, input mode = pin, `EXT_WDT_CONFIG` = 1000 ms,
@@ -129,18 +138,12 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   while every applicable fault mode is configured as latched Hi-Z; do not select an automatic
   retry fault mode without also changing this field deliberately.
 - **Startup and resync**: `MTR_STARTUP` selects exactly one method; there is no encoded IPD
-  plus align fallback. Use the volatile double-align bench seed below for the unloaded motor.
-  The unloaded seed uses manual open-to-closed-loop handoff at 14% of `MAX_SPEED`, or 25.2 RPM.
-  Automatic thresholds of 500 mV and 1 V both reached smooth open-loop rotation but still
-  locked on abnormal BEMF during an early handoff near 15 RPM. The manual threshold delays
-  that transition without raising the proven-low startup current. A subsequent handoff at
-  exactly 27 RPM produced the same fault. With TI's 70% abnormal-BEMF tolerance, the motor
-  then ran the full test near 26.6 RPM without fault but remained just below the 27 RPM
-  transition. The 25.2 RPM threshold forces the next test to cross into closed loop while
-  keeping that detector enabled and latched; the KV-derived Ke convention is not trusted
-  until measured.
-  Select and qualify the final loaded startup method from observed starts; `DIR_CHANGE_MODE`
-  remains a full stop sequence.
+  plus align fallback. The unloaded image uses double align for 750 ms at 1 A, then a
+  0.5 A / 1 electrical-Hz/s open-loop ramp and manual handoff at 10% of `MAX_SPEED`
+  (18 RPM nominal) with a 0.15 degree/ms theta ramp. `IQ_RAMP_EN` is disabled because live
+  testing showed that it trapped later speed-reference changes. This sequence passed both
+  directions and four complete start/stop repetitions. Select and qualify the final loaded
+  startup method from observed starts; `DIR_CHANGE_MODE` remains a full stop sequence.
 - `FG_DIV` = 1h (20 pulses/rev; see electrical.md).
 - EEPROM discipline: write only with the motor stopped and the device idle/faulted, VM ≥ 6 V
   throughout, then write `0x8A500000` to `ALGO_CTRL1`, wait at least 750 ms, and poll until
@@ -159,14 +162,18 @@ Matter-on, and MPET commands until configuration is staged or verified.
 
 `config stage` writes `PROVISIONAL_IMAGE` to volatile shadow registers, verifies every claimed
 bit by read-back, reports `config=provisional`, and never issues the EEPROM commit command. A
-power cycle erases it. The bench image uses vendor-derived GL100 R/L and convention-unverified
-Ke seeds, double align, 0.5 A startup/open-loop/closed-loop current, 40 kHz PWM, 1.5 mechanical
-RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, a 2 µs
-hardware-current deglitch, manual handoff at 25.2 RPM, 70% abnormal-BEMF tolerance, and the
-documented fault,
-watchdog, alarm, speed-input, and abnormal-speed/BEMF/no-motor lock settings. The gains follow
-TI's manual formula using the 0.5 A bench ceiling as an upper-bound proxy; they are first-spin
-values, not loaded tuning.
+power cycle erases it. The selected unloaded image uses `0xB1` R, `0xAE` L, `0xC0` Ke, the
+double-align/handoff sequence above, Kp 0.008, Ki 0.0016, 25 kHz PWM, 1.5 mechanical RPM/s,
+AVS, the nominal 180 RPM ceiling, and the documented fault/watchdog/alarm/input settings.
+Closed-loop acquisition starts at 0.25 A so the sensorless observer can capture. Once Hall
+confirms roughly 10 RPM, firmware changes only `FAULT_CONFIG1.ILIMIT` to the 0.125 A settling
+ceiling and verifies read-back. After at least 35 RPM tracks within 5 RPM for two seconds, it
+restores the 0.25 A running ceiling and verifies again. Stop, disarm, fault, or configuration
+loss returns to the 0.25 A acquisition ceiling before another arm.
+The abnormal-speed lock is disabled because it falsely tripped during valid acquisition;
+abnormal-BEMF and no-motor locks remain enabled and latched. Full data and rejected candidates
+are in [`unloaded-tuning-2026-08-20.md`](../testing/unloaded-tuning-2026-08-20.md). These remain
+unloaded values, not loaded tuning.
 After every motor-power cycle, stage again and then issue a fresh run command. Never use
 `config apply` for this provisional image.
 

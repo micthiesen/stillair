@@ -1,0 +1,10 @@
+# No motor command. Read the raw status immediately after staging so a gain-range transition
+# cannot hide its cause behind the supervisor's aggregate fault label.
+fault clear
+reg read CONTROLLER_FAULT_STATUS
+reg read GATE_DRIVER_FAULT_STATUS
+reg read EEPROM_FAULT_STATUS
+reg read DEVICE_CONFIG1
+reg read DEVICE_CONFIG2
+reg read 0x477
+reg read VM_VOLTAGE

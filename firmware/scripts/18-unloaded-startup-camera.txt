@@ -1,0 +1,8 @@
+# Camera-only startup/settling trial; avoids deep estimator traffic during iteration.
+fault clear
+wait idle_off --for 20
+run 35
+wait speed 35 --within 2 --for 70
+dwell 35
+stop
+wait idle_off --for 60

@@ -1,0 +1,9 @@
+# Ten-minute unloaded endurance hold with a normal floor-to-coast stop.
+fault clear
+wait idle_off --for 20
+dir forward
+run 100
+wait speed 100 --within 2 --for 90
+dwell 600
+stop
+wait idle_off --for 100

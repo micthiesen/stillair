@@ -323,6 +323,10 @@ impl Simulator {
                 self.supervisor.command(Command::Off);
                 self.emit(&Reply::Ok);
             }
+            Request::Disarm => {
+                self.supervisor.command(Command::Disarm);
+                self.emit(&Reply::Ok);
+            }
             Request::SetDirection(direction) => {
                 self.supervisor.command(Command::SetDirection(direction));
                 self.emit(&Reply::Ok);
@@ -369,7 +373,7 @@ impl Simulator {
                 )),
             Request::Config(operation) => self.config(operation),
             Request::Mpet(operation) => match operation {
-                MpetOp::Start => {
+                MpetOp::Start | MpetOp::Electrical => {
                     let command = Command::StartMpet;
                     if self.refuse_unconfigured_command(command) {
                         return;

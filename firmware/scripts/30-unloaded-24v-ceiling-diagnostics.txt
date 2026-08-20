@@ -1,0 +1,27 @@
+# Gradual 24 V ceiling qualification. Each rung gets a physically scored dwell followed by
+# an observer/current sample. The live camera guard disarms before the next rung if hunting,
+# reversal, tracking loss, or a sustained excursion appears.
+fault clear
+wait idle_off --for 20
+run 100
+wait speed 100 --within 2 --for 80
+dwell 8
+estimator sample --for 10
+dwell 8
+run 140
+wait speed 140 --within 3 --for 50
+dwell 8
+estimator sample --for 10
+dwell 8
+run 160
+wait speed 160 --within 3 --for 40
+dwell 8
+estimator sample --for 10
+dwell 8
+run 170
+wait speed 170 --within 3 --for 40
+dwell 8
+estimator sample --for 10
+dwell 8
+stop
+wait idle_off --for 150
