@@ -60,7 +60,9 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   bounded support for the MCF's clock stretching. A 30-second soak through concurrent
   Wi-Fi/BLE/Matter startup plus a separate 60-second sustained poll stayed in `idle_off`;
   both fault registers read zero and the full configuration check completed (`unverified`
-  is expected until motor tuning creates the golden image).
+  is expected until motor tuning creates the golden image). The numbered board-smoke script
+  subsequently passed unchanged: `idle_off`, zero command/duty, clean MCF fault registers,
+  readable VM telemetry, and a successful configuration read.
 - **The Hall board and harness passed end-to-end** (2026-08-19). Final physical colors are
   PCB-01 J3 left-to-right red/blue/green when viewed component-side with C1/C2 upper-left;
   PCB-02 top-to-bottom green/blue/red when viewed component-side with J1 at the top. This is
