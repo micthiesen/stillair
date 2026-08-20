@@ -44,7 +44,7 @@ impl SpeedPwm {
 
     /// Hold SPEED/WAKE high while safe-boot makes the MCF's volatile shadow use standby.
     ///
-    /// One count below full scale is effectively a continuous high at 200 Hz while avoiding
+    /// One count below full scale is effectively a continuous high at 1 kHz while avoiding
     /// the LEDC full-scale alias-to-zero edge case. The hardware permission latch is still
     /// cleared throughout this boot-only operation, so DRVOFF keeps every MOSFET Hi-Z.
     pub fn hold_wake_for_configuration(&mut self) -> bool {

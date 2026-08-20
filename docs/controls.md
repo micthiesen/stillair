@@ -109,10 +109,10 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   report-only). The only non-latchable paths are IPD start-attempt retry (electrical.md)
   and FET thermal shutdown, which auto-recovers by silicon design (see the failure table).
 - **Speed input** (added 2026-07 review — previously unconfigured): `SPEED_MODE` = 01b (PWM
-  duty on the SPEED pin) **and `SPEED_RANGE_SEL` = 1h** (the 10–325 Hz low band; the
-  register defaults to the 325 Hz–95 kHz band, in which a 200 Hz carrier would silently be
-  out of range). Carrier: 200 Hz (11-bit resolution holds for 10–350 Hz per the resolution
-  table). Duty → speed mapping = duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the
+  duty on the SPEED pin) and `SPEED_RANGE_SEL` = 0h (325 Hz–100 kHz band). Carrier: 1 kHz,
+  moved from the initially planned 200 Hz low band after live commissioning proved the MCF
+  reported zero duty despite a verified 0.63 V average waveform at its SPEED pin. Duty →
+  speed mapping = duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the
   180 RPM ceiling), and the I²C speed/DIR override bits left off so the pins are
   authoritative.
 - **External watchdog** (previously unconfigured — without these the EXT_WD path silently

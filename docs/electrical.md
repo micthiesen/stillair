@@ -247,7 +247,7 @@ deliberately re-fused.
 | GPIO | Signal | Note |
 |---|---|---|
 | 0 / 1 | SDA / SCL | MCF configuration bus |
-| 2 | SPEED PWM | 10–350 Hz carrier band (11-bit resolution) |
+| 2 | SPEED PWM | 1 kHz carrier; MCF normal 325 Hz–100 kHz input band |
 | 3 | DIR | |
 | 6 | NTC ADC | optional temperature; ADC1_CH6 |
 | 7 | HALL_TACH sense | 3.3 V-domain Hall input for the FG-vs-Hall plausibility check (added 2026-07 review — the check was unimplementable without it); non-strap, JTAG-inactive by default |
@@ -790,8 +790,8 @@ footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
 - **MCF register-image capture checklist** (the `mcf_config::IMAGE` bench capture is
   deliberately empty until a device is measured; when captured, the image MUST cover these
   or the board wiring stays inert on virgin silicon — 2026-07 review): `PIN_CONFIG.
-  SPEED_MODE = 01b` (PWM duty) and `PERI_CONFIG1.SPEED_RANGE_SEL = 1h` (10–325 Hz band, the
-  200 Hz LEDC carrier) or the SPEED pin reads as analog; `PIN_CONFIG.ALARM_PIN_EN = 1` +
+  SPEED_MODE = 01b` (PWM duty) and `PERI_CONFIG1.SPEED_RANGE_SEL = 0h` (325 Hz–100 kHz band,
+  with a 1 kHz LEDC carrier) or the SPEED pin reads as analog; `PIN_CONFIG.ALARM_PIN_EN = 1` +
   `GD_CONFIG1.OTW_REP = 1` or the tested McfAlarm/thermal-stop path never fires;
   `DEVICE_CONFIG2.EXT_WDT_EN = 1` + `EXT_WDT_INPUT_MODE = 1` (GPIO tickle) + a deliberate
   `EXT_WDT_FAULT_MODE` choice (1h = latch Hi-Z adds a genuinely independent layer) to make

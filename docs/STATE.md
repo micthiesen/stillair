@@ -89,6 +89,12 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   stopped it at 15 s. At 1.5 RPM/s the command had not yet reached the 35 RPM released
   minimum, which takes about 23 s. `START_TIMEOUT_MS` is now 45 s and compile-time-checked to
   exceed the minimum-speed ramp time; the next step is the same restrained 35 RPM retry.
+- **The corrected retry isolated the next blocker to MCF PWM capture** (2026-08-19). During
+  a 25 s diagnostic, ESP telemetry ramped to the correct 19.4% duty and J8.6 measured a
+  matching 0.63 V average at the MCF SPEED pin, but MCF `ALGO_STATUS.DUTY_CMD`, applied
+  voltage, and bus current all stayed zero. PIN_CONFIG, PERI_CONFIG1, and ALGO_DEBUG1 read
+  back correctly. The next diagnostic moves the carrier from the 200 Hz low band to 1 kHz in
+  the normal 325 Hz–100 kHz band without changing requested speed or motor PWM frequency.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,

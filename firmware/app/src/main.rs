@@ -147,7 +147,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     let fg = Input::new(peripherals.GPIO20, floating);
     let hall = Input::new(peripherals.GPIO7, floating);
 
-    // SPEED-pin PWM. 11-bit at 200 Hz, inside the MCF's `SPEED_RANGE_SEL` = 1h band.
+    // SPEED-pin PWM. 11-bit at 1 kHz, inside the MCF's `SPEED_RANGE_SEL` = 0h band.
     let ledc = LEDC.init(Ledc::new(peripherals.LEDC));
     ledc.set_global_slow_clock(LSGlobalClkSource::APBClk);
     let speed_timer = SPEED_TIMER.init(ledc.timer::<LowSpeed>(timer::Number::Timer0));
@@ -157,7 +157,7 @@ async fn main(spawner: embassy_executor::Spawner) {
             clock_source: timer::LSClockSource::APBClk,
             frequency: Rate::from_hz(config::SPEED_CARRIER_HZ),
         })
-        .expect("SPEED carrier must be configurable at 200 Hz / 11 bit");
+        .expect("SPEED carrier must be configurable at 1 kHz / 11 bit");
 
     let mut speed = ledc.channel(channel::Number::Channel0, peripherals.GPIO2);
     speed

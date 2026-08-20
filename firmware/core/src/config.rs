@@ -77,17 +77,16 @@ const _: () = assert!(START_TIMEOUT_MS > MINIMUM_START_RAMP_MS);
 /// long, report a service condition instead of waiting forever.
 pub const START_QUIET_TIMEOUT_MS: u64 = 120_000;
 
-/// Full scale of the SPEED-pin PWM duty command, in duty units. 11 bits is the
-/// resolution the 200 Hz carrier holds per TI's resolution table.
+/// Full scale of the SPEED-pin PWM duty command, in duty units.
 pub const SPEED_DUTY_FULL_SCALE: u16 = 2_048;
 
 /// The largest duty that is actually *writable*. An 11-bit duty register holds 0..=2047;
 /// writing full scale aliases to zero, so a maximum command would stop the fan.
 pub const SPEED_DUTY_MAX: u16 = SPEED_DUTY_FULL_SCALE - 1;
 
-/// SPEED-pin PWM carrier, Hz. Must sit inside the `SPEED_RANGE_SEL` = 1h band
-/// (10–325 Hz); the register's default band would put this silently out of range.
-pub const SPEED_CARRIER_HZ: u32 = 200;
+/// SPEED-pin PWM carrier, Hz. This sits comfortably inside the MCF's normal
+/// `SPEED_RANGE_SEL` = 0h band (325 Hz–100 kHz).
+pub const SPEED_CARRIER_HZ: u32 = 1_000;
 
 /// Boot-time SPEED/WAKE hold. TI specifies at most 5 ms from a valid PWM-high wake to
 /// DVDD availability; one extra millisecond keeps the first I2C transfer beyond that bound.

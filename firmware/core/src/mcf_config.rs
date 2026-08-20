@@ -1,7 +1,7 @@
 //! The MCF8316D configuration image: what the device must be holding before the fan runs.
 //!
 //! `docs/controls.md` > "Initial MCF8316D configuration" describes the configuration in
-//! words — latched fault modes, `SPEED_RANGE_SEL` = 1h, qualified startup, a 180 RPM stored
+//! words — latched fault modes, `SPEED_RANGE_SEL` = 0h, qualified startup, a 180 RPM stored
 //! ceiling. This module is the machinery that makes those words checkable against silicon,
 //! and [`IMAGE`] is where the values themselves live.
 //!
@@ -97,10 +97,10 @@ impl Setting {
 /// at minimum (tests below enforce the register coverage):
 ///
 /// - **`PIN_CONFIG`** — `SPEED_MODE` = 01b (PWM duty command; reset default is analog, and
-///   the board drives SPEED with a 200 Hz LEDC PWM) and `ALARM_PIN_EN` = 1 (the ALARM →
+///   the board drives SPEED with a 1 kHz LEDC PWM) and `ALARM_PIN_EN` = 1 (the ALARM →
 ///   GPIO14 thermal-stop path is wired and unit-tested but dead until enabled).
-/// - **`PERI_CONFIG1`** — `SPEED_RANGE_SEL` = 1h (10–325 Hz duty band; the reset default
-///   band starts at 325 Hz, above the 200 Hz carrier).
+/// - **`PERI_CONFIG1`** — `SPEED_RANGE_SEL` = 0h (325 Hz–100 kHz duty band; the 1 kHz
+///   command carrier sits well inside it).
 /// - **`GD_CONFIG1`** — `OTW_REP` = 1 (thermal warnings must reach ALARM).
 /// - **`CLOSED_LOOP4.MAX_SPEED`** — the 180 RPM stored ceiling; [`max_speed_setting`]
 ///   builds this entry so the masked value and the speed ladder stay in one place.
@@ -137,7 +137,7 @@ pub const PROVISIONAL_IMAGE: &[Setting] = &[
     Setting::masked("INT_ALGO_2", 0x0A2, 0x7FFF_FFFF, 0x0000_0000),
     Setting::masked("PIN_CONFIG", 0x0A4, 0x7FFF_FFFF, 0x0020_0041),
     Setting::masked("DEVICE_CONFIG2", 0x0A8, 0x7FFF_FFFF, 0x0000_001F),
-    Setting::masked("PERI_CONFIG1", 0x0AA, 0x7FFF_FFFF, 0x0022_0200),
+    Setting::masked("PERI_CONFIG1", 0x0AA, 0x7FFF_FFFF, 0x0022_0000),
     Setting::masked("GD_CONFIG1", 0x0AC, 0x7FFF_FFFF, 0x0001_0000),
 ];
 
@@ -654,7 +654,7 @@ mod tests {
             (0x0A2, 0x0000_0000),
             (0x0A4, 0x0020_0041),
             (0x0A8, 0x0000_001F),
-            (0x0AA, 0x0022_0200),
+            (0x0AA, 0x0022_0000),
             (0x0AC, 0x0001_0000),
         ];
         assert_eq!(PROVISIONAL_IMAGE.len(), expected.len());
@@ -692,6 +692,14 @@ mod tests {
 
         let fault2 = PROVISIONAL_IMAGE[7].value;
         assert_eq!((fault2 >> 28) & 0x7, 0x7, "all three motor locks enabled");
+
+        let peri_config1 = PROVISIONAL_IMAGE[11].value;
+        assert_eq!(
+            (peri_config1 >> 9) & 0x1,
+            0,
+            "normal 325 Hz-100 kHz SPEED input band"
+        );
+        assert!((325..=100_000).contains(&crate::config::SPEED_CARRIER_HZ));
     }
 
     #[test]
