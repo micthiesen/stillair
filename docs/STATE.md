@@ -70,6 +70,11 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   board frames. HALL_TACH measured 3.251 V released and 0.04 V active, switching at about
   10 mm with the intended rotor magnet. Live firmware telemetry registered every manual
   approach/release cycle.
+- **The no-motor permission command path passed** (2026-08-19). With J2 physically
+  disconnected, a 35 RPM command drove TP12 DRVOFF from 3.1 V to 0 V as U5 armed. The MCF
+  immediately reported the expected open-phase `StartFailed`; firmware revoked permission
+  and TP12 returned to 3.1 V. This proves arm plus firmware fault revocation, but is not a
+  substitute for PCB-03's separate forced independent-source checks.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
