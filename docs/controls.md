@@ -130,9 +130,10 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   retry fault mode without also changing this field deliberately.
 - **Startup and resync**: `MTR_STARTUP` selects exactly one method; there is no encoded IPD
   plus align fallback. Use the volatile double-align bench seed below for the unloaded motor.
-  Automatic handoff remains enabled with `AUTO_HANDOFF_MIN_BEMF = 500 mV`; the reset 0 mV
-  floor handed off immediately after alignment, before the rotor produced usable feedback,
-  and ended in an abnormal-BEMF lock.
+  Automatic handoff remains enabled with `AUTO_HANDOFF_MIN_BEMF = 1 V`. The reset 0 mV floor
+  handed off immediately after alignment. A 500 mV trial reached smooth open-loop rotation
+  near 15 RPM but still locked on abnormal BEMF at handoff, so the next seed delays handoff
+  without raising the proven-low startup current.
   Select and qualify the final loaded startup method from observed starts; `DIR_CHANGE_MODE`
   remains a full stop sequence.
 - `FG_DIV` = 1h (20 pulses/rev; see electrical.md).
@@ -156,7 +157,7 @@ bit by read-back, reports `config=provisional`, and never issues the EEPROM comm
 power cycle erases it. The bench image uses vendor-derived GL100 R/L and convention-unverified
 Ke seeds, double align, 0.5 A startup/open-loop/closed-loop current, 40 kHz PWM, 1.5 mechanical
 RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, a 2 µs
-hardware-current deglitch, a 500 mV automatic-handoff floor, and the documented fault,
+hardware-current deglitch, a 1 V automatic-handoff floor, and the documented fault,
 watchdog, alarm, speed-input, and abnormal-speed/BEMF/no-motor lock settings. The gains follow
 TI's manual formula using the 0.5 A bench ceiling as an upper-bound proxy; they are first-spin
 values, not loaded tuning.

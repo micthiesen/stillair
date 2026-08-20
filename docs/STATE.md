@@ -107,11 +107,11 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   supply display did not catch the brief event. The seed had left `HW_LOCK_ILIMIT_DEG = 0`
   (no deglitch). It is now 2 µs, TI's normal tuning value, while the 2 A hardware threshold,
   0.5 A commanded startup current, and latched Hi-Z response remain unchanged.
-- **With the 2 µs deglitch, the motor visibly aligned about 10°**, then the MCF handed off
-  and latched abnormal BEMF (`0x80500000`) (2026-08-19). The auto-handoff floor was still its
-  reset value of 0 mV, allowing closed-loop entry before useful rotor feedback existed. The
-  next seed uses 500 mV so open-loop commutation continues after alignment until measurable
-  BEMF exists; the abnormal-BEMF detector itself remains enabled and unchanged.
+- **The unloaded motor now aligns and rotates smoothly in open loop** (2026-08-19). With the
+  2 µs current deglitch and a 500 mV auto-handoff floor, it aligned about 10°, accelerated
+  smoothly through roughly 3, 6, and 15 RPM, then twitched at closed-loop handoff and latched
+  abnormal BEMF (`0x80500000`). Peak supply current was only 0.114 A. The next seed raises
+  only the handoff floor to 1 V; current limits and the abnormal-BEMF detector stay unchanged.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
