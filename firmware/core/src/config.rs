@@ -62,11 +62,15 @@ pub const ARM_SETTLE_MS: u64 = 50;
 /// extraction armed indefinitely.
 pub const MPET_TIMEOUT_MS: u64 = 130_000;
 
-/// Firmware-defined start supervision: if the rotor shows no FG motion this long after
-/// the ramp begins, the start failed (permission never took, rotor jammed, or the
-/// analog lock is latched) and the supervisor faults rather than commanding into a
-/// dead drive. Derived requirement, not from TI.
-pub const START_TIMEOUT_MS: u64 = 15_000;
+/// Time needed for the normal ramp to reach the released minimum from rest.
+pub const MINIMUM_START_RAMP_MS: u64 =
+    RPM_USER_MIN_TARGET as u64 * 1_000_000 / RAMP_MILLI_RPM_PER_S as u64;
+
+/// Firmware-defined start supervision: allow the gentle ramp to reach the released minimum,
+/// then leave ample time for alignment and the first FG edge. If the rotor is still quiet,
+/// permission never took, the rotor is jammed, or the analog lock is latched.
+pub const START_TIMEOUT_MS: u64 = 45_000;
+const _: () = assert!(START_TIMEOUT_MS > MINIMUM_START_RAMP_MS);
 
 /// A start is gated on both tach channels being quiet (the pre-arm plausibility rule).
 /// A windmilling rotor therefore delays a start; if it has not gone quiet within this

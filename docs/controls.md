@@ -211,11 +211,12 @@ hardware guarantees silently depend on them)
 Decisions the contract implied but did not state. Constants live in `firmware/core/src/config.rs`
 and each is covered by a host test in `firmware/core/src/state.rs`.
 
-- **Start supervision**: if the rotor produces no FG edge within `START_TIMEOUT_MS` (15 s) of
+- **Start supervision**: if the rotor produces no FG edge within `START_TIMEOUT_MS` (45 s) of
   the ramp beginning, the start failed — permission never took, the rotor is jammed, or the
   analog lock is latched — and the supervisor faults rather than commanding into a dead
-  drive. Not a TI requirement; without it a failed arm looks identical to a very slow start
-  forever.
+  drive. The timeout must exceed the roughly 23 s needed for the 1.5 RPM/s ramp to reach the
+  35 RPM released minimum. Not a TI requirement; without it a failed arm looks identical to
+  a very slow start forever.
 - **A windmilling rotor delays a start, it does not race it.** The pre-arm quiet rule and the
   ISD/resync windmill-restart configuration read as being in tension; they are not. Firmware
   waits for both channels to go quiet before arming, so a coasting rotor simply postpones the

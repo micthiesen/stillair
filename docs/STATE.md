@@ -84,6 +84,11 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   shadow, verifies it, and reports `provisional` without committing EEPROM. The next hardware
   step is to flash this build, stage once at 19.4 V (above the staged 18 V undervoltage
   threshold), and retry the observed 35 RPM smoke.
+- **The first staged retry exposed a start-timeout mismatch** (2026-08-19). The MCF reported
+  no gate-driver or controller fault and made only its alignment movement before the firmware
+  stopped it at 15 s. At 1.5 RPM/s the command had not yet reached the 35 RPM released
+  minimum, which takes about 23 s. `START_TIMEOUT_MS` is now 45 s and compile-time-checked to
+  exceed the minimum-speed ramp time; the next step is the same restrained 35 RPM retry.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
