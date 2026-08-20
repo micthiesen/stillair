@@ -111,7 +111,9 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   2 µs current deglitch and a 500 mV auto-handoff floor, it aligned about 10°, accelerated
   smoothly through roughly 3, 6, and 15 RPM, then twitched at closed-loop handoff and latched
   abnormal BEMF (`0x80500000`). Peak supply current was only 0.114 A. The next seed raises
-  only the handoff floor to 1 V; current limits and the abnormal-BEMF detector stay unchanged.
+  the automatic floor to 1 V, which extended the smooth-ish open-loop run but produced the
+  same handoff jump and fault at 0.115 A peak. The next seed uses deterministic manual handoff
+  at 27 RPM; current limits and the abnormal-BEMF detector stay unchanged.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
