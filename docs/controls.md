@@ -108,6 +108,9 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   **except `EXT_WDT_FAULT_MODE`, whose encoding is inverted: 1b = latched Hi-Z** (0b is
   report-only). The only non-latchable paths are IPD start-attempt retry (electrical.md)
   and FET thermal shutdown, which auto-recovers by silicon design (see the failure table).
+- Hardware lock-current detection remains a latched 2.0 A cutoff with a 2 µs deglitch. The
+  initial no-deglitch seed falsely tripped on the first switching edge before visible motor
+  movement; 2 µs is TI's normal tuning value and does not change the current threshold.
 - **Speed input** (added 2026-07 review — previously unconfigured): `SPEED_MODE` = 01b (PWM
   duty on the SPEED pin) and `SPEED_RANGE_SEL` = 0h (325 Hz–100 kHz band). Carrier: 1 kHz,
   moved from the initially planned 200 Hz low band after live commissioning proved the MCF
@@ -149,10 +152,10 @@ Matter-on, and MPET commands until configuration is staged or verified.
 bit by read-back, reports `config=provisional`, and never issues the EEPROM commit command. A
 power cycle erases it. The bench image uses vendor-derived GL100 R/L and convention-unverified
 Ke seeds, double align, 0.5 A startup/open-loop/closed-loop current, 40 kHz PWM, 1.5 mechanical
-RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, and the
-documented fault, watchdog, alarm, speed-input, and abnormal-speed/BEMF/no-motor lock
-settings. The gains follow TI's manual formula using the 0.5 A bench ceiling as an upper-bound
-proxy; they are first-spin values, not loaded tuning.
+RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, a 2 µs
+hardware-current deglitch, and the documented fault, watchdog, alarm, speed-input, and
+abnormal-speed/BEMF/no-motor lock settings. The gains follow TI's manual formula using the
+0.5 A bench ceiling as an upper-bound proxy; they are first-spin values, not loaded tuning.
 After every motor-power cycle, stage again and then issue a fresh run command. Never use
 `config apply` for this provisional image.
 

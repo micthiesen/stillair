@@ -101,6 +101,12 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   provisional path now sends that same ramp through TI's volatile I²C speed override while
   holding the physical SPEED pin at zero. This isolates motor/startup tuning from the failed
   pin decoder without bypassing the permission latch, 0.5 A limit, or stop/fault handling.
+- **The first I²C-controlled start reached the drive and exposed an un-deglitched hardware
+  current trip** (2026-08-19). At roughly 3% command the MCF latched
+  `HW_LOCK_LIMIT` (`CONTROLLER_FAULT_STATUS = 0x80040000`) before visible movement; the
+  supply display did not catch the brief event. The seed had left `HW_LOCK_ILIMIT_DEG = 0`
+  (no deglitch). It is now 2 µs, TI's normal tuning value, while the 2 A hardware threshold,
+  0.5 A commanded startup current, and latched Hi-Z response remain unchanged.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
