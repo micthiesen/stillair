@@ -111,6 +111,34 @@ impl Setting {
 ///   the chip's reset default. The `ext_wdt` test below fails the build on a bad capture.
 pub const IMAGE: &[Setting] = &[];
 
+/// Put the live configuration shadow into standby mode without committing EEPROM.
+///
+/// A device previously stored in sleep mode stops acknowledging I2C while SPEED is low.
+/// The board firmware holds SPEED high while calling this function, then returns it to zero
+/// only after the `DEV_MODE` bit has read back clear. This is intentionally separate from
+/// [`apply`]: it changes one volatile shadow bit to make commissioning possible and never
+/// issues an EEPROM commit.
+pub async fn ensure_standby<B: RegisterBus>(bus: &mut B) -> Result<bool, ConfigFault> {
+    let address = reg::DEVICE_CONFIG2;
+    let current = bus
+        .read(address)
+        .await
+        .map_err(|_| ConfigFault::Unreadable { address })?;
+    let standby = current & !crate::mcf8316::fields::DEV_MODE_SLEEP;
+    if standby == current {
+        return Ok(false);
+    }
+
+    bus.write(address, standby)
+        .await
+        .map_err(|_| ConfigFault::Mismatch { address })?;
+    match bus.read(address).await {
+        Ok(readback) if readback & crate::mcf8316::fields::DEV_MODE_SLEEP == 0 => Ok(true),
+        Ok(_) => Err(ConfigFault::Mismatch { address }),
+        Err(_) => Err(ConfigFault::Unreadable { address }),
+    }
+}
+
 /// The `CLOSED_LOOP4.MAX_SPEED` image entry for a given stored ceiling, claiming only the
 /// 14 `MAX_SPEED` bits (Table 8-10) so the bench-tuned speed-loop gains in the same
 /// register stay unclaimed until they are captured.
@@ -434,6 +462,46 @@ mod tests {
         let mut bus = FakeBus::default();
         assert_eq!(block_on(check(&mut bus, &[])), ConfigCheck::Unverified);
         assert_ne!(ConfigCheck::Unverified, ConfigCheck::Verified);
+    }
+
+    #[test]
+    fn ensure_standby_clears_only_dev_mode_without_committing() {
+        use crate::mcf8316::fields::DEV_MODE_SLEEP;
+
+        let original = 0xA5A5_0000 | DEV_MODE_SLEEP;
+        let mut bus = FakeBus::with(&[(reg::DEVICE_CONFIG2, original)]);
+        assert_eq!(block_on(ensure_standby(&mut bus)), Ok(true));
+        assert_eq!(
+            bus.registers[&reg::DEVICE_CONFIG2],
+            original & !DEV_MODE_SLEEP
+        );
+        assert_eq!(bus.writes, 1, "volatile change must be one shadow write");
+        assert_eq!(
+            bus.registers.get(&reg::ALGO_CTRL1),
+            None,
+            "standby recovery must not issue an EEPROM commit"
+        );
+    }
+
+    #[test]
+    fn ensure_standby_does_not_rewrite_an_awake_device() {
+        let mut bus = FakeBus::with(&[(reg::DEVICE_CONFIG2, 0x1234_0000)]);
+        assert_eq!(block_on(ensure_standby(&mut bus)), Ok(false));
+        assert_eq!(bus.writes, 0);
+    }
+
+    #[test]
+    fn ensure_standby_rejects_an_ignored_shadow_write() {
+        use crate::mcf8316::fields::DEV_MODE_SLEEP;
+
+        let mut bus = FakeBus::with(&[(reg::DEVICE_CONFIG2, DEV_MODE_SLEEP)]);
+        bus.write_ignored = Some(reg::DEVICE_CONFIG2);
+        assert_eq!(
+            block_on(ensure_standby(&mut bus)),
+            Err(ConfigFault::Mismatch {
+                address: reg::DEVICE_CONFIG2
+            })
+        );
     }
 
     #[test]

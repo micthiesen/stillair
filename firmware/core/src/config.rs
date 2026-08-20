@@ -85,6 +85,22 @@ pub const SPEED_DUTY_MAX: u16 = SPEED_DUTY_FULL_SCALE - 1;
 /// (10–325 Hz); the register's default band would put this silently out of range.
 pub const SPEED_CARRIER_HZ: u32 = 200;
 
+/// Boot-time SPEED/WAKE hold. TI specifies at most 5 ms from a valid PWM-high wake to
+/// DVDD availability; one extra millisecond keeps the first I2C transfer beyond that bound.
+pub const MCF_WAKE_HOLD_MS: u64 = 6;
+
+/// Half-period for ordinary MCF8316D I2C bits. This is approximately 100 kHz; the separate
+/// inter-byte hold below, rather than a globally slow clock, satisfies TI's unusual timing.
+pub const MCF_I2C_HALF_PERIOD_US: u32 = 5;
+
+/// SCL-low hold after every byte and its ACK/NACK. TI requires at least 100 us between bytes.
+/// The 10 us margin avoids operating exactly at the limit while keeping status reads quick.
+pub const MCF_I2C_INTERBYTE_US: u32 = 110;
+
+/// Maximum time the MCF may hold SCL low while preparing the next bit. TI documents a
+/// 4.66 ms internal clock-low timeout for this device family, so 5 ms covers that bound.
+pub const MCF_I2C_CLOCK_STRETCH_TIMEOUT_US: u64 = 5_000;
+
 /// Window over which FG pulses are integrated into a speed estimate. At the 35 RPM
 /// target this is ~12 FG pulses, enough for a stable reading.
 pub const SPEED_ESTIMATE_WINDOW_MS: u64 = 1_000;

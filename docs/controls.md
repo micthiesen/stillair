@@ -83,6 +83,23 @@ SLLU335 (gradual-startup recipes).
 - Acceleration/deceleration: begin near 1.5 mechanical RPM/s.
 - Configure standby mode (DEV_MODE = 0b), not sleep: the SPEED pin doubles as WAKE, and in
   sleep mode an idle-low SPEED pin kills I²C after SLEEP_ENTRY_TIME.
+  Safe boot first probes the expected target at zero SPEED, so a controller already in standby
+  receives no wake command. If that read fails, recovery uses the firmware's
+  `MCF_WAKE_HOLD_MS` interval, clears only DEV_MODE in the volatile shadow, verifies the bit,
+  returns SPEED to zero, and clears the expected wake-under-DRVOFF start diagnostic. MCU_CLEAR_N
+  is held low throughout, so this remains safe across an ESP-only reset where the external
+  permission latch may retain its prior state. Recovery does not commit EEPROM; the reviewed
+  golden image must still store DEV_MODE = 0b. The watchdog heartbeat starts in a boot-inhibit
+  mode before the I2C address probe, because an already-configured MCF watchdog is live after
+  wake; MCU_CLEAR_N remains low until SPEED is zero. Once the control task starts, heartbeat
+  service again requires observed control-loop progress.
+- Drive the MCF I2C bus through the dedicated GPIO0/1 software transport. Ordinary bits run
+  near 100 kHz, followed by an explicit `MCF_I2C_INTERBYTE_US` (110 us) SCL-low hold after
+  every byte ACK or NACK. TI requires at least 100 us between bytes, which the ESP hardware
+  packet engine cannot insert. Slowing that engine to 5 kHz and 2.5 kHz still produced
+  intermittent NACKs on the real board because a slow bit period is not the specified pause.
+  The transport permits the MCF's documented clock stretching up to its 4.66 ms internal
+  timeout. Protocol CRC and nine-clock bus recovery remain enabled.
 - Set every configurable fault mode to latched Hi-Z (0h) and OCP_MODE to latched —
   **except `EXT_WDT_FAULT_MODE`, whose encoding is inverted: 1b = latched Hi-Z** (0b is
   report-only). The only non-latchable paths are IPD start-attempt retry (electrical.md)
@@ -226,10 +243,10 @@ example packets byte for byte.
 - Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
 - Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
   first bring-up rather than trusting it.
-- Every transaction has a 20 ms software deadline. A timeout enters the pinned esp-hal bus
-  clear path, which resets the controller, sends nine SCL pulses, generates STOP, reconnects
-  SDA/SCL, and returns the failure for normal retry accounting. A follow-up status transfer
-  confirms recovery; sustained failures still become `BusUnreachable` and revoke permission.
+- Each raised SCL edge permits clock stretching through the MCF's documented 4.66 ms internal
+  timeout. A line still held low after 5 ms fails the transfer. Recovery sends nine SCL pulses
+  and STOP before a follow-up status read; sustained failures still become `BusUnreachable`
+  and revoke permission.
 
 ### Stored-configuration verification (2026-07-27)
 

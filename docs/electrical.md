@@ -597,6 +597,12 @@ detection necessarily happens in the running state).
 | J7 PROGRAM | TC2030 footprint | 3V3, TX, RX, EN, BOOT, GND |
 | J8 SCOPE | DNP 2×5, 1.27 mm | VM, rails, controls, FG, nFAULT, SOX |
 
+**Motor-phase harness convention (2026-08-19):** PCB J2 pin 3/U is red, pin 2/V is
+green, and pin 1/W is yellow. At the GL100 end, viewed top-down with the motor centre above
+and its connector below, motor pins 1, 2, and 3 are red, green, and yellow from left to right.
+The GL100 phases are electrically unlabeled, so preserve this wiring convention and correct
+the installed rotation sense in software if necessary rather than repinning the harness.
+
 Locking power and phase contacts must be rated at least 5 A/contact even though released
 phase current is 1.5 A.
 

@@ -46,6 +46,10 @@ pub mod fields {
     /// which a `MAX_SPEED`-only setting must not claim.
     pub const MAX_SPEED_MASK: u32 = 0x3FFF;
 
+    /// `DEVICE_CONFIG2.DEV_MODE`, bit 11 (Table 8-25): 0h = standby, 1h = sleep.
+    /// Standby keeps I2C alive when SPEED is zero; sleep disables it.
+    pub const DEV_MODE_SLEEP: u32 = 1 << 11;
+
     /// `DEVICE_CONFIG2` external-watchdog fields (Table 8-25, offset A8h, reset 0):
     /// enable, bit 4.
     pub const EXT_WDT_EN: u32 = 1 << 4;

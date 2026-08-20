@@ -13,8 +13,10 @@ use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_sync::signal::Signal;
 use embassy_time::{with_timeout, Duration, Timer};
-use esp_hal::i2c::master::{Error as I2cError, I2c};
-use esp_hal::Async;
+use esp_hal::delay::Delay;
+use esp_hal::gpio::{DriveMode, Flex, InputConfig, OutputConfig, Pin, Pull};
+use esp_hal::time::Instant as HalInstant;
+use stillair_core::config;
 use stillair_core::console::Reply;
 use stillair_core::mcf8316::{
     self, reg, value_from_bytes32, verify_read, write_frame, CrcMismatch, FaultStatus, MpetReport,
@@ -242,26 +244,253 @@ const fn describe(error: BusError) -> &'static str {
     }
 }
 
+/// Failures reported by the dedicated MCF software I2C bus.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SoftI2cError {
+    AddressNack,
+    DataNack,
+    ClockHeldLow,
+}
+
+/// Two-wire controller with the MCF8316D's required pause after every byte.
+///
+/// The ESP hardware packet engine cannot insert that pause. GPIO0/1 are dedicated to this
+/// one target, so a compact single-controller implementation is both sufficient and easier
+/// to audit than pretending a globally slow SCL clock is the same timing requirement.
+struct SoftI2c {
+    sda: Flex<'static>,
+    scl: Flex<'static>,
+    delay: Delay,
+}
+
+impl SoftI2c {
+    fn new(sda: impl Pin + 'static, scl: impl Pin + 'static) -> Self {
+        let input = InputConfig::default().with_pull(Pull::None);
+        let output = OutputConfig::default().with_drive_mode(DriveMode::OpenDrain);
+
+        let mut sda = Flex::new(sda);
+        sda.apply_input_config(&input);
+        sda.set_input_enable(true);
+        sda.apply_output_config(&output);
+        sda.set_high();
+        sda.set_output_enable(true);
+
+        let mut scl = Flex::new(scl);
+        scl.apply_input_config(&input);
+        scl.set_input_enable(true);
+        scl.apply_output_config(&output);
+        scl.set_high();
+        scl.set_output_enable(true);
+
+        Self {
+            sda,
+            scl,
+            delay: Delay::new(),
+        }
+    }
+
+    fn half_period(&self) {
+        self.delay.delay_micros(config::MCF_I2C_HALF_PERIOD_US);
+    }
+
+    fn release_clock(&mut self) -> Result<(), SoftI2cError> {
+        self.scl.set_high();
+        let released_at = HalInstant::now();
+        while self.scl.is_low() {
+            if released_at.elapsed().as_micros() >= config::MCF_I2C_CLOCK_STRETCH_TIMEOUT_US {
+                return Err(SoftI2cError::ClockHeldLow);
+            }
+        }
+        self.half_period();
+        Ok(())
+    }
+
+    fn pull_clock_low(&mut self) {
+        self.scl.set_low();
+        self.half_period();
+    }
+
+    fn interbyte_hold(&self) {
+        // Every caller enters with SCL low. Keeping it low makes the pause unambiguous and
+        // prevents a target from mistaking line movement for another START or STOP. This is
+        // deliberately a busy wait: yielding the thread-mode executor here let radio startup
+        // stretch 110 us beyond the MCF's own 4.66 ms clock-low timeout.
+        self.delay.delay_micros(config::MCF_I2C_INTERBYTE_US);
+    }
+
+    fn start(&mut self) -> Result<(), SoftI2cError> {
+        self.sda.set_high();
+        self.half_period();
+        self.release_clock()?;
+        self.sda.set_low();
+        self.half_period();
+        self.pull_clock_low();
+        Ok(())
+    }
+
+    fn stop(&mut self) -> Result<(), SoftI2cError> {
+        self.sda.set_low();
+        self.half_period();
+        let clock = self.release_clock();
+        // Even if SCL is still held low, release SDA rather than leaving both bus lines low.
+        // The caller preserves the original transfer error and the recovery path can then
+        // issue clock pulses without fighting our own output.
+        self.sda.set_high();
+        self.half_period();
+        clock
+    }
+
+    fn finish<T>(&mut self, result: Result<T, SoftI2cError>) -> Result<T, SoftI2cError> {
+        let stopped = self.stop();
+        match (result, stopped) {
+            (Err(error), _) | (Ok(_), Err(error)) => Err(error),
+            (Ok(value), Ok(())) => Ok(value),
+        }
+    }
+
+    async fn write_byte(&mut self, byte: u8) -> Result<bool, SoftI2cError> {
+        for bit in (0..8).rev() {
+            if byte & (1 << bit) == 0 {
+                self.sda.set_low();
+            } else {
+                self.sda.set_high();
+            }
+            self.half_period();
+            self.release_clock()?;
+            self.pull_clock_low();
+        }
+
+        self.sda.set_high();
+        self.half_period();
+        self.release_clock()?;
+        let acknowledged = self.sda.is_low();
+        self.pull_clock_low();
+        self.interbyte_hold();
+        Ok(acknowledged)
+    }
+
+    async fn read_byte(&mut self, acknowledge: bool) -> Result<u8, SoftI2cError> {
+        self.sda.set_high();
+        let mut byte = 0;
+        for _ in 0..8 {
+            self.half_period();
+            self.release_clock()?;
+            byte = (byte << 1) | u8::from(self.sda.is_high());
+            self.pull_clock_low();
+        }
+
+        if acknowledge {
+            self.sda.set_low();
+        } else {
+            self.sda.set_high();
+        }
+        self.half_period();
+        self.release_clock()?;
+        self.pull_clock_low();
+        self.sda.set_high();
+        self.interbyte_hold();
+        Ok(byte)
+    }
+
+    async fn write(&mut self, target: u8, bytes: &[u8]) -> Result<(), SoftI2cError> {
+        let mut result = self.start();
+        if result.is_ok() {
+            result = match self.write_byte(target << 1).await {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(SoftI2cError::AddressNack),
+                Err(error) => Err(error),
+            };
+        }
+        for &byte in bytes {
+            if result.is_err() {
+                break;
+            }
+            result = match self.write_byte(byte).await {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(SoftI2cError::DataNack),
+                Err(error) => Err(error),
+            };
+        }
+        self.finish(result)
+    }
+
+    async fn write_read(
+        &mut self,
+        target: u8,
+        written: &[u8],
+        read: &mut [u8],
+    ) -> Result<(), SoftI2cError> {
+        if let Err(error) = self.start() {
+            return self.finish(Err(error));
+        }
+        match self.write_byte(target << 1).await {
+            Ok(true) => {}
+            Ok(false) => return self.finish(Err(SoftI2cError::AddressNack)),
+            Err(error) => return self.finish(Err(error)),
+        }
+        for &byte in written {
+            match self.write_byte(byte).await {
+                Ok(true) => {}
+                Ok(false) => return self.finish(Err(SoftI2cError::DataNack)),
+                Err(error) => return self.finish(Err(error)),
+            }
+        }
+
+        if let Err(error) = self.start() {
+            return self.finish(Err(error));
+        }
+        match self.write_byte((target << 1) | 1).await {
+            Ok(true) => {}
+            Ok(false) => return self.finish(Err(SoftI2cError::AddressNack)),
+            Err(error) => return self.finish(Err(error)),
+        }
+        let last = read.len().saturating_sub(1);
+        for (index, byte) in read.iter_mut().enumerate() {
+            *byte = match self.read_byte(index != last).await {
+                Ok(byte) => byte,
+                Err(error) => return self.finish(Err(error)),
+            };
+        }
+        self.finish(Ok(()))
+    }
+
+    async fn recover(&mut self) {
+        // Release SDA, then give a target stranded mid-byte nine chances to finish before
+        // generating STOP. Failure is harmless here: the following status read reports it.
+        self.sda.set_high();
+        for _ in 0..9 {
+            self.scl.set_low();
+            self.half_period();
+            if self.release_clock().is_err() {
+                break;
+            }
+            self.pull_clock_low();
+        }
+        let _ = self.stop();
+        self.interbyte_hold();
+    }
+}
+
 /// Why a register access failed.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BusError {
     /// The transfer itself failed: NACK, arbitration loss, timeout, stuck bus.
-    Transfer(I2cError),
+    Transfer(SoftI2cError),
     /// The device answered, but the CRC over its reply did not match. Treated as a failure
     /// rather than retried silently — a wrong checksum means either the bus is corrupting
     /// data or our framing is wrong, and neither should reach the state machine as truth.
     Crc(CrcMismatch),
 }
 
-impl From<I2cError> for BusError {
-    fn from(error: I2cError) -> Self {
+impl From<SoftI2cError> for BusError {
+    fn from(error: SoftI2cError) -> Self {
         Self::Transfer(error)
     }
 }
 
 /// A configured connection to the MCF8316D.
 pub struct Mcf {
-    i2c: I2c<'static, Async>,
+    i2c: SoftI2c,
     /// 7-bit target address. Default 0x01, but changeable in EEPROM, so this is discovered
     /// by [`Mcf::probe`] rather than assumed.
     target: u8,
@@ -272,12 +501,21 @@ impl Mcf {
     /// Wrap a bus with CRC enabled. CRC costs one byte per transaction and turns silent
     /// corruption into a reported failure, which is worth far more than the byte on a
     /// device that commands a motor.
-    pub fn new(i2c: I2c<'static, Async>, target: u8) -> Self {
+    pub fn new(sda: impl Pin + 'static, scl: impl Pin + 'static, target: u8) -> Self {
         Self {
-            i2c,
+            i2c: SoftI2c::new(sda, scl),
             target,
             crc: true,
         }
+    }
+
+    /// Confirm the currently selected target without sweeping the address space.
+    ///
+    /// Safe boot uses this at zero SPEED before deciding whether the chip actually needs a
+    /// WAKE pulse. Avoiding an unnecessary pulse matters because a high speed command while
+    /// DRVOFF is asserted can legitimately latch a start-failed diagnostic.
+    pub async fn probe_current(&mut self) -> bool {
+        self.read(reg::GATE_DRIVER_FAULT_STATUS).await.is_ok()
     }
 
     /// Find the device by reading a known register at each candidate address.
@@ -334,16 +572,11 @@ impl Mcf {
 
     /// Attempt to free a bus a confused target is holding low.
     ///
-    /// The configured software deadline turns a stuck transfer into `I2cError::Timeout`.
-    /// On a timeout, the pinned esp-hal path resets the controller, emits nine SCL recovery
-    /// pulses, generates STOP, and reconnects the pins before returning the error. This follow-up
-    /// transfer both exercises the recovered bus and also invokes the same nine-clock clear
-    /// if the controller still reports the bus busy.
-    ///
     /// The supervisor does not depend on this working: [`BusError`]s accumulate and become
     /// `BusUnreachable`, which stops the fan and requires a power cycle. That is the
     /// documented fallback, and it is the safe one.
     pub async fn recover(&mut self) {
+        self.i2c.recover().await;
         Timer::after(Duration::from_millis(10)).await;
         let _ = self.fault_status().await;
     }
@@ -359,7 +592,7 @@ impl RegisterBus for Mcf {
         let mut reply = [0u8; 5];
         let len = 4 + usize::from(self.crc);
         self.i2c
-            .write_read_async(self.target, &control, &mut reply[..len])
+            .write_read(self.target, &control, &mut reply[..len])
             .await?;
 
         if self.crc {
@@ -372,7 +605,7 @@ impl RegisterBus for Mcf {
 
     async fn write(&mut self, address: u16, value: u32) -> Result<(), BusError> {
         let frame = write_frame(self.target, address, value, self.crc);
-        self.i2c.write_async(self.target, &frame).await?;
+        self.i2c.write(self.target, &frame).await?;
         Ok(())
     }
 

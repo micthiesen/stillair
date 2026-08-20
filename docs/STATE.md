@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. This records the work, not machine state or
 uncommitted changes. Durable findings live in the linked docs.
 
-Last updated: **2026-08-19** (completed PCB-01 and PCB-02 hand-population.)
+Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
 
 ## Now
 
@@ -41,7 +41,24 @@ Last updated: **2026-08-19** (completed PCB-01 and PCB-02 hand-population.)
   C1, C2, C34, J1, J2, U8, and the F1 link fitted; the C36-C40 timing-calibration bank and
   C6 spare bulk-cap site remain intentionally DNP. PCB-02 has U1, C1, and J1 fitted. Both
   boards passed the practical unpowered continuity and no-hard-short checks in binder sheets
-  1A and 1B. Harness fabrication and the controlled no-motor first power remain next.
+  1A and 1B. The first power harness is complete and polarity-checked. The motor-phase
+  harness convention is J2 pin 3/U red, pin 2/V green, pin 1/W yellow; at the motor end,
+  viewed with the motor centre above its connector, motor pins 1-2-3 are red-green-yellow
+  from left to right. Preserve that order and correct final rotation sense in software if
+  needed.
+- **PCB-01 first no-motor power passed at 18.0 V** (2026-08-19): steady 0.043 A / 0.78 W
+  with firmware, Wi-Fi, and BLE running; no sag or abnormal heating. Measured from TP4 AGND:
+  TP8 DVDD 1.547 V, TP7 AVDD 3.281 V, TP18 SDA 3.269 V, TP19 SCL 3.159 V, and TP12 DRVOFF
+  3.104 V. ESP32-C6 identification and flashing passed over J6. A wake-assisted probe then
+  identified the MCF8316D at 0x01 and read its configuration successfully, proving the bus and
+  soldering. Repeated 100 kHz packets later wedged I2C because they omitted TI's required
+  100 us inter-byte spacing. Hardware-controller workarounds at 5 kHz and 2.5 kHz still
+  produced intermittent NACKs in real-board soaks. Firmware now uses a dedicated GPIO0/1
+  software bus with normal-speed bits, an explicit 110 us SCL-low hold after each byte, and
+  bounded support for the MCF's clock stretching. A 30-second soak through concurrent
+  Wi-Fi/BLE/Matter startup plus a separate 60-second sustained poll stayed in `idle_off`;
+  both fault registers read zero and the full configuration check completed (`unverified`
+  is expected until motor tuning creates the golden image).
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
@@ -61,17 +78,18 @@ Last updated: **2026-08-19** (completed PCB-01 and PCB-02 hand-population.)
   long USB J6 whenever PCB-01 drives the motor.
 - **Commissioning software is ready for hardware values**: the normal firmware now has a
   fault-aware `Mpet` service state and bounded `mpet run`, confirmed EEPROM commits with
-  the required 750 ms wait and self-clear poll, nine-clock I2C recovery through the
-  pinned ESP HAL, `wait speed`, and six numbered scripts under `firmware/scripts/`. The host
+  the required 750 ms wait and self-clear poll, nine-clock I2C recovery, `wait speed`, and six
+  numbered scripts under `firmware/scripts/`. The host
   and target builds are covered by tests; only real motor results and the resulting golden
   configuration image remain hardware-gated.
 
 ## Next
 
-Work from [integration.md](integration.md). Electronics is the main dependency spine; the
-immediate checkpoint is harness fabrication followed by PCB-01's first no-motor power and
-safety checks. Then complete motor integration, balance, controller tuning, essential
-hardware safety checks, workshop proof speed, representative starts, and the thermal run.
+Work from [integration.md](integration.md). Electronics is the main dependency spine; PCB-01
+assembly, first power, rails, USB, and sustained MCF communication have passed at 18 V. Next
+complete the remaining motor and Hall harnesses, then proceed through motor integration,
+balance, controller tuning, essential hardware safety checks, workshop proof speed,
+representative starts, and the thermal run.
 
 ## Candidates Not Chosen
 

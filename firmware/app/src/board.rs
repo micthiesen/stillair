@@ -41,6 +41,31 @@ impl SpeedPwm {
     pub fn new(channel: channel::Channel<'static, LowSpeed>) -> Self {
         Self(channel)
     }
+
+    /// Hold SPEED/WAKE high while safe-boot makes the MCF's volatile shadow use standby.
+    ///
+    /// One count below full scale is effectively a continuous high at 200 Hz while avoiding
+    /// the LEDC full-scale alias-to-zero edge case. The hardware permission latch is still
+    /// cleared throughout this boot-only operation, so DRVOFF keeps every MOSFET Hi-Z.
+    pub fn hold_wake_for_configuration(&mut self) -> bool {
+        let duty = self.0.max_duty_cycle().saturating_sub(1);
+        self.set_raw(duty, "MCF wake")
+    }
+
+    /// Return the SPEED pin to its normal stopped command before the control loop starts.
+    pub fn idle_after_configuration(&mut self) -> bool {
+        self.set_raw(0, "MCF wake release")
+    }
+
+    fn set_raw(&mut self, duty: u16, operation: &'static str) -> bool {
+        match self.0.set_duty_cycle(duty) {
+            Ok(()) => true,
+            Err(error) => {
+                log::error!("{operation} SPEED duty write failed ({error:?})");
+                false
+            }
+        }
+    }
 }
 
 /// Free-running tach edge counters, incremented by the edge tasks and sampled by the

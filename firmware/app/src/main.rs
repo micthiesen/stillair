@@ -31,12 +31,11 @@
 #![no_std]
 #![no_main]
 
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use embassy_time::{Duration, Instant, Timer};
 use esp_backtrace as _;
 use esp_hal::gpio::{DriveMode, Input, InputConfig, Level, Output, OutputConfig, Pull};
-use esp_hal::i2c::master::{Config as I2cConfig, I2c, SoftwareTimeout};
 use esp_hal::interrupt::Priority;
 use esp_hal::ledc::channel::ChannelIFace;
 use esp_hal::ledc::timer::TimerIFace;
@@ -74,6 +73,14 @@ const CONTROL_TICK: Duration = Duration::from_millis(50);
 /// liveness rather than merely CPU liveness (`docs/controls.md` > "Firmware safety
 /// architecture").
 static CONTROL_LOOP_BEAT: AtomicU32 = AtomicU32::new(0);
+
+/// True only while main holds MCU_CLEAR_N asserted during hardware initialization.
+///
+/// The MCF's stored external watchdog can already be active when it wakes, so its shared
+/// heartbeat pin must toggle during a slow address sweep. This flag permits that boot-only
+/// service while drive is independently impossible. Once the real control task exists, the
+/// heartbeat again advances only when [`CONTROL_LOOP_BEAT`] does.
+static BOOT_INHIBIT_ACTIVE: AtomicBool = AtomicBool::new(true);
 
 static LEDC: StaticCell<Ledc<'static>> = StaticCell::new();
 static SPEED_TIMER: StaticCell<timer::Timer<'static, LowSpeed>> = StaticCell::new();
@@ -115,10 +122,21 @@ async fn main(spawner: embassy_executor::Spawner) {
 
     let dir = Output::new(peripherals.GPIO3, Level::Low, push_pull);
     let arm = Output::new(peripherals.GPIO18, Level::Low, push_pull);
-    // Idle high (released). Open-drain so it can only ever pull the latch's clear line
-    // down — firmware cannot drive permission on.
-    let clear_n = Output::new(peripherals.GPIO15, Level::High, open_drain);
+    // Start asserted. This matters on an ESP-only reset: the external latch can retain an
+    // earlier permission state while the MCU reboots. Open-drain means firmware can only
+    // revoke permission, never force it on. Safe boot releases the line only after SPEED is
+    // confirmed back at zero following the MCF wake/recovery sequence.
+    let mut clear_n = Output::new(peripherals.GPIO15, Level::Low, open_drain);
     let heartbeat = Output::new(peripherals.GPIO19, Level::Low, push_pull);
+
+    // Start the heartbeat before probing the MCF. A stored external-watchdog configuration
+    // may already be live after SPEED wakes the device, and a changed I2C target can make the
+    // bounded address sweep longer than its 1000 ms window. During this early service
+    // MCU_CLEAR_N is held low, so heartbeat activity cannot accompany drive permission.
+    let control = CONTROL_EXECUTOR
+        .init(InterruptExecutor::new(sw_int.software_interrupt1))
+        .start(Priority::Priority3);
+    control.spawn(heartbeat_task(heartbeat).unwrap());
 
     // Inputs. No internal pulls: the board provides them.
     let floating = InputConfig::default().with_pull(Pull::None);
@@ -149,46 +167,90 @@ async fn main(spawner: embassy_executor::Spawner) {
         })
         .expect("SPEED channel must configure");
 
-    let board = Board::new(
-        dir,
-        arm,
-        clear_n,
-        board::SpeedPwm::new(speed),
-        pgood,
-        nfault,
-        alarm,
+    let mut speed = board::SpeedPwm::new(speed);
+    // The MCF8316D requires a 100 us pause after every I2C byte. The ESP packet engine cannot
+    // express that timing, so this small dedicated software bus owns GPIO0/1 and inserts the
+    // pause exactly while preserving normal-speed data bits and protocol CRC.
+    let mut mcf = Mcf::new(
+        peripherals.GPIO0,
+        peripherals.GPIO1,
+        mcf8316::DEFAULT_TARGET_ID,
     );
 
-    // MCF configuration and diagnostics. 100 kHz: the device clock-stretches while it
-    // services its own interrupts, and there is nothing here worth hurrying.
-    let i2c = I2c::new(
-        peripherals.I2C0,
-        I2cConfig::default()
-            .with_frequency(Rate::from_khz(100))
-            // Convert a target holding the bus into a HAL Timeout. For a timed-out transfer,
-            // this pinned HAL resets the controller, issues nine SCL pulses plus STOP, and
-            // reconnects the pins before the error reaches our recovery loop.
-            .with_software_timeout(SoftwareTimeout::Transaction(
-                esp_hal::time::Duration::from_millis(20),
-            )),
-    )
-    .expect("I2C0 must configure")
-    .with_sda(peripherals.GPIO0)
-    .with_scl(peripherals.GPIO1)
-    .into_async();
+    // First try the expected target at zero SPEED. A controller already in standby answers
+    // here and needs no wake command. If it does not answer, recover a stored sleep mode by
+    // holding SPEED high beyond TI's 5 ms maximum wake interval, then sweep in case EEPROM
+    // also changed the target address. MCU_CLEAR_N stays asserted throughout, so no phase
+    // output can be enabled even though SPEED is temporarily near full scale.
+    let mut wake_used = false;
+    let target = if mcf.probe_current().await {
+        Some(mcf8316::DEFAULT_TARGET_ID)
+    } else if speed.hold_wake_for_configuration() {
+        wake_used = true;
+        Timer::after(Duration::from_millis(config::MCF_WAKE_HOLD_MS)).await;
+        mcf.probe().await
+    } else {
+        None
+    };
+    match target {
+        Some(target) => log::info!("MCF8316D found at I2C target {target:#04x}"),
+        None => log::error!("no MCF8316D on the I2C bus; status reads will fail"),
+    }
+    let standby = match target {
+        Some(_) => mcf_config::ensure_standby(&mut mcf).await,
+        None => Err(mcf_config::ConfigFault::Unreadable {
+            address: mcf8316::reg::DEVICE_CONFIG2,
+        }),
+    };
+    match standby {
+        Ok(true) => log::warn!("MCF sleep mode cleared in volatile shadow for commissioning"),
+        Ok(false) => log::info!("MCF standby mode already active"),
+        Err(error) => log::error!("MCF standby recovery failed: {error:?}"),
+    }
+    if !speed.idle_after_configuration() {
+        // `clear_n` deliberately remains asserted. Starting the supervisor with a stale
+        // near-full SPEED command would let a later arm produce an uncontrolled start,
+        // because its duty cache correctly assumes hardware began at zero.
+        panic!("SPEED could not be returned to zero after MCF wake");
+    }
 
-    // Everything that must keep running when the network does not.
-    let control = CONTROL_EXECUTOR
-        .init(InterruptExecutor::new(sw_int.software_interrupt1))
-        .start(Priority::Priority3);
+    if wake_used {
+        // A high speed command while DRVOFF is asserted can latch the expected start-failed
+        // diagnostic. Clear that recovery artifact only after SPEED is confirmed zero. A
+        // real standing condition reasserts, and permission remains revoked for the full
+        // supervisor safe-boot hold before any user command can arm the drive.
+        match mcf.clear_faults().await {
+            Ok(()) => Timer::after(Duration::from_millis(250)).await,
+            Err(error) => log::error!("failed to clear MCF wake diagnostic: {error:?}"),
+        }
+    }
+    clear_n.set_high();
+
+    let verdict = match standby {
+        Ok(_) => mcf_config::check(&mut mcf, mcf_config::IMAGE).await,
+        Err(error) => ConfigCheck::Failed(error),
+    };
+    match verdict {
+        ConfigCheck::Verified => log::info!("MCF stored configuration verified"),
+        ConfigCheck::Unverified => log::warn!(
+            "MCF stored configuration NOT verified: no golden image has been captured yet \
+             (`config dump` on a tuned device, then fill in mcf_config::IMAGE)"
+        ),
+        other => log::error!("MCF stored configuration check failed: {other:?}"),
+    }
+    mcf::publish_verdict(verdict);
+
+    let board = Board::new(dir, arm, clear_n, speed, pgood, nfault, alarm);
+
+    // Everything else that must keep running when the network does not.
     control.spawn(fg_task(fg).unwrap());
     control.spawn(hall_task(hall).unwrap());
-    control.spawn(heartbeat_task(heartbeat).unwrap());
     control.spawn(control_task(board).unwrap());
+    BOOT_INHIBIT_ACTIVE.store(false, Ordering::Release);
 
     // Diagnostics, the tuning console, and (later) the network stack live on the
     // thread-mode executor, below the control loop.
-    spawner.spawn(mcf_task(Mcf::new(i2c, mcf8316::DEFAULT_TARGET_ID)).unwrap());
+    spawner.spawn(mcf_task(mcf).unwrap());
     let (usb_rx, usb_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
         .into_async()
         .split();
@@ -290,6 +352,10 @@ async fn heartbeat_task(mut heartbeat: Output<'static>) {
 
     loop {
         Timer::after(half_period).await;
+        if BOOT_INHIBIT_ACTIVE.load(Ordering::Acquire) {
+            heartbeat.toggle();
+            continue;
+        }
         let beat = CONTROL_LOOP_BEAT.load(Ordering::Relaxed);
         if beat == last_beat {
             // Say nothing, do nothing: letting the watchdog time out *is* the response.
@@ -309,26 +375,6 @@ async fn heartbeat_task(mut heartbeat: Output<'static>) {
 /// no longer interrogate it.
 #[embassy_executor::task]
 async fn mcf_task(mut mcf: Mcf) {
-    match mcf.probe().await {
-        Some(target) => log::info!("MCF8316D found at I2C target {target:#04x}"),
-        None => log::error!("no MCF8316D on the I2C bus; status reads will fail"),
-    }
-
-    // The last clause of the contract's safe-boot step. `SafeBoot` is holding for ten seconds
-    // regardless, and this is a handful of register reads, so the check is free in wall-clock
-    // terms — but until it publishes a verdict the supervisor will not leave SafeBoot, which
-    // is what makes "stored configuration verified" a gate rather than a comment.
-    let verdict = mcf_config::check(&mut mcf, mcf_config::IMAGE).await;
-    match verdict {
-        ConfigCheck::Verified => log::info!("MCF stored configuration verified"),
-        ConfigCheck::Unverified => log::warn!(
-            "MCF stored configuration NOT verified: no golden image has been captured yet \
-             (`config dump` on a tuned device, then fill in mcf_config::IMAGE)"
-        ),
-        other => log::error!("MCF stored configuration check failed: {other:?}"),
-    }
-    mcf::publish_verdict(verdict);
-
     // What the last poll reported, so a standing condition is logged once rather than five
     // times a second.
     //
