@@ -2,7 +2,7 @@
 config stage
 wait idle_off --for 30
 run 35
-wait running --for 30
+wait running --for 50
 wait speed 35 --within 5 --for 90
 stream 5 --for 15
 stop
