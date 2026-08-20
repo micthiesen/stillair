@@ -133,7 +133,10 @@ uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
   The unloaded seed uses manual open-to-closed-loop handoff at 15% of `MAX_SPEED`, or 27 RPM.
   Automatic thresholds of 500 mV and 1 V both reached smooth open-loop rotation but still
   locked on abnormal BEMF during an early handoff near 15 RPM. The manual threshold delays
-  that transition without raising the proven-low startup current.
+  that transition without raising the proven-low startup current. A subsequent handoff at
+  exactly 27 RPM produced the same fault, so the provisional seed uses TI's 70% abnormal-BEMF
+  tolerance while keeping that detector enabled and latched; the KV-derived Ke convention is
+  not trusted until measured.
   Select and qualify the final loaded startup method from observed starts; `DIR_CHANGE_MODE`
   remains a full stop sequence.
 - `FG_DIV` = 1h (20 pulses/rev; see electrical.md).
@@ -157,7 +160,8 @@ bit by read-back, reports `config=provisional`, and never issues the EEPROM comm
 power cycle erases it. The bench image uses vendor-derived GL100 R/L and convention-unverified
 Ke seeds, double align, 0.5 A startup/open-loop/closed-loop current, 40 kHz PWM, 1.5 mechanical
 RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, a 2 µs
-hardware-current deglitch, manual handoff at 27 RPM, and the documented fault,
+hardware-current deglitch, manual handoff at 27 RPM, 70% abnormal-BEMF tolerance, and the
+documented fault,
 watchdog, alarm, speed-input, and abnormal-speed/BEMF/no-motor lock settings. The gains follow
 TI's manual formula using the 0.5 A bench ceiling as an upper-bound proxy; they are first-spin
 values, not loaded tuning.

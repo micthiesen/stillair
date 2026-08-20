@@ -133,7 +133,7 @@ pub const PROVISIONAL_IMAGE: &[Setting] = &[
     Setting::masked("CLOSED_LOOP3", 0x08C, 0x7FFF_FFFF, 0x6500_0004),
     PROVISIONAL_SENTINEL,
     Setting::masked("FAULT_CONFIG1", 0x090, 0x7FFF_FFFF, 0x12A8_0000),
-    Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x7000_47C0),
+    Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x71C0_47C0),
     Setting::masked("INT_ALGO_1", 0x0A0, 0x7FFF_FFFF, 0x000A_0000),
     Setting::masked("INT_ALGO_2", 0x0A2, 0x7FFF_FFFF, 0x0000_0000),
     Setting::masked("PIN_CONFIG", 0x0A4, 0x7FFF_FFFF, 0x0020_0041),
@@ -651,7 +651,7 @@ mod tests {
             (0x08C, 0x6500_0004),
             (0x08E, 0x50C2_0168),
             (0x090, 0x12A8_0000),
-            (0x092, 0x7000_47C0),
+            (0x092, 0x71C0_47C0),
             (0x0A0, 0x000A_0000),
             (0x0A2, 0x0000_0000),
             (0x0A4, 0x0020_0041),
@@ -699,6 +699,11 @@ mod tests {
 
         let fault2 = PROVISIONAL_IMAGE[7].value;
         assert_eq!((fault2 >> 28) & 0x7, 0x7, "all three motor locks enabled");
+        assert_eq!(
+            (fault2 >> 22) & 0x7,
+            7,
+            "70 percent abnormal-BEMF tolerance"
+        );
         assert_eq!(
             (fault2 >> 13) & 0x7,
             2,

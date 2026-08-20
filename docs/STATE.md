@@ -113,7 +113,9 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   abnormal BEMF (`0x80500000`). Peak supply current was only 0.114 A. The next seed raises
   the automatic floor to 1 V, which extended the smooth-ish open-loop run but produced the
   same handoff jump and fault at 0.115 A peak. The next seed uses deterministic manual handoff
-  at 27 RPM; current limits and the abnormal-BEMF detector stay unchanged.
+  at 27 RPM; it reached 26.6 RPM, then produced the same jump and fault at only 0.119 A peak.
+  The next seed keeps the manual threshold and widens TI's enabled abnormal-BEMF tolerance
+  from 40% to 70% to accommodate the unmeasured KV-to-phase Ke convention.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
