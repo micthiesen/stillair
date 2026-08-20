@@ -75,6 +75,15 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   immediately reported the expected open-phase `StartFailed`; firmware revoked permission
   and TP12 returned to 3.1 V. This proves arm plus firmware fault revocation, but is not a
   substitute for PCB-03's separate forced independent-source checks.
+- **The first connected-motor command exposed the missing configuration gate** (2026-08-19).
+  The restrained unloaded motor moved only a few degrees and stopped; telemetry decoded
+  controller status `0x81000000` as `MPET_BEMF_FAULT`. Factory-zero R/L/Ke and speed PI
+  fields make any nonzero target enter implicit MPET, so this was not a normal startup and
+  showed no short or sustained drive. Firmware now blocks all start-capable commands while
+  `unverified`. `config stage` loads a reviewed 0.5 A GL100 first-spin image into volatile
+  shadow, verifies it, and reports `provisional` without committing EEPROM. The next hardware
+  step is to flash this build, stage once at 19.4 V (above the staged 18 V undervoltage
+  threshold), and retry the observed 35 RPM smoke.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
@@ -92,12 +101,13 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   drive, and no safety bypass is used. Do not assume a vibration sensor, optical tachometer,
   remote interlock, or second operator. Use normal safety firmware plus the host CLI over
   long USB J6 whenever PCB-01 drives the motor.
-- **Commissioning software is ready for hardware values**: the normal firmware now has a
+- **Commissioning software is ready for the corrected first-spin retry**: the normal firmware now has a
   fault-aware `Mpet` service state and bounded `mpet run`, confirmed EEPROM commits with
   the required 750 ms wait and self-clear poll, nine-clock I2C recovery, `wait speed`, and six
-  numbered scripts under `firmware/scripts/`. The host
-  and target builds are covered by tests; only real motor results and the resulting golden
-  configuration image remain hardware-gated.
+  numbered scripts under `firmware/scripts/`, plus a volatile-only provisional configuration
+  gate that prevents factory defaults from running. The host and target builds are covered by
+  tests; real startup results, loaded tuning, and the resulting golden image remain
+  hardware-gated.
 
 ## Next
 

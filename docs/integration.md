@@ -54,6 +54,12 @@ Use the numbered sequences in `firmware/scripts/`. Controlled MPET is `mpet run`
 an explicit service state from `IdleOff`, uses the ordinary permission and fault paths,
 reports the raw result registers, aborts on its deadline, and leaves results uncommitted for
 review and capture.
+Until the loaded golden image is committed, each motor-power cycle begins `unverified` in
+`SafeBoot`. Scripts 02 and 03 first execute `config stage`, verify the volatile first-spin
+image, and require a separate fresh run command. Staging never writes EEPROM. Release scripts
+04 through 06 instead require `config check` against the committed golden image. A normal
+start command must never be issued directly against factory defaults because zero speed-loop
+gains invoke the MCF's implicit MPET path.
 Do not create a general permissive or safety-bypass firmware build for routine testing.
 
 ## Practical workshop test policy

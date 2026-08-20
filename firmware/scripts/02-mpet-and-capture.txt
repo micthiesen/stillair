@@ -1,3 +1,4 @@
+# HOLD until PROVISIONAL_IMAGE is reviewed for loaded MPET, not only unloaded first spin.
 # Representative loaded rotor secured on the installed ceiling plate. MPET will turn it.
 wait idle_off --for 30
 mpet run --for 120

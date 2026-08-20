@@ -1,4 +1,5 @@
 # Loaded ceiling test. One low-speed reversal in each direction.
+config check
 wait idle_off --for 30
 dir fwd
 run 60

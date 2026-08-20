@@ -1,6 +1,6 @@
 # Fan mounted on the ceiling plate, watched continuously, clear area below.
-wait idle_off --for 30
 config check
+wait idle_off --for 30
 run 35
 wait running --for 30
 wait speed 35 --within 5 --for 90

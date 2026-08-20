@@ -103,6 +103,17 @@ pub enum Command {
     AbortMpet,
 }
 
+impl Command {
+    /// Does accepting this command request motor drive rather than stopping or editing intent?
+    pub const fn starts_drive(self) -> bool {
+        match self {
+            Self::On | Self::StartMpet => true,
+            Self::SetSpeed(speed) => !speed.is_zero(),
+            Self::Off | Self::SetDirection(_) | Self::AbortMpet => false,
+        }
+    }
+}
+
 /// What the supervisor wants the caller to do. The caller applies these in order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
@@ -394,6 +405,18 @@ impl Supervisor {
             return actions;
         }
 
+        // A volatile commissioning image can disappear independently of user intent (for
+        // example after an MCF reset), and `config check` can deliberately downgrade the
+        // standing verdict. Never let a queued On or MPET request survive that boundary.
+        if self.state != FanState::SafeBoot && !inputs.config.permits_operation() {
+            self.desired.on = false;
+            self.mpet_requested = false;
+            self.push(&mut actions, Action::ClearPermission);
+            self.emit_duty(SpeedDuty::ZERO, &mut actions);
+            self.transition(FanState::SafeBoot, now);
+            return actions;
+        }
+
         match self.state {
             FanState::SafeBoot => self.poll_safe_boot(now, inputs, &mut actions),
             FanState::IdleOff => self.poll_idle(now, &mut actions),
@@ -447,11 +470,15 @@ impl Supervisor {
                 }
                 return;
             }
-            // `Unverified` proceeds deliberately: until a golden image has been captured
-            // from a real device there is nothing to compare against, and the harness has to
-            // be usable in order to capture one. It is carried in every telemetry frame so
-            // the distinction is never invisible.
-            ConfigCheck::Verified | ConfigCheck::Unverified => {}
+            // A factory/unidentified configuration is allowed to remain here so the console
+            // can inspect and stage it, but it is never allowed to run. Discard any command
+            // entered before staging so configuration cannot unexpectedly start the motor.
+            ConfigCheck::Unverified => {
+                self.desired.on = false;
+                self.mpet_requested = false;
+                return;
+            }
+            ConfigCheck::Provisional | ConfigCheck::Verified => {}
         }
         self.transition(FanState::IdleOff, now);
     }
@@ -794,6 +821,17 @@ mod tests {
     /// milli-RPM × ms × pulses-per-rev, per pulse.
     const PULSE_SCALE: u64 = 60_000 * 1_000;
 
+    #[test]
+    fn every_drive_starting_command_is_classified_for_the_configuration_gate() {
+        assert!(!Command::Off.starts_drive());
+        assert!(Command::On.starts_drive());
+        assert!(!Command::SetSpeed(MilliRpm::ZERO).starts_drive());
+        assert!(Command::SetSpeed(MilliRpm::from_rpm(35)).starts_drive());
+        assert!(!Command::SetDirection(Direction::Reverse).starts_drive());
+        assert!(Command::StartMpet.starts_drive());
+        assert!(!Command::AbortMpet.starts_drive());
+    }
+
     /// What the simulated status-reading task is doing.
     #[derive(Debug, Clone, Copy)]
     enum Reader {
@@ -1091,16 +1129,22 @@ mod tests {
     }
 
     #[test]
-    fn an_unverified_configuration_runs_but_says_so() {
-        // Before a golden image has been captured there is nothing to compare against, and
-        // the harness has to work in order to capture one. The distinction must still be
-        // visible in telemetry rather than silently equal to "verified".
+    fn an_unverified_configuration_stays_safe_and_drops_a_queued_start() {
         let mut bench = Bench::new();
         bench.inputs.config = ConfigCheck::Unverified;
-        bench.boot();
-        bench.run_at(40);
+        bench
+            .supervisor
+            .command(Command::SetSpeed(MilliRpm::from_rpm(40)));
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS + 1_000);
+        assert_eq!(bench.supervisor.state(), FanState::SafeBoot);
+        assert!(!bench.supervisor.commanded_on());
         assert_eq!(bench.supervisor.config(), ConfigCheck::Unverified);
-        assert_ne!(bench.supervisor.config(), ConfigCheck::Verified);
+
+        bench.inputs.config = ConfigCheck::Provisional;
+        bench.tick();
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+        bench.run_ms(1_000);
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
     }
 
     #[test]

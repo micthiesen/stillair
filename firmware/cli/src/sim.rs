@@ -108,8 +108,8 @@ impl Simulator {
         let now = Millis::ZERO;
         let mut registers = Vec::new();
         // Run the real boot-time check against the (empty) simulated register file. It
-        // reports `Unverified`, which is the truth: a simulator says nothing about what any
-        // register on a real MCF8316D contains, and every frame it emits will say so.
+        // starts `Unverified`, which is the truth: a simulator says nothing about what any
+        // register on a real MCF8316D contains. An explicit stage can move it to Provisional.
         let inputs = Inputs {
             config: block_on(mcf_config::check(
                 &mut SimBus(&mut registers),
@@ -227,6 +227,20 @@ impl Simulator {
         )
     }
 
+    fn operation_ready(&self) -> bool {
+        self.inputs.config.permits_operation()
+    }
+
+    fn refuse_unconfigured_command(&mut self, command: Command) -> bool {
+        if !command.starts_drive() || self.operation_ready() {
+            return false;
+        }
+        self.emit(&Reply::Error(
+            "stage or verify the MCF configuration before running",
+        ));
+        true
+    }
+
     /// Configuration operations, run through the real `mcf_config` code against the
     /// simulated register file.
     fn config(&mut self, operation: ConfigOp) {
@@ -238,22 +252,39 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
-            ConfigOp::Check | ConfigOp::Apply => {
+            ConfigOp::Check | ConfigOp::Stage | ConfigOp::Apply => {
                 let mut written = 0;
                 let mut unchanged = 0;
-                let check = if operation == ConfigOp::Apply {
-                    let (applied, check) = block_on(mcf_config::apply(
-                        &mut SimBus(&mut self.registers),
-                        mcf_config::IMAGE,
-                    ));
-                    written = applied.written;
-                    unchanged = applied.unchanged;
-                    check
-                } else {
-                    block_on(mcf_config::check(
-                        &mut SimBus(&mut self.registers),
-                        mcf_config::IMAGE,
-                    ))
+                let check = match operation {
+                    ConfigOp::Apply => {
+                        let (applied, check) = block_on(mcf_config::apply(
+                            &mut SimBus(&mut self.registers),
+                            mcf_config::IMAGE,
+                        ));
+                        written = applied.written;
+                        unchanged = applied.unchanged;
+                        check
+                    }
+                    ConfigOp::Stage => {
+                        let (applied, check) =
+                            block_on(mcf_config::stage(&mut SimBus(&mut self.registers)));
+                        written = applied.written;
+                        unchanged = applied.unchanged;
+                        check
+                    }
+                    ConfigOp::Check => {
+                        if self.inputs.config == mcf_config::ConfigCheck::Provisional {
+                            block_on(mcf_config::check_provisional(&mut SimBus(
+                                &mut self.registers,
+                            )))
+                        } else {
+                            block_on(mcf_config::check(
+                                &mut SimBus(&mut self.registers),
+                                mcf_config::IMAGE,
+                            ))
+                        }
+                    }
+                    ConfigOp::Dump => unreachable!(),
                 };
                 self.inputs.config = check;
                 self.emit(&Reply::Config {
@@ -272,13 +303,20 @@ impl Simulator {
                 self.emit(&Reply::Telemetry(telemetry));
             }
             Request::Run(rpm) => {
-                self.supervisor.command(Command::SetSpeed(rpm));
+                let command = Command::SetSpeed(rpm);
+                if self.refuse_unconfigured_command(command) {
+                    return;
+                }
+                self.supervisor.command(command);
                 self.emit(&Reply::Ok);
             }
             Request::Percent(percent) => {
                 let released_min = self.supervisor.released_min();
-                self.supervisor
-                    .command(matter::command_for_percent(percent, released_min));
+                let command = matter::command_for_percent(percent, released_min);
+                if self.refuse_unconfigured_command(command) {
+                    return;
+                }
+                self.supervisor.command(command);
                 self.emit(&Reply::Ok);
             }
             Request::Stop => {
@@ -303,15 +341,14 @@ impl Simulator {
                 self.emit(&Reply::Register { address, value });
             }
             Request::RegWrite { address, value } => {
-                if !self.stopped_for_write() {
-                    self.emit(&Reply::Error("registers are writable only while stopped"));
+                if !stillair_core::mcf8316::is_configuration(address) {
+                    self.emit(&Reply::Error(
+                        "raw writes are limited to the volatile configuration shadow",
+                    ));
                     return;
                 }
-                // CLR_FLT is write-only and self-clearing on real silicon, so the model
-                // does not store it — otherwise a read-back would show a bit the device
-                // never holds.
-                if address == reg::ALGO_CTRL1 {
-                    self.emit(&Reply::Ok);
+                if !self.stopped_for_write() {
+                    self.emit(&Reply::Error("registers are writable only while stopped"));
                     return;
                 }
                 // The same core call the firmware makes, so a configuration write
@@ -326,13 +363,18 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
-            Request::Config(ConfigOp::Apply) if !self.stopped_for_write() => self.emit(
-                &Reply::Error("configuration registers are writable only while stopped"),
-            ),
+            Request::Config(ConfigOp::Stage | ConfigOp::Apply) if !self.stopped_for_write() => self
+                .emit(&Reply::Error(
+                    "configuration registers are writable only while stopped",
+                )),
             Request::Config(operation) => self.config(operation),
             Request::Mpet(operation) => match operation {
                 MpetOp::Start => {
-                    self.supervisor.command(Command::StartMpet);
+                    let command = Command::StartMpet;
+                    if self.refuse_unconfigured_command(command) {
+                        return;
+                    }
+                    self.supervisor.command(command);
                     self.emit(&Reply::Ok);
                 }
                 MpetOp::Abort => {
@@ -427,20 +469,53 @@ mod tests {
         None
     }
 
-    #[test]
-    fn the_simulator_boots_into_idle_after_the_hold() {
+    fn staged_simulator() -> Simulator {
         let mut sim = Simulator::new();
+        sim.send("config stage").unwrap();
+        let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&reply, "ok"), Some("true"));
+        assert_eq!(field(&reply, "config"), Some("provisional"));
+        sim
+    }
+
+    #[test]
+    fn an_unconfigured_simulator_stays_in_safe_boot() {
+        let mut sim = Simulator::new();
+        for command in ["run 35", "pct 50", "mpet start"] {
+            sim.send(command).unwrap();
+            let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+            assert_eq!(field(&reply, "ok"), Some("false"), "{command}");
+        }
+        let frame = run_until(&mut sim, 30_000, |line| {
+            field(line, "state") == Some("idle_off")
+        });
+        assert!(frame.is_none(), "factory configuration was allowed to run");
+        assert_eq!(sim.supervisor.state(), FanState::SafeBoot);
+        assert_eq!(sim.supervisor.config(), mcf_config::ConfigCheck::Unverified);
+    }
+
+    #[test]
+    fn staging_allows_idle_only_after_the_safe_boot_hold() {
+        let mut sim = staged_simulator();
         let frame = run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         });
         assert!(frame.is_some(), "never reached idle_off");
-        // And it took at least the documented hold to get there.
         assert!(sim.now.0 >= config::SAFE_BOOT_HOLD_MS);
     }
 
     #[test]
+    fn checking_a_staged_image_preserves_the_provisional_verdict() {
+        let mut sim = staged_simulator();
+        sim.send("config check").unwrap();
+        let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&reply, "ok"), Some("true"));
+        assert_eq!(field(&reply, "config"), Some("provisional"));
+    }
+
+    #[test]
     fn a_run_command_reaches_the_commanded_speed() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         })
@@ -455,7 +530,7 @@ mod tests {
 
     #[test]
     fn a_bad_command_is_rejected_rather_than_ignored() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         sim.send("frobnicate").unwrap();
         let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
         assert_eq!(field(&reply, "ok"), Some("false"));
@@ -464,7 +539,7 @@ mod tests {
 
     #[test]
     fn registers_round_trip_by_name() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         sim.send("reg write ISD_CONFIG 0x12345678").unwrap();
         sim.receive(Duration::from_millis(10)).unwrap();
         sim.send("reg read ISD_CONFIG").unwrap();
@@ -475,7 +550,7 @@ mod tests {
 
     #[test]
     fn writes_are_refused_while_the_simulated_fan_is_running() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         })
@@ -495,10 +570,19 @@ mod tests {
     }
 
     #[test]
+    fn raw_control_writes_are_refused_even_while_stopped() {
+        let mut sim = staged_simulator();
+        sim.send("reg write ALGO_CTRL1 0x8A500000").unwrap();
+        let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&reply, "ok"), Some("false"));
+        assert_eq!(sim.inputs.config, mcf_config::ConfigCheck::Provisional);
+    }
+
+    #[test]
     fn the_simulator_enforces_the_same_speed_ceiling_as_the_firmware() {
         // It runs the real Supervisor, so the limits are not re-implemented here and
         // cannot drift from the ones under test.
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         })
@@ -513,7 +597,7 @@ mod tests {
 
     #[test]
     fn a_direction_change_goes_through_reversing() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         })
@@ -560,7 +644,7 @@ mod tests {
     fn state_derives_from_the_real_supervisor_not_a_reimplementation() {
         // Guards against the simulator drifting into its own state machine: the frame must
         // agree with what the embedded Supervisor reports directly.
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
             field(line, "state") == Some("idle_off")
         })

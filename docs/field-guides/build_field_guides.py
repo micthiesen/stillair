@@ -710,7 +710,7 @@ def page_4a(c: Canvas, n: int) -> None:
         "Use `script` for any multi-step sequence. Separate CLI invocations create separate simulator sessions.",
         "Use `wait <state> --for <seconds>` after asynchronous commands.",
         "Use `stream <hz> --for <seconds>` for CSV telemetry.",
-        "For release, `config check` must report config=verified; ok=true with config=unverified is not a pass.",
+        "Factory-unverified stays in SafeBoot. Use `config stage` for a volatile bench image; release requires config=verified.",
         "Use `config capture` only after a complete measured configuration exists.",
         "Treat simulator results as harness validation, never motor validation.",
     ], x + 14, y + 178, w - 28, 9)
@@ -745,12 +745,12 @@ def page_4b(c: Canvas, n: int) -> None:
         "Populate the required D-generation fields, including safety-critical speed, ALARM, and external-watchdog settings.",
         "Do not use `config apply` as a release step until EEPROM completion timing and readback are proven on hardware.",
         "Capture the complete image only after review. Never reuse A1/C-generation register dumps.",
-        "Require `config check` to report config=verified; ok=true with config=unverified is not a release pass.",
+        "Require `config check` to report config=verified after the final reviewed image is committed.",
     ], x + 14, y + 143, w - 28, 8.7)
 
     x, y, w, h = s.panel("CURRENT RECORD", 90)
     s.text("R: __________   L: __________   BEMF: __________   convention: __________________________", x + 14, y + 48, w - 28, 9.5, bold=True)
-    s.text("Config verdict: unverified / verified    image commit: ________________________________", x + 14, y + 20, w - 28, 9.2)
+    s.text("Config verdict: unverified / provisional / verified    image: ________________________", x + 14, y + 20, w - 28, 9.2)
     s.stop("Independent bare-motor measurements are recorded. MPET and the golden image remain HOLD until the loaded procedure is released.")
     s.footer("docs/controls.md, Measured-data gate and Stored configuration; docs/electrical.md, V1-to-V2 gates", "DRV-01, PCB-02, CTL-08/09/10")
 
@@ -1163,8 +1163,8 @@ def page_4a_visual(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("BUILD / FLASH / TALK", 165)
     commands = [
         ["cargo build --manifest-path firmware/Cargo.toml"],
-        ["espflash flash --port /dev/cu.usbmodem2101 --non-interactive", "  firmware/app/target/riscv32imac-unknown-none-elf/debug/stillair"],
-        ["firmware/target/debug/stillair --port /dev/cu.usbmodem2101 state"],
+        ["espflash flash --port /dev/cu.usbmodem101 --non-interactive", "  firmware/app/target/riscv32imac-unknown-none-elf/debug/stillair"],
+        ["firmware/target/debug/stillair --port /dev/cu.usbmodem101 state"],
     ]
     box_top = y + 132
     for command_lines in commands:
@@ -1181,13 +1181,13 @@ def page_4a_visual(c: Canvas, n: int) -> None:
     mini_card(c,"GPIO22 -> 3V3","PGOOD good",35,424,160,65,GREEN,GREEN_BG)
     mini_card(c,"GPIO21 -> 3V3","nFAULT idle high",226,424,160,65,GREEN,GREEN_BG)
     mini_card(c,"GPIO14 -> GND","ALARM idle low",417,424,160,65,BLUE,BLUE_BG)
-    step_strip(c,["SafeBoot","Starting","15 s, no FG","NoRotation fault"],35,366,542,RED)
+    step_strip(c,["config stage","Starting","15 s, no FG","NoRotation fault"],35,366,542,RED)
     c.setFillColor(RED); c.setFont("Helvetica-Bold",8); c.drawCentredString(306,350,"EXPECTED ON A BARE BOARD; IT DOES NOT GENERATE FG EDGES")
     s.y = 340
     x, y, w, h = s.panel("SESSION RULES", 205)
     mini_card(c,"ONE READER","Stop raw-log capture before espflash or CLI opens the port.",x+14,y+111,160,70,BLUE,BLUE_BG)
     mini_card(c,"USE SCRIPT","Multi-step simulator work must stay in one session; separate invocations reset it.",x+188,y+111,160,70,PURPLE,PURPLE_BG)
-    mini_card(c,"RELEASE GATE","config check must report config=verified. ok=true plus unverified is not a pass.",x+362,y+111,160,70,RED,RED_BG)
+    mini_card(c,"CONFIG GATE","unverified = blocked; provisional = volatile bench; verified = release.",x+362,y+111,160,70,RED,RED_BG)
     s.text("wait <state> --for <seconds>  |  wait speed <rpm> --within <rpm> --for <seconds>",x+14,y+91,w-28,8.5,bold=True)
     s.text("stream <hz> --for <seconds> for CSV  |  config capture after complete measured configuration",x+14,y+76,w-28,8.5,bold=True)
     s.warning("Firmware refuses raw register/config writes unless stopped. Use controlled mpet run, not live raw commands. Simulator passes validate the harness, not the motor.",35,166,542)
@@ -1208,26 +1208,26 @@ def motor_meter(c: Canvas, x: float, y: float, title: str, symbol: str, color, r
 
 
 def page_4b_visual(c: Canvas, n: int) -> None:
-    s = Sheet(c,"4B","Desk: Bare GL100 Measurements",n,"HOLD: IMAGE UNVERIFIED")
-    c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES  x")
-    c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Motor secured; manual cutoff ready; board/safety tests already passed")
-    motor_meter(c,35,518,"1  PHASE RESISTANCE","ohm",BLUE,"method: __________   ohm")
-    motor_meter(c,223,518,"2  PHASE INDUCTANCE","L",PURPLE,"frequency: ________   L")
-    motor_meter(c,411,518,"3  MANUAL-SPIN BEMF","~",GREEN,"RPM/polarity: ______   Vpp")
-    c.setFillColor(MUTED); c.setFont("Helvetica",8); c.drawCentredString(306,501,"Repeat across phase pairs; record connection and polarity convention. Confirm 20 pole pairs.")
+    s = Sheet(c,"4B","Unloaded First Spin",n,"VOLATILE BENCH IMAGE")
+    c.setFillColor(RED); c.setFont("Helvetica-Bold",13); c.drawString(35,702,"NO BLADES")
+    c.setFillColor(INK); c.setFont("Helvetica-Bold",9); c.drawString(160,702,"Motor secured; reachable power cutoff; board and Hall tests passed")
+    motor_meter(c,35,518,"1  POWER CYCLE","19.4 V",BLUE,"supply: 19.4 V / 2 A limit")
+    motor_meter(c,223,518,"2  CONFIG STAGE","CLI",PURPLE,"expect: provisional")
+    motor_meter(c,411,518,"3  OBSERVED RUN","35",GREEN,"watch: smooth rotation")
+    c.setFillColor(MUTED); c.setFont("Helvetica",8); c.drawCentredString(306,501,"Double-align may make one or two small positioning ticks before smooth rotation.")
     s.y = 495
     x,y,w,h=s.panel("GREEN LANE - DO NOW",145,GREEN_BG,GREEN,GREEN)
     s.checkbox_grid([
-        ("Measure R and L independently with method recorded.","Manually spin only; scope line-to-line BEMF and convention."),
-        ("Use script 03 at the provisional minimum only; keep current/speed caps.","Keep loose hub hardware and blades off the motor."),
+        ("Power at 19.4 V with a 2 A supply limit; confirm normal idle draw.","Run config stage after each motor-power cycle; require provisional."),
+        ("Issue a fresh run only after staging.","Use script 03 at 35 RPM; watch continuously and keep the cutoff reachable."),
     ],x+14,y+98,w/2-2,8.4)
     x,y,w,h=s.panel("LOADED-STAGE HANDOFF",145,AMBER_BG,AMBER,AMBER)
     s.checkbox_grid([
-        ("No unloaded MPET; script 02 requires the representative loaded rotor.","Golden image still needs measured D-generation fields and review."),
-        ("config apply is stopped-only and confirms commit + readback.","After power cycle require config check: verified, not merely ok=true."),
+        ("No unloaded MPET; script 02 requires the representative loaded rotor.","The provisional image is for this unloaded first-spin test only."),
+        ("Never config apply the provisional image; it is volatile by design.","After final apply and power cycle require config check: verified."),
     ],x+14,y+98,w/2-2,8.3)
-    s.warning("No live raw register writes. For any later powered work, VM <=35 V target; 40 V rejects.",35,157,542)
-    s.stop("R / L / BEMF records are complete. Loaded MPET waits for the rotor, not for more software.")
+    s.warning("Factory-unverified is blocked: a normal run would invoke implicit MPET with zero gains. Stage first. VM <=35 V target; 40 V rejects.",35,157,542)
+    s.stop("35 RPM starts, turns smoothly, reports FG, and stops cleanly. Loaded tuning remains separate.")
     s.footer("docs/controls.md, measured-data gate; docs/electrical.md", "DRV-01, PCB-02, CTL-08/09/10")
 
 

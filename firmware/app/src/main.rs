@@ -50,7 +50,7 @@ use stillair_core::console::Telemetry;
 use stillair_core::mcf8316;
 use stillair_core::mcf_config::{self, ConfigCheck};
 use stillair_core::speed;
-use stillair_core::state::{Command, Inputs, StatusRead, Supervisor};
+use stillair_core::state::{Command, FanState, Inputs, StatusRead, Supervisor};
 use stillair_core::time::Millis;
 
 mod board;
@@ -59,7 +59,7 @@ mod matter;
 mod mcf;
 mod output;
 
-use board::{Board, FG_PULSES, HALL_PULSES};
+use board::{Board, FG_PULSES, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH};
 use mcf::{service_access, Mcf};
 
 esp_bootloader_esp_idf::esp_app_desc!();
@@ -141,6 +141,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     // Inputs. No internal pulls: the board provides them.
     let floating = InputConfig::default().with_pull(Pull::None);
     let pgood = Input::new(peripherals.GPIO22, floating);
+    PGOOD_HIGH.store(pgood.is_high(), Ordering::Release);
     let nfault = Input::new(peripherals.GPIO21, floating);
     let alarm = Input::new(peripherals.GPIO14, floating);
     let fg = Input::new(peripherals.GPIO20, floating);
@@ -233,18 +234,22 @@ async fn main(spawner: embassy_executor::Spawner) {
     match verdict {
         ConfigCheck::Verified => log::info!("MCF stored configuration verified"),
         ConfigCheck::Unverified => log::warn!(
-            "MCF stored configuration NOT verified: no golden image has been captured yet \
-             (`config dump` on a tuned device, then fill in mcf_config::IMAGE)"
+            "MCF configuration is not runnable: use `config stage` for volatile bench \
+             commissioning, or capture the tuned golden image"
         ),
+        ConfigCheck::Provisional => {
+            log::warn!("MCF volatile first-spin configuration staged; EEPROM unchanged")
+        }
         other => log::error!("MCF stored configuration check failed: {other:?}"),
     }
     mcf::publish_verdict(verdict);
 
-    let board = Board::new(dir, arm, clear_n, speed, pgood, nfault, alarm);
+    let board = Board::new(dir, arm, clear_n, speed, nfault, alarm);
 
     // Everything else that must keep running when the network does not.
     control.spawn(fg_task(fg).unwrap());
     control.spawn(hall_task(hall).unwrap());
+    control.spawn(pgood_task(pgood).unwrap());
     control.spawn(control_task(board).unwrap());
     BOOT_INHIBIT_ACTIVE.store(false, Ordering::Release);
 
@@ -287,7 +292,7 @@ async fn control_task(mut board: Board) {
                 supervisor.command(command);
             }
         }
-        if config_service {
+        if config_service && supervisor.state() != FanState::Fault {
             supervisor.command(Command::Off);
         }
         if console::take_mpet_abort() {
@@ -295,6 +300,14 @@ async fn control_task(mut board: Board) {
         }
 
         let mut inputs: Inputs = board.inputs();
+        // The MCF shadow registers disappear with its rail even if USB keeps the ESP alive.
+        // Invalidate both provisional and stored verdicts on the falling edge. A provisional
+        // image must be staged again; a stored image must be checked again after power returns.
+        let verdict =
+            mcf_config::after_pgood_loss(PGOOD_FELL.swap(false, Ordering::AcqRel), mcf::verdict());
+        if verdict != mcf::verdict() {
+            mcf::publish_verdict(verdict);
+        }
         // Absent a fresh read this stays `Stale`, which the supervisor treats as carrying
         // no information — neither evidence of a fault nor evidence of health.
         inputs.mcf_status = mcf::STATUS.try_take().unwrap_or(StatusRead::Stale);
@@ -335,6 +348,25 @@ async fn control_task(mut board: Board) {
 
         CONTROL_LOOP_BEAT.fetch_add(1, Ordering::Relaxed);
         Timer::after(CONTROL_TICK).await;
+    }
+}
+
+/// Tracks the MCF rail independently of the 50 ms control-loop sampling cadence.
+#[embassy_executor::task]
+async fn pgood_task(mut pgood: Input<'static>) {
+    // Close the startup gap between the initial sample and this task beginning to await
+    // edges. If the rail fell during that interval, preserve it as a falling event.
+    let high = pgood.is_high();
+    if PGOOD_HIGH.swap(high, Ordering::AcqRel) && !high {
+        PGOOD_FELL.store(true, Ordering::Release);
+    }
+    loop {
+        pgood.wait_for_any_edge().await;
+        let high = pgood.is_high();
+        PGOOD_HIGH.store(high, Ordering::Release);
+        if !high {
+            PGOOD_FELL.store(true, Ordering::Release);
+        }
     }
 }
 
@@ -419,6 +451,16 @@ async fn mcf_task(mut mcf: Mcf) {
         // Console register accesses are serviced between status polls, so a tuning session
         // never has to wait a full poll interval for an answer.
         service_access(&mut mcf).await;
+
+        // An internal MCF reset can reload EEPROM without dropping PGOOD. One critical
+        // provisional word is enough to detect that all-shadow reset cheaply; a mismatch
+        // revokes operation within the next 200 ms status interval.
+        if mcf::verdict() == ConfigCheck::Provisional {
+            let check = mcf_config::check_provisional_sentinel(&mut mcf).await;
+            if check != ConfigCheck::Provisional {
+                mcf::publish_verdict(check);
+            }
+        }
 
         let outcome = mcf.fault_status().await;
         // A repeat of the previous verdict says nothing new; a different one always does.

@@ -103,7 +103,8 @@ fn step(link: &mut dyn Link, words: &[&str]) -> Result<(), String> {
         }
         // `config capture` is a host verb, and `config dump` needs host-side collection
         // because it is the one device command whose reply is many lines rather than one.
-        // `config check` and `config apply` are single-reply and pass straight through.
+        // `config check`, `config stage`, and `config apply` are single-reply and pass
+        // straight through.
         "config" if words.get(1) == Some(&"capture") => capture(link),
         "config" if words.get(1) == Some(&"dump") => dump(link),
         "mpet" if words.get(1) == Some(&"run") => mpet_run(link, &words[2..]),
@@ -506,6 +507,12 @@ fn flag(arguments: &[&str], name: &str) -> Result<Option<u64>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn staged_simulator() -> Simulator {
+        let mut sim = Simulator::new();
+        passthrough(&mut sim, "config stage").expect("stage provisional configuration");
+        sim
+    }
     use std::collections::VecDeque;
 
     #[test]
@@ -539,7 +546,7 @@ mod tests {
 
     #[test]
     fn waiting_for_a_reachable_state_succeeds() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
     }
 
@@ -554,7 +561,7 @@ mod tests {
 
     #[test]
     fn waiting_for_speed_requires_and_detects_arrival() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
         assert!(passthrough(&mut sim, "run 60").is_ok());
         assert!(wait_speed(&mut sim, &["60", "--within", "2", "--for", "120"]).is_ok());
@@ -585,6 +592,7 @@ mod tests {
         let mut sim = Simulator::new();
         let source = "\
 # boot, then prove a register write is visible to a later step
+config stage
 wait idle_off --for 30
 reg write ISD_CONFIG 0x12345678
 reg read ISD_CONFIG
@@ -607,7 +615,7 @@ reg read ISD_CONFIG
         let path = std::env::temp_dir().join("stillair-script-shift.txt");
         std::fs::write(
             &path,
-            "wait idle_off --for 30\nreg write ISD_CONFIG 0xAABBCCDD\n",
+            "config stage\nwait idle_off --for 30\nreg write ISD_CONFIG 0xAABBCCDD\n",
         )
         .unwrap();
         assert!(script(&mut sim, path.to_str().unwrap()).is_ok());
@@ -709,7 +717,7 @@ reg read ISD_CONFIG
 
     #[test]
     fn controlled_mpet_completes_and_returns_to_idle() {
-        let mut sim = Simulator::new();
+        let mut sim = staged_simulator();
         assert!(wait(&mut sim, &["idle_off", "--for", "30"]).is_ok());
         assert!(mpet_run(&mut sim, &["--for", "5"]).is_ok());
         sim.send("state").unwrap();

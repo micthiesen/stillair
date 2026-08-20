@@ -137,6 +137,13 @@ impl FanHandler {
     /// is not draining it, and stalling the Matter stack on that would convert a control-loop
     /// problem into a network problem for no benefit.
     fn command(&self, command: Command) -> Result<(), Error> {
+        if command.starts_drive()
+            && !console::latest()
+                .map(|telemetry| telemetry.config.permits_operation())
+                .unwrap_or(false)
+        {
+            return Err(Error::from(ErrorCode::Busy));
+        }
         console::COMMANDS
             .try_send(command)
             .map_err(|_| Error::from(ErrorCode::Busy))

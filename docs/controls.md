@@ -60,11 +60,15 @@ before releasing the top speed.
 motor's ~300 mV/electrical-Hz BEMF constant is 7–70× the MCF's entire handoff-threshold menu
 — closed-loop stability at the target minimum is comfortably in range (TI's "not ideal"
 territory starts around two orders of magnitude less signal). Expect the tuning effort to go
-into startup smoothness instead: align startup can kick the rotor backward; IPD startup
-avoids that (see the IPD retry caveat in electrical.md). App notes: SLLA665 (handoff),
+into startup smoothness instead. The unloaded bench image uses double align because it does
+not depend on rotor saliency; one or two visible positioning ticks are normal. The final
+loaded startup method remains an observed tuning decision. App notes: SLLA665 (handoff),
 SLLU335 (gradual-startup recipes).
 
 ## Initial MCF8316D configuration
+
+This is the eventual loaded/release baseline. The volatile first-spin stage below deliberately
+uses a lower 0.5 A current ceiling for the restrained unloaded bench test.
 
 - Provisional `MOTOR_RES`: `0xB1` (1.35 Ω; measured value wins).
 - Provisional `MOTOR_IND`: `0xAE` (1.20 mH; measured value wins).
@@ -116,11 +120,13 @@ SLLU335 (gradual-startup recipes).
   `EXT_WDT_FAULT_MODE` = 1b.
 - `ALARM_PIN_EN` = 1 (ALARM → GPIO14). Note this moves report-only faults to ALARM
   exclusively; actionable faults still assert nFAULT.
-- `AUTO_RETRY_TIMES` = 0 (no automatic retries anywhere).
-- **Startup and resync** (previously unconfigured; the Starting state is unimplementable
-  without them): `MTR_STARTUP` = IPD preferred (avoids align reverse-kick; accepts the
-  documented start-attempt retry) with align as fallback; ISD/resync enables set for clean
-  windmilling restart (DRV-06); `DIR_CHANGE_MODE` = full stop sequence.
+- `AUTO_RETRY_TIMES` = 0 means unlimited retries in silicon, not zero retries. It is inert
+  while every applicable fault mode is configured as latched Hi-Z; do not select an automatic
+  retry fault mode without also changing this field deliberately.
+- **Startup and resync**: `MTR_STARTUP` selects exactly one method; there is no encoded IPD
+  plus align fallback. Use the volatile double-align bench seed below for the unloaded motor.
+  Select and qualify the final loaded startup method from observed starts; `DIR_CHANGE_MODE`
+  remains a full stop sequence.
 - `FG_DIV` = 1h (20 pulses/rev; see electrical.md).
 - EEPROM discipline: write only with the motor stopped and the device idle/faulted, VM ≥ 6 V
   throughout, then write `0x8A500000` to `ALGO_CTRL1`, wait at least 750 ms, and poll until
@@ -128,6 +134,25 @@ SLLU335 (gradual-startup recipes).
   the entire image by read-back. Endurance is 20k cycles, so never write on a
   power-up path; an interrupted write is caught by CRC at next boot and EEP_FAULT_MODE = 0b
   holds Hi-Z. The register map is D-generation-specific — never reuse A1/C dumps.
+
+### Volatile first-spin stage
+
+A factory-reset MCF is not runnable. On the first connected-motor attempt, a 35 RPM command
+with zero R/L/Ke and speed PI fields automatically entered the MCF's implicit MPET sequence,
+moved the rotor a few degrees, and ended with `MPET_BEMF_FAULT` (`0x81000000`). That was not
+normal startup. Firmware now holds `config=unverified` in `SafeBoot` and rejects run, percent,
+Matter-on, and MPET commands until configuration is staged or verified.
+
+`config stage` writes `PROVISIONAL_IMAGE` to volatile shadow registers, verifies every claimed
+bit by read-back, reports `config=provisional`, and never issues the EEPROM commit command. A
+power cycle erases it. The bench image uses vendor-derived GL100 R/L and convention-unverified
+Ke seeds, double align, 0.5 A startup/open-loop/closed-loop current, 40 kHz PWM, 1.5 mechanical
+RPM/s closed-loop acceleration, Kp 0.008, Ki 0.0008, AVS, the 180 RPM ceiling, and the
+documented fault, watchdog, alarm, speed-input, and abnormal-speed/BEMF/no-motor lock
+settings. The gains follow TI's manual formula using the 0.5 A bench ceiling as an upper-bound
+proxy; they are first-spin values, not loaded tuning.
+After every motor-power cycle, stage again and then issue a fresh run command. Never use
+`config apply` for this provisional image.
 
 ## Electrical control contract
 
@@ -273,13 +298,13 @@ The last clause of the safe-boot step ("stored configuration verified") is enfor
 - **The device's own verdict outranks ours.** The check reads `CONTROLLER_FAULT_STATUS` first
   and fails on `EEPROM_ERR` / `EEPROM_WRITE_LOCK` / `EEPROM_READ_LOCK`. The MCF CRCs its
   EEPROM at boot; if that failed, no amount of read-back agreement from us redeems the block.
-- **Four verdicts, not a boolean.** `pending` holds `SafeBoot` (with a
+- **Five verdicts, not a boolean.** `pending` holds `SafeBoot` (with a
   `CONFIG_CHECK_GRACE_MS` timeout, because a supervisor parked in `SafeBoot` reporting
   nothing is indistinguishable from a board that will not boot); `failed` is a fault, before
-  or after boot; `verified` proceeds. `unverified` — the device is healthy but **no image has
-  been captured yet** — also proceeds, because the harness has to be usable in order to
-  capture one, and it rides in every telemetry frame and CSV row so a capture taken against
-  an unverified configuration is identifiable as one six months later.
+  or after boot; `verified` proceeds. `unverified` means the device is healthy but has no
+  recognized runnable image, so it remains in `SafeBoot` while inspection and configuration
+  commands stay available. `provisional` means the reviewed first-spin image passed read-back
+  in volatile shadow and permits bench operation. Every frame carries the verdict.
 - **A configuration write invalidates the verdict.** Any successful `reg write` into
   `0x080..=0x0AE` re-runs the check automatically rather than leaving a stale `verified`
   standing. Raw writes change shadow only and deliberately do not spend an EEPROM cycle.

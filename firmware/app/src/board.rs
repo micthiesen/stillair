@@ -4,7 +4,7 @@
 //! terms of the sans-I/O contract in `stillair-core`, which is why that contract is
 //! testable on a laptop and this file is not.
 
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use embedded_hal::pwm::SetDutyCycle;
 use esp_hal::gpio::{Input, Level, Output};
@@ -73,6 +73,9 @@ impl SpeedPwm {
 /// the supervisor only ever asks whether they advanced.
 pub static FG_PULSES: AtomicU32 = AtomicU32::new(0);
 pub static HALL_PULSES: AtomicU32 = AtomicU32::new(0);
+/// Current PGOOD level and a sticky falling-edge latch, maintained by `pgood_task`.
+pub static PGOOD_HIGH: AtomicBool = AtomicBool::new(false);
+pub static PGOOD_FELL: AtomicBool = AtomicBool::new(false);
 
 /// Minimum ARM_PULSE width. The permission latch needs a clean, deliberate edge; the
 /// datasheet minimum is 10 µs and this is generously above it.
@@ -105,7 +108,6 @@ pub struct Board {
     /// firmware can never assert permission this way, only remove it.
     clear_n: Output<'static>,
     speed: SpeedPwm,
-    pgood: Input<'static>,
     /// nFAULT is active low; [`Board::inputs`] normalises it.
     nfault: Input<'static>,
     alarm: Input<'static>,
@@ -117,7 +119,6 @@ impl Board {
         arm: Output<'static>,
         clear_n: Output<'static>,
         speed: SpeedPwm,
-        pgood: Input<'static>,
         nfault: Input<'static>,
         alarm: Input<'static>,
     ) -> Self {
@@ -126,7 +127,6 @@ impl Board {
             arm,
             clear_n,
             speed,
-            pgood,
             nfault,
             alarm,
         }
@@ -135,7 +135,7 @@ impl Board {
     /// Sample every supervisor input at one instant.
     pub fn inputs(&self) -> Inputs {
         Inputs {
-            pgood: self.pgood.is_high(),
+            pgood: PGOOD_HIGH.load(Ordering::Acquire),
             mcf_fault: self.nfault.is_low(),
             mcf_alarm: self.alarm.is_high(),
             // Both filled in by the control loop from the I2C task; the pins say nothing

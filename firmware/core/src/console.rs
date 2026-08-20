@@ -35,7 +35,6 @@ pub enum Request {
     State,
     /// Command a speed in whole RPM. Clamped by the supervisor exactly like a Matter
     /// command, so this is a convenience rather than a way around the speed limits.
-    /// (`RegWrite` is not so constrained — see its note.)
     Run(MilliRpm),
     /// Command a Matter `PercentSetting`, 0–100. The same path Apple Home drives, so a
     /// script can exercise the percent mapping rather than only the RPM one it bypasses.
@@ -43,10 +42,9 @@ pub enum Request {
     Stop,
     SetDirection(Direction),
     RegRead(u16),
-    /// Raw register access, deliberately outside every supervisor safeguard: it is how
-    /// configuration gets *derived* at the bench, so it cannot be limited to values the
-    /// firmware already knows. The device gates writes to the persistent configuration
-    /// block on the motor being stopped; nothing else is checked.
+    /// Raw configuration-shadow access for deriving settings at the bench. The device
+    /// accepts it only while stopped, invalidates the standing verdict after each write,
+    /// and rejects RAM/control addresses so EEPROM commit and MPET remain controlled flows.
     RegWrite {
         address: u16,
         value: u32,
@@ -68,6 +66,8 @@ pub enum Request {
 pub enum ConfigOp {
     /// Re-run the boot-time verification and report the verdict.
     Check,
+    /// Write the reviewed first-spin image to volatile shadow registers only.
+    Stage,
     /// Write every setting in the golden image the device does not already satisfy, then
     /// verify by read-back. A bench operation: the device gates it on the fan being stopped.
     Apply,
@@ -143,6 +143,8 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
         let operation = argument()?;
         if is(operation, "check") {
             Ok(Request::Config(ConfigOp::Check))
+        } else if is(operation, "stage") {
+            Ok(Request::Config(ConfigOp::Stage))
         } else if is(operation, "apply") {
             Ok(Request::Config(ConfigOp::Apply))
         } else if is(operation, "dump") {
@@ -389,12 +391,13 @@ pub const HELP: &[&str] = &[
     "pct <0-100>               command a Matter PercentSetting (0 = off)",
     "stop                      command off",
     "config check              re-verify the MCF's stored configuration",
+    "config stage              load the volatile first-spin image (stopped only)",
     "config apply              write the golden image (only while stopped)",
     "config dump               read the whole EEPROM configuration block",
     "mpet start|status|abort   controlled motor-parameter extraction service",
     "dir fwd|rev               set direction (takes effect from a verified stop)",
     "reg read <name|addr>      read a 32-bit register",
-    "reg write <name|addr> <v> write a 32-bit register",
+    "reg write <config> <value> write a volatile configuration register",
     "stream on <hz>|off        continuous telemetry, 1-100 Hz (deduped to the control rate)",
     "fault clear               issue CLR_FLT (counts as a fresh user command)",
 ];
@@ -429,7 +432,10 @@ pub const fn config_fault_name(check: ConfigCheck) -> Option<&'static str> {
         ConfigCheck::Failed(ConfigFault::CommitUnconfirmed) => Some("commit_unconfirmed"),
         ConfigCheck::Failed(ConfigFault::CommitUnreadable) => Some("commit_unreadable"),
         ConfigCheck::Failed(ConfigFault::TimedOut) => Some("timed_out"),
-        ConfigCheck::Pending | ConfigCheck::Unverified | ConfigCheck::Verified => None,
+        ConfigCheck::Pending
+        | ConfigCheck::Unverified
+        | ConfigCheck::Provisional
+        | ConfigCheck::Verified => None,
     }
 }
 
@@ -641,6 +647,7 @@ mod tests {
     #[test]
     fn configuration_operations_parse() {
         assert_eq!(parse("config check"), Ok(Request::Config(ConfigOp::Check)));
+        assert_eq!(parse("config stage"), Ok(Request::Config(ConfigOp::Stage)));
         assert_eq!(parse("CONFIG Apply"), Ok(Request::Config(ConfigOp::Apply)));
         assert_eq!(parse("config dump"), Ok(Request::Config(ConfigOp::Dump)));
         assert_eq!(parse("config"), Err(ParseError::MissingArgument));
@@ -687,7 +694,7 @@ mod tests {
         assert!(failed.contains("\"detail\":\"mismatch\""), "{failed}");
         assert!(failed.contains("\"addr\":138"), "{failed}");
 
-        for check in [ConfigCheck::Verified, ConfigCheck::Unverified] {
+        for check in [ConfigCheck::Verified, ConfigCheck::Provisional] {
             let line = Reply::Config {
                 check,
                 written: 3,

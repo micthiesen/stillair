@@ -1,7 +1,7 @@
 //! The MCF8316D configuration image: what the device must be holding before the fan runs.
 //!
 //! `docs/controls.md` > "Initial MCF8316D configuration" describes the configuration in
-//! words — latched fault modes, `SPEED_RANGE_SEL` = 1h, IPD startup, a 180 RPM stored
+//! words — latched fault modes, `SPEED_RANGE_SEL` = 1h, qualified startup, a 180 RPM stored
 //! ceiling. This module is the machinery that makes those words checkable against silicon,
 //! and [`IMAGE`] is where the values themselves live.
 //!
@@ -74,18 +74,18 @@ impl Setting {
 
 /// The configuration the fan is qualified against.
 ///
-/// **Empty on purpose.** No device has been captured yet — the MCF8316D is on the unbuilt V1
-/// board, and the values in `docs/controls.md` are commissioning seeds, not measurements. An
+/// **Empty on purpose.** No tuned device has been captured yet; the values in
+/// `docs/controls.md` are commissioning seeds, not measurements. An
 /// image invented from those seeds would be worse than none: [`check`] would pass against a
 /// fiction and `SafeBoot`'s "stored configuration verified" clause would read as satisfied
 /// while verifying nothing.
 ///
 /// While it is empty, [`check`] reports [`ConfigCheck::Unverified`] rather than
-/// [`ConfigCheck::Verified`], the supervisor runs but says so, and every telemetry frame and
-/// CSV row carries that fact. Filling it in is a bench step, not a code change:
+/// [`ConfigCheck::Verified`], the supervisor remains in `SafeBoot`, and every telemetry frame
+/// and CSV row carries that fact. Filling it in is a bench step, not a code change:
 ///
 /// ```text
-/// stillair --port /dev/tty.usbmodem1101 config capture
+/// stillair --port /dev/cu.usbmodem101 config capture
 /// ```
 ///
 /// prints this table from a live device, ready to paste.
@@ -110,6 +110,36 @@ impl Setting {
 ///   (500 ms) is edge-on-deadline and faults on jitter; 0h/1h can never pass — and 0h is
 ///   the chip's reset default. The `ext_wdt` test below fails the build on a bad capture.
 pub const IMAGE: &[Setting] = &[];
+
+/// Volatile-only first-spin configuration for the unloaded GL100 commissioning bench.
+///
+/// This is deliberately separate from [`IMAGE`]. It uses vendor motor data and conservative
+/// first-spin gains, not values qualified with the final rotor, so it must never be committed
+/// to EEPROM or described as the golden configuration. `config stage` writes these settings
+/// to the MCF shadow registers and a power cycle erases them.
+///
+/// Values are lower-31-bit register words from MCF8316D SLLSFX9A Tables 8-5 through 8-32;
+/// bit 31 is the silicon's read-only parity bit. The 0.5 A speed-loop seed uses TI tuning-guide
+/// equations Kp = Iq / maximum electrical Hz and Ki = 0.1 Kp, rounded down to Kp=0.008 and
+/// Ki=0.0008. It is only a controlled first-spin starting point.
+pub const PROVISIONAL_SENTINEL: Setting =
+    Setting::masked("CLOSED_LOOP4", 0x08E, 0x7FFF_FFFF, 0x50C2_0168);
+
+pub const PROVISIONAL_IMAGE: &[Setting] = &[
+    Setting::masked("MOTOR_STARTUP1", 0x084, 0x7FFF_FFFF, 0x22E4_0004),
+    Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1104_0002),
+    Setting::masked("CLOSED_LOOP1", 0x088, 0x7FFF_FFFF, 0x0003_0108),
+    Setting::masked("CLOSED_LOOP2", 0x08A, 0x7FFF_FFFF, 0x0000_B1AE),
+    Setting::masked("CLOSED_LOOP3", 0x08C, 0x7FFF_FFFF, 0x6500_0004),
+    PROVISIONAL_SENTINEL,
+    Setting::masked("FAULT_CONFIG1", 0x090, 0x7FFF_FFFF, 0x12A8_0000),
+    Setting::masked("FAULT_CONFIG2", 0x092, 0x7FFF_FFFF, 0x7000_07C0),
+    Setting::masked("INT_ALGO_2", 0x0A2, 0x7FFF_FFFF, 0x0000_0000),
+    Setting::masked("PIN_CONFIG", 0x0A4, 0x7FFF_FFFF, 0x0020_0041),
+    Setting::masked("DEVICE_CONFIG2", 0x0A8, 0x7FFF_FFFF, 0x0000_001F),
+    Setting::masked("PERI_CONFIG1", 0x0AA, 0x7FFF_FFFF, 0x0022_0200),
+    Setting::masked("GD_CONFIG1", 0x0AC, 0x7FFF_FFFF, 0x0001_0000),
+];
 
 /// Put the live configuration shadow into standby mode without committing EEPROM.
 ///
@@ -158,7 +188,7 @@ pub enum ConfigFault {
     /// not trustworthy no matter what our read-back says, because an interrupted EEPROM
     /// write is caught by the MCF's CRC and held at Hi-Z (`docs/controls.md`).
     DeviceEeprom,
-    /// A register did not read back as [`IMAGE`] requires.
+    /// A register did not read back as the image being checked requires.
     Mismatch { address: u16 },
     /// The register could not be read at all.
     Unreadable { address: u16 },
@@ -171,9 +201,9 @@ pub enum ConfigFault {
     TimedOut,
 }
 
-/// The verdict on the device's stored configuration.
+/// The device's configuration-readiness verdict, covering both volatile and stored images.
 ///
-/// Four values rather than a `bool` because "we have not checked yet", "there is nothing to
+/// Five values rather than a `bool` because "we have not checked yet", "there is nothing to
 /// check against yet", and "we checked and it is right" are three genuinely different things,
 /// and collapsing the middle one into either neighbour is how a safety gate becomes theatre.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -182,10 +212,12 @@ pub enum ConfigCheck {
     #[default]
     Pending,
     /// The device's own integrity bits are clean, but [`IMAGE`] is empty, so nothing was
-    /// compared. The fan runs — the harness has to be usable before there is anything to
-    /// capture — and every frame it emits carries this so a bench capture records that it was
-    /// taken against an unverified configuration.
+    /// compared. The fan remains in `SafeBoot`; inspection and staging commands stay
+    /// available, and every telemetry frame records the unverified verdict.
     Unverified,
+    /// The reviewed first-spin image is present in volatile shadow registers. This permits
+    /// bench operation but is intentionally lost at the next MCF power cycle.
+    Provisional,
     /// Every setting in [`IMAGE`] read back as required.
     Verified,
     Failed(ConfigFault),
@@ -199,13 +231,14 @@ impl ConfigCheck {
 
     /// May the supervisor leave `SafeBoot` on this verdict?
     pub const fn permits_operation(self) -> bool {
-        matches!(self, Self::Unverified | Self::Verified)
+        matches!(self, Self::Provisional | Self::Verified)
     }
 
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::Pending => "pending",
             Self::Unverified => "unverified",
+            Self::Provisional => "provisional",
             Self::Verified => "verified",
             Self::Failed(_) => "failed",
         }
@@ -277,6 +310,90 @@ pub struct Applied {
 /// over the block to learn what this one already established.
 ///
 pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, ConfigCheck) {
+    let (applied, write_failure) = write_shadow(bus, image).await;
+    if let Some(failure) = write_failure {
+        return (applied, failure);
+    }
+
+    if applied.written != 0 {
+        match commit(bus).await {
+            Ok(true) => {}
+            Ok(false) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnconfirmed)),
+            Err(_) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnreadable)),
+        }
+    }
+
+    // Re-read everything rather than trusting the writes. `RegisterBus::write` promises
+    // nothing about the value sticking, and a configuration that silently did not take is the
+    // failure this whole module exists to make impossible.
+    (applied, check(bus, image).await)
+}
+
+/// Stage the provisional commissioning image in volatile shadow registers only.
+///
+/// No EEPROM command is issued. A successful full read-back is reported as
+/// [`ConfigCheck::Provisional`] so it cannot be confused with the persistent golden image.
+pub async fn stage<B: RegisterBus>(bus: &mut B) -> (Applied, ConfigCheck) {
+    let (applied, check) = write_volatile_image(bus, PROVISIONAL_IMAGE).await;
+    let verdict = match check {
+        ConfigCheck::Verified => ConfigCheck::Provisional,
+        other => other,
+    };
+    (applied, verdict)
+}
+
+/// Re-read the fixed provisional image without rewriting it.
+pub async fn check_provisional<B: RegisterBus>(bus: &mut B) -> ConfigCheck {
+    match check(bus, PROVISIONAL_IMAGE).await {
+        ConfigCheck::Verified => ConfigCheck::Provisional,
+        other => other,
+    }
+}
+
+/// Cheaply detect an MCF reset that silently reloaded EEPROM while its rail stayed high.
+///
+/// CLOSED_LOOP4 contains both nonzero speed-loop gains and the 180 RPM ceiling, and reset
+/// silicon does not reproduce this word. The full image is still checked by `config stage`
+/// and an explicit `config check`; this sentinel runs on every status cycle.
+pub async fn check_provisional_sentinel<B: RegisterBus>(bus: &mut B) -> ConfigCheck {
+    match bus.read(PROVISIONAL_SENTINEL.address).await {
+        Ok(value) if PROVISIONAL_SENTINEL.matches(value) => ConfigCheck::Provisional,
+        Ok(_) => ConfigCheck::Failed(ConfigFault::Mismatch {
+            address: PROVISIONAL_SENTINEL.address,
+        }),
+        Err(_) => ConfigCheck::Failed(ConfigFault::Unreadable {
+            address: PROVISIONAL_SENTINEL.address,
+        }),
+    }
+}
+
+/// Invalidate configuration readiness when the MCF rail falls while the ESP remains alive.
+pub const fn after_pgood_loss(pgood_fell: bool, current: ConfigCheck) -> ConfigCheck {
+    if pgood_fell {
+        ConfigCheck::Unverified
+    } else {
+        current
+    }
+}
+
+async fn write_volatile_image<B: RegisterBus>(
+    bus: &mut B,
+    image: &[Setting],
+) -> (Applied, ConfigCheck) {
+    if image.is_empty() {
+        return (Applied::default(), ConfigCheck::Unverified);
+    }
+    let (applied, write_failure) = write_shadow(bus, image).await;
+    if let Some(failure) = write_failure {
+        return (applied, failure);
+    }
+    (applied, check(bus, image).await)
+}
+
+async fn write_shadow<B: RegisterBus>(
+    bus: &mut B,
+    image: &[Setting],
+) -> (Applied, Option<ConfigCheck>) {
     let mut applied = Applied::default();
 
     for setting in image {
@@ -286,7 +403,7 @@ pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, 
                 let address = setting.address;
                 return (
                     applied,
-                    ConfigCheck::Failed(ConfigFault::Unreadable { address }),
+                    Some(ConfigCheck::Failed(ConfigFault::Unreadable { address })),
                 );
             }
         };
@@ -302,24 +419,13 @@ pub async fn apply<B: RegisterBus>(bus: &mut B, image: &[Setting]) -> (Applied, 
             let address = setting.address;
             return (
                 applied,
-                ConfigCheck::Failed(ConfigFault::Mismatch { address }),
+                Some(ConfigCheck::Failed(ConfigFault::Mismatch { address })),
             );
         }
         applied.written += 1;
     }
 
-    if applied.written != 0 {
-        match commit(bus).await {
-            Ok(true) => {}
-            Ok(false) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnconfirmed)),
-            Err(_) => return (applied, ConfigCheck::Failed(ConfigFault::CommitUnreadable)),
-        }
-    }
-
-    // Re-read everything rather than trusting the writes. `RegisterBus::write` promises
-    // nothing about the value sticking, and a configuration that silently did not take is the
-    // failure this whole module exists to make impossible.
-    (applied, check(bus, image).await)
+    (applied, None)
 }
 
 /// Write one register on an operator's behalf, re-verifying the image if it landed in the
@@ -532,6 +638,60 @@ mod tests {
             );
             assert_ne!(setting.mask, 0, "{} claims no bits at all", setting.name);
         }
+    }
+
+    #[test]
+    fn provisional_words_match_the_reviewed_datasheet_transcription() {
+        let expected = [
+            (0x084, 0x22E4_0004),
+            (0x086, 0x1104_0002),
+            (0x088, 0x0003_0108),
+            (0x08A, 0x0000_B1AE),
+            (0x08C, 0x6500_0004),
+            (0x08E, 0x50C2_0168),
+            (0x090, 0x12A8_0000),
+            (0x092, 0x7000_07C0),
+            (0x0A2, 0x0000_0000),
+            (0x0A4, 0x0020_0041),
+            (0x0A8, 0x0000_001F),
+            (0x0AA, 0x0022_0200),
+            (0x0AC, 0x0001_0000),
+        ];
+        assert_eq!(PROVISIONAL_IMAGE.len(), expected.len());
+        for (setting, (address, value)) in PROVISIONAL_IMAGE.iter().zip(expected) {
+            assert_eq!(setting.address, address, "{} address", setting.name);
+            assert_eq!(setting.mask, 0x7FFF_FFFF, "{} parity mask", setting.name);
+            assert_eq!(setting.value, value, "{} value", setting.name);
+            assert!(crate::mcf8316::is_configuration(setting.address));
+        }
+        // Either zero re-enters implicit MPET on a normal speed command.
+        let kp_code =
+            ((PROVISIONAL_IMAGE[4].value & 0x7) << 7) | ((PROVISIONAL_IMAGE[5].value >> 24) & 0x7F);
+        let ki_code = (PROVISIONAL_IMAGE[5].value >> 14) & 0x03FF;
+        assert_ne!(kp_code, 0);
+        assert_ne!(ki_code, 0);
+
+        let startup1 = PROVISIONAL_IMAGE[0].value;
+        assert_eq!((startup1 >> 29) & 0x3, 1, "double align");
+        assert_eq!((startup1 >> 25) & 0xF, 1, "1 A/s align ramp");
+        assert_eq!((startup1 >> 21) & 0xF, 7, "750 ms align time");
+        assert_eq!((startup1 >> 17) & 0xF, 2, "0.5 A align current");
+        assert_eq!((startup1 >> 2) & 0x1, 1, "Iq ramp enabled");
+
+        let startup2 = PROVISIONAL_IMAGE[1].value;
+        assert_eq!((startup2 >> 27) & 0xF, 2, "0.5 A open-loop current");
+        assert_eq!((startup2 >> 23) & 0xF, 2, "1 electrical Hz/s A1");
+        assert_eq!((startup2 >> 19) & 0xF, 0, "zero A2");
+        assert_eq!((startup2 >> 18) & 0x1, 1, "automatic handoff");
+        assert_eq!(startup2 & 0x7, 2, "0.1 degree/ms theta ramp");
+
+        let fault1 = PROVISIONAL_IMAGE[6].value;
+        assert_eq!((fault1 >> 27) & 0xF, 2, "0.5 A closed-loop current");
+        assert_eq!((fault1 >> 23) & 0xF, 5, "2 A hardware lock threshold");
+        assert_eq!((fault1 >> 19) & 0xF, 5, "2 A software lock threshold");
+
+        let fault2 = PROVISIONAL_IMAGE[7].value;
+        assert_eq!((fault2 >> 28) & 0x7, 0x7, "all three motor locks enabled");
     }
 
     #[test]
@@ -750,6 +910,73 @@ mod tests {
     }
 
     #[test]
+    fn stage_writes_and_verifies_without_an_eeprom_commit() {
+        let image = [
+            Setting::whole("A", A, 0x1111),
+            Setting::whole("B", B, 0x2222),
+        ];
+        let mut bus = FakeBus::with(&[(A, 0), (B, 0x2222)]);
+        let (applied, check) = block_on(write_volatile_image(&mut bus, &image));
+        assert_eq!(
+            applied,
+            Applied {
+                written: 1,
+                unchanged: 1
+            }
+        );
+        assert_eq!(check, ConfigCheck::Verified);
+        assert_eq!(bus.writes, 1, "stage issued an EEPROM command");
+        assert_eq!(bus.delayed_ms, 0, "stage entered the EEPROM delay path");
+        assert_eq!(bus.registers[&A], 0x1111);
+        assert!(!bus.registers.contains_key(&reg::ALGO_CTRL1));
+    }
+
+    #[test]
+    fn public_stage_authorizes_only_the_fixed_provisional_image() {
+        let mut bus = FakeBus::default();
+        let (applied, check) = block_on(stage(&mut bus));
+        assert_eq!(usize::from(applied.written), PROVISIONAL_IMAGE.len() - 1);
+        assert_eq!(applied.unchanged, 1);
+        assert_eq!(check, ConfigCheck::Provisional);
+        assert_eq!(bus.writes, PROVISIONAL_IMAGE.len() - 1);
+        assert_eq!(bus.delayed_ms, 0);
+        assert!(!bus.registers.contains_key(&reg::ALGO_CTRL1));
+    }
+
+    #[test]
+    fn provisional_sentinel_detects_a_shadow_reset() {
+        let mut bus = FakeBus::with(&[(PROVISIONAL_SENTINEL.address, PROVISIONAL_SENTINEL.value)]);
+        assert_eq!(
+            block_on(check_provisional_sentinel(&mut bus)),
+            ConfigCheck::Provisional
+        );
+        bus.registers.insert(PROVISIONAL_SENTINEL.address, 0);
+        assert_eq!(
+            block_on(check_provisional_sentinel(&mut bus)),
+            ConfigCheck::Failed(ConfigFault::Mismatch {
+                address: PROVISIONAL_SENTINEL.address
+            })
+        );
+    }
+
+    #[test]
+    fn a_motor_rail_falling_edge_invalidates_any_runnable_verdict() {
+        for verdict in [ConfigCheck::Provisional, ConfigCheck::Verified] {
+            assert_eq!(after_pgood_loss(true, verdict), ConfigCheck::Unverified);
+            assert_eq!(after_pgood_loss(false, verdict), verdict);
+        }
+    }
+
+    #[test]
+    fn an_empty_provisional_image_cannot_authorize_operation() {
+        let mut bus = FakeBus::default();
+        let (applied, check) = block_on(write_volatile_image(&mut bus, &[]));
+        assert_eq!(applied, Applied::default());
+        assert_eq!(check, ConfigCheck::Unverified);
+        assert_eq!(bus.writes, 0);
+    }
+
+    #[test]
     fn apply_fails_if_the_eeprom_command_never_self_clears() {
         let image = [Setting::whole("A", A, 0x1111)];
         let mut bus = FakeBus::with(&[(A, 0)]);
@@ -877,11 +1104,13 @@ mod tests {
     fn verdicts_gate_operation_as_documented() {
         assert!(!ConfigCheck::Pending.permits_operation());
         assert!(!ConfigCheck::Failed(ConfigFault::DeviceEeprom).permits_operation());
-        assert!(ConfigCheck::Unverified.permits_operation());
+        assert!(!ConfigCheck::Unverified.permits_operation());
+        assert!(ConfigCheck::Provisional.permits_operation());
         assert!(ConfigCheck::Verified.permits_operation());
 
         assert!(!ConfigCheck::Pending.settled());
         assert!(ConfigCheck::Unverified.settled());
+        assert!(ConfigCheck::Provisional.settled());
         assert!(ConfigCheck::Verified.settled());
         assert!(ConfigCheck::Failed(ConfigFault::TimedOut).settled());
     }

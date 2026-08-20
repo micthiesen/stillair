@@ -244,7 +244,7 @@ async fn config(operation: ConfigOp) {
     let access = match operation {
         ConfigOp::Check => mcf::Access::ConfigCheck,
         ConfigOp::Dump => mcf::Access::ConfigDump,
-        ConfigOp::Apply => {
+        ConfigOp::Stage | ConfigOp::Apply => {
             // The same gate as a raw configuration write, for the same reasons: EEPROM
             // discipline, and the fact that `MAX_SPEED` decides what every clamped duty
             // means. `CONFIG_FIRST` stands in for the block as a whole.
@@ -256,12 +256,16 @@ async fn config(operation: ConfigOp) {
                 emit(&Reply::Error(error));
                 return;
             }
-            mcf::Access::ConfigApply
+            match operation {
+                ConfigOp::Stage => mcf::Access::ConfigStage,
+                ConfigOp::Apply => mcf::Access::ConfigApply,
+                _ => unreachable!(),
+            }
         }
     };
 
     let result = mcf::request_config(access).await;
-    if matches!(operation, ConfigOp::Apply) {
+    if matches!(operation, ConfigOp::Stage | ConfigOp::Apply) {
         CONFIG_SERVICE_ACTIVE.store(false, Ordering::Release);
     }
     match result {
@@ -287,14 +291,14 @@ async fn config(operation: ConfigOp) {
 
 /// Why a register write must not happen right now, if it must not.
 ///
-/// Raw register access is a bench capability that sits outside every supervisor safeguard —
-/// `run` is clamped, `reg write` is not. Two of those registers decide what a clamped duty
-/// actually means (`MAX_SPEED`) or how faults are handled at all (`FAULT_CONFIG*`), so
-/// writing them under a spinning rotor could defeat the layered limits from the outside.
-/// The configuration block is the shadow of EEPROM-backed settings, and changing live motor
-/// parameters while spinning is unsafe even though persistence remains a separate
-/// `config apply` operation.
-fn refuse_write(_address: u16) -> Option<&'static str> {
+/// Raw writes are a stopped-only bench capability limited to the configuration shadow. This
+/// keeps EEPROM commit, fault clear, and MPET behind their dedicated controlled operations.
+/// Configuration fields still decide what a clamped duty means and how faults are handled,
+/// so each successful write invalidates the standing verdict before operation can resume.
+fn refuse_write(address: u16) -> Option<&'static str> {
+    if !stillair_core::mcf8316::is_configuration(address) {
+        return Some("raw writes are limited to the volatile configuration shadow");
+    }
     match latest().map(|telemetry| telemetry.state) {
         Some(FanState::IdleOff | FanState::SafeBoot | FanState::Fault) => None,
         Some(_) => Some("registers are writable only while stopped"),
@@ -331,6 +335,16 @@ async fn begin_config_service() -> Result<(), &'static str> {
 fn command(command: Command) {
     if config_service_active() {
         emit(&Reply::Error("configuration write in progress"));
+        return;
+    }
+    if command.starts_drive()
+        && !latest()
+            .map(|telemetry| telemetry.config.permits_operation())
+            .unwrap_or(false)
+    {
+        emit(&Reply::Error(
+            "stage or verify the MCF configuration before running",
+        ));
         return;
     }
     // `try_send`, never `send`: a full queue means the control loop is not draining, and

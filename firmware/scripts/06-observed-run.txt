@@ -1,4 +1,5 @@
 # Final observed run at a moderate speed. Increase duration only when this is uneventful.
+config check
 wait idle_off --for 30
 run 120
 wait running --for 30
