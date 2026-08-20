@@ -430,6 +430,11 @@ capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCa
   main board.
 - J1 **S3B-PH-K-S** (JST-PH side entry, settled 2026-07-30): 1 = 3V3, 2 = HALL_TACH,
   3 = AGND — mirrors J3 on PCB-01. Cable exits in the board plane away from the hub.
+- Verified harness colors (2026-08-19): with PCB-01 viewed component-side and C1/C2 at the
+  upper left, J3 is red/blue/green from left to right (3V3/HALL_TACH/AGND). With PCB-02
+  viewed component-side and J1 at the top, the same straight-through harness appears
+  green/blue/red from top to bottom (AGND/HALL_TACH/3V3). The board-view frames are mirrored;
+  the electrical cable remains contact 1-to-1, 2-to-2, and 3-to-3.
 - All components on the magnet-facing side (single-sided hand assembly); the sensor face is
   the closest surface to the magnet cap.
 - Mounting: two Ø2.2 mm NPTH (M2) on the board centerline at board-local (7, 4) and
@@ -450,6 +455,10 @@ capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCa
   package), so element-to-magnet is gap + 0.4 mm; the 15× field margin absorbs it, but
   record measurements against the package face, never the PCB substrate (measuring from
   the substrate would under-report the true clearance by the package height).
+- Bench verification with the intended rotor magnet (2026-08-19): HALL_TACH measured
+  3.251 V released and 0.04 V active, with a repeatable digital transition at about 10 mm.
+  Firmware telemetry counted repeated approaches and releases. The sharp transition is the
+  expected switch behavior, not an analog distance output.
 - Considered and declined at the 2026-07-30 board review: a series resistor on
   HALL_TACH at the sensor end (signal is ≤3.3 Hz behind a 10 kΩ pull-up into a 2N7002
   gate with R45/C32 filtering at the LM2907; DRV5033 carries internal load-dump/reverse

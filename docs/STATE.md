@@ -45,7 +45,9 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   harness convention is J2 pin 3/U red, pin 2/V green, pin 1/W yellow; at the motor end,
   viewed with the motor centre above its connector, motor pins 1-2-3 are red-green-yellow
   from left to right. Preserve that order and correct final rotation sense in software if
-  needed.
+  needed. The completed motor harness has continuity through all phase pairs and no phase
+  continuity to the motor housing; its PCB-01 end remains disconnected pending release of
+  powered motor work.
 - **PCB-01 first no-motor power passed at 18.0 V** (2026-08-19): steady 0.043 A / 0.78 W
   with firmware, Wi-Fi, and BLE running; no sag or abnormal heating. Measured from TP4 AGND:
   TP8 DVDD 1.547 V, TP7 AVDD 3.281 V, TP18 SDA 3.269 V, TP19 SCL 3.159 V, and TP12 DRVOFF
@@ -59,6 +61,13 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
   Wi-Fi/BLE/Matter startup plus a separate 60-second sustained poll stayed in `idle_off`;
   both fault registers read zero and the full configuration check completed (`unverified`
   is expected until motor tuning creates the golden image).
+- **The Hall board and harness passed end-to-end** (2026-08-19). Final physical colors are
+  PCB-01 J3 left-to-right red/blue/green when viewed component-side with C1/C2 upper-left;
+  PCB-02 top-to-bottom green/blue/red when viewed component-side with J1 at the top. This is
+  electrically 1-to-1, 2-to-2, 3-to-3; the differing visual order comes from the mirrored
+  board frames. HALL_TACH measured 3.251 V released and 0.04 V active, switching at about
+  10 mm with the intended rotor magnet. Live firmware telemetry registered every manual
+  approach/release cycle.
 - **The streamlined printable integration binder is ready** at
   `output/pdf/stillair-integration-field-guides.pdf`, with editable source in
   `docs/field-guides/`. It covers only the active electronics, mechanical integration,
@@ -86,10 +95,11 @@ Last updated: **2026-08-19** (first no-motor power and firmware bring-up.)
 ## Next
 
 Work from [integration.md](integration.md). Electronics is the main dependency spine; PCB-01
-assembly, first power, rails, USB, and sustained MCF communication have passed at 18 V. Next
-complete the remaining motor and Hall harnesses, then proceed through motor integration,
-balance, controller tuning, essential hardware safety checks, workshop proof speed,
-representative starts, and the thermal run.
+assembly, harnesses, first power, rails, USB, sustained MCF communication, and the end-to-end
+Hall path have passed at 18 V. Next complete the remaining board-only safety checks before
+connecting motor phases, then proceed through motor integration, balance, controller tuning,
+essential hardware safety checks, workshop proof speed, representative starts, and the
+thermal run.
 
 ## Candidates Not Chosen
 
