@@ -78,13 +78,15 @@ station is deliberately moderate (v2's c14/ys−10/zr−8 hook was unloftable ev
   broken ring around the catcher. Outer corners reach r99.2, inside the hub's Ø200
   silhouette.
 - **Bolts**: four M5 A4-80 from above through the hub's Ø5.5 stations (r62/r88, y±15) into
-  **hex-nut pockets in the rectangle underside** (8.1 across-flats × 5.0 deep, ISO 4032
-  nuts, all-metal prevailing class). No printed thread carries load. Bolt length **M5 × 22**
-  (8 hub + 7 root above pocket + ~4 nut + ≥2 mm through-nut protrusion; the tip lands at or
-  just past the root underside in free air). **Nut buying trap (2026-07-28 sourcing)**: the
-  common "DIN 980V"/ISO 7042 oval-top prevailing nut is 5.1–6.0 mm tall and does not fit
-  the 5.0 mm pocket — specify the **3-punch style at standard hex height (~4.0 mm)**, and
-  caliper-verify AF ≤ 8.1 / height ≤ 5.0 on arrival.
+  **hex-nut pockets in the rectangle underside** (8.1 across-flats × 5.0 deep). Use DIN 985
+  M5 × 0.8 A4 nylon-insert locknuts, 8 mm across flats and 4.7–5.0 mm high; replace the nuts
+  after every removal. No printed thread carries load. Bolt length **M5 × 22**
+  (8 hub + 7 root above pocket + 5 nut leaves ~2 mm nominal through-nut protrusion; the tip
+  lands just past the root underside in free air). Verify at least one complete thread protrudes
+  through the nylon insert with the delivered 5 mm nut. **Rejected hardware:** the original
+  4 mm-high A4 three-punch all-metal prevailing nuts galled against the A4 bolts during the
+  first installed fit-up on 2026-08-20, became hot, tore bolt threads, and overloaded a printed
+  pocket. Do not use them. Common DIN 980V/ISO 7042 oval-top nuts at 5.1–6.0 mm remain too tall.
 - **Dowels**: the blade prints **integrated Ø5 pins** on its top face at (r66, y0), (r86,
   y0), engaging RH-100's existing blind dowel holes (owner decision 2026-07-28; steel
   dowels deleted). Registration + shear in plastic is owner-scope like the rest of the
