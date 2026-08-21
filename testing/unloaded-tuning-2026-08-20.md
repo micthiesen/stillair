@@ -11,7 +11,9 @@ and synchronized audio. Earlier 19.4 V DPS-150 results remain below as supportin
 ## Best provisional configuration
 
 These values are the best **unloaded** volatile image. They are not the loaded golden image and
-have not been committed to MCF EEPROM.
+have not been committed to MCF EEPROM. The complete setting table is frozen in firmware as
+`mcf_config::UNLOADED_IMAGE`. Loaded tuning must use a separate candidate constant so this
+baseline remains available for A/B comparison and regression diagnosis.
 
 | Function | Selected value | Evidence |
 |---|---:|---|

@@ -1,8 +1,8 @@
 # Build release
 
 Order, assemble, prove, install. A gated sequence built around an instrumented custom V1
-board. No TI evaluation module is required, and the first full-rotor spin never happens over
-the bed.
+board. No TI evaluation module is required. Final loaded work happens on the installed plate,
+beginning at the lowest useful speed with continuous observation and a reachable cutoff.
 
 ## Build sequence (five gated phases)
 
@@ -15,14 +15,13 @@ the bed.
 3. **Fabricate and inspect** — make the metal and printed parts, inspect every critical
    interface, destructively test a blade root-joint sample, proof the three installed blade
    roots, and prepare four matched blades.
-4. **Assemble and mechanically prove** — measure runout and balance unpowered, then make the
-   first powered full-rotor work a secured external-drive 216 RPM proof in a cleared area.
-   Keep the GL100 phases disconnected from PCB-01, start low, use PCB-02 Hall telemetry or
-   the drive readout, and watch continuously. No safety bypass is used.
-5. **Owner-installed commissioning** — after the workshop proof passes, Michael uses the
-   installed ceiling plate for loaded MPET, tuning, representative starts, normal-range
-   speed and shutdown checks, and thermal verification. The project records this flow but
-   does not prompt or manage the installed work unless he explicitly requests it.
+4. **Assemble and inspect unpowered** — install the final mechanics, verify retention and hand
+   clearance, and check balance and runout before applying motor power.
+5. **Ceiling integration and commissioning** — Michael has explicitly resumed project
+   assistance for mounting the remaining assembly and routing 24 V, motor, Hall, and long-USB
+   service connections on the installed plate. Loaded MPET, tuning, representative starts,
+   normal-range speed and shutdown checks, and thermal verification then run in that final
+   support/load/acoustic environment.
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
@@ -34,7 +33,7 @@ the bed.
 - **Ordered finished**: MP-100 (JLCCNC 2026-07-27), ST-100 (JLCCNC 2026-07-28, qty 4,
   clear anodized), KD-100 (became a purchased DIN 440 washer — Accu 2026-07-28). BP-100
   blade manufacturing and blade-root qualification passed 2026-08-14; assembled rotor
-  balance/runout remains under MEC-05.
+  balance/runout is checked unpowered during final ceiling integration.
 - **SP-100 measure-first gates closed before fabrication**: measured KD-100 thickness set
   the cotter-hole Z; measured GL100 axial length set the capture stack. The finished part
   arrived with the rest of the JLCCNC batch on 2026-08-14. See parts.md > SP-100.

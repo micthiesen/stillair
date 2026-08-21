@@ -111,12 +111,13 @@ impl Setting {
 ///   the chip's reset default. The `ext_wdt` test below fails the build on a bad capture.
 pub const IMAGE: &[Setting] = &[];
 
-/// Volatile-only first-spin configuration for the unloaded GL100 commissioning bench.
+/// Frozen volatile configuration qualified on the unloaded GL100 commissioning bench.
 ///
 /// This is deliberately separate from [`IMAGE`]. It uses vendor motor data and conservative
 /// unloaded commissioning gains, not values qualified with the final rotor, so it must never
 /// be committed to EEPROM or described as the golden configuration. `config stage` writes
-/// these settings to the MCF shadow registers and a power cycle erases them.
+/// these settings to the MCF shadow registers and a power cycle erases them. Loaded tuning must
+/// add a separate candidate image rather than editing or deleting this retained baseline.
 ///
 /// Values are lower-31-bit register words from MCF8316D SLLSFX9A Tables 8-5 through 8-32;
 /// bit 31 is the silicon's read-only parity bit. Speed-loop gains and current headroom are
@@ -129,7 +130,7 @@ pub const ACQUISITION_FAULT_CONFIG1: u32 = 0x0AA8_4000;
 pub const SETTLING_FAULT_CONFIG1: u32 = 0x02A8_4000;
 pub const RUNNING_FAULT_CONFIG1: u32 = 0x0AA8_4000;
 
-pub const PROVISIONAL_IMAGE: &[Setting] = &[
+pub const UNLOADED_IMAGE: &[Setting] = &[
     Setting::masked("MOTOR_STARTUP1", 0x084, 0x7FFF_FFFF, 0x22E6_0000),
     Setting::masked("MOTOR_STARTUP2", 0x086, 0x7FFF_FFFF, 0x1101_28AB),
     Setting::masked(
@@ -174,6 +175,12 @@ pub const PROVISIONAL_IMAGE: &[Setting] = &[
         0x0001_0000 | crate::mcf8316::fields::CSA_GAIN_1P2_V_PER_A,
     ),
 ];
+
+/// The image currently staged by `config stage`.
+///
+/// Kept as an alias so loaded commissioning can point staging at a separate candidate while
+/// [`UNLOADED_IMAGE`] remains available for A/B comparison and regression diagnosis.
+pub const PROVISIONAL_IMAGE: &[Setting] = UNLOADED_IMAGE;
 
 /// Put the live configuration shadow into standby mode without committing EEPROM.
 ///
@@ -676,7 +683,7 @@ mod tests {
     }
 
     #[test]
-    fn provisional_words_match_the_reviewed_datasheet_transcription() {
+    fn unloaded_words_match_the_reviewed_datasheet_transcription() {
         let expected = [
             (0x084, 0x22E6_0000),
             (0x086, 0x1101_28AB),
@@ -694,8 +701,8 @@ mod tests {
             (0x0AA, 0x0022_0000),
             (0x0AC, 0x0001_0003),
         ];
-        assert_eq!(PROVISIONAL_IMAGE.len(), expected.len());
-        for (setting, (address, value)) in PROVISIONAL_IMAGE.iter().zip(expected) {
+        assert_eq!(UNLOADED_IMAGE.len(), expected.len());
+        for (setting, (address, value)) in UNLOADED_IMAGE.iter().zip(expected) {
             assert_eq!(setting.address, address, "{} address", setting.name);
             assert_eq!(
                 crate::mcf8316::reg::by_name(setting.name),
@@ -709,12 +716,12 @@ mod tests {
         }
         // Either zero re-enters implicit MPET on a normal speed command.
         let kp_code =
-            ((PROVISIONAL_IMAGE[4].value & 0x7) << 7) | ((PROVISIONAL_IMAGE[5].value >> 24) & 0x7F);
-        let ki_code = (PROVISIONAL_IMAGE[5].value >> 14) & 0x03FF;
+            ((UNLOADED_IMAGE[4].value & 0x7) << 7) | ((UNLOADED_IMAGE[5].value >> 24) & 0x7F);
+        let ki_code = (UNLOADED_IMAGE[5].value >> 14) & 0x03FF;
         assert_ne!(kp_code, 0);
         assert_ne!(ki_code, 0);
 
-        let startup1 = PROVISIONAL_IMAGE[0].value;
+        let startup1 = UNLOADED_IMAGE[0].value;
         assert_eq!((startup1 >> 29) & 0x3, 1, "double align");
         assert_eq!((startup1 >> 25) & 0xF, 1, "1 A/s align ramp");
         assert_eq!((startup1 >> 21) & 0xF, 7, "750 ms align time");
@@ -725,7 +732,7 @@ mod tests {
             "Iq ramp disabled because it traps later speed changes on this motor"
         );
 
-        let startup2 = PROVISIONAL_IMAGE[1].value;
+        let startup2 = UNLOADED_IMAGE[1].value;
         assert_eq!((startup2 >> 27) & 0xF, 2, "0.5 A open-loop current");
         assert_eq!((startup2 >> 23) & 0xF, 2, "1 electrical Hz/s A1");
         assert_eq!((startup2 >> 19) & 0xF, 0, "zero A2");
@@ -748,7 +755,7 @@ mod tests {
         );
         assert_eq!(startup2 & 0x7, 3, "0.15 degree/ms theta ramp");
 
-        let closed_loop1 = PROVISIONAL_IMAGE[2].value;
+        let closed_loop1 = UNLOADED_IMAGE[2].value;
         assert_eq!(
             closed_loop1 & crate::mcf8316::fields::CL_ACC_MASK,
             crate::mcf8316::fields::CL_ACC_NO_LIMIT,
@@ -766,7 +773,7 @@ mod tests {
         );
         assert_ne!(closed_loop1 & (1 << 3), 0, "AVS baseline remains enabled");
 
-        let fault1 = PROVISIONAL_IMAGE[6].value;
+        let fault1 = UNLOADED_IMAGE[6].value;
         assert_eq!((fault1 >> 27) & 0xF, 1, "0.25 A startup current");
         assert_eq!((fault1 >> 23) & 0xF, 5, "2 A hardware lock threshold");
         assert_eq!((fault1 >> 19) & 0xF, 5, "2 A software lock threshold");
@@ -788,8 +795,8 @@ mod tests {
             SETTLING_FAULT_CONFIG1 & crate::mcf8316::fields::ILIMIT_MASK,
             crate::mcf8316::fields::ILIMIT_0P125_A
         );
-        let closed_loop3 = PROVISIONAL_IMAGE[4].value;
-        let closed_loop4 = PROVISIONAL_IMAGE[5].value;
+        let closed_loop3 = UNLOADED_IMAGE[4].value;
+        let closed_loop4 = UNLOADED_IMAGE[5].value;
         assert_eq!(
             ((closed_loop3 & 0x7) << 7) | ((closed_loop4 >> 24) & 0x7F),
             0x250,
@@ -797,13 +804,13 @@ mod tests {
         );
         assert_eq!((closed_loop4 >> 14) & 0x3FF, 0x308, "0.0016 speed-loop Ki");
 
-        let device_config1 = PROVISIONAL_IMAGE[11].value;
+        let device_config1 = UNLOADED_IMAGE[11].value;
         assert_eq!(
             device_config1 & crate::mcf8316::fields::BUS_VOLT_MASK,
             crate::mcf8316::fields::BUS_VOLT_30_V,
             "24 V supply requires the 30 V measurement range"
         );
-        let device_config2 = PROVISIONAL_IMAGE[12].value;
+        let device_config2 = UNLOADED_IMAGE[12].value;
         assert_eq!(
             device_config2 & crate::mcf8316::fields::DYNAMIC_VOLTAGE_GAIN_EN,
             0,
@@ -813,10 +820,10 @@ mod tests {
             device_config2 & crate::mcf8316::fields::DYNAMIC_CSA_GAIN_EN,
             0
         );
-        let pin_config = PROVISIONAL_IMAGE[10].value;
+        let pin_config = UNLOADED_IMAGE[10].value;
         assert_eq!(pin_config & crate::mcf8316::fields::VDC_FILTER_MASK, 0);
 
-        let gd_config1 = PROVISIONAL_IMAGE[14].value;
+        let gd_config1 = UNLOADED_IMAGE[14].value;
         assert_eq!(gd_config1 & crate::mcf8316::fields::SLEW_RATE_MASK, 0);
         assert_eq!(
             gd_config1 & crate::mcf8316::fields::CSA_GAIN_MASK,
@@ -824,7 +831,7 @@ mod tests {
             "maximum current gain outlasted the lower-gain candidates"
         );
 
-        let fault2 = PROVISIONAL_IMAGE[7].value;
+        let fault2 = UNLOADED_IMAGE[7].value;
         assert_eq!(
             (fault2 >> 28) & 0x7,
             0x3,
@@ -841,10 +848,10 @@ mod tests {
             "2 microsecond hardware-current deglitch"
         );
 
-        let int_algo1 = PROVISIONAL_IMAGE[8].value;
+        let int_algo1 = UNLOADED_IMAGE[8].value;
         assert_eq!((int_algo1 >> 17) & 0x7, 7, "1.5 V automatic-handoff floor");
 
-        let peri_config1 = PROVISIONAL_IMAGE[13].value;
+        let peri_config1 = UNLOADED_IMAGE[13].value;
         assert_eq!(
             (peri_config1 >> 9) & 0x1,
             0,

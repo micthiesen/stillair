@@ -160,9 +160,10 @@ moved the rotor a few degrees, and ended with `MPET_BEMF_FAULT` (`0x81000000`). 
 normal startup. Firmware now holds `config=unverified` in `SafeBoot` and rejects run, percent,
 Matter-on, and MPET commands until configuration is staged or verified.
 
-`config stage` writes `PROVISIONAL_IMAGE` to volatile shadow registers, verifies every claimed
-bit by read-back, reports `config=provisional`, and never issues the EEPROM commit command. A
-power cycle erases it. The selected unloaded image uses `0xB1` R, `0xAE` L, `0xC0` Ke, the
+`config stage` currently writes the frozen `UNLOADED_IMAGE` through the `PROVISIONAL_IMAGE`
+alias to volatile shadow registers, verifies every claimed bit by read-back, reports
+`config=provisional`, and never issues the EEPROM commit command. A power cycle erases it. The
+selected unloaded image uses `0xB1` R, `0xAE` L, `0xC0` Ke, the
 double-align/handoff sequence above, Kp 0.008, Ki 0.0016, 25 kHz PWM, 1.5 mechanical RPM/s,
 AVS, the nominal 180 RPM ceiling, and the documented fault/watchdog/alarm/input settings.
 Closed-loop acquisition starts at 0.25 A so the sensorless observer can capture. Once Hall
@@ -174,6 +175,8 @@ The abnormal-speed lock is disabled because it falsely tripped during valid acqu
 abnormal-BEMF and no-motor locks remain enabled and latched. Full data and rejected candidates
 are in [`unloaded-tuning-2026-08-20.md`](../testing/unloaded-tuning-2026-08-20.md). These remain
 unloaded values, not loaded tuning.
+Loaded tuning must add a separate candidate image and repoint the staging alias; it must not
+edit or delete `UNLOADED_IMAGE`, which remains the qualified unloaded A/B baseline.
 After every motor-power cycle, stage again and then issue a fresh run command. Never use
 `config apply` for this provisional image.
 
@@ -186,9 +189,8 @@ After every motor-power cycle, stage again and then issue a fresh run command. N
 - Configuration and diagnostics: I²C to the MCF8316D (24-bit control-word protocol;
   bus-scan the target address at first bring-up).
 - Convert FG using 20 pole pairs and FG_DIV = 1h (20 pulses/rev). Cross-check reported FG
-  against the independent PCB-02 Hall channel during motor-driven commissioning. During an
-  external-drive proof, use PCB-02 Hall telemetry or the drive's own speed readout. No
-  separate optical tachometer is assumed.
+  against the independent PCB-02 Hall channel during motor-driven commissioning. No separate
+  optical tachometer is assumed.
 - The MCF commutates phases and limits current. The ESP32 never commutates phases.
 - `nFAULT` is diagnostic, not an asynchronous clear input to the external permission latch.
   Configure MCF lock/fault responses to latched Hi-Z.

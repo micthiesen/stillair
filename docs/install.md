@@ -1,19 +1,43 @@
 # Installation
 
-> **Owner-managed as of 2026-08-17.** This file is retained as technical reference only.
-> MP-100 installation, tether proof, and catcher proof are accepted complete by owner
-> report. Agents must not suggest, audit, schedule, or prompt for installation, tether, or
-> catcher work unless Michael explicitly asks.
+> **Final integration resumed by explicit owner request on 2026-08-20.** MP-100 installation,
+> tether proof, and catcher proof remain accepted complete and must not be reopened. The active
+> work is mounting the remaining fan assembly and electronics from below, including permanent
+> 24 V, Hall, motor, and service-USB routing for ceiling-mounted loaded commissioning.
 
 Site: 11-storey concrete condo, ceiling slab possibly post-tensioned (treat as PT until
 proven otherwise); existing bolts of unknown type in the slab. Anchor engineering basis:
 ICC-ES ESR-2713 (Simpson Titen HD), design strengths in cracked concrete at f'c 2500 psi —
 the correct conservative assumption for a suspended slab soffit.
 
-**Site status 2026-08-17:** MP-100 is installed on the ceiling (owner report), with all three
+**Site status 2026-08-20:** MP-100 is installed on the ceiling (owner report), with all three
 ST-100 standoffs and SP-100 spindle in place. The two primary holes and primary plate mount
 are complete. `INS-01` is accepted as passed against the documented anchor and spacer stack.
-No further project-side installation record or inspection is required.
+No further anchor, plate, tether, or catcher proof is required.
+
+## Active remaining integration
+
+The next session should guide Michael one physical step at a time. Work from an unpowered
+system until every stationary cable is supported and every moving clearance is visible:
+
+1. Preassemble the motor to MC-100 and establish the motor/Hall harness exits before the
+   overhead lift.
+2. Attach MC-100 to the installed ST-100 standoffs, then install RH-100 and the completed rotor
+   using the released fastener stacks in `parts.md`.
+3. Complete the already-qualified central capture stack without reopening its proof basis.
+4. Mount PCB-01 and PCB-02, connect 24 V, phases, and Hall, then secure each stationary cable
+   independently of its connector.
+5. Route a quality long USB cable from PCB-01 J6 to an operator position outside the rotor
+   sweep. USB is data-only. Strain-relieve it to stationary structure and use an active
+   extension only if the passive link proves unreliable.
+6. With power still off, inspect full hand-rotation clearance, connector seating, cable reach,
+   and strain relief. Then continuity-check the installed harnesses before loaded power-up.
+
+Loaded MPET and tuning follow this installation as a separate commissioning step. The installed
+ceiling position is the selected loaded-test location because it provides the final mechanical
+support, rotor load, cable lengths, ceiling interaction, and room acoustics. The USB oscilloscope
+is optional additional evidence if it arrives in time; its safe hookups are in
+[`observability.md`](observability.md).
 
 **Historical tether note:** the original MP-100 clearance at X0, Y-82 was only
 sqrt(65^2 + 82^2) = 104.6 mm from either primary center, conflicting with the documented

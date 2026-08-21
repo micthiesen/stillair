@@ -325,8 +325,8 @@ def page_0a(c: Canvas, n: int) -> None:
     x, y, w, h = s.panel("NON-NEGOTIABLE BOUNDARIES", 155, RED_BG, RED, RED)
     s.checkboxes([
         "Desk first: no-motor checks, then only released bare-motor work with no blades.",
-        "Balance and runout pass before the external-drive 216 RPM workshop proof.",
-        "The observed workshop proof is the first powered full-rotor work; ceiling commissioning comes after it.",
+        "Check retention, clearance, balance, and runout unpowered on the installed plate.",
+        "First loaded motion starts at the lowest useful speed with continuous observation.",
         "Use normal safety firmware plus the persistent CLI; no general permissive build.",
         "Keep long USB J6 outside the sweep; cutoff reachable outside it; unplugging is not braking.",
     ], x + 14, y + 112, w - 28, 9.1)
@@ -1067,10 +1067,10 @@ def page_0a_visual(c: Canvas, n: int) -> None:
     s.checkbox_grid([
         ("A result is measured and recorded, not just observed.", "A failed gate stops the next powered stage."),
         ("Connector polarity and pin order are proved end-to-end.", "After loaded MPET, verify config before start/speed qualification."),
-        ("Balance + observed workshop proof precede ceiling loaded work.", "Normal safety firmware + long USB J6; cutoff outside sweep."),
+        ("Installed unpowered checks precede gradual loaded work.", "Normal safety firmware + long USB J6; cutoff outside sweep."),
     ], x + 14, y + 100, w / 2 - 2, 8.4)
     x, y, w, h = s.panel("BOUNDARIES KEPT OUT OF THIS ACTIVE BINDER", 120, GRAY_BG)
-    s.text("Installed execution remains owner-managed. Sheet 5C is an owner-led reference record; it does not initiate or manage installed work. Deferred scope stays omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
+    s.text("Michael performs installed work with one-step-at-a-time project guidance. Completed plate, tether, and catcher work stays closed. Deferred scope remains omitted unless explicitly reopened.", x + 14, y + 75, w - 28, 9.2, bold=True)
     s.stop("Start at 1A. Carry only the current sheet, board, and required tools to the bench.")
     s.footer("docs/STATE.md; docs/integration.md; testing/test-matrix.csv")
 

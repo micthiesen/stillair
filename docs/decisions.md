@@ -9,7 +9,7 @@ The design to take into CAD. All items below are **selected**.
 
 | Area | Decision | Note |
 |---|---|---|
-| Mounting | Compact metal plate, two primary anchors, separate tether anchor | MP-100 installation and tether proof accepted complete by owner report 2026-08-17. Remaining installation is owner-managed and not an active project gate. |
+| Mounting | Compact metal plate, two primary anchors, separate tether anchor | MP-100 installation and tether proof accepted complete by owner report 2026-08-17. Remaining below-plate integration resumed with project guidance by explicit owner request 2026-08-20. |
 | Structure | Metal ceiling structure and hub; blades bolt directly to the hub (adapters deleted 2026-07-28, BP-100 v3) | A non-contact central capture path retains the rotor after motor-bearing retention failure. |
 | Rotor | 44-inch maximum, three printed BP-100 v3 cambered-airfoil blades with CF-rod spars, baked-in twist, and integrated bolt-on roots | Replaced the symmetric-birch/12°-adapter rotor 2026-07-27, root integrated 2026-07-28 ([blade-v2.md](blade-v2.md)); forward flow optimized, reverse degraded-but-functional by accepted trade. Birch BL-100 is the fallback. 42 inches remains the diameter fallback if wall-effect testing or handling makes 44 undesirable. |
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
@@ -50,11 +50,13 @@ an undocumented assumption.
 2. **Permanent PCB** — V1 proves protection, connectors, power conversion, watchdog, analog
    overspeed, bus-voltage behavior, thermals, RF, and the exact MCF settings before V2 release.
 3. **Rotor qualification** — blades, root joints, hub, central capture, and catcher are
-   accepted complete; balance/runout and workshop proof speed remain active.
+   accepted complete. Final retention, clearance, balance, and runout checks happen unpowered
+   on the installed plate before gradual loaded commissioning there.
 
-Anchor selection and mounting sequence remain recorded in [install.md](install.md) as
-reference. Michael owns installation and any local approval decisions; agents must not
-surface them as work unless explicitly asked.
+Anchor selection and the completed plate/tether/catcher basis remain recorded in
+[install.md](install.md). Michael owns physical execution and local approval decisions. He
+explicitly requested one-step-at-a-time project guidance for the remaining below-plate assembly,
+cable installation, and loaded commissioning.
 
 ## Accepted deviations
 
@@ -82,6 +84,6 @@ Constraints that cannot all be optimized.
 The docs define dimensioned mechanical views, part interfaces, materials, loads, exact
 standard components, a circuit-level PCB handoff, placement zones, controller behavior,
 sources, and acceptance tests. Michael creates the final OnShape models, captures and reviews
-the KiCad schematic/layout in `pcb/`, and implements firmware in `firmware/`. Installation,
-tether, catcher, slab verification, and local approval are owner-managed and outside the
-active project plan.
+the KiCad schematic/layout in `pcb/`, and implements firmware in `firmware/`. Michael performs
+the physical installation with project guidance. Completed tether/catcher/slab work and local
+approval decisions remain owner-managed and outside the active project plan.
