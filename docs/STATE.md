@@ -23,11 +23,10 @@ Last updated: **2026-08-21** (provisional operation complete; acoustic/startup r
   rest. Visible steady-state jitter is no longer material. These observations are recorded in the
   loaded-tuning report and `DRV-02`/`DRV-04` in
   [test-matrix.csv](../testing/test-matrix.csv).
-- **A Home slider feedback hotfix is built and host-tested, but not yet flashed.** Both Matter
-  percentage attributes now report the requested target instead of feeding intermediate ramp speed
-  back into Apple Home, so a long press-and-drag remains continuously adjustable. The controller
-  was not enumerating over USB after the build; installed-device validation remains open in
-  `CTL-11`.
+- **The Home slider feedback hotfix is installed and accepted.** Both Matter percentage
+  attributes report the requested target instead of feeding intermediate ramp speed back into
+  Apple Home. Michael confirmed that an extended press-and-drag stayed with his finger while live
+  telemetry recorded multiple changing targets during the physical ramp; details are in `CTL-11`.
 - **The next evidence stack is chosen.** Planned close 24-bit/96 kHz USB microphone audio, OWON
   VDS1022I SOX/electrical frames, Hall/FG, telemetry, and Kasa power share one timeline. Camera is
   conditional on startup/reversal, suspected contact, or a rotor-position-correlated squeak. The
@@ -35,12 +34,11 @@ Last updated: **2026-08-21** (provisional operation complete; acoustic/startup r
 
 ## Next
 
-Flash and validate the Home slider hotfix on the installed controller, including an extended
-press-and-drag while the fan is still ramping. Then run the full loaded acoustic and startup
-refinement session: establish the current golden reference, localize the intermittent squeak before
-considering lubrication, capture the align/open-loop/handoff current and motion, compare startup
-candidates, then reduce steady-state motor/controller noise at matched measured speeds. Loaded MPET
-is a measured comparison, not an automatic replacement. The ordered session contract is in
+Run the full loaded acoustic and startup refinement session: establish the current golden reference,
+localize the intermittent squeak before considering lubrication, capture the
+align/open-loop/handoff current and motion, compare startup candidates, then reduce steady-state
+motor/controller noise at matched measured speeds. Loaded MPET is a measured comparison, not an
+automatic replacement. The ordered session contract is in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Candidates Not Chosen
