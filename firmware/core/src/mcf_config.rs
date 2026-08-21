@@ -74,22 +74,6 @@ impl Setting {
 
 /// The configuration the fan is qualified against.
 ///
-/// **Empty on purpose.** No tuned device has been captured yet; the values in
-/// `docs/controls.md` are commissioning seeds, not measurements. An
-/// image invented from those seeds would be worse than none: [`check`] would pass against a
-/// fiction and `SafeBoot`'s "stored configuration verified" clause would read as satisfied
-/// while verifying nothing.
-///
-/// While it is empty, [`check`] reports [`ConfigCheck::Unverified`] rather than
-/// [`ConfigCheck::Verified`], the supervisor remains in `SafeBoot`, and every telemetry frame
-/// and CSV row carries that fact. Filling it in is a bench step, not a code change:
-///
-/// ```text
-/// stillair --port /dev/cu.usbmodem101 config capture
-/// ```
-///
-/// prints this table from a live device, ready to paste.
-///
 /// # Capture checklist (2026-07 board-truth review)
 ///
 /// The PCB-01 wiring makes specific register fields load-bearing; a capture that leaves
@@ -109,15 +93,51 @@ impl Setting {
 ///   every 500 ms), so GPIO tickle mode requires `EXT_WDT_CONFIG` = 3h (1000 ms). 2h
 ///   (500 ms) is edge-on-deadline and faults on jitter; 0h/1h can never pass — and 0h is
 ///   the chip's reset default. The `ext_wdt` test below fails the build on a bad capture.
-pub const IMAGE: &[Setting] = &[];
+pub const IMAGE: &[Setting] = LOADED_IMAGE;
+
+/// Golden image captured from the stopped, ceiling-loaded controller on 2026-08-21.
+///
+/// The retained unloaded candidate supplied the tuned fields, then the installed fan qualified
+/// repeated 50 RPM starts, the complete 50--170 RPM range, Hall/FG agreement, and a ten-minute
+/// 50 RPM endurance hold with Matter online. Unlike [`UNLOADED_IMAGE`], this capture pins the
+/// complete configuration block exactly as read from silicon.
+pub const LOADED_IMAGE: &[Setting] = &[
+    Setting::whole("ISD_CONFIG", 0x080, 0x64f3_4ca0),
+    Setting::whole("REV_DRIVE_CONFIG", 0x082, 0xa820_0000),
+    Setting::whole("MOTOR_STARTUP1", 0x084, 0xa2e6_0000),
+    Setting::whole("MOTOR_STARTUP2", 0x086, 0x1101_28ab),
+    Setting::whole("CLOSED_LOOP1", 0x088, 0x3e01_810c),
+    Setting::whole("CLOSED_LOOP2", 0x08a, 0x8000_b1ae),
+    Setting::whole("CLOSED_LOOP3", 0x08c, 0xe000_0004),
+    Setting::whole("CLOSED_LOOP4", 0x08e, 0xd0c2_0168),
+    Setting::whole("FAULT_CONFIG1", 0x090, 0x0aa8_4000),
+    Setting::whole("FAULT_CONFIG2", 0x092, 0xb1c0_47c0),
+    Setting::whole("REF_PROFILES1", 0x094, 0x0000_0000),
+    Setting::whole("REF_PROFILES2", 0x096, 0x0000_0000),
+    Setting::whole("REF_PROFILES3", 0x098, 0x8000_0002),
+    Setting::whole("REF_PROFILES4", 0x09a, 0x8006_8000),
+    Setting::whole("REF_PROFILES5", 0x09c, 0x8000_0010),
+    Setting::whole("REF_PROFILES6", 0x09e, 0x0000_0000),
+    Setting::whole("INT_ALGO_1", 0x0a0, 0x800e_0000),
+    Setting::whole("INT_ALGO_2", 0x0a2, 0x0000_0000),
+    Setting::whole("PIN_CONFIG", 0x0a4, 0x8020_0041),
+    // TARGET_ID is EEPROM-latched and the live capture reported zero while silicon still
+    // answered at the prior 0x01 address. Pin the documented default explicitly so replaying
+    // the capture cannot move the device onto reserved address 0x00 after a power cycle.
+    Setting::whole("DEVICE_CONFIG1", 0x0a6, 0x0010_0001),
+    Setting::whole("DEVICE_CONFIG2", 0x0a8, 0x8000_001f),
+    Setting::whole("PERI_CONFIG1", 0x0aa, 0x0022_0000),
+    Setting::whole("GD_CONFIG1", 0x0ac, 0x8001_0003),
+    Setting::whole("GD_CONFIG2", 0x0ae, 0x0084_0000),
+];
 
 /// Frozen volatile configuration qualified on the unloaded GL100 commissioning bench.
 ///
 /// This is deliberately separate from [`IMAGE`]. It uses vendor motor data and conservative
 /// unloaded commissioning gains, not values qualified with the final rotor, so it must never
 /// be committed to EEPROM or described as the golden configuration. `config stage` writes
-/// these settings to the MCF shadow registers and a power cycle erases them. Loaded tuning must
-/// add a separate candidate image rather than editing or deleting this retained baseline.
+/// these settings to the MCF shadow registers and a power cycle erases them. Loaded tuning uses
+/// the separate complete [`LOADED_IMAGE`] rather than editing or deleting this retained baseline.
 ///
 /// Values are lower-31-bit register words from MCF8316D SLLSFX9A Tables 8-5 through 8-32;
 /// bit 31 is the silicon's read-only parity bit. Speed-loop gains and current headroom are
@@ -653,14 +673,9 @@ mod tests {
     }
 
     #[test]
-    fn the_committed_image_is_empty_until_a_device_is_captured() {
-        // A guard against an image being invented from the commissioning seeds in
-        // docs/controls.md. When this fails, it should be because a real capture landed —
-        // and then the every-value-is-masked test below starts doing the real work.
-        assert!(
-            IMAGE.is_empty(),
-            "IMAGE has entries; they must come from `config capture` on a real device"
-        );
+    fn the_committed_image_is_the_complete_loaded_capture() {
+        assert_eq!(IMAGE, LOADED_IMAGE);
+        assert_eq!(IMAGE.len(), reg::configuration().count());
     }
 
     #[test]
@@ -810,6 +825,16 @@ mod tests {
             crate::mcf8316::fields::BUS_VOLT_30_V,
             "24 V supply requires the 30 V measurement range"
         );
+        assert_eq!(
+            IMAGE
+                .iter()
+                .find(|setting| setting.address == reg::DEVICE_CONFIG1)
+                .unwrap()
+                .value
+                & crate::mcf8316::fields::I2C_TARGET_ADDR_MASK,
+            u32::from(crate::mcf8316::DEFAULT_TARGET_ID) << 20,
+            "golden image must preserve the documented I2C target across power cycles"
+        );
         let device_config2 = UNLOADED_IMAGE[12].value;
         assert_eq!(
             device_config2 & crate::mcf8316::fields::DYNAMIC_VOLTAGE_GAIN_EN,
@@ -865,11 +890,7 @@ mod tests {
         // The capture checklist in [`IMAGE`]'s doc, enforced: PCB-01 wires SPEED as PWM,
         // ALARM into the thermal-stop path, and carries the 180 RPM stored ceiling — all
         // dead at register reset defaults. An image that omits these registers passes
-        // check() while leaving that copper inert. Trivially satisfied while IMAGE is
-        // empty; the day a capture lands, this names what it must cover.
-        if IMAGE.is_empty() {
-            return;
-        }
+        // check() while leaving that copper inert.
         for required in [
             reg::PIN_CONFIG,
             reg::PERI_CONFIG1,

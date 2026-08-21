@@ -83,6 +83,11 @@ pub mod fields {
     pub const BUS_VOLT_MASK: u32 = 0b11;
     pub const BUS_VOLT_30_V: u32 = 0b01;
 
+    /// `DEVICE_CONFIG1.I2C_TARGET_ADDR`, bits 26-20 (Table 8-24). The field is latched
+    /// from EEPROM only at power-up, so a live shadow capture can read zero while the device
+    /// still answers at its prior address.
+    pub const I2C_TARGET_ADDR_MASK: u32 = 0x7F << 20;
+
     /// `DEVICE_CONFIG2.DYNAMIC_VOLTAGE_GAIN_EN`, bit 12 (Table 8-25).
     pub const DYNAMIC_VOLTAGE_GAIN_EN: u32 = 1 << 12;
 
@@ -172,6 +177,8 @@ pub mod reg {
     pub const CURRENT_PI: u16 = 0x0F0;
     /// Speed-loop gains calculated by MPET.
     pub const SPEED_PI: u16 = 0x0F2;
+    /// I2C target address, bus-voltage range, and pin slew controls (§8.3.2, Table 8-24).
+    pub const DEVICE_CONFIG1: u16 = 0x0A6;
     /// Sleep/CSA/clock and the external-watchdog fields (§8.3.3, Table 8-25).
     pub const DEVICE_CONFIG2: u16 = 0x0A8;
     /// Pin muxing: `SPEED_MODE`, `ALARM_PIN_EN`, brake/dir input selects (§8.3).
@@ -663,10 +670,12 @@ pub fn probe_candidates(current: u8) -> impl Iterator<Item = u8> {
     // explicitly up front rather than left to the sweep.
     const FIRST: u8 = 0x08;
     const LAST: u8 = 0x77;
-    let head = [current, DEFAULT_TARGET_ID];
-    let head_len = if current == DEFAULT_TARGET_ID { 1 } else { 2 };
-    head.into_iter()
-        .take(head_len)
+    // Address zero is also reserved, but a captured zero TARGET_ID can strand the device
+    // there after an EEPROM commit. Try it explicitly as a recovery address.
+    const RECOVERY_TARGET_ID: u8 = 0x00;
+    core::iter::once(current)
+        .chain(core::iter::once(DEFAULT_TARGET_ID).filter(move |candidate| *candidate != current))
+        .chain(core::iter::once(RECOVERY_TARGET_ID).filter(move |candidate| *candidate != current))
         .chain((FIRST..=LAST).filter(move |candidate| *candidate != current))
 }
 
@@ -1054,16 +1063,26 @@ mod tests {
     }
 
     #[test]
-    fn probe_tries_the_current_address_then_the_default_then_sweeps() {
+    fn probe_tries_current_default_and_zero_recovery_before_the_sweep() {
         let candidates: std::vec::Vec<u8> = probe_candidates(0x60).collect();
-        assert_eq!(&candidates[..3], &[0x60, DEFAULT_TARGET_ID, 0x08]);
+        assert_eq!(&candidates[..4], &[0x60, DEFAULT_TARGET_ID, 0x00, 0x08]);
         assert_eq!(*candidates.last().unwrap(), 0x77);
         // The current address is tried once, up front, not again mid-sweep.
         assert_eq!(candidates.iter().filter(|c| **c == 0x60).count(), 1);
-        // Nothing reserved leaks into the sweep.
+        // Only the two deliberate recovery addresses sit outside the normal sweep.
         assert!(candidates[1..]
             .iter()
-            .all(|c| *c == DEFAULT_TARGET_ID || (0x08..=0x77).contains(c)));
+            .all(|c| matches!(*c, DEFAULT_TARGET_ID | 0x00) || (0x08..=0x77).contains(c)));
+
+        let recovered: std::vec::Vec<u8> = probe_candidates(0x00).collect();
+        assert_eq!(&recovered[..3], &[0x00, DEFAULT_TARGET_ID, 0x08]);
+        assert_eq!(
+            recovered
+                .iter()
+                .filter(|candidate| **candidate == 0x00)
+                .count(),
+            1
+        );
     }
 
     #[test]

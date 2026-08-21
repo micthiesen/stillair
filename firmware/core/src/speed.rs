@@ -145,7 +145,7 @@ pub fn milli_rpm_from_pulses(pulses: u32, window_ms: u64, pulses_per_rev: u32) -
 ///
 /// Accumulates *travel* rather than converting each tick independently, so the ramp rate
 /// is honoured exactly regardless of how coarsely or irregularly the control loop polls: a
-/// 10 ms tick at 1.5 RPM/s would otherwise truncate to zero movement forever, and
+/// a 10 ms tick at the configured low rate would otherwise truncate to zero movement forever, and
 /// accumulating elapsed time instead loses a sub-millisecond remainder on every step,
 /// which compounds into a ramp that runs measurably fast.
 #[derive(Debug, Clone, Copy)]
@@ -236,7 +236,7 @@ impl Default for Ramp {
 mod tests {
     use super::*;
 
-    const MIN: MilliRpm = MilliRpm::from_rpm(35);
+    const MIN: MilliRpm = MilliRpm::from_rpm(config::RPM_USER_MIN_TARGET);
 
     #[test]
     fn duty_maps_speed_onto_the_stored_ceiling() {
@@ -287,7 +287,7 @@ mod tests {
     #[test]
     fn percent_zero_is_off_and_the_endpoints_are_exact() {
         assert_eq!(percent_to_rpm(0, MIN), None);
-        assert_eq!(percent_to_rpm(1, MIN), Some(MilliRpm::from_rpm(35)));
+        assert_eq!(percent_to_rpm(1, MIN), Some(MIN));
         assert_eq!(percent_to_rpm(100, MIN), Some(MilliRpm::from_rpm(170)));
     }
 
@@ -297,7 +297,7 @@ mod tests {
         for percent in 1..=100u8 {
             let rpm = percent_to_rpm(percent, MIN).unwrap();
             assert!(rpm >= previous, "percent {percent} went backwards");
-            assert!(rpm >= MilliRpm::from_rpm(35));
+            assert!(rpm >= MIN);
             assert!(rpm <= MilliRpm::from_rpm(config::RPM_USER_MAX));
             previous = rpm;
         }
@@ -370,7 +370,7 @@ mod tests {
                 elapsed += tick;
                 assert!(elapsed < 200_000, "tick {tick} never converged");
             }
-            // 100 RPM at 1.5 RPM/s is 66.7 s; allow one tick of quantisation.
+            // Derive the duration from the released rate; allow one tick of quantisation.
             let expected = 100_000 * 1_000 / u64::from(config::RAMP_MILLI_RPM_PER_S);
             assert!(
                 elapsed >= expected && elapsed <= expected + tick,
@@ -386,8 +386,11 @@ mod tests {
         assert_eq!(ramp.current(), MIN);
         assert!(ramp.at_target());
 
-        ramp.set_target(MilliRpm::from_rpm(40));
-        assert_eq!(ramp.step(1_000), MilliRpm(36_500));
+        ramp.set_target(MilliRpm(MIN.0 + 5_000));
+        assert_eq!(
+            ramp.step(1_000),
+            MilliRpm(MIN.0 + config::RAMP_MILLI_RPM_PER_S)
+        );
     }
 
     #[test]

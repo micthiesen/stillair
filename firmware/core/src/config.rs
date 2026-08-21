@@ -8,9 +8,10 @@
 /// Motor pole pairs (GL100 KV10).
 pub const POLE_PAIRS: u32 = 20;
 
-/// Qualification target user range, RPM. The released minimum may end up higher;
-/// it is gated on the full start + acoustic matrix (`testing/test-matrix.csv`).
-pub const RPM_USER_MIN_TARGET: u32 = 35;
+/// Released user range, RPM. Ceiling-loaded commissioning on 2026-08-21 found that
+/// 35--40 RPM can rock without acquiring from an arbitrary rest position, while the
+/// rotor acquired cleanly at the 10% mapping (47.27 RPM). Keep a small integer margin.
+pub const RPM_USER_MIN_TARGET: u32 = 50;
 pub const RPM_USER_MAX: u32 = 170;
 
 /// Speed ceiling stored in the MCF8316D itself (mechanical RPM). Also the full-scale
@@ -21,10 +22,10 @@ pub const RPM_MCF_LIMIT: u32 = 180;
 pub const RPM_ANALOG_TRIP: u32 = 200;
 
 /// Initial acceleration/deceleration ramp, thousandths of a mechanical RPM per second
-/// (= 1.5 RPM/s, per docs/controls.md). Expressed in integer milli-RPM because the
-/// ESP32-C6 is RV32IMAC with no hardware FPU — soft-float in the control loop buys
-/// nothing here.
-pub const RAMP_MILLI_RPM_PER_S: u32 = 1_500;
+/// (= 3 RPM/s, the top of the released 1--3 RPM/s commissioning range). The first
+/// Apple Home loaded sweep proved 1.5 RPM/s looked unresponsive during a long descent.
+/// Expressed in integer milli-RPM because the ESP32-C6 is RV32IMAC with no hardware FPU.
+pub const RAMP_MILLI_RPM_PER_S: u32 = 3_000;
 
 /// DRVOFF must remain high this long after power-up or any permission-clearing
 /// fault before re-arming (TI safe-operation requirement).
@@ -100,8 +101,10 @@ pub const SPEED_DUTY_MAX: u16 = SPEED_DUTY_FULL_SCALE - 1;
 pub const SPEED_CARRIER_HZ: u32 = 1_000;
 
 /// Boot-time SPEED/WAKE hold. TI specifies at most 5 ms from a valid PWM-high wake to
-/// DVDD availability; one extra millisecond keeps the first I2C transfer beyond that bound.
-pub const MCF_WAKE_HOLD_MS: u64 = 6;
+/// DVDD availability. Holding for 50 ms also covers the first LEDC update boundary and the
+/// installed supply's power-up settling, while the hardware permission latch keeps every
+/// MOSFET Hi-Z throughout this boot-only recovery.
+pub const MCF_WAKE_HOLD_MS: u64 = 50;
 
 /// Half-period for ordinary MCF8316D I2C bits. This is approximately 100 kHz; the separate
 /// inter-byte hold below, rather than a globally slow clock, satisfies TI's unusual timing.

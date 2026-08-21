@@ -92,7 +92,8 @@ unloaded bench.
 - Disable flux weakening and overmodulation.
 - Enable AVS. Coast for normal stops; avoid deliberate regeneration into the desktop supply.
   (With AVS on, deceleration rate is governed by AVS rather than CL_DEC — fine for a fan.)
-- Acceleration/deceleration: begin near 1.5 mechanical RPM/s.
+- Acceleration/deceleration: 3 mechanical RPM/s. The initial 1.5 RPM/s ceiling-loaded
+  Apple Home sweep was electrically correct but looked stuck during a large descent.
 - Configure standby mode (DEV_MODE = 0b), not sleep: the SPEED pin doubles as WAKE, and in
   sleep mode an idle-low SPEED pin kills I²C after SLEEP_ENTRY_TIME.
   Safe boot first probes the expected target at zero SPEED, so a controller already in standby
@@ -123,11 +124,12 @@ unloaded bench.
   duty on the SPEED pin) and `SPEED_RANGE_SEL` = 0h (325 Hz–100 kHz band). Carrier: 1 kHz,
   moved from the initially planned 200 Hz low band after live commissioning proved the MCF
   reported zero duty despite a verified 0.63 V average waveform at its SPEED pin. The
-  provisional commissioning path therefore holds the physical pin at zero and writes the
+  loaded-qualified command path therefore holds the physical pin at zero and writes the
   same normalized ramp through volatile `ALGO_DEBUG1.OVERRIDE` + `DIGITAL_SPEED_CTRL`.
   The MCF task checks the 20 Hz firmware ramp at each 50 ms service slice and performs I²C
   only when the word changes. Stop/fault revokes the hardware permission latch first and
-  then commands digital zero; any non-provisional configuration clears the override. Duty → speed mapping remains
+  then commands digital zero. Both `provisional` and `verified` verdicts use this path;
+  non-runnable verdicts clear the override. Duty → speed mapping remains
   duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the 180 RPM ceiling).
 - **External watchdog** (previously unconfigured — without these the EXT_WD path silently
   doesn't exist): `EXT_WDT_EN` = 1, input mode = pin, `EXT_WDT_CONFIG` = 1000 ms,
@@ -164,7 +166,7 @@ Matter-on, and MPET commands until configuration is staged or verified.
 alias to volatile shadow registers, verifies every claimed bit by read-back, reports
 `config=provisional`, and never issues the EEPROM commit command. A power cycle erases it. The
 selected unloaded image uses `0xB1` R, `0xAE` L, `0xC0` Ke, the
-double-align/handoff sequence above, Kp 0.008, Ki 0.0016, 25 kHz PWM, 1.5 mechanical RPM/s,
+double-align/handoff sequence above, Kp 0.008, Ki 0.0016, 25 kHz PWM, 3 mechanical RPM/s,
 AVS, the nominal 180 RPM ceiling, and the documented fault/watchdog/alarm/input settings.
 Closed-loop acquisition starts at 0.25 A so the sensorless observer can capture. Once Hall
 confirms roughly 10 RPM, firmware changes only `FAULT_CONFIG1.ILIMIT` to the 0.125 A settling
@@ -175,10 +177,10 @@ The abnormal-speed lock is disabled because it falsely tripped during valid acqu
 abnormal-BEMF and no-motor locks remain enabled and latched. Full data and rejected candidates
 are in [`unloaded-tuning-2026-08-20.md`](../testing/unloaded-tuning-2026-08-20.md). These remain
 unloaded values, not loaded tuning.
-Loaded tuning must add a separate candidate image and repoint the staging alias; it must not
-edit or delete `UNLOADED_IMAGE`, which remains the qualified unloaded A/B baseline.
-After every motor-power cycle, stage again and then issue a fresh run command. Never use
-`config apply` for this provisional image.
+The loaded 2026-08-21 candidate preserves these tuning values in a separate full `IMAGE` while
+`UNLOADED_IMAGE` remains the immutable qualified A/B baseline. `PROVISIONAL_IMAGE` still aliases
+the unloaded image for recovery work. Normal operation now verifies `IMAGE` directly from EEPROM
+after every motor-power cycle and does not stage volatile values.
 
 ## Electrical control contract
 
@@ -211,9 +213,11 @@ hardware guarantees silently depend on them)
 - ARM_PULSE is a deliberate software-sequenced pulse (idle low, drive high ≥10 µs, return
   low) — never peripheral-driven. After a WDO pulse ends, any stray rising edge would
   re-arm the latch.
-- Motor control + heartbeat run on a **higher-priority (interrupt) executor** than the
-  Matter/Wi-Fi tasks: a hung network stack must degrade to the network-loss row (fan keeps
-  its speed), and only a hung control task produces the watchdog row (fan stops).
+- Motor control + heartbeat run on a priority-3 interrupt executor and MCF status/speed service
+  runs on a separate priority-2 interrupt executor, both above thread-mode Matter/Wi-Fi work.
+  This ordering was loaded-tested after a shared-thread implementation allowed network work to
+  starve MCF reads into a false `BusUnreachable`. A hung network stack must degrade to the
+  network-loss row (fan keeps its speed), and only a hung control task produces the watchdog row.
 - Boot never restores a running state: regardless of persisted Matter attributes, power-on
   is always IdleOff with speed zero (no StartUpOnOff semantics).
 - **Permission lifecycle** (decided 2026-07; the dossier left it ambiguous): a normal stop
@@ -239,8 +243,8 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
 - **Start supervision**: if the rotor produces no FG edge within `START_TIMEOUT_MS` (45 s) of
   the ramp beginning, the start failed — permission never took, the rotor is jammed, or the
   analog lock is latched — and the supervisor faults rather than commanding into a dead
-  drive. The timeout must exceed the roughly 23 s needed for the 1.5 RPM/s ramp to reach the
-  35 RPM released minimum. Not a TI requirement; without it a failed arm looks identical to
+  drive. The timeout must exceed the roughly 17 s needed for the 3 RPM/s ramp to reach the
+  50 RPM released minimum. Not a TI requirement; without it a failed arm looks identical to
   a very slow start forever.
 - **A windmilling rotor delays a start, it does not race it.** The pre-arm quiet rule and the
   ISD/resync windmill-restart configuration read as being in tension; they are not. Firmware
@@ -252,8 +256,8 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
   a speed change, not a restart: permission has not been revoked yet, so the supervisor
   returns to Running without the 10 s cost. A *reversal* is explicitly excluded — it must
   reach a verified stop, because its whole purpose is to flip DIR from standstill.
-- **Speed resolution**: the SPEED-pin duty is written as the raw 11-bit value, not as whole
-  percent. Percent steps are 1.8 RPM against a range that starts at 35 RPM — too coarse to
+- **Speed resolution**: the speed reference is represented as the raw 11-bit value, not as whole
+  percent. Percent steps are about 1.2 RPM across the released 50--170 RPM range, too coarse to
   tune. Duty is also clamped one below full scale, since an 11-bit register holds 0..=2047
   and writing 2048 would wrap to zero (the fan stopping at maximum command).
 - **The watchdog heartbeat is conditional, not merely bit-banged.** The control loop
@@ -262,12 +266,6 @@ and each is covered by a host test in `firmware/core/src/state.rs`.
   through a hung control loop, which is the exact failure the watchdog exists to catch. This
   gating lives in the app crate (`firmware/app/src/main.rs`) and is therefore **not** covered
   by a host test — unlike every other item in this section, it is verified only by CTL-02.
-
-### Hardware-derived gap
-
-- **No golden image has been captured yet**, so the boot-time configuration gate below
-  reports `unverified` rather than `verified`. The mechanism is real and the gate holds; what
-  is missing is a device to capture from. See "Stored-configuration verification" below.
 
 ### MCF8316D I²C wire format (verified 2026-07-27 against primary sources)
 
@@ -292,8 +290,11 @@ example packets byte for byte.
   value `0x30000000`. Both are write-only and self-clearing, so read-back proves nothing,
   and a latched fault can take **up to 200 ms** to clear (the 10 s safe-boot hold covers it).
 - Allow at least 100 µs between bytes, and expect clock stretching (SLLA662 §3.1).
-- Default target ID is 0x01, changeable only via EEPROM plus a power cycle — bus-scan at
-  first bring-up rather than trusting it.
+- Default target ID is 0x01, changeable only via EEPROM plus a power cycle. Recovery probes the
+  current address, 0x01, and reserved 0x00 before sweeping the remaining legal range. A live
+  shadow capture reported target zero while the part still answered at 0x01; committing that
+  word moved it to 0x00 after reboot. The golden `DEVICE_CONFIG1` therefore normalizes the field
+  explicitly to 0x01 rather than trusting the captured shadow value.
 - Each raised SCL edge permits clock stretching through the MCF's documented 4.66 ms internal
   timeout. A line still held low after 5 ms fails the transfer. Recovery sends nine SCL pulses
   and STOP before a follow-up status read; sustained failures still become `BusUnreachable`
@@ -334,13 +335,16 @@ The last clause of the safe-boot step ("stored configuration verified") is enfor
 - **A configuration write invalidates the verdict.** Any successful `reg write` into
   `0x080..=0x0AE` re-runs the check automatically rather than leaving a stale `verified`
   standing. Raw writes change shadow only and deliberately do not spend an EEPROM cycle.
-  During bench derivation against an empty image this is harmless; once an image exists,
-  deliberately diverging from it stops the fan, which is the point. Persistence happens only
-  through the reviewed `config apply` path.
+  Deliberately diverging from the golden image stops the fan, which is the point. Persistence
+  happens only through the reviewed `config apply` path.
 - **Capturing the image is a bench step, not a code change**:
   `stillair --port … config capture` prints a paste-ready table. The host knows how many
   registers to expect (it shares `reg::configuration()` with the firmware), so a dump cut
   short by a bus error fails rather than producing a silently partial image.
+- **The loaded golden image was captured and committed 2026-08-21.** EEPROM recalculates each
+  register's read-only parity bit during commit, so `IMAGE` contains the post-commit read-back
+  values rather than stale parity bits from the volatile capture. A cold power cycle verified
+  all 24 words at address 0x01 before permitting a loaded start.
 
 ### Matter cluster mapping (2026-07-27)
 
@@ -473,8 +477,9 @@ simulator pass says nothing about motor constants or physical behavior.
 
 ## Independent limits
 
-- Qualification target user range: 35–170 RPM. Test 30, 35, and 40 RPM; release the minimum
-  no lower than the lowest point that passes the complete start and acoustic matrix.
+- Qualification target user range: 35–170 RPM. Ceiling-loaded commissioning released 50 RPM
+  as the provisional user minimum after 35–40 RPM rocked without acquiring from one rest
+  position and 47.27 RPM acquired cleanly. Lower-speed qualification remains possible later.
 - MCF speed ceiling: 180 RPM.
 - Hardware analog overspeed: calibrate 200 RPM nominal rising and 180 RPM nominal reset.
   Across voltage and temperature, trip must remain above 190 RPM and at or below 220 RPM.

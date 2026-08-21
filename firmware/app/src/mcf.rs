@@ -134,14 +134,14 @@ pub async fn service_current_profile(
 
 /// Apply the latest normalized speed through TI's volatile `ALGO_DEBUG1` override.
 ///
-/// The override exists only for the reviewed provisional commissioning image. Any other
-/// verdict writes zero and selects the physical SPEED pin again. Failed writes are retried
-/// because `last_written` advances only after the bus accepts the command.
+/// The override is the loaded-qualified speed path for both provisional and verified images.
+/// A non-runnable verdict writes zero and selects the physical SPEED pin again. Failed writes
+/// are retried because `last_written` advances only after the bus accepts the command.
 pub async fn service_digital_speed(
     mcf: &mut Mcf,
     last_written: &mut Option<u32>,
 ) -> Result<(), BusError> {
-    let word = if verdict() == ConfigCheck::Provisional {
+    let word = if verdict().permits_operation() {
         mcf_digital_speed_word(SpeedDuty(DIGITAL_SPEED_DUTY.load(Ordering::Acquire)))
     } else {
         0

@@ -196,7 +196,7 @@ impl Handler for FanCluster {
 
     /// Poll the fan's measured speed and re-report it when it moves.
     ///
-    /// Deliberately slow: `PercentCurrent` follows a 1.5 RPM/s ramp, so nothing a controller
+    /// Deliberately slow: `PercentCurrent` follows the physical rotor, so nothing a controller
     /// displays changes faster than this, and every notification costs the network stack work
     /// it would rather spend on the commissioning path.
     async fn run(&self, ctx: impl HandlerContext) -> Result<(), Error> {
@@ -391,7 +391,7 @@ const NODE: Node = Node {
 
 /// How often the fan's own state is re-reported to Matter subscribers.
 ///
-/// Slow on purpose. `PercentCurrent` follows a 1.5 RPM/s ramp, so nothing a controller
+/// Slow on purpose. `PercentCurrent` follows the physical rotor, so nothing a controller
 /// displays changes faster than this, and every notification costs the network stack work it
 /// would otherwise spend on the commissioning path.
 const NOTIFY_INTERVAL: Duration = Duration::from_secs(2);

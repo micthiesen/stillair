@@ -106,15 +106,12 @@ impl Default for Simulator {
 impl Simulator {
     pub fn new() -> Self {
         let now = Millis::ZERO;
-        let mut registers = Vec::new();
-        // Run the real boot-time check against the (empty) simulated register file. It
-        // starts `Unverified`, which is the truth: a simulator says nothing about what any
-        // register on a real MCF8316D contains. An explicit stage can move it to Provisional.
+        let registers = Vec::new();
+        // The empty simulated register file represents unknown factory state, not a known
+        // mismatch against the captured golden image. Start `Unverified`; an explicit check
+        // can classify its zeroes as a mismatch, and an explicit stage can make it Provisional.
         let inputs = Inputs {
-            config: block_on(mcf_config::check(
-                &mut SimBus(&mut registers),
-                mcf_config::IMAGE,
-            )),
+            config: mcf_config::ConfigCheck::Unverified,
             ..Inputs::default()
         };
         Self {

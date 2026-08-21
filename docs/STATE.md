@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-20** (ceiling installation accepted complete; loaded tuning next.)
+Last updated: **2026-08-21** (loaded operating image committed and cold-boot verified.)
 
 ## Now
 
@@ -28,19 +28,29 @@ Last updated: **2026-08-20** (ceiling installation accepted complete; loaded tun
 - **The evidence path for loaded work is ready.** Existing Hall/FG, MCF telemetry, camera/audio,
   wall-power, and IR capture support safe loaded tuning. The optional OWON USB scope can add
   waveform evidence if available, but it is not a prerequisite.
+- **The ceiling fan has a persistent, provisional operating release.** Apple Home is commissioned
+  and survives cold power cycles. The released floor is 50 RPM, the command ramp is 3 RPM/s,
+  and the loaded golden MCF image verifies from EEPROM at target `0x01`. Nine 50 RPM starts
+  passed across commissioning; one intervening scheduler-starvation fault was fixed, then a
+  ten-minute 50 RPM run completed without fault at about 1.7 W. A final verified-image start,
+  three-minute hold, cold power
+  cycle, second start, one-minute hold, and stop all passed with Hall/FG agreement. The earlier
+  35--40 RPM floor was rejected after one Apple Home start rocked without acquiring. Evidence:
+  [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Next
 
-Begin ceiling-mounted loaded commissioning at the lowest useful speed, then run loaded MPET and
-bounded tuning through [integration.md](integration.md). Preserve the unloaded image as the A/B
-baseline and do not write EEPROM until the loaded golden image is reviewed.
+Treat 50--170 RPM as the provisional user range. Next tuning work should run loaded MPET and
+compare it with the retained unloaded baseline before changing the golden image. Longer loaded
+thermal/endurance evidence and the remaining fixed plateaus can follow; neither blocks ordinary
+observed use at the released floor.
 
 ## Candidates Not Chosen
 
 - **Loaded tuning on an improvised bench rig:** not chosen; the ceiling installation provides the
   final support, rotor load, cable lengths, ceiling interaction, and room acoustics.
 - **EEPROM commit of the unloaded image:** rejected. Only the reviewed loaded golden image may
-  populate persistent `IMAGE`.
+  populate persistent `IMAGE`; the reviewed 2026-08-21 capture now does.
 - **USB oscilloscope as a blocker:** rejected. It is optional additional evidence.
 - **Reopening accepted plate, anchor, tether, or catcher proof work:** rejected unless Michael
   explicitly requests it; the installed inspection checks condition and clearance, not proof basis.

@@ -96,6 +96,14 @@ static SPEED_TIMER: StaticCell<timer::Timer<'static, LowSpeed>> = StaticCell::ne
 /// priority *before* those tasks exist is the only way that stays true by construction.
 static CONTROL_EXECUTOR: StaticCell<InterruptExecutor<1>> = StaticCell::new();
 
+/// MCF register service runs above Matter/Wi-Fi but below the safety-critical control loop.
+///
+/// A commissioned Matter stack can keep the thread-mode executor busy for longer than the
+/// supervisor's status-freshness deadline. Giving the bounded software-I2C task its own middle
+/// priority prevents network work from looking like a dead motor-controller bus, while Priority3
+/// control and watchdog work can still preempt every register transaction.
+static MCF_EXECUTOR: StaticCell<InterruptExecutor<2>> = StaticCell::new();
+
 #[esp_rtos::main]
 async fn main(spawner: embassy_executor::Spawner) {
     // Not `esp_println::logger`: every line, log or protocol, goes through one queue and
@@ -139,6 +147,9 @@ async fn main(spawner: embassy_executor::Spawner) {
         .init(InterruptExecutor::new(sw_int.software_interrupt1))
         .start(Priority::Priority3);
     control.spawn(heartbeat_task(heartbeat).unwrap());
+    let mcf_executor = MCF_EXECUTOR
+        .init(InterruptExecutor::new(sw_int.software_interrupt2))
+        .start(Priority::Priority2);
 
     // Inputs. No internal pulls: the board provides them.
     let floating = InputConfig::default().with_pull(Pull::None);
@@ -255,9 +266,10 @@ async fn main(spawner: embassy_executor::Spawner) {
     control.spawn(control_task(board).unwrap());
     BOOT_INHIBIT_ACTIVE.store(false, Ordering::Release);
 
-    // Diagnostics, the tuning console, and (later) the network stack live on the
-    // thread-mode executor, below the control loop.
-    spawner.spawn(mcf_task(mcf).unwrap());
+    // Status and bounded register service must outlive stalls in Matter/Wi-Fi, but remain
+    // preemptible by the Priority3 control and watchdog path.
+    mcf_executor.spawn(mcf_task(mcf).unwrap());
+    // The tuning console and network stack remain on the thread-mode executor.
     let (usb_rx, usb_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
         .into_async()
         .split();
@@ -405,9 +417,10 @@ async fn heartbeat_task(mut heartbeat: Output<'static>) {
 
 /// Polls the MCF's fault-status registers and services fault-clear requests.
 ///
-/// Deliberately on the lower-priority executor: I²C is slow, can hang, and is never on the
-/// path that keeps the fan safe. A bus that stops answering shows up to the supervisor as
-/// accumulating `BusError`s, which becomes a stop after
+/// Deliberately on the middle-priority executor: I²C is slow and can hang, so Priority3 control
+/// and watchdog work must always preempt it. Keeping it above thread-mode Matter/Wi-Fi prevents
+/// network work from starving status freshness. A bus that stops answering shows up to the
+/// supervisor as accumulating `BusError`s, which becomes a stop after
 /// [`config::BUS_FAILURES_BEFORE_FAULT`] — the drive is not commanded by something that can
 /// no longer interrogate it.
 async fn service_digital_speed_override(

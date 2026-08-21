@@ -312,7 +312,7 @@ impl Supervisor {
 
     /// The standing speed *setting* — what the user last asked for, which the ramp is on its
     /// way to and which a bare `On` resumes. Distinct from [`Supervisor::commanded`] for
-    /// minutes at a time on a 1.5 RPM/s ramp, and from [`Supervisor::measured`] always.
+    /// minutes at a time on the configured ramp, and from [`Supervisor::measured`] always.
     ///
     /// Retained across an `Off` — that is what makes a bare `On` a resume — so it is only
     /// meaningful alongside [`Supervisor::commanded_on`].
@@ -1138,11 +1138,12 @@ mod tests {
 
         /// Drive to `rpm` and settle there, from a booted, idle bench.
         fn run_at(&mut self, rpm: u32) {
+            let expected = rpm.clamp(config::RPM_USER_MIN_TARGET, config::RPM_USER_MAX);
             self.supervisor
                 .command(Command::SetSpeed(MilliRpm::from_rpm(rpm)));
             self.run_until(300_000, "Running", |s| s.state() == FanState::Running);
             self.run_until(300_000, "target speed", |s| {
-                s.commanded() == MilliRpm::from_rpm(rpm)
+                s.commanded() == MilliRpm::from_rpm(expected)
             });
         }
 
@@ -1440,10 +1441,11 @@ mod tests {
         bench.run_until(120_000, "60 RPM", |s| {
             s.commanded() == MilliRpm::from_rpm(60)
         });
-        // The MCF receives the qualified 35 RPM startup floor immediately, then this outer
-        // ramp limits only the remaining 25 RPM. The driver's own CL_ACC limits the physical
+        // The MCF receives the released startup floor immediately, then this outer ramp
+        // limits only the remaining travel. The driver's own CL_ACC limits the physical
         // zero-to-floor acceleration.
-        let expected = (60_000 - 35_000) * 1_000 / u64::from(config::RAMP_MILLI_RPM_PER_S);
+        let expected = u64::from(60_000 - config::RPM_USER_MIN_TARGET * 1_000) * 1_000
+            / u64::from(config::RAMP_MILLI_RPM_PER_S);
         assert!(
             bench.now.0 >= config::SAFE_BOOT_HOLD_MS + expected,
             "reached speed in {} ms, faster than the ramp allows",
@@ -1815,15 +1817,18 @@ mod tests {
     fn a_speed_below_the_released_minimum_is_raised_to_it() {
         let mut bench = Bench::new();
         bench.boot();
-        bench.supervisor.set_released_min(MilliRpm::from_rpm(45));
+        let raised = config::RPM_USER_MIN_TARGET + 10;
+        bench
+            .supervisor
+            .set_released_min(MilliRpm::from_rpm(raised));
         bench
             .supervisor
             .command(Command::SetSpeed(MilliRpm::from_rpm(20)));
         bench.run_until(120_000, "released minimum", |s| {
-            s.commanded() == MilliRpm::from_rpm(45)
+            s.commanded() == MilliRpm::from_rpm(raised)
         });
         bench.run_ms(10_000);
-        assert_eq!(bench.supervisor.commanded(), MilliRpm::from_rpm(45));
+        assert_eq!(bench.supervisor.commanded(), MilliRpm::from_rpm(raised));
     }
 
     #[test]
@@ -2060,6 +2065,9 @@ mod tests {
         bench.run_at(40);
         bench.run_ms(600_000);
         assert_eq!(bench.supervisor.state(), FanState::Running);
-        assert_eq!(bench.supervisor.commanded(), MilliRpm::from_rpm(40));
+        assert_eq!(
+            bench.supervisor.commanded(),
+            MilliRpm::from_rpm(config::RPM_USER_MIN_TARGET)
+        );
     }
 }

@@ -257,7 +257,7 @@ pub struct Telemetry {
     /// cannot tell you whether the fan is meant to be running.
     pub on: bool,
     /// The standing speed setting — what was asked for. The ramp is on its way to it, so on a
-    /// 1.5 RPM/s ramp this leads `commanded` by minutes; recording all three is what makes a
+    /// configured ramp this can lead `commanded` substantially; recording all three makes a
     /// capture show whether a slow arrival was the ramp or the motor.
     pub target: MilliRpm,
     /// What the supervisor is commanding, after ramping and clamping.

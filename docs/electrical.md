@@ -787,10 +787,10 @@ footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
 - **Firmware TODO**: TEMP_SENSE (GPIO6/ADC1) is wired but unread — ADC1 is currently
   consumed whole by the Matter TRNG; needs a shared-ADC arrangement to implement the
   overtemperature input. (WDO on GPIO23 is deliberately unread — see docs/controls.md.)
-- **MCF register-image capture checklist** (the `mcf_config::IMAGE` bench capture is
-  deliberately empty until a device is measured; when captured, the image MUST cover these
-  or the board wiring stays inert on virgin silicon — 2026-07 review): `PIN_CONFIG.
-  SPEED_MODE = 01b` (PWM duty) and `PERI_CONFIG1.SPEED_RANGE_SEL = 0h` (325 Hz–100 kHz band,
+- **MCF register-image capture checklist** (`mcf_config::IMAGE` was captured, normalized,
+  committed, and cold-boot verified on the loaded assembly 2026-08-21; it covers these or the
+  board wiring stays inert on virgin silicon): `PIN_CONFIG.SPEED_MODE = 01b` (PWM duty) and
+  `PERI_CONFIG1.SPEED_RANGE_SEL = 0h` (325 Hz–100 kHz band,
   with a 1 kHz LEDC carrier) or the SPEED pin reads as analog; `PIN_CONFIG.ALARM_PIN_EN = 1` +
   `GD_CONFIG1.OTW_REP = 1` or the tested McfAlarm/thermal-stop path never fires;
   `DEVICE_CONFIG2.EXT_WDT_EN = 1` + `EXT_WDT_INPUT_MODE = 1` (GPIO tickle) + a deliberate
@@ -799,10 +799,12 @@ footprints, R3 PGOOD pull-up source) and left these as decisions or later work:
   the 2 Hz heartbeat's rising edge lands every 500 ms, so the 100/200 ms windows can never
   pass, the 500 ms window is edge-on-deadline (faults on first jitter), and 100 ms is the
   register's reset default. Enforced in code: `mcf_config` tests fail any captured image
-  that enables GPIO tickle with an unsatisfiable window (2026-07 round-3 review). Also firmware: `seeds::MAX_SPEED` (0x0168) is
-  value-validated but not yet mapped to its host register/bit-field in `mcf8316::reg` —
-  close that before the image lands. DIR/BRAKE/buck reset defaults are already the intended
-  states and need no image entries.
+  that enables GPIO tickle with an unsatisfiable window (2026-07 round-3 review). The golden
+  image also normalizes `DEVICE_CONFIG1.I2C_TARGET_ADDR` to 0x01: a volatile capture can report
+  zero while the device is still answering at its previously latched address, and committing
+  that unchecked value moves the device to reserved 0x00 on the next power cycle. EEPROM parity
+  bits must come from post-commit read-back because silicon recalculates them. DIR/BRAKE/buck
+  reset defaults are already the intended states and need no image entries.
 
 ## V1-to-V2 gates
 

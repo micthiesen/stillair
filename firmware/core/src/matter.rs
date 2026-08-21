@@ -247,8 +247,8 @@ mod tests {
 
     #[test]
     fn a_fan_ramping_down_still_reports_the_air_it_is_moving() {
-        // `PercentCurrent` comes off the tachometer in every state. At 1.5 RPM/s a stop from
-        // 170 RPM takes nearly two minutes, and reporting 0 the instant the command lands
+        // `PercentCurrent` comes off the tachometer in every state. A loaded stop from
+        // 170 RPM can take over a minute, and reporting 0 the instant the command lands
         // would tell the user it had stopped while it was plainly still turning over the bed.
         let mut telemetry = snapshot();
         telemetry.on = false;

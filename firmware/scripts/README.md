@@ -62,7 +62,7 @@ container, where Kasa credentials already live, refuses any device other than th
 Plug identity and address, and reconnects boundedly after transient TPAP failures without running
 periodic rediscovery through an active evidence stream.
 
-Before the golden image exists, script 03 begins with `config stage`. This loads and
+For recovery or A/B work, script 03 begins with `config stage`. This loads and
 read-back-verifies the reviewed GL100 first-spin settings in volatile shadow only. It must be
 repeated after every motor-power cycle, and it never commits EEPROM. A fresh unverified
 controller remains in `SafeBoot`; this prevents zero factory speed-loop gains from invoking
@@ -76,7 +76,6 @@ committed golden image; staging the provisional image there would overwrite load
 image. Review that capture before committing or applying it. MPET itself updates shadow
 registers only and does not spend an EEPROM cycle.
 
-The current 35 RPM first rung is the design target, not a qualified motor number. If the real
-motor cannot start or run smoothly there, stop and raise the released minimum before continuing
-the ladder. Do not edit firmware merely to make a script pass against an unsuitable provisional
-number.
+The 35 RPM design target was rejected for loaded use after one arbitrary-position start rocked
+without acquiring. The provisional released floor is 50 RPM; scripts that retain a 35 RPM bench
+rung are unloaded evidence profiles, not the user operating contract.
