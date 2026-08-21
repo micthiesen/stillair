@@ -155,6 +155,7 @@ async fn dispatch(line: &str) {
             }
             None => emit(&Reply::Error("control loop has not run yet")),
         },
+        Request::Wifi => emit(&Reply::Wifi(crate::wifi_diag::snapshot())),
         Request::Run(rpm) => command(Command::SetSpeed(rpm)),
         // Routed through the same mapping the Matter handler uses, so a script exercises the
         // percent path rather than a console-only imitation of it.

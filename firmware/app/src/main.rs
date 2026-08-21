@@ -58,6 +58,7 @@ mod console;
 mod matter;
 mod mcf;
 mod output;
+mod wifi_diag;
 
 use board::{
     Board, FG_PULSES, HALL_LAST_EDGE_MS, HALL_PERIOD_MS, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH,
@@ -276,6 +277,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     spawner.spawn(output::writer_task(usb_tx).unwrap());
     spawner.spawn(console::console_task(usb_rx).unwrap());
     spawner.spawn(console::stream_task().unwrap());
+    spawner.spawn(wifi_diag::sample_task().unwrap());
 
     // Matter runs to the end of `main`, which *is* the thread-mode executor's own task —
     // below the control loop's Priority3 interrupt executor by construction. Everything the

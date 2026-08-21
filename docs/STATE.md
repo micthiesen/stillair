@@ -28,6 +28,10 @@ Last updated: **2026-08-21** (provisional operation complete; microphone-first r
   attributes report the requested target instead of feeding intermediate ramp speed back into
   Apple Home. Michael confirmed that an extended press-and-drag stayed with his finger while live
   telemetry recorded multiple changing targets during the physical ramp; details are in `CTL-11`.
+- **Wi-Fi RF diagnostics are queued for the next firmware flash.** The USB console's new `wifi`
+  command reports current and weakest RSSI, signal quality, sampling failures, disconnects, and
+  last-success time without exposing SSID, credentials, scans, or a new LAN listener. The installed
+  image does not contain this yet.
 - **The remaining work is finite and ordered.** A microphone-only tune comes first when the mic
   arrives, followed by a scope-assisted electrical refinement when the OWON arrives in roughly one
   to two weeks. Then Michael will make a cleaner Hall-board mount and verify the sensor again before

@@ -52,6 +52,16 @@ unreliable. USB supplies communication only because J6 VBUS does not power the b
 and strain-relieve the cable outside all moving geometry, and keep the physical low-voltage
 cutoff reachable without entering the sweep.
 
+`stillair --port <device> wifi` reports the associated radio's current RSSI, a plain-language
+quality band, the weakest RSSI sampled since boot, sampling failures, observed disconnect
+transitions, and the last successful sample time. The application samples every 10 seconds on
+the thread-mode executor, below all motor-control work, and logs only connection or quality-band
+changes. The command is intentionally available only over the physical USB console: the firmware
+does not add an unauthenticated LAN listener. It also omits SSID, credentials, and nearby-network
+scans so saved commissioning logs do not disclose them. Interpret the bands as excellent at
+−55 dBm or better, good through −67 dBm, usable through −75 dBm, and weak below −75 dBm; retain
+the raw dBm number when comparing enclosure or antenna changes.
+
 **Headroom check during tuning**: at 170 RPM the BEMF is roughly 17 V against the 24 V bus —
 the tightest margin in the system with flux weakening disabled. A 20% error in the Ke
 convention (phase vs line) erases it, so pin the convention down against measured BEMF

@@ -33,6 +33,8 @@ pub type Line = String<LINE_CAPACITY>;
 pub enum Request {
     /// One-shot telemetry snapshot.
     State,
+    /// One-shot radio-health snapshot. This deliberately contains no credentials or SSID.
+    Wifi,
     /// Command a speed in whole RPM. Clamped by the supervisor exactly like a Matter
     /// command, so this is a convenience rather than a way around the speed limits.
     Run(MilliRpm),
@@ -129,6 +131,8 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
 
     let parsed = if is(command, "state") {
         Ok(Request::State)
+    } else if is(command, "wifi") {
+        Ok(Request::Wifi)
     } else if is(command, "stop") {
         Ok(Request::Stop)
     } else if is(command, "disarm") {
@@ -294,6 +298,21 @@ pub struct Telemetry {
     pub dropped: u32,
 }
 
+/// Read-only Wi-Fi health sampled by the application outside the safety-critical executor.
+///
+/// The SSID and nearby scan results are intentionally absent. They add no commissioning value
+/// once the fan is associated, and keeping them out means this reply is safe to retain in logs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WifiDiagnostics {
+    pub connected: bool,
+    pub rssi_dbm: Option<i8>,
+    pub weakest_rssi_dbm: Option<i8>,
+    pub samples: u32,
+    pub sample_failures: u32,
+    pub disconnects: u32,
+    pub last_ok_ms: Option<u64>,
+}
+
 impl Telemetry {
     /// Render as one protocol line.
     pub fn to_line(&self) -> Line {
@@ -337,6 +356,7 @@ pub enum Reply<'a> {
         value: u32,
     },
     Telemetry(Telemetry),
+    Wifi(WifiDiagnostics),
     /// The outcome of a configuration check or apply.
     ///
     /// `ok` follows [`ConfigCheck::permits_operation`] rather than "the command executed",
@@ -366,6 +386,21 @@ impl Reply<'_> {
                 )
             }
             Self::Telemetry(telemetry) => return telemetry.to_line(),
+            Self::Wifi(wifi) => write!(
+                line,
+                "{PREFIX}{{\"ok\":true,\"type\":\"wifi\",\"connected\":{},\
+                 \"rssi_dbm\":{},\"quality\":{},\"weakest_rssi_dbm\":{},\
+                 \"samples\":{},\"sample_failures\":{},\"disconnects\":{},\
+                 \"last_ok_ms\":{}}}",
+                wifi.connected,
+                OptionalNumber(wifi.rssi_dbm),
+                OptionalName(wifi.rssi_dbm.map(wifi_quality)),
+                OptionalNumber(wifi.weakest_rssi_dbm),
+                wifi.samples,
+                wifi.sample_failures,
+                wifi.disconnects,
+                OptionalNumber(wifi.last_ok_ms),
+            ),
             Self::Config {
                 check,
                 written,
@@ -400,6 +435,7 @@ impl Reply<'_> {
 /// One line per command, for `help`. Plain text, not JSON: this one is for a human.
 pub const HELP: &[&str] = &[
     "state                     one telemetry snapshot",
+    "wifi                      radio health (no SSID or credentials)",
     "run <rpm>                 command a speed (clamped to the released range)",
     "pct <0-100>               command a Matter PercentSetting (0 = off)",
     "stop                      command off",
@@ -434,6 +470,17 @@ pub const fn direction_name(direction: Direction) -> &'static str {
     match direction {
         Direction::Forward => "fwd",
         Direction::Reverse => "rev",
+    }
+}
+
+/// Human-scale RSSI bands. The raw dBm value remains the authority; this label exists so a
+/// bench check does not require remembering whether -55 or -85 is the good end of the scale.
+pub const fn wifi_quality(rssi_dbm: i8) -> &'static str {
+    match rssi_dbm {
+        -55..=i8::MAX => "excellent",
+        -67..=-56 => "good",
+        -75..=-68 => "usable",
+        _ => "weak",
     }
 }
 
@@ -523,6 +570,18 @@ impl core::fmt::Display for OptionalName {
     }
 }
 
+/// Renders an optional integer without allocating or inventing a sentinel in the protocol.
+struct OptionalNumber<T>(Option<T>);
+
+impl<T: core::fmt::Display> core::fmt::Display for OptionalNumber<T> {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match &self.0 {
+            None => formatter.write_str("null"),
+            Some(value) => value.fmt(formatter),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -530,6 +589,7 @@ mod tests {
     #[test]
     fn simple_commands_parse() {
         assert_eq!(parse("state"), Ok(Request::State));
+        assert_eq!(parse("wifi"), Ok(Request::Wifi));
         assert_eq!(parse("stop"), Ok(Request::Stop));
         assert_eq!(parse("disarm"), Ok(Request::Disarm));
         assert_eq!(parse("help"), Ok(Request::Help));
@@ -658,6 +718,7 @@ mod tests {
     fn trailing_words_are_rejected_for_every_command_shape() {
         for command in [
             "state now",
+            "wifi now",
             "run 60 now",
             "dir forward now",
             "config stage now",
@@ -848,6 +909,67 @@ mod tests {
             Reply::Error("unknown command").to_line().as_str(),
             "@{\"ok\":false,\"error\":\"unknown command\"}"
         );
+    }
+
+    #[test]
+    fn wifi_diagnostics_are_machine_readable_and_secret_free() {
+        let line = Reply::Wifi(WifiDiagnostics {
+            connected: true,
+            rssi_dbm: Some(-61),
+            weakest_rssi_dbm: Some(-74),
+            samples: 42,
+            sample_failures: 2,
+            disconnects: 1,
+            last_ok_ms: Some(12_000),
+        })
+        .to_line();
+
+        for field in [
+            "\"type\":\"wifi\"",
+            "\"connected\":true",
+            "\"rssi_dbm\":-61",
+            "\"quality\":\"good\"",
+            "\"weakest_rssi_dbm\":-74",
+            "\"sample_failures\":2",
+            "\"disconnects\":1",
+            "\"last_ok_ms\":12000",
+        ] {
+            assert!(line.contains(field), "missing {field} in {line}");
+        }
+        assert!(!line.contains("ssid"));
+    }
+
+    #[test]
+    fn unavailable_wifi_values_are_null() {
+        let line = Reply::Wifi(WifiDiagnostics {
+            connected: false,
+            rssi_dbm: None,
+            weakest_rssi_dbm: None,
+            samples: 1,
+            sample_failures: 1,
+            disconnects: 0,
+            last_ok_ms: None,
+        })
+        .to_line();
+        assert!(line.contains("\"rssi_dbm\":null"), "{line}");
+        assert!(line.contains("\"quality\":null"), "{line}");
+        assert!(line.contains("\"last_ok_ms\":null"), "{line}");
+    }
+
+    #[test]
+    fn the_widest_wifi_reply_still_fits() {
+        let line = Reply::Wifi(WifiDiagnostics {
+            connected: true,
+            rssi_dbm: Some(i8::MIN),
+            weakest_rssi_dbm: Some(i8::MIN),
+            samples: u32::MAX,
+            sample_failures: u32::MAX,
+            disconnects: u32::MAX,
+            last_ok_ms: Some(u64::MAX),
+        })
+        .to_line();
+        assert!(line.ends_with('}'), "truncated at {} bytes", line.len());
+        assert!(line.len() < LINE_CAPACITY);
     }
 
     #[test]

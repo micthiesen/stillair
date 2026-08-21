@@ -17,7 +17,7 @@ use std::task::{Context, Poll, Waker};
 use std::time::Duration;
 
 use stillair_core::config;
-use stillair_core::console::{self, ConfigOp, MpetOp, Reply, Request, Telemetry};
+use stillair_core::console::{self, ConfigOp, MpetOp, Reply, Request, Telemetry, WifiDiagnostics};
 use stillair_core::matter;
 use stillair_core::mcf8316::{reg, FaultStatus, MpetReport, RegisterBus};
 use stillair_core::mcf_config;
@@ -299,6 +299,15 @@ impl Simulator {
                 let telemetry = self.telemetry();
                 self.emit(&Reply::Telemetry(telemetry));
             }
+            Request::Wifi => self.emit(&Reply::Wifi(WifiDiagnostics {
+                connected: false,
+                rssi_dbm: None,
+                weakest_rssi_dbm: None,
+                samples: 0,
+                sample_failures: 0,
+                disconnects: 0,
+                last_ok_ms: None,
+            })),
             Request::Run(rpm) => {
                 let command = Command::SetSpeed(rpm);
                 if self.refuse_unconfigured_command(command) {
