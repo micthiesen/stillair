@@ -20,6 +20,13 @@ Last updated: **2026-08-20** (unloaded campaign wrapped; ceiling integration sel
   hand-torque target. The complete carrier/motor assembly was then mounted overhead with three
   M6 × 20 A4-80 screws, genuine glued Nord-Lock pairs, no threadlocker, and the selected 5 N·m
   target. The tether connection and rotor installation are next.
+- **Blade installation is paused for fastener recovery.** During the first installed blade
+  fit-up on 2026-08-20, an M5 all-metal prevailing nut became extremely difficult to advance
+  and one printed nut pocket was damaged. The purchased screw and nut are both M5 × 0.8; likely
+  causes under diagnosis are reversed 3-punch-nut orientation, cross-threading/galling, or the
+  prevailing torque exceeding the pocket's torque-out capacity. Do not force another fastener
+  until the stuck one is safely removed and spare hardware passes an off-assembly orientation
+  check.
 - **PCB-01, PCB-02, harnesses, firmware, and the restrained unloaded motor are qualified.**
   Board bring-up, Hall polarity and physical switching, MCF transport, permission/fault revoke,
   startup/handoff, 35–170 RPM in both directions, repeated stops, and normal coast-down passed.
