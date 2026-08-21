@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-21** (provisional operation complete; acoustic/startup refinement next.)
+Last updated: **2026-08-21** (provisional operation complete; microphone-first refinement next.)
 
 ## Now
 
@@ -28,20 +28,33 @@ Last updated: **2026-08-21** (provisional operation complete; acoustic/startup r
   attributes report the requested target instead of feeding intermediate ramp speed back into
   Apple Home. Michael confirmed that an extended press-and-drag stayed with his finger while live
   telemetry recorded multiple changing targets during the physical ramp; details are in `CTL-11`.
-- **The next evidence stack is chosen.** Planned close 24-bit/96 kHz USB microphone audio, OWON
-  VDS1022I SOX/electrical frames, Hall/FG, telemetry, and Kasa power share one timeline. Camera is
-  conditional on startup/reversal, suspected contact, or a rotor-position-correlated chirp. The
-  capture contract is in [observability.md](observability.md).
+- **The remaining work is finite and ordered.** A microphone-only tune comes first when the mic
+  arrives, followed by a scope-assisted electrical refinement when the OWON arrives in roughly one
+  to two weeks. Then Michael will make a cleaner Hall-board mount and verify the sensor again before
+  completing the owner-designed cosmetic housing and printed power-cable conduit.
 
 ## Next
 
-Run the full loaded acoustic and startup refinement session: establish the current golden reference,
-separate the steady electrical whine from transient chirps, localize the chirp before considering
-lubrication, capture the
-align/open-loop/handoff current and motion, compare startup candidates, then reduce steady-state
-motor/controller noise at matched measured speeds. Loaded MPET is a measured comparison, not an
-automatic replacement. The ordered session contract is in
+Run the microphone-first loaded tune. Record the current golden reference at the close motor and bed
+positions, separate steady electrical whine from transient chirps, and use synchronized Hall/FG,
+telemetry, Kasa power, and selective video to compare conservative acoustic and startup candidates.
+Preserve the qualified image until a candidate repeats the release checks. The ordered session
+contract is in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
+
+## Remaining Roadmap
+
+1. **Microphone-first loaded tune:** use the 24-bit/96 kHz mic as soon as it arrives. Set up a
+   camera for rough startup and possible rotor-position correlation of chirps; Hall/FG remain the
+   steady-speed authority, so video need not accompany every plateau.
+2. **Scope-assisted refinement:** when the OWON VDS1022I arrives, correlate SOX/electrical frames
+   with the retained audio signatures, telemetry, Hall/FG, and power. Revisit the first-pass tune
+   only where the electrical evidence supports a better candidate, then qualify the final image.
+3. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
+   gap, hand-rotation pulse, and driven Hall/FG agreement checks (`TACH-03B`).
+4. **Owner-led finish:** Michael will artfully create the cosmetic housing and printed conduit for
+   the power cable. Their design details stay outside this project; record only completion and any
+   final fan-clearance, retention, or cable-routing verification that affects operation.
 
 ## Candidates Not Chosen
 

@@ -171,9 +171,11 @@ observer.
 - A second capture at the bed position answers the user-facing loudness question after source
   tuning. Centered below the spindle is not the primary diagnostic position because downwash and
   blade-pressure pulses can mask motor tones.
-- Camera is conditional. Hall and FG already establish steady-speed stability, so omit it for
-  ordinary acoustic A/B work. Add 30 fps video for startup/reversal, suspected contact, or a chirp
-  that may repeat at a particular rotor position.
+- Camera is selective rather than mandatory. Set it up for the first microphone pass because the
+  rough startup and intermittent chirp can benefit from motion and rotor-position correlation.
+  Hall and FG already establish steady-speed stability, so omit video from later ordinary acoustic
+  plateaus if the first pass shows that it adds no evidence. Use at least 30 fps for startup,
+  reversal, suspected contact, or a chirp that may repeat at a particular rotor position.
 
 ### Cutoff, stop, and regenerative transient
 

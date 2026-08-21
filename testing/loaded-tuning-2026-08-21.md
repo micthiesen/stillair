@@ -95,22 +95,35 @@ qualification work; they are not claims made by this commissioning result.
 - Acceleration from rest is not subjectively smooth. The next session should capture the complete
   align/open-loop/handoff sequence and tune startup separately from steady-state acoustic changes.
 
-## Next loaded-tuning session
+## Phased loaded-tuning plan
+
+### Pass 1: microphone first
 
 - Planned microphone: Razer Seiren V3 Mini or equivalent raw 24-bit/96 kHz USB condenser, mounted
   on the stationary upper housing about 2--3 inches from the motor with compliant isolation. Keep
   gain, orientation, and position fixed; capture a stopped-room baseline and lossless WAV.
-- Use the OWON VDS1022I on J8 SOX plus FG/SPEED or VM24 according to the recipe in
-  [`docs/observability.md`](../docs/observability.md). First qualify frame timing and retain the
-  raw samples and sidecar metadata before using it as continuous evidence.
-- Synchronize microphone audio, supervisor telemetry, Hall/FG, Kasa power, and scope frames. Begin
-  with the current golden image as the A/B reference; run loaded MPET as a captured comparison,
-  never as an automatic EEPROM replacement.
-- A camera is optional for ordinary steady-state work because Hall/FG already show stable motion.
-  Add it when diagnosing the rough start or if the chirp repeats with rotor position; it remains
-  useful for gross direction/reversal and visible rub, not as the primary high-speed tachometer.
+- Synchronize microphone audio, supervisor telemetry, Hall/FG, and Kasa power. Capture the current
+  golden image at fixed close-mic and bed positions before changing anything, then compare
+  conservative acoustic and startup candidates at matched measured speeds.
+- Set up the available camera for startup and the intermittent chirp. It is useful for detecting
+  rough align/open-loop/handoff motion, visible contact, and rotor-position correlation. Hall/FG
+  already establish steady-state stability, so video is not required for every acoustic plateau;
+  omit it from later steady-state captures if this first pass shows that it adds no evidence.
 - Candidate order: characterize the reference; separate the steady electrical whine from transient
   chirps; localize the chirp; inspect startup current and handoff; compare startup parameters; then
   compare steady-state PWM/commutation candidates at matched measured speeds. Commit a new golden
   image only after the selected candidate repeats the low-speed starts, acoustic ladder, stop, and
   persistence checks.
+
+### Pass 2: scope-assisted refinement
+
+- When the OWON VDS1022I arrives, connect J8 SOX plus FG/SPEED or VM24 according to
+  [`docs/observability.md`](../docs/observability.md). First qualify frame timing and retain raw
+  samples plus sidecar metadata before using it as continuous evidence.
+- Synchronize scope frames with the retained microphone signatures, supervisor telemetry, Hall/FG,
+  and Kasa power. Use the evidence to distinguish electrical/commutation tones from mechanical
+  radiation and to correlate transient chirps with SOX/current distortion or command transitions.
+- Treat the microphone-pass result as the new comparison reference, not as disposable progress.
+  Run loaded MPET as a captured comparison only, never as an automatic EEPROM replacement. Promote
+  a scope-informed change only if it improves the matched acoustic result and repeats all release
+  checks.
