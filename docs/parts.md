@@ -144,7 +144,10 @@ moved with it, see [electrical.md](electrical.md).)
   1.5×D guideline for aluminum threads; 20 mm restores ~8.5 mm with the pair, which is
   **accepted at 1.4×D** given the tiny joint loads and the joint-analysis torque, with the
   actual washer-stack thickness stated on the drawing; washer stacks ≤3 mm reach the full
-  9 mm guideline).
+  9 mm guideline). **Installed target selected 2026-08-20: 5 N·m**, tightened evenly in a
+  triangular sequence with no threadlocker. This intentionally stays below Nord-Lock's generic
+  8.4 N·m A4-80/M6 guidance because that table assumes Cu/C lubrication and does not account
+  for this joint's tapped 6061-T6 standoffs.
 
 Fabrication callouts (pre-order check 2026-07-28):
 
@@ -528,9 +531,9 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 - Motor M4 torque remains a release gate until thread material, measured engagement, and
   CubeMars' allowable installation torque are known. Use a calibrated torque driver,
   compatible removable threadlocker, and witness marks.
-- ST-100 M6 joints use the joint-analysis torque recorded on the drawing plus compatible
-  wedge-locking washers. Do not infer torque from a generic stainless table without checking
-  aluminum thread bearing stress.
+- ST-100 M6 joints use a 5 N·m installed target plus compatible wedge-locking washers and no
+  threadlocker. The target accounts for the tapped aluminum standoffs rather than copying a
+  generic stainless joint table.
 - Replace cotters, prevailing nuts, distorted lock washers, and any one-time locking hardware
   after removal. Record all critical-joint torque and witness-mark inspection during
   commissioning.
