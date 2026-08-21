@@ -18,10 +18,11 @@ Last updated: **2026-08-21** (provisional operation complete; acoustic/startup r
   work, verified operation uses the loaded-qualified digital-speed path, target-address recovery
   covers `0x00`, and EEPROM parity is compared against post-commit values. Evidence and rejected
   paths are in [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
-- **The remaining user-facing problem is acoustic and transitional.** Michael reports that the
-  current tune is too loud above the bed, occasionally squeaks, and does not ramp smoothly from
-  rest. Visible steady-state jitter is no longer material. These observations are recorded in the
-  loaded-tuning report and `DRV-02`/`DRV-04` in
+- **The released 1% sleep setting passed an overnight owner run.** It ran perfectly all night at
+  the 50 RPM floor and was minimally audible. Remaining acoustic work is concentrated at higher
+  settings: a consistent coil-whine/electrical tone plus occasional short chirp-like events. The
+  start from rest also remains subjectively rough; visible steady-state jitter is no longer
+  material. Details are in the loaded-tuning report and `DRV-02`/`DRV-04` in
   [test-matrix.csv](../testing/test-matrix.csv).
 - **The Home slider feedback hotfix is installed and accepted.** Both Matter percentage
   attributes report the requested target instead of feeding intermediate ramp speed back into
@@ -29,13 +30,14 @@ Last updated: **2026-08-21** (provisional operation complete; acoustic/startup r
   telemetry recorded multiple changing targets during the physical ramp; details are in `CTL-11`.
 - **The next evidence stack is chosen.** Planned close 24-bit/96 kHz USB microphone audio, OWON
   VDS1022I SOX/electrical frames, Hall/FG, telemetry, and Kasa power share one timeline. Camera is
-  conditional on startup/reversal, suspected contact, or a rotor-position-correlated squeak. The
+  conditional on startup/reversal, suspected contact, or a rotor-position-correlated chirp. The
   capture contract is in [observability.md](observability.md).
 
 ## Next
 
 Run the full loaded acoustic and startup refinement session: establish the current golden reference,
-localize the intermittent squeak before considering lubrication, capture the
+separate the steady electrical whine from transient chirps, localize the chirp before considering
+lubrication, capture the
 align/open-loop/handoff current and motion, compare startup candidates, then reduce steady-state
 motor/controller noise at matched measured speeds. Loaded MPET is a measured comparison, not an
 automatic replacement. The ordered session contract is in
@@ -43,8 +45,9 @@ automatic replacement. The ordered session contract is in
 
 ## Candidates Not Chosen
 
-- **Lubricating before diagnosis:** deferred. The squeak may be bearing, contact, structural, or
-  commutation-related; correlate it with rotor angle, drive state, and SOX before intervening.
+- **Lubricating before diagnosis:** deferred. The intermittent chirp may be bearing, contact,
+  structural, or commutation-related; correlate it with rotor angle, drive state, and SOX before
+  intervening.
 - **Camera as a mandatory steady-speed observer:** rejected. Hall/FG already cover stability; use
   video only where startup motion, reversal, contact, or rotor-position correlation adds evidence.
 - **Loaded tuning on an improvised bench rig:** rejected. The installed ceiling assembly is the

@@ -81,12 +81,17 @@ qualification work; they are not claims made by this commissioning result.
 
 ## Owner observations after provisional use
 
-- The current loaded tune is too loud for the intended above-bed overnight use even though its
-  speed regulation and visible motion are solid. Acoustic reduction is the primary tuning goal.
-- An occasional squeak is audible. Its source is not yet identified; preserve it as a symptom
-  rather than assuming bearing lubrication. The next capture should test whether it is periodic
-  with rotor angle, confined to startup, correlated with SOX/current distortion, or independent of
-  drive state before any lubricant or mechanical intervention is chosen.
+- The fan subsequently ran perfectly all night at the 1% setting (the 50 RPM released floor) by
+  owner report. At that setting its motor/electrical noise was minimal and almost inaudible, so the
+  provisional floor is already usable for sleep despite the remaining acoustic work.
+- Higher settings have a consistent coil-whine/electrical tonal character. Treat this steady tone
+  separately from the intermittent event during capture: compare its frequency, harmonics, and
+  sidebands against PWM, commutation, electrical angle, SOX, speed, and load at matched RPM.
+- The occasional sound is better described as a short chirp-like event than a generic squeak. Its
+  source is not yet identified; preserve it as a symptom rather than assuming bearing lubrication.
+  The next capture should test whether chirps are periodic with rotor angle, confined to startup or
+  target changes, correlated with SOX/current distortion, or independent of drive state before any
+  lubricant or mechanical intervention is chosen.
 - Acceleration from rest is not subjectively smooth. The next session should capture the complete
   align/open-loop/handoff sequence and tune startup separately from steady-state acoustic changes.
 
@@ -102,9 +107,10 @@ qualification work; they are not claims made by this commissioning result.
   with the current golden image as the A/B reference; run loaded MPET as a captured comparison,
   never as an automatic EEPROM replacement.
 - A camera is optional for ordinary steady-state work because Hall/FG already show stable motion.
-  Add it when diagnosing the rough start or if the squeak repeats with rotor position; it remains
+  Add it when diagnosing the rough start or if the chirp repeats with rotor position; it remains
   useful for gross direction/reversal and visible rub, not as the primary high-speed tachometer.
-- Candidate order: characterize the reference; localize the squeak; inspect startup current and
-  handoff; compare startup parameters; then compare steady-state PWM/commutation candidates at
-  matched measured speeds. Commit a new golden image only after the selected candidate repeats the
-  low-speed starts, acoustic ladder, stop, and persistence checks.
+- Candidate order: characterize the reference; separate the steady electrical whine from transient
+  chirps; localize the chirp; inspect startup current and handoff; compare startup parameters; then
+  compare steady-state PWM/commutation candidates at matched measured speeds. Commit a new golden
+  image only after the selected candidate repeats the low-speed starts, acoustic ladder, stop, and
+  persistence checks.

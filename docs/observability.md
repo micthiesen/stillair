@@ -172,7 +172,7 @@ observer.
   tuning. Centered below the spindle is not the primary diagnostic position because downwash and
   blade-pressure pulses can mask motor tones.
 - Camera is conditional. Hall and FG already establish steady-speed stability, so omit it for
-  ordinary acoustic A/B work. Add 30 fps video for startup/reversal, suspected contact, or a squeak
+  ordinary acoustic A/B work. Add 30 fps video for startup/reversal, suspected contact, or a chirp
   that may repeat at a particular rotor position.
 
 ### Cutoff, stop, and regenerative transient
