@@ -27,6 +27,12 @@ the physical magnet-to-sensor gap can be set directly below 10 mm. Keep the two 
 reachable from the side; final qualification still uses the 1.5–4.0 mm sensing window rather
 than the broader installation-only check.
 
+**Installed status 2026-08-20:** Michael reports RH-100 and all blades installed after resolving
+the blade-fastener fit-up, plus BR-100/PCB-02, the Hall magnet, both balance slugs, and PCB-01.
+PCB-01 has its 24 V, Hall, and motor harnesses connected. Exact blade-fastener resolution, Hall
+gap, cable support, continuity, and live telemetry remain to be recorded. Install the central
+catcher stack while electrically dead before any hand-rotation or powered check.
+
 ## Active remaining integration
 
 The next session should guide Michael one physical step at a time. Work from an unpowered

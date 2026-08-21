@@ -20,12 +20,12 @@ Last updated: **2026-08-20** (unloaded campaign wrapped; ceiling integration sel
   hand-torque target. The complete carrier/motor assembly was then mounted overhead with three
   M6 × 20 A4-80 screws, genuine glued Nord-Lock pairs, no threadlocker, and the selected 5 N·m
   target. The tether connection and rotor installation are next.
-- **Blade installation is paused for replacement locknuts.** The first installed A4 three-punch
-  all-metal prevailing nut galled against its A4 bolt on 2026-08-20: it became hot, seized, tore
-  threads, and minimally marked one printed pocket. Michael removed the blade without material
-  damage beyond those marks. The all-metal nuts are rejected. Replace them with DIN 985 M5 × 0.8
-  A4 nylon-insert locknuts (8 mm AF, 4.7–5.0 mm high), bench-check one complete joint and thread
-  protrusion, then verify the marked pocket still resists nut rotation before reinstallation.
+- **The rotor and installed electronics are physically in place.** Michael resolved the blade
+  fastener installation and reports all blades installed; the exact resolution still needs to
+  be recorded before loaded release because the A4 three-punch galling failure remains real.
+  BR-100/PCB-02, the Hall magnet, both balance slugs, and PCB-01 are mounted, with 24 V, Hall,
+  and motor harnesses connected. The central KD-100/castellated-nut/cotter stack is next. Keep
+  power disconnected until catcher clearance, cable support, continuity, and hand rotation pass.
 - **PCB-01, PCB-02, harnesses, firmware, and the restrained unloaded motor are qualified.**
   Board bring-up, Hall polarity and physical switching, MCF transport, permission/fault revoke,
   startup/handoff, 35–170 RPM in both directions, repeated stops, and normal coast-down passed.
