@@ -149,12 +149,11 @@ impl FanHandler {
             .map_err(|_| Error::from(ErrorCode::Busy))
     }
 
-    /// Re-report to subscribers when the fan's own state has moved.
+    /// Re-report to subscribers when the fan's target state has moved.
     ///
     /// Matter subscriptions are driven by the cluster's data version, and only a write bumps
-    /// it — so without this a controller would show the speed it last asked for and never the
-    /// speed the fan actually reached. The change originates in the control loop rather than
-    /// in a Matter write, which is why it needs pushing rather than falling out of a setter.
+    /// it. Console commands and supervisor faults change the target without passing through a
+    /// Matter write, so those changes need pushing rather than falling out of a setter.
     fn refresh(&self, notifier: &impl AttrChangeNotifier) {
         self.dataver.changed();
         notifier.notify_cluster_changed(
@@ -194,19 +193,17 @@ impl Handler for FanCluster {
         self.0.bump_dataver(ctx);
     }
 
-    /// Poll the fan's measured speed and re-report it when it moves.
+    /// Poll the fan's reported target and re-report it when it moves.
     ///
-    /// Deliberately slow: `PercentCurrent` follows the physical rotor, so nothing a controller
-    /// displays changes faster than this, and every notification costs the network stack work
-    /// it would rather spend on the commissioning path.
+    /// Matter writes notify immediately. This slower loop catches target changes originating
+    /// at the console or supervisor without burdening the network stack.
     async fn run(&self, ctx: impl HandlerContext) -> Result<(), Error> {
         let mut last = None;
         loop {
             Timer::after(NOTIFY_INTERVAL).await;
-            // The whole reported snapshot, not just the measured speed: the serial console
-            // writes the same commands into the same channel, and a fault clears the request
-            // outright. Watching only what Matter itself wrote would leave a controller
-            // showing a setting nobody holds any more.
+            // The whole reported snapshot: the serial console writes the same commands into
+            // the same channel, and a fault clears the request outright. Watching only what
+            // Matter itself wrote would leave a controller showing a stale target.
             let current = self.0 .0.reported();
             if last != Some(current) {
                 last = Some(current);
@@ -391,9 +388,8 @@ const NODE: Node = Node {
 
 /// How often the fan's own state is re-reported to Matter subscribers.
 ///
-/// Slow on purpose. `PercentCurrent` follows the physical rotor, so nothing a controller
-/// displays changes faster than this, and every notification costs the network stack work it
-/// would otherwise spend on the commissioning path.
+/// Matter writes notify immediately. This slower cadence catches console- and
+/// supervisor-originated target changes without burdening the network stack.
 const NOTIFY_INTERVAL: Duration = Duration::from_secs(2);
 
 /// Run the Matter stack. Never returns.

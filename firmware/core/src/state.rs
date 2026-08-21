@@ -335,7 +335,8 @@ impl Supervisor {
         self.desired.direction
     }
 
-    /// The measured rotor speed, for `PercentCurrent` and telemetry.
+    /// The measured rotor speed, for telemetry and safety supervision. Matter reports the
+    /// requested target in both percentage attributes so Apple Home's slider stays stable.
     pub const fn measured(&self) -> MilliRpm {
         self.tach.measured()
     }

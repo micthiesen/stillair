@@ -123,9 +123,9 @@ pub struct Reported {
     /// `PercentSetting`: what was asked for. Zero when the fan is off, because the standing
     /// speed is retained across an Off so a bare `On` can resume it.
     pub setting: u8,
-    /// `PercentCurrent`: what the tachometer measures, in every state. A fan ramping down
-    /// after an Off is still moving air for a minute or more, and reporting zero the instant
-    /// the command lands would claim it had stopped when it plainly has not.
+    /// `PercentCurrent`: mirrors the requested setting. Apple Home renders this attribute in
+    /// its slider, so reporting the ramp's intermediate measured speed makes the thumb walk
+    /// away from the user's finger during a long press-and-drag.
     pub current: u8,
     /// The direction *asked for*. The applied direction lags a reversal by the whole
     /// stop-verify-flip-restart sequence, and a toggle that springs back for a minute reads
@@ -137,13 +137,14 @@ pub struct Reported {
 
 /// Derive the reported attributes from a telemetry snapshot.
 pub fn reported(telemetry: &Telemetry) -> Reported {
+    let setting = if telemetry.on {
+        speed::rpm_to_percent(telemetry.target, telemetry.released_min)
+    } else {
+        0
+    };
     Reported {
-        setting: if telemetry.on {
-            speed::rpm_to_percent(telemetry.target, telemetry.released_min)
-        } else {
-            0
-        },
-        current: speed::rpm_to_percent(telemetry.measured_fg, telemetry.released_min),
+        setting,
+        current: setting,
         direction: AirflowDirection::from_direction(telemetry.requested_direction),
         on: telemetry.on,
     }
@@ -246,18 +247,32 @@ mod tests {
     }
 
     #[test]
-    fn a_fan_ramping_down_still_reports_the_air_it_is_moving() {
-        // `PercentCurrent` comes off the tachometer in every state. A loaded stop from
-        // 170 RPM can take over a minute, and reporting 0 the instant the command lands
-        // would tell the user it had stopped while it was plainly still turning over the bed.
+    fn an_off_target_reports_zero_even_while_the_fan_coasts() {
+        // Apple Home uses `PercentCurrent` for its slider. Once Off is requested, both
+        // percentage attributes describe that target even though telemetry still exposes
+        // the physical coast-down speed for diagnostics and safety logic.
         let mut telemetry = snapshot();
         telemetry.on = false;
         telemetry.state = FanState::Stopping;
         telemetry.measured_fg = MilliRpm::from_rpm(150);
 
         let reported = reported(&telemetry);
-        assert_eq!(reported.setting, 0, "the setting is off");
-        assert!(reported.current > 80, "but it is still moving air");
+        assert_eq!(reported.setting, 0);
+        assert_eq!(reported.current, 0);
+    }
+
+    #[test]
+    fn percent_current_stays_at_the_target_through_a_slow_ramp() {
+        // Regression: with a 3 RPM/s ramp, feeding measured speed back through
+        // `PercentCurrent` made Home's slider count up from zero and fight drag gestures.
+        let mut telemetry = snapshot();
+        telemetry.target = speed::percent_to_rpm(10, min()).unwrap();
+        telemetry.commanded = MilliRpm::ZERO;
+        telemetry.measured_fg = MilliRpm::ZERO;
+
+        let reported = reported(&telemetry);
+        assert_eq!(reported.setting, 10);
+        assert_eq!(reported.current, 10);
     }
 
     #[test]
@@ -277,7 +292,9 @@ mod tests {
         let mut telemetry = snapshot();
         telemetry.on = true;
         telemetry.target = speed::percent_to_rpm(42, min()).unwrap();
-        assert_eq!(reported(&telemetry).setting, 42);
+        let reported = reported(&telemetry);
+        assert_eq!(reported.setting, 42);
+        assert_eq!(reported.current, 42);
     }
 
     #[test]

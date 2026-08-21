@@ -227,8 +227,9 @@ hardware guarantees silently depend on them)
   unacceptable, changing it is a design decision for decisions.md, not an implementation
   shortcut.
 - **Percent → RPM mapping** (previously undefined): PercentSetting 0 = Off; 1–100 maps
-  linearly onto [released minimum, 170 RPM]; PercentCurrent reports the actual value;
-  FanMode On without a percent write resumes the last non-zero setting. The released
+  linearly onto [released minimum, 170 RPM]; PercentCurrent mirrors the requested target so
+  Apple Home's slider remains under the user's finger throughout a slow ramp; FanMode On
+  without a percent write resumes the last non-zero setting. The released
   minimum is a config constant (it may rise after qualification), never hardcoded.
 - **Hall/FG plausibility**: pre-arm asserts both channels quiet (consistent with stopped —
   it cannot detect sensor loss); the running check stops the fan if FG is nonzero while
@@ -385,18 +386,17 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   re-reporting would only re-serve the stale value. Deriving makes the divergence
   unrepresentable. The derivation lives in `stillair-core` (`matter::reported`) so it is
   host-tested — the app crate has no tests, which is precisely how the cache slipped through.
-- **`PercentSetting` is what was asked for; `PercentCurrent` follows reported speed, in
-  every state.** A fan ramping down after an Off is still moving air for a minute or more, so
-  reporting zero the instant the command lands would claim it had stopped while it was plainly
-  still turning. Direction reports the *requested* value, because the applied one lags a
+- **`PercentSetting` and `PercentCurrent` both report what was asked for.** Apple Home renders
+  `PercentCurrent` in its interactive slider; feeding the slow ramp's measured speed back into
+  it makes the thumb walk away from a press-and-drag gesture. Physical FG and Hall speed remain
+  available in telemetry and continue to drive supervision, but they do not overwrite the Home
+  control. Direction likewise reports the *requested* value, because the applied one lags a
   reversal by the whole stop-verify-flip-restart sequence and a toggle that springs back for a
   minute reads as a device that ignored you. `Smart` (deprecated) is accepted as Auto.
 - **Subscribers are refreshed from the handler's `run` hook**, which `rs-matter` drives for
-  every handler in the chain, at a 2 s cadence, and it compares the *whole* reported snapshot
-  rather than only the measured speed. Only a write bumps a cluster's data version, so without
-  this a controller would show the speed it asked for and never the speed reached — and
-  watching only what Matter itself wrote would miss every console-issued command and every
-  fault.
+  every handler in the chain, at a 2 s cadence, and it compares the whole reported snapshot.
+  Matter writes notify immediately; the poll catches console-issued targets and supervisor
+  faults, which change the report without passing through a Matter setter.
 - **The bridge is non-blocking in both directions**: writes `try_send` into the same bounded
   channel the tuning console uses, reads come from the telemetry snapshot. A wedged Matter task
   cannot block the supervisor, and a wedged supervisor cannot block Matter — which is the
