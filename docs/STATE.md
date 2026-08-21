@@ -3,64 +3,56 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-21** (loaded operating image committed and cold-boot verified.)
+Last updated: **2026-08-21** (provisional operation complete; acoustic/startup refinement next.)
 
 ## Now
 
-- **The ceiling assembly is physically complete by owner report.** MP-100, ST-100, SP-100,
-  MC-100, GL100, tether, RH-100, all three blades, BR-100/PCB-02, the Hall magnet and balance
-  slugs, PCB-01, and the KD-100/castellated-nut/cotter catcher stack are installed. The permanent
-  feed was verified at stable 24 V with correct polarity. Installation details and remaining
-  evidence are in [install.md](install.md).
-- **The stationary fastener stacks are recorded.** GL100-to-MC-100 uses four M4 × 12 screws,
-  blue removable threadlocker, and an approximately 1.5 N·m hand target. MC-100-to-ST-100 uses
-  three M6 × 20 A4-80 screws, genuine Nord-Lock pairs, no threadlocker, and a 5 N·m target. The
-  blade-fastener fit-up was owner-resolved and accepted installed after the recorded A4
-  three-punch galling event; it is not an open installation gate.
-- **Installed mechanical and electrical checks are complete by owner report.** Power, Hall,
-  motor, and service harnesses are installed; cable support, continuity/polarity, Hall and
-  catcher clearances, connector seating, and unobstructed hand rotation are accepted complete.
-- **The unloaded motor, electronics, harnesses, and safety behavior are qualified.** The retained
-  25 kHz `mcf_config::UNLOADED_IMAGE` completed both-direction operation through 170 RPM and a
-  ten-minute 170 RPM endurance run. It remains the immutable A/B baseline; loaded tuning gets a
-  separate candidate. Evidence is in
-  [unloaded-tuning-2026-08-20.md](../testing/unloaded-tuning-2026-08-20.md).
-- **The evidence path for loaded work is ready.** Existing Hall/FG, MCF telemetry, camera/audio,
-  wall-power, and IR capture support safe loaded tuning. The optional OWON USB scope can add
-  waveform evidence if available, but it is not a prerequisite.
-- **The ceiling fan has a persistent, provisional operating release.** Apple Home is commissioned
-  and survives cold power cycles. The released floor is 50 RPM, the command ramp is 3 RPM/s,
-  and the loaded golden MCF image verifies from EEPROM at target `0x01`. Nine 50 RPM starts
-  passed across commissioning; one intervening scheduler-starvation fault was fixed, then a
-  ten-minute 50 RPM run completed without fault at about 1.7 W. A final verified-image start,
-  three-minute hold, cold power
-  cycle, second start, one-minute hold, and stop all passed with Hall/FG agreement. The earlier
-  35--40 RPM floor was rejected after one Apple Home start rocked without acquiring. Evidence:
-  [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
+- **The complete ceiling assembly is installed and accepted by owner report.** Installed wiring,
+  Hall sensing, catcher clearance, fastener stacks, hand rotation, and the permanent 24 V feed are
+  complete. Details remain in [install.md](install.md) and [parts.md](parts.md).
+- **The fan has a persistent provisional 50--170 RPM operating release.** The loaded golden MCF
+  image verifies from EEPROM at target `0x01`; Apple Home, Wi-Fi, and both Matter fabrics survive
+  cold power cycles. Nine 50 RPM starts and a fault-free ten-minute low-speed hold passed with
+  Hall/FG agreement and about 1.7 W steady input.
+- **Control-path defects found during commissioning are fixed.** MCF service now runs above network
+  work, verified operation uses the loaded-qualified digital-speed path, target-address recovery
+  covers `0x00`, and EEPROM parity is compared against post-commit values. Evidence and rejected
+  paths are in [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
+- **The remaining user-facing problem is acoustic and transitional.** Michael reports that the
+  current tune is too loud above the bed, occasionally squeaks, and does not ramp smoothly from
+  rest. Visible steady-state jitter is no longer material. These observations are recorded in the
+  loaded-tuning report and `DRV-02`/`DRV-04` in
+  [test-matrix.csv](../testing/test-matrix.csv).
+- **The next evidence stack is chosen.** Planned close 24-bit/96 kHz USB microphone audio, OWON
+  VDS1022I SOX/electrical frames, Hall/FG, telemetry, and Kasa power share one timeline. Camera is
+  conditional on startup/reversal, suspected contact, or a rotor-position-correlated squeak. The
+  capture contract is in [observability.md](observability.md).
 
 ## Next
 
-Treat 50--170 RPM as the provisional user range. Next tuning work should run loaded MPET and
-compare it with the retained unloaded baseline before changing the golden image. Longer loaded
-thermal/endurance evidence and the remaining fixed plateaus can follow; neither blocks ordinary
-observed use at the released floor.
+Run a full loaded acoustic and startup refinement session on the installed fan. Establish the
+current golden reference, localize the intermittent squeak before considering lubrication, capture
+the align/open-loop/handoff current and motion, compare startup candidates, then reduce steady-state
+motor/controller noise at matched measured speeds. Loaded MPET is a measured comparison, not an
+automatic replacement. The ordered session contract is in
+[loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Candidates Not Chosen
 
-- **Loaded tuning on an improvised bench rig:** not chosen; the ceiling installation provides the
-  final support, rotor load, cable lengths, ceiling interaction, and room acoustics.
-- **EEPROM commit of the unloaded image:** rejected. Only the reviewed loaded golden image may
-  populate persistent `IMAGE`; the reviewed 2026-08-21 capture now does.
-- **USB oscilloscope as a blocker:** rejected. It is optional additional evidence.
-- **Reopening accepted plate, anchor, tether, or catcher proof work:** rejected unless Michael
-  explicitly requests it; the installed inspection checks condition and clearance, not proof basis.
+- **Lubricating before diagnosis:** deferred. The squeak may be bearing, contact, structural, or
+  commutation-related; correlate it with rotor angle, drive state, and SOX before intervening.
+- **Camera as a mandatory steady-speed observer:** rejected. Hall/FG already cover stability; use
+  video only where startup motion, reversal, contact, or rotor-position correlation adds evidence.
+- **Loaded tuning on an improvised bench rig:** rejected. The installed ceiling assembly is the
+  actual support, rotor load, cable, acoustic, and airflow environment.
+- **Replacing the golden image directly from loaded MPET:** rejected. Preserve the qualified image
+  as the A/B reference and promote only a fully repeated candidate.
 
 ## Learned Recently
 
-- Ceiling hardware, wiring state, fastener targets, and installed check sequence:
-  [install.md](install.md) and [parts.md](parts.md).
-- Blade-joint geometry and the A4 all-metal prevailing-nut galling failure:
-  [blade-v2.md](blade-v2.md) and [bom.csv](../bom/bom.csv).
-- Retained unloaded tuning, acoustic interpretation, and endurance evidence:
+- Loaded commissioning, persistence proof, owner acoustic observations, and the next candidate
+  order: [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
+- Microphone placement, conditional camera use, and scope/audio synchronization:
+  [observability.md](observability.md).
+- Retained unloaded tuning and acoustic baseline:
   [unloaded-tuning-2026-08-20.md](../testing/unloaded-tuning-2026-08-20.md).
-- Measurement authority and optional scope capture contract: [observability.md](observability.md).

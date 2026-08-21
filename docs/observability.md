@@ -29,7 +29,7 @@ This document owns the measurement architecture. Test limits remain in
 | Supervisor telemetry | State, fault, on/off, target, ramped command, FG RPM, Hall RPM, duty, actual/requested direction, released minimum, configuration verdict, and dropped-frame count | 1–100 Hz | Behavioral record and pass/fail input. The `dropped` field makes serial loss visible. It is not an independent physical observer. |
 | MCF register samples | Speed feedback, estimator angle, q-axis/current-loop values, VM and decoded fault registers | Test-specific | Diagnostic evidence for commutation, handoff, model, and fault cause. Sampling is intrusive enough that retained scripts bound its rate and duration. |
 | IR camera | Gross motion, direction, stalls, rotor position, and synchronized microphone audio | 30 fps plus audio | Independent gross-motion authority. Optical RPM is accepted through 140 RPM; known orientation-specific tracker slip above that prevents precise high-speed use. |
-| Camera microphone | Tonal and broadband sound in the actual room | Audio sample rate | Acoustic comparison only when position, gain, room state, speed, and load are matched. It cannot localize motor versus controller without electrical correlation or an A/B change. |
+| USB condenser microphone | Tonal and broadband motor/controller sound; planned 24-bit/96 kHz capture | Audio sample rate | Acoustic comparison only when position, gain, room state, speed, and load are matched. Close upper-housing placement improves source isolation but requires compliant mechanical isolation. It cannot localize motor versus controller without electrical correlation or an A/B change. |
 | Kasa Utility Plug | Wall voltage, current, power, and energy | 1 Hz | Whole-system input power and long-run drift. It cannot resolve phase current or PWM behavior. |
 | OWON VDS1022I | Two analog voltage waveforms | Up to 100 MS/s in 5 kpoint frames | Electrical waveform observer selected 2026-08-20. It is 8-bit and its continuous-stream behavior is unqualified until measured. USB isolation protects the host boundary; the two BNC channel grounds are still common. |
 | ZEEWEII DSO3D12 | Two displayed analog waveforms | Manual capture | Local visual fallback. Its USB-C connection is treated as charging only; no raw computer acquisition path is assumed. Operate from battery when connected to the motor system. |
@@ -155,6 +155,25 @@ observer.
   not merely equal command.
 - Retain time waveform, current-envelope spectrum, microphone spectrum, Hall/FG stability,
   duty, and wall power for the same settled window.
+
+### Close microphone and camera use
+
+- The planned Razer Seiren V3 Mini is a directional side-address microphone: point its front/logo
+  face at the motor or nearest acoustic opening, not its top. Record raw 24-bit/96 kHz WAV with
+  automatic gain, voice isolation, gates, compression, EQ, and vendor processing disabled.
+- Preferred source-diagnostic placement is on the stationary upper housing, about 2--3 inches from
+  the motor, outside the main blade downwash. Use a short compliant isolator between microphone and
+  housing, strain-relieve the USB cable separately, and begin with low input gain. A rigid mount can
+  turn housing vibration into an apparent airborne tone.
+- Capture stopped-but-powered and fully unpowered baselines without moving the microphone. Preserve
+  unsmoothed spectra and spectrograms; a close microphone is comparative evidence, not a calibrated
+  absolute-SPL meter.
+- A second capture at the bed position answers the user-facing loudness question after source
+  tuning. Centered below the spindle is not the primary diagnostic position because downwash and
+  blade-pressure pulses can mask motor tones.
+- Camera is conditional. Hall and FG already establish steady-speed stability, so omit it for
+  ordinary acoustic A/B work. Add 30 fps video for startup/reversal, suspected contact, or a squeak
+  that may repeat at a particular rotor position.
 
 ### Cutoff, stop, and regenerative transient
 

@@ -78,3 +78,33 @@ Apple Home control through 170 RPM, responsive command changes, independent Hall
 clean stopping, and persistence. Loaded MPET, randomized multi-voltage start matrices, fixed loaded
 plateaus, acoustic assessment from bed, and long maximum-speed thermal endurance remain later
 qualification work; they are not claims made by this commissioning result.
+
+## Owner observations after provisional use
+
+- The current loaded tune is too loud for the intended above-bed overnight use even though its
+  speed regulation and visible motion are solid. Acoustic reduction is the primary tuning goal.
+- An occasional squeak is audible. Its source is not yet identified; preserve it as a symptom
+  rather than assuming bearing lubrication. The next capture should test whether it is periodic
+  with rotor angle, confined to startup, correlated with SOX/current distortion, or independent of
+  drive state before any lubricant or mechanical intervention is chosen.
+- Acceleration from rest is not subjectively smooth. The next session should capture the complete
+  align/open-loop/handoff sequence and tune startup separately from steady-state acoustic changes.
+
+## Next loaded-tuning session
+
+- Planned microphone: Razer Seiren V3 Mini or equivalent raw 24-bit/96 kHz USB condenser, mounted
+  on the stationary upper housing about 2--3 inches from the motor with compliant isolation. Keep
+  gain, orientation, and position fixed; capture a stopped-room baseline and lossless WAV.
+- Use the OWON VDS1022I on J8 SOX plus FG/SPEED or VM24 according to the recipe in
+  [`docs/observability.md`](../docs/observability.md). First qualify frame timing and retain the
+  raw samples and sidecar metadata before using it as continuous evidence.
+- Synchronize microphone audio, supervisor telemetry, Hall/FG, Kasa power, and scope frames. Begin
+  with the current golden image as the A/B reference; run loaded MPET as a captured comparison,
+  never as an automatic EEPROM replacement.
+- A camera is optional for ordinary steady-state work because Hall/FG already show stable motion.
+  Add it when diagnosing the rough start or if the squeak repeats with rotor position; it remains
+  useful for gross direction/reversal and visible rub, not as the primary high-speed tachometer.
+- Candidate order: characterize the reference; localize the squeak; inspect startup current and
+  handoff; compare startup parameters; then compare steady-state PWM/commutation candidates at
+  matched measured speeds. Commit a new golden image only after the selected candidate repeats the
+  low-speed starts, acoustic ladder, stop, and persistence checks.
