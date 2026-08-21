@@ -12,6 +12,9 @@ Last updated: **2026-08-20** (unloaded campaign wrapped; ceiling integration sel
   and must not be reopened. Michael explicitly resumed project help for mounting the remaining
   fan assembly, electronics, and cables from below; the active sequence is in
   [install.md](install.md).
+- **The ceiling 24 V feed is ready for integration.** Michael verified a stable 24 V at the
+  ceiling plate with correct polarity on 2026-08-20. Keep it de-energized while assembling the
+  stationary stack, rotor, electronics, and cable strain relief.
 - **PCB-01, PCB-02, harnesses, firmware, and the restrained unloaded motor are qualified.**
   Board bring-up, Hall polarity and physical switching, MCF transport, permission/fault revoke,
   startup/handoff, 35–170 RPM in both directions, repeated stops, and normal coast-down passed.

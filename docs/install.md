@@ -13,7 +13,9 @@ the correct conservative assumption for a suspended slab soffit.
 **Site status 2026-08-20:** MP-100 is installed on the ceiling (owner report), with all three
 ST-100 standoffs and SP-100 spindle in place. The two primary holes and primary plate mount
 are complete. `INS-01` is accepted as passed against the documented anchor and spacer stack.
-No further anchor, plate, tether, or catcher proof is required.
+The ceiling feed has been verified at a stable 24 V with correct polarity. No further anchor,
+plate, tether, or catcher proof is required. Keep the feed de-energized through the remaining
+mechanical assembly, cable support, hand-clearance, and installed continuity checks.
 
 ## Active remaining integration
 
