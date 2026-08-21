@@ -22,32 +22,22 @@ blue removable threadlocker, and an approximately 1.5 N·m hand-torque target. M
 to all three ST-100s with M6 × 20 A4-80 screws, glued Nord-Lock pairs, no threadlocker, and the
 selected 5 N·m target.
 
-**Hall-bracket order:** Michael chose to install BR-100 after the hub and blades are present so
-the physical magnet-to-sensor gap can be set directly below 10 mm. Keep the two MC-100 M3 mounts
-reachable from the side; final qualification still uses the 1.5–4.0 mm sensing window rather
-than the broader installation-only check.
+**Hall-bracket result:** Michael installed BR-100 after the hub and blades so the physical
+magnet-to-sensor gap could be set directly. The installed Hall assembly is owner-accepted
+complete against the qualified 1.5–4.0 mm sensing window.
 
 **Installed status 2026-08-20:** Michael reports RH-100 and all blades installed after resolving
 the blade-fastener fit-up, plus BR-100/PCB-02, the Hall magnet, both balance slugs, and PCB-01.
 PCB-01 has its 24 V, Hall, and motor harnesses connected. Michael subsequently reported the
 KD-100/castellated-nut/cotter stack complete after receiving the anti-seize, 20 N·m, tighten-only
-to alignment, and new-cotter procedure. Exact blade-fastener resolution, installed catcher and
-Hall gaps, cable support, continuity, full hand rotation, and live telemetry remain to be recorded.
+to alignment, and new-cotter procedure. He accepted the complete installation, blade-fastener
+resolution, clearances, cable support, continuity/polarity, connector seating, and hand rotation
+as done on 2026-08-20. Loaded tuning is next.
 
 ## Active remaining integration
 
-Mechanical installation is complete by owner report. Keep the system electrically dead until
-the remaining installed evidence is recorded:
-
-1. Record the final blade nut/locking configuration that resolved the failed all-metal-nut fit-up.
-2. Measure the Hall gap at 1.5–4.0 mm (2.5 mm nominal), the catcher gap at ≥2.0 mm throughout a
-   complete turn, and every other stationary-to-rotor clearance at ≥2.0 mm.
-3. Secure the 24 V, phase, Hall, and service-USB cables independently of their connectors. Route
-   USB from PCB-01 J6 to an operator position outside the rotor sweep; use an active extension
-   only if the passive link proves unreliable.
-4. Inspect connector seating and cable reach, continuity-check every installed harness, verify
-   24 V polarity at PCB-01, and hand-rotate the rotor through 360° with no rubbing or wire motion.
-5. Only after all four checks pass, proceed to loaded commissioning through `integration.md`.
+Mechanical installation and its unpowered checks are complete by owner report. Preserve this
+installed state and proceed through the loaded commissioning sequence in `integration.md`.
 
 Loaded MPET and tuning follow this installation as a separate commissioning step. The installed
 ceiling position is the selected loaded-test location because it provides the final mechanical

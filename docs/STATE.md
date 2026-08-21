@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-20** (ceiling assembly complete; installed checks and loaded commissioning next.)
+Last updated: **2026-08-20** (ceiling installation accepted complete; loaded tuning next.)
 
 ## Now
 
@@ -14,13 +14,12 @@ Last updated: **2026-08-20** (ceiling assembly complete; installed checks and lo
   evidence are in [install.md](install.md).
 - **The stationary fastener stacks are recorded.** GL100-to-MC-100 uses four M4 × 12 screws,
   blue removable threadlocker, and an approximately 1.5 N·m hand target. MC-100-to-ST-100 uses
-  three M6 × 20 A4-80 screws, genuine Nord-Lock pairs, no threadlocker, and a 5 N·m target.
-  The exact blade-nut resolution after the A4 all-metal galling event still needs one owner
-  sentence in [blade-v2.md](blade-v2.md) and [the BOM](../bom/bom.csv).
-- **Installed power, Hall, and motor harnesses are connected but not released for loaded power.**
-  Final evidence still needed: independent cable strain relief, installed continuity/polarity,
-  1.5–4.0 mm Hall gap, at least 2 mm catcher and stationary clearances, connector seating, and
-  unobstructed 360° hand rotation with no rubbing.
+  three M6 × 20 A4-80 screws, genuine Nord-Lock pairs, no threadlocker, and a 5 N·m target. The
+  blade-fastener fit-up was owner-resolved and accepted installed after the recorded A4
+  three-punch galling event; it is not an open installation gate.
+- **Installed mechanical and electrical checks are complete by owner report.** Power, Hall,
+  motor, and service harnesses are installed; cable support, continuity/polarity, Hall and
+  catcher clearances, connector seating, and unobstructed hand rotation are accepted complete.
 - **The unloaded motor, electronics, harnesses, and safety behavior are qualified.** The retained
   25 kHz `mcf_config::UNLOADED_IMAGE` completed both-direction operation through 170 RPM and a
   ten-minute 170 RPM endurance run. It remains the immutable A/B baseline; loaded tuning gets a
@@ -32,20 +31,12 @@ Last updated: **2026-08-20** (ceiling assembly complete; installed checks and lo
 
 ## Next
 
-Record the final blade fastener configuration, then perform the complete electrically dead
-installed inspection from [install.md](install.md): measure Hall/catcher clearances, support every
-cable independently of its connector, verify continuity and polarity, and hand-rotate the rotor
-through 360° with no contact.
-
-Once those checks pass, begin ceiling-mounted loaded commissioning at the lowest useful speed,
-then run loaded MPET and bounded tuning through [integration.md](integration.md). Preserve the
-unloaded image as the A/B baseline and do not write EEPROM until the loaded golden image is
-reviewed.
+Begin ceiling-mounted loaded commissioning at the lowest useful speed, then run loaded MPET and
+bounded tuning through [integration.md](integration.md). Preserve the unloaded image as the A/B
+baseline and do not write EEPROM until the loaded golden image is reviewed.
 
 ## Candidates Not Chosen
 
-- **Loaded tuning before installed inspection:** rejected. The completed mechanical stack still
-  needs measured gaps, continuity, strain relief, and full hand-rotation evidence before power.
 - **Loaded tuning on an improvised bench rig:** not chosen; the ceiling installation provides the
   final support, rotor load, cable lengths, ceiling interaction, and room acoustics.
 - **EEPROM commit of the unloaded image:** rejected. Only the reviewed loaded golden image may
