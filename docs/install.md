@@ -22,6 +22,11 @@ blue removable threadlocker, and an approximately 1.5 N·m hand-torque target. M
 to all three ST-100s with M6 × 20 A4-80 screws, glued Nord-Lock pairs, no threadlocker, and the
 selected 5 N·m target.
 
+**Hall-bracket order:** Michael chose to install BR-100 after the hub and blades are present so
+the physical magnet-to-sensor gap can be set directly below 10 mm. Keep the two MC-100 M3 mounts
+reachable from the side; final qualification still uses the 1.5–4.0 mm sensing window rather
+than the broader installation-only check.
+
 ## Active remaining integration
 
 The next session should guide Michael one physical step at a time. Work from an unpowered
