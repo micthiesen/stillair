@@ -29,27 +29,25 @@ than the broader installation-only check.
 
 **Installed status 2026-08-20:** Michael reports RH-100 and all blades installed after resolving
 the blade-fastener fit-up, plus BR-100/PCB-02, the Hall magnet, both balance slugs, and PCB-01.
-PCB-01 has its 24 V, Hall, and motor harnesses connected. Exact blade-fastener resolution, Hall
-gap, cable support, continuity, and live telemetry remain to be recorded. Install the central
-catcher stack while electrically dead before any hand-rotation or powered check.
+PCB-01 has its 24 V, Hall, and motor harnesses connected. Michael subsequently reported the
+KD-100/castellated-nut/cotter stack complete after receiving the anti-seize, 20 N·m, tighten-only
+to alignment, and new-cotter procedure. Exact blade-fastener resolution, installed catcher and
+Hall gaps, cable support, continuity, full hand rotation, and live telemetry remain to be recorded.
 
 ## Active remaining integration
 
-The next session should guide Michael one physical step at a time. Work from an unpowered
-system until every stationary cable is supported and every moving clearance is visible:
+Mechanical installation is complete by owner report. Keep the system electrically dead until
+the remaining installed evidence is recorded:
 
-1. Preassemble the motor to MC-100 and establish the motor/Hall harness exits before the
-   overhead lift.
-2. Attach MC-100 to the installed ST-100 standoffs, then install RH-100 and the completed rotor
-   using the released fastener stacks in `parts.md`.
-3. Complete the already-qualified central capture stack without reopening its proof basis.
-4. Mount PCB-01 and PCB-02, connect 24 V, phases, and Hall, then secure each stationary cable
-   independently of its connector.
-5. Route a quality long USB cable from PCB-01 J6 to an operator position outside the rotor
-   sweep. USB is data-only. Strain-relieve it to stationary structure and use an active
-   extension only if the passive link proves unreliable.
-6. With power still off, inspect full hand-rotation clearance, connector seating, cable reach,
-   and strain relief. Then continuity-check the installed harnesses before loaded power-up.
+1. Record the final blade nut/locking configuration that resolved the failed all-metal-nut fit-up.
+2. Measure the Hall gap at 1.5–4.0 mm (2.5 mm nominal), the catcher gap at ≥2.0 mm throughout a
+   complete turn, and every other stationary-to-rotor clearance at ≥2.0 mm.
+3. Secure the 24 V, phase, Hall, and service-USB cables independently of their connectors. Route
+   USB from PCB-01 J6 to an operator position outside the rotor sweep; use an active extension
+   only if the passive link proves unreliable.
+4. Inspect connector seating and cable reach, continuity-check every installed harness, verify
+   24 V polarity at PCB-01, and hand-rotate the rotor through 360° with no rubbing or wire motion.
+5. Only after all four checks pass, proceed to loaded commissioning through `integration.md`.
 
 Loaded MPET and tuning follow this installation as a separate commissioning step. The installed
 ceiling position is the selected loaded-test location because it provides the final mechanical
