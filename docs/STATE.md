@@ -17,7 +17,9 @@ Last updated: **2026-08-20** (unloaded campaign wrapped; ceiling integration sel
   stationary stack, rotor, electronics, and cable strain relief.
 - **GL100 is mounted to MC-100.** The four M4 × 12 screws fit without bottoming and were
   installed on 2026-08-20 with blue removable threadlocker, using an approximately 1.5 N·m
-  hand-torque target. The carrier/motor assembly is ready for the overhead standoff joint.
+  hand-torque target. The complete carrier/motor assembly was then mounted overhead with three
+  M6 × 20 A4-80 screws, genuine glued Nord-Lock pairs, no threadlocker, and the selected 5 N·m
+  target. The tether connection and rotor installation are next.
 - **PCB-01, PCB-02, harnesses, firmware, and the restrained unloaded motor are qualified.**
   Board bring-up, Hall polarity and physical switching, MCF transport, permission/fault revoke,
   startup/handoff, 35–170 RPM in both directions, repeated stops, and normal coast-down passed.

@@ -17,6 +17,11 @@ The ceiling feed has been verified at a stable 24 V with correct polarity. No fu
 plate, tether, or catcher proof is required. Keep the feed de-energized through the remaining
 mechanical assembly, cable support, hand-clearance, and installed continuity checks.
 
+**Stationary-stack status 2026-08-20:** GL100 is installed on MC-100 with four M4 × 12 screws,
+blue removable threadlocker, and an approximately 1.5 N·m hand-torque target. MC-100 is mounted
+to all three ST-100s with M6 × 20 A4-80 screws, glued Nord-Lock pairs, no threadlocker, and the
+selected 5 N·m target.
+
 ## Active remaining integration
 
 The next session should guide Michael one physical step at a time. Work from an unpowered
