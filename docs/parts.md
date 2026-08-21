@@ -195,7 +195,9 @@ Fabrication callouts (pre-order check 2026-07-28):
   definition is the standoff-bisector, not the number).
 - Nominal phase-lead window 20 × 12 R3; final location from the STEP and physical motor.
 - Use four M4 × 12 A4-80 screws. The counterbore produces approximately 5.5 mm motor-thread
-  engagement against the official 6.0 mm maximum. Verify first.
+  engagement against the official 6.0 mm maximum. Verify first. **Installed 2026-08-20:** all
+  four fit without bottoming and clamped the motor to MC-100 using blue removable threadlocker
+  and an approximately 1.5 N·m hand-torque target.
 
 ## SP-100 capture spindle
 
