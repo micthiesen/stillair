@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-21** (provisional operation complete; microphone-first refinement next.)
+Last updated: **2026-08-22** (occupied automation intent recorded; microphone-first refinement next.)
 
 ## Now
 
@@ -32,6 +32,9 @@ Last updated: **2026-08-21** (provisional operation complete; microphone-first r
   command reports current and weakest RSSI, signal quality, sampling failures, disconnects, and
   last-success time without exposing SSID, credentials, scans, or a new LAN listener. The installed
   image does not contain this yet.
+- **The provisional automation intent is occupied-by-default.** After final startup and endurance
+  qualification, a confirmed arrival should start forward 1%; temperature may later boost to 20%
+  and return to 1%, while manual Off, faults, reboots, and power restoration remain no-start gates.
 - **The remaining work is finite and ordered.** A microphone-only tune comes first when the mic
   arrives, followed by a scope-assisted electrical refinement when the OWON arrives in roughly one
   to two weeks. Then Michael will make a cleaner Hall-board mount and verify the sensor again before
