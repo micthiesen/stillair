@@ -40,8 +40,8 @@ Direct drive, low voltage, simple structure:
   hardware watchdog, and a permission latch that firmware can clear but not force. Mechanical
   backstops: a non-contact central rotor catcher and a separate rated whole-assembly tether.
 - **Structure**: compact stainless ceiling plate, three aluminum standoffs, aluminum motor
-  carrier and rotor hub, qualified printed blade adapters, birch blades, printed clamshell
-  housing.
+  carrier and rotor hub, printed BP-100 blades, and a two-motion printed
+  [housing](housing.md) with separate stationary and rotating sections.
 
 ## Design gates (dependency order)
 

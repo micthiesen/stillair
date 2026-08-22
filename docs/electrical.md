@@ -48,8 +48,8 @@ cylinder that is empty except for the
 Ø16 spindle, the three Ø16 standoffs at r75, the tether run near Y−82, and the cable drop. The
 low-risk shape is ID Ø30–40 (generous non-contact clearance around the spindle) × OD ≤Ø130,
 entirely inside the standoff circle — ~12,500 mm², nearly 3× the rectangle — leaving a wide
-annular air path at the wall for the housing's ≥1200 mm² venting (a wider board with standoff
-slots needs its own vent slots instead). Mount on three M3 bosses tapped into the MC-100
+annular air path at the wall if the final housing's thermal test demonstrates a need for
+concealed ventilation. Mount on three M3 bosses tapped into the MC-100
 carrier top, which also puts J2 beside the motor's phase-lead window. Zones translate to
 angular separation: MCF power stage at one clock position, tach/analog 120–180° away.
 
@@ -275,10 +275,9 @@ NTC circuit (was unspecified): 10 kΩ 1% from 3.3 V to GPIO6, 10 kΩ NTC from GP
 (0–3300 mV, ±40 mV). Sensor element selected 2026-07-30 (the J4 cable had every part
 purchased except the sensor itself — swarm finding): **Vishay NTCALUG01T103G501**, 10 kΩ
 25 °C, B=3984 K ±0.5 %, ring-lug terminal that bolts to the GL100 housing; qty 1 ordered in
-DigiKey 100888768. Exact mounting point is
-TBD when EB-100/BR-100 are drawn;
-firmware read remains TODO(temp-sense). VBUS sense divider (was unspecified): 100 kΩ / 100 kΩ to a test pad or
-ADC pin — 5.25 V max lands at 2.6 V, inside the 3.3 V limit.
+DigiKey 100888768. Exact stationary mounting point is TBD with the final housing-integrated
+Hall mount; firmware read remains TODO(temp-sense). VBUS sense divider (was unspecified):
+100 kΩ / 100 kΩ to a test pad or ADC pin — 5.25 V max lands at 2.6 V, inside the 3.3 V limit.
 
 Two module caveats: ADC range/accuracy specs apply only to chips manufactured on/after
 shielding-case date code **212023** or modules assembled on/after bar-code D/C **2321**

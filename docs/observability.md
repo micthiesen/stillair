@@ -33,7 +33,7 @@ This document owns the measurement architecture. Test limits remain in
 | Kasa Utility Plug | Wall voltage, current, power, and energy | 1 Hz | Whole-system input power and long-run drift. It cannot resolve phase current or PWM behavior. |
 | OWON VDS1022I | Two analog voltage waveforms | Up to 100 MS/s in 5 kpoint frames | Electrical waveform observer selected 2026-08-20. It is 8-bit and its continuous-stream behavior is unqualified until measured. USB isolation protects the host boundary; the two BNC channel grounds are still common. |
 | ZEEWEII DSO3D12 | Two displayed analog waveforms | Manual capture | Local visual fallback. Its USB-C connection is treated as charging only; no raw computer acquisition path is assumed. Operate from battery when connected to the motor system. |
-| Motor NTC | GL100 housing temperature | Slow | Hardware exists, but firmware acquisition remains TODO. Until implemented, use an independently attached temperature logger for release thermal tests. |
+| Motor NTC | Stationary GL100/MC-100 motor-mount temperature | Slow | J4 and the purchased ring-lug NTC exist, but firmware acquisition remains TODO. Until implemented, read the divider with an external meter/logger or use an independent attached temperature logger for release thermal tests. |
 
 The reusable host path is `firmware/scripts/08-flash-and-unloaded-profile.sh`. It aligns the
 motor log, camera/audio, physical tracking, Hall/FG telemetry, and wall-power evidence, and

@@ -62,9 +62,10 @@ in
    the close position until a finalist exists, then move it once for the final bed-position A/B.
 2. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
    gap, hand-rotation pulse, and driven Hall/FG agreement checks (`TACH-03B`).
-3. **Owner-led finish:** Michael will artfully create the cosmetic housing and printed conduit for
-   the power cable. Their design details stay outside this project; record only completion and any
-   final fan-clearance, retention, or cable-routing verification that affects operation.
+3. **Owner-led finish:** Michael will artfully create the two-motion cosmetic housing specified in
+   [housing.md](housing.md) and the printed conduit for the power cable. Aesthetic form and detailed
+   CAD remain owner-controlled; the repo retains acoustic, thermal, sensing, clearance, retention,
+   and cable-routing interfaces.
 
 ## Candidates Not Chosen
 

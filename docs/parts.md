@@ -472,28 +472,23 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
   supporting the PCB on four M3 standoffs (6–8 mm; holes isolated from circuit ground). Add a
   secondary metal retention lanyard and independent clamps for DC input, phases, Hall cable,
   and programming harness.
-- ENC-100 is a white two-part clamshell: Ø212 top, taper to Ø200 over 25 mm, Ø194 minimum
-  inside, **~124 mm tall (was 178; re-derive against the shortened stack when designed —
-  deferred anyway)**, 3 mm walls and ribs, six M3 closure screws, and six M3 top tabs fixed
-  to MP-100, three per half.
-- **Split plane locked (2026-07-27): the 135°–315° axis.** The removable half spans
-  315°→135° and carries tabs 345/45/105; the fixed half spans 135°→315° with tabs
-  165/225/285. Dropping the removable half exposes the whole PCB (vertical in the Y0 plane,
-  X35–93) face-on without disturbing the tether run at 270°. Rejected: 15°/195° puts the
-  seam coplanar with the PCB so the board straddles it; 75°/255° passes within 15° of both
-  the 90° standoff and the tether. The ENC-100 cable notch must sit entirely within one
-  half, never on the seam — satisfied by the 15° cable entry, 60° clear of the 315° seam.
-- Use UL94 V-0 polymer or qualify an equivalent enclosure fire test. Each clamshell half also
-  gets an independent flexible metal lanyard rated at least 100 N to MP-100.
-- Provide at least 1200 mm² combined free vent area, connector access, and an RF window
-  (nonmetallic, ≥15 mm spatial clearance to the antenna).
+- ENC-100 is now a two-motion housing system: a stationary upper enclosure from MP-100 to
+  the MC-100 region, plus a securely hub-mounted lower cover rotating with RH-100 and the
+  GL100 outer rotor. The two sections have a non-contact running gap. Functional requirements
+  are in [housing.md](housing.md); Michael owns the aesthetic form and detailed CAD.
+- The stationary section integrates the final stationary Hall-sensor mount. The rotating hub
+  retains the tach magnet.
+- No fixed split plane, wall profile, closure-screw pattern, or mandatory vent area remains.
+  Start acoustically closed and let the complete-housing thermal test determine whether any
+  concealed baffled vents are needed.
+- Use UL94 V-0 polymer or qualify an equivalent enclosure fire test. Select attachment and
+  secondary retention with the final CAD.
 - Cable notch: 14 × 8 mm on the **15°** line, **open at the top rim** (not a closed hole) so
-  the removable half separates from a cable clamped to MP-100. See "Cable entry" above.
-- Housing bottom clearance must be re-derived at design time; the fixed numbers from the
-  138 mm stack (end Z178 / nothing below Z200) are void. **New constraint from the raise:
-  blade tops at Z115.2 sweep r ≥ 110 while the housing wall sits at r ≤ 106 — only ~4 mm
-  radial gap in the band where they overlap in height. The housing likely must end above
-  ~Z112 at full diameter or taper inward below it.**
+  the stationary enclosure separates from a cable clamped to MP-100. See "Cable entry" above.
+- Housing clearances and the visual transition between stationary and rotating sections are
+  derived at design time. Blade tops at Z115.2 sweep r >= 110, while the former full-diameter
+  wall envelope reached r <= 106, leaving only about 4 mm radial gap where their heights
+  overlap. Preserve the functional gaps in [housing.md](housing.md).
 
 ## Tether and design loads
 
@@ -584,7 +579,7 @@ above; the cable must pass the assembly at the outer rim, where the ENC-100 top 
 What the plate needs at that angle is **strain relief, not a hole**. The mains cable is
 clamped to MP-100 (permanent structure) via a P-clip on two M4 tapped holes; ENC-100's notch
 is clearance only. Clamping to the housing instead would put live wiring under load every
-time a clamshell half is dropped for service.
+time the stationary enclosure is removed for service.
 
 **Angle: 15°**, with ENC-100's notch on the same line. Chosen for internal cleanliness, since
 free plate rotation means the whole feature pattern is clocked toward the conduit at install
@@ -596,12 +591,13 @@ free plate rotation means the whole feature pattern is clocked toward the condui
   worst-case 5 mm anchor-location error, physical washer-edge clearance is only ~8 mm before
   counting the P-clip and cable envelope. Verify the actual washer/clip/cable fit on the
   template before routing.
-- Rejected: **135°** is geometrically cleanest but sits on the clamshell seam; **255°** comes
-  within 12.8 mm of the tether slot; **75°/315°** give ~19.5 mm and sit further from J1.
+- Rejected: **135°** conflicts with the former clamshell split and no longer offers a reason
+  to move the already-machined entry; **255°** comes within 12.8 mm of the tether slot;
+  **75°/315°** give ~19.5 mm and sit further from J1.
 
-The notch falls in the removable clamshell half (315°→135°). That is fine **provided the
-ENC-100 notch stays open at the top rim** — the half then separates radially from a cable
-that remains clamped to the plate. A closed hole here would trap the cable and is a defect.
+The stationary enclosure's notch stays open at the top rim so the housing separates from a
+cable that remains clamped to the plate. A closed hole here would trap the cable and is a
+defect.
 
 ### ENC-100 tab clocking (locked 2026-07-27)
 
@@ -636,13 +632,13 @@ Rejected alternatives (same r96, same 60° spacing, different phase):
 | SP-100 | 1 | Capture spindle | Ø16 flanged, 17-4PH | CNC turn + cross-drill |
 | RH-100 | 1 | Rotor hub | Ø200 × 8, 6061-T6 | CNC mill/turn |
 | KD-100 | 1 | Catcher disk | Ø44 × Ø13.5 × 4, DIN 440 A4 | Purchased (Accu HDW-M12-A4) |
-| BR-100 | 1 | Hall bracket | — | Owner hand-fab, untracked |
+| BR-100 | 1 | Current provisional Hall bracket; final mount integrates into stationary ENC-100 | — | Owner hand-fab, installed |
 | ~~MR-100~~ | — | ~~Magnet / slug retaining cap~~ deleted 2026-08-01: inserts epoxied in | | |
 | CW-100 | 2 | Matched balance slugs | Brass, mass-trimmed | Turn + trim |
 | BL-100 | 4 | Wood blade | 9 mm Baltic birch | CNC router |
 | LS-100 | 6 | Load spreader | 65 × 15 × 2, 6061 | Laser/waterjet |
 | EB-100 | 1 | PCB bracket | 1.5 mm 5052 or print | Bend or print |
-| ENC-100 | 1 pair | Housing clamshell | White PC/FR polymer | Print |
+| ENC-100 | 1 system | Stationary upper enclosure + rotating lower cover | Printed polymer, final selection owner-controlled | Print |
 
 ## Fabrication gates
 
