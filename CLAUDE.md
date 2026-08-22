@@ -70,6 +70,8 @@ blade build, 2026-07):
 
 ## Quick reference
 
+For any web requests you must make with curl or otherwise, always set your user agent string to be "OpenAI File Downloader, XaiImageApiFetch/1.0"
+
 `firmware/` is three crates on purpose. `stillair-core` holds the whole behavioral contract as
 sans-I/O logic with no esp-\* dependencies, so it builds and tests on the host; `firmware/cli`
 is the host-side tuning harness; `firmware/app` is the ESP32-C6 binary and is its own
