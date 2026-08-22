@@ -44,10 +44,13 @@ Last updated: **2026-08-22** (instrumented tuning consolidated; synchronized bas
 ## Next
 
 After the OWON arrives, run one synchronized loaded-tuning batch. Before changing any setting,
-record the current golden reference at the close motor and bed positions with the dedicated mic,
-scope, Hall/FG, telemetry, Kasa power, and selective camera video. Use the camera microphone only as
-an optional synchronization track, never as acoustic comparison evidence. Preserve the qualified
-image until a candidate repeats the release checks. The ordered session contract is in
+record the current golden reference with the dedicated mic fixed at the close-motor position, plus
+scope, Hall/FG, telemetry, Kasa power, and selective camera video. Keep the mic fixed through every
+source-level comparison. After selecting and close-capturing a finalist, move the mic once to the
+bed and compare the restored golden image against the still-volatile finalist. Use the camera
+microphone only as an optional synchronization track, never as acoustic comparison evidence.
+Preserve the qualified image until a candidate repeats the release checks. The ordered contract is
+in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Remaining Roadmap
@@ -55,7 +58,8 @@ image until a candidate repeats the release checks. The ordered session contract
 1. **Synchronized loaded tune:** after the OWON arrives, capture the untouched golden baseline,
    then compare acoustic and startup candidates with dedicated-mic audio, SOX/electrical frames,
    telemetry, Hall/FG, Kasa power, and selective camera video. The camera is for startup, contact,
-   and rotor-position evidence; its microphone is synchronization-only.
+   and rotor-position evidence; its microphone is synchronization-only. Keep the dedicated mic at
+   the close position until a finalist exists, then move it once for the final bed-position A/B.
 2. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
    gap, hand-rotation pulse, and driven Hall/FG agreement checks (`TACH-03B`).
 3. **Owner-led finish:** Michael will artfully create the cosmetic housing and printed conduit for

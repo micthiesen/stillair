@@ -106,9 +106,10 @@ gain, mounting, and clipping, but it is not the formal reference and changes no 
   on the stationary upper housing about 2--3 inches from the motor with compliant isolation. Keep
   gain, orientation, and position fixed; capture a stopped-room baseline and lossless WAV.
 - At the start of the instrumented session, synchronize microphone audio, SOX plus FG/SPEED or VM24,
-  supervisor telemetry, Hall/FG, and Kasa power. Capture the untouched current golden image at fixed
-  close-mic and bed positions **before changing any setting**. Confirm the captures are usable
-  before beginning candidate work; the baseline cannot be reconstructed honestly afterward.
+  supervisor telemetry, Hall/FG, and Kasa power. Capture the untouched current golden image with the
+  dedicated mic fixed at the close-motor position **before changing any setting**. Confirm the
+  captures are usable before beginning candidate work; the source baseline cannot be reconstructed
+  honestly afterward.
 - Set up the available camera for startup and the intermittent chirp. It is useful for detecting
   rough align/open-loop/handoff motion, visible contact, and rotor-position correlation. Hall/FG
   already establish steady-state stability, so video is not required for every acoustic plateau;
@@ -122,6 +123,10 @@ gain, mounting, and clipping, but it is not the formal reference and changes no 
   chirps; localize the chirp; inspect startup current and handoff; compare startup parameters; then
   compare steady-state PWM/commutation candidates at matched measured speeds. Commit a new golden
   image only after the selected candidate repeats the low-speed starts, acoustic ladder, stop, and
-  persistence checks.
+  persistence checks. Keep the dedicated mic in its close position through the finalist's close
+  capture. Then move it once to the bed, capture the room baseline, and compare the restored golden
+  configuration with the still-volatile finalist at representative matched speeds. This final A/B
+  tests whether a source improvement remains audible where it matters without sacrificing close-mic
+  repeatability throughout tuning.
 - Run loaded MPET as a captured comparison only, never as an automatic EEPROM replacement. Promote
   a candidate only if it improves the matched acoustic result and repeats all release checks.

@@ -168,9 +168,12 @@ observer.
 - Capture stopped-but-powered and fully unpowered baselines without moving the microphone. Preserve
   unsmoothed spectra and spectrograms; a close microphone is comparative evidence, not a calibrated
   absolute-SPL meter.
-- A second capture at the bed position answers the user-facing loudness question after source
-  tuning. Centered below the spindle is not the primary diagnostic position because downwash and
-  blade-pressure pulses can mask motor tones.
+- A final capture at the bed position answers the user-facing loudness question after source
+  tuning. Do not move the only dedicated microphone there for the initial baseline: close-position
+  repeatability is more valuable throughout candidate work. After a finalist has its close capture,
+  move the mic once, capture the bed-position room baseline, then A/B the restored golden image and
+  the still-volatile finalist at representative matched speeds. Centered below the spindle is not
+  the primary diagnostic position because downwash and blade-pressure pulses can mask motor tones.
 - Camera is selective rather than mandatory. Set it up for the first instrumented session because
   the rough startup and intermittent chirp can benefit from motion and rotor-position correlation.
   Hall and FG already establish steady-speed stability, so omit video from later ordinary acoustic
