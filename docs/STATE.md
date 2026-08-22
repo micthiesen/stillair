@@ -74,6 +74,8 @@ contract is in
 
 ## Learned Recently
 
+- Provisional delayed-away, manual-override, vacation, and gated comfort automation behavior:
+  [home-automation.md](home-automation.md).
 - Loaded commissioning, persistence proof, owner acoustic observations, and the next candidate
   order: [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 - Apple Home uses `PercentCurrent` for the interactive slider, so it must mirror the requested
