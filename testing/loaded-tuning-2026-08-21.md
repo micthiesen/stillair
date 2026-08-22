@@ -95,35 +95,33 @@ qualification work; they are not claims made by this commissioning result.
 - Acceleration from rest is not subjectively smooth. The next session should capture the complete
   align/open-loop/handoff sequence and tune startup separately from steady-state acoustic changes.
 
-## Phased loaded-tuning plan
+## Synchronized loaded-tuning plan
 
-### Pass 1: microphone first
+The dedicated microphone has arrived and is usable; the OWON is expected roughly seven days later.
+Because physical setup is easier to batch and the current golden image is already pleasant in use,
+defer candidate tuning until the scope is present. A short microphone shakedown may verify format,
+gain, mounting, and clipping, but it is not the formal reference and changes no motor setting.
 
-- Planned microphone: Razer Seiren V3 Mini or equivalent raw 24-bit/96 kHz USB condenser, mounted
+- Use the Razer Seiren V3 Mini or equivalent raw 24-bit/96 kHz USB condenser, mounted
   on the stationary upper housing about 2--3 inches from the motor with compliant isolation. Keep
   gain, orientation, and position fixed; capture a stopped-room baseline and lossless WAV.
-- Synchronize microphone audio, supervisor telemetry, Hall/FG, and Kasa power. Capture the current
-  golden image at fixed close-mic and bed positions before changing anything, then compare
-  conservative acoustic and startup candidates at matched measured speeds.
+- At the start of the instrumented session, synchronize microphone audio, SOX plus FG/SPEED or VM24,
+  supervisor telemetry, Hall/FG, and Kasa power. Capture the untouched current golden image at fixed
+  close-mic and bed positions **before changing any setting**. Confirm the captures are usable
+  before beginning candidate work; the baseline cannot be reconstructed honestly afterward.
 - Set up the available camera for startup and the intermittent chirp. It is useful for detecting
   rough align/open-loop/handoff motion, visible contact, and rotor-position correlation. Hall/FG
   already establish steady-state stability, so video is not required for every acoustic plateau;
-  omit it from later steady-state captures if this first pass shows that it adds no evidence.
+  omit it from ordinary steady-state captures. The dedicated microphone is the only acoustic
+  authority. Camera audio may remain enabled solely to align video frames with dedicated-mic audio;
+  never use it to compare candidates.
+- First qualify scope frame timing and retain raw samples plus sidecar metadata. Use the synchronized
+  evidence to distinguish electrical/commutation tones from mechanical radiation and to correlate
+  transient chirps with SOX/current distortion, command transitions, or rotor position.
 - Candidate order: characterize the reference; separate the steady electrical whine from transient
   chirps; localize the chirp; inspect startup current and handoff; compare startup parameters; then
   compare steady-state PWM/commutation candidates at matched measured speeds. Commit a new golden
   image only after the selected candidate repeats the low-speed starts, acoustic ladder, stop, and
   persistence checks.
-
-### Pass 2: scope-assisted refinement
-
-- When the OWON VDS1022I arrives, connect J8 SOX plus FG/SPEED or VM24 according to
-  [`docs/observability.md`](../docs/observability.md). First qualify frame timing and retain raw
-  samples plus sidecar metadata before using it as continuous evidence.
-- Synchronize scope frames with the retained microphone signatures, supervisor telemetry, Hall/FG,
-  and Kasa power. Use the evidence to distinguish electrical/commutation tones from mechanical
-  radiation and to correlate transient chirps with SOX/current distortion or command transitions.
-- Treat the microphone-pass result as the new comparison reference, not as disposable progress.
-  Run loaded MPET as a captured comparison only, never as an automatic EEPROM replacement. Promote
-  a scope-informed change only if it improves the matched acoustic result and repeats all release
-  checks.
+- Run loaded MPET as a captured comparison only, never as an automatic EEPROM replacement. Promote
+  a candidate only if it improves the matched acoustic result and repeats all release checks.

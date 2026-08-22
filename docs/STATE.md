@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-22** (occupied automation intent recorded; microphone-first refinement next.)
+Last updated: **2026-08-22** (instrumented tuning consolidated; synchronized baseline and tune next.)
 
 ## Now
 
@@ -35,31 +35,30 @@ Last updated: **2026-08-22** (occupied automation intent recorded; microphone-fi
 - **The provisional automation intent is occupied-by-default.** After final startup and endurance
   qualification, a confirmed arrival should start forward 1%; temperature may later boost to 20%
   and return to 1%, while manual Off, faults, reboots, and power restoration remain no-start gates.
-- **The remaining work is finite and ordered.** A microphone-only tune comes first when the mic
-  arrives, followed by a scope-assisted electrical refinement when the OWON arrives in roughly one
-  to two weeks. Then Michael will make a cleaner Hall-board mount and verify the sensor again before
-  completing the owner-designed cosmetic housing and printed power-cable conduit.
+- **The remaining work is finite and ordered.** The microphone has arrived and is usable; the OWON
+  is expected in roughly seven days. Rather than duplicate setup, acoustic and electrical tuning
+  will run as one instrumented batch after it arrives, beginning with an untouched-golden baseline.
+  Then Michael will make a cleaner Hall-board mount and verify the sensor again before completing
+  the owner-designed cosmetic housing and printed power-cable conduit.
 
 ## Next
 
-Run the microphone-first loaded tune. Record the current golden reference at the close motor and bed
-positions, separate steady electrical whine from transient chirps, and use synchronized Hall/FG,
-telemetry, Kasa power, and selective video to compare conservative acoustic and startup candidates.
-Preserve the qualified image until a candidate repeats the release checks. The ordered session
-contract is in
+After the OWON arrives, run one synchronized loaded-tuning batch. Before changing any setting,
+record the current golden reference at the close motor and bed positions with the dedicated mic,
+scope, Hall/FG, telemetry, Kasa power, and selective camera video. Use the camera microphone only as
+an optional synchronization track, never as acoustic comparison evidence. Preserve the qualified
+image until a candidate repeats the release checks. The ordered session contract is in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Remaining Roadmap
 
-1. **Microphone-first loaded tune:** use the 24-bit/96 kHz mic as soon as it arrives. Set up a
-   camera for rough startup and possible rotor-position correlation of chirps; Hall/FG remain the
-   steady-speed authority, so video need not accompany every plateau.
-2. **Scope-assisted refinement:** when the OWON VDS1022I arrives, correlate SOX/electrical frames
-   with the retained audio signatures, telemetry, Hall/FG, and power. Revisit the first-pass tune
-   only where the electrical evidence supports a better candidate, then qualify the final image.
-3. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
+1. **Synchronized loaded tune:** after the OWON arrives, capture the untouched golden baseline,
+   then compare acoustic and startup candidates with dedicated-mic audio, SOX/electrical frames,
+   telemetry, Hall/FG, Kasa power, and selective camera video. The camera is for startup, contact,
+   and rotor-position evidence; its microphone is synchronization-only.
+2. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
    gap, hand-rotation pulse, and driven Hall/FG agreement checks (`TACH-03B`).
-4. **Owner-led finish:** Michael will artfully create the cosmetic housing and printed conduit for
+3. **Owner-led finish:** Michael will artfully create the cosmetic housing and printed conduit for
    the power cable. Their design details stay outside this project; record only completion and any
    final fan-clearance, retention, or cable-routing verification that affects operation.
 
@@ -70,6 +69,9 @@ contract is in
   intervening.
 - **Camera as a mandatory steady-speed observer:** rejected. Hall/FG already cover stability; use
   video only where startup motion, reversal, contact, or rotor-position correlation adds evidence.
+- **Separate microphone-only tuning pass:** rejected after the microphone arrived. A short setup
+  shakedown is fine, but the fan is already usable and the scope is only about seven days away, so
+  one baseline-first synchronized batch avoids duplicated setup and ambiguous causal conclusions.
 - **Loaded tuning on an improvised bench rig:** rejected. The installed ceiling assembly is the
   actual support, rotor load, cable, acoustic, and airflow environment.
 - **Replacing the golden image directly from loaded MPET:** rejected. Preserve the qualified image

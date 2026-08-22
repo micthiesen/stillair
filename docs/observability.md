@@ -140,7 +140,7 @@ observer.
 - Analog 1: SOX to AGND.
 - Analog 2: SPEED or FG to AGND.
 - Concurrent evidence: 10 Hz supervisor stream, estimator samples where the retained
-  profile calls for them, physical Hall, camera/audio, and wall power.
+  profile calls for them, physical Hall, camera video, dedicated-microphone audio, and wall power.
 - Trigger: SPEED/FG transition or SOX threshold before releasing DRVOFF.
 - Look for: current acquisition, repeated align attempts, discontinuity at open-to-closed
   loop handoff, current limiting, missed FG, direction error, and a tonal event aligned with
@@ -171,11 +171,15 @@ observer.
 - A second capture at the bed position answers the user-facing loudness question after source
   tuning. Centered below the spindle is not the primary diagnostic position because downwash and
   blade-pressure pulses can mask motor tones.
-- Camera is selective rather than mandatory. Set it up for the first microphone pass because the
-  rough startup and intermittent chirp can benefit from motion and rotor-position correlation.
+- Camera is selective rather than mandatory. Set it up for the first instrumented session because
+  the rough startup and intermittent chirp can benefit from motion and rotor-position correlation.
   Hall and FG already establish steady-speed stability, so omit video from later ordinary acoustic
-  plateaus if the first pass shows that it adds no evidence. Use at least 30 fps for startup,
+  plateaus if the baseline shows that it adds no evidence. Use at least 30 fps for startup,
   reversal, suspected contact, or a chirp that may repeat at a particular rotor position.
+- Camera audio is never an acoustic-comparison source when the dedicated microphone is present.
+  Leaving it enabled can provide a convenient synchronization track: a clap, startup sound, or the
+  same chirp can align dedicated audio to video frames. If a visible synchronization cue provides
+  the required alignment, camera audio may be ignored or disabled.
 
 ### Cutoff, stop, and regenerative transient
 
