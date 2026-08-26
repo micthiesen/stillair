@@ -205,3 +205,12 @@ observer.
 
 Retained results belong in `testing/`; reusable acquisition and analysis code belongs in
 `firmware/scripts/`. Do not embed one-off measurements in this architecture document.
+
+The reusable loaded entry point is `firmware/scripts/09-run-loaded-profile.sh`. It records all
+sources into one run directory with nanosecond wall-clock anchors and a hashed evidence manifest.
+The OWON helper pins the `florentbr/OWON-VDS1022` Python API at commit
+`4c67805713906c20b4414b4225fd293adea4cb05`. Its 5,000-sample acquisitions are explicitly discrete
+frames with unknown inter-frame data; the JSONL index retains each arrival gap so no later analysis
+can mistake this mode for gap-free streaming. The initial SOX/FG recipe is a safe preflight starting
+point, not a calibrated setup: confirm the VDS1022I model, common-ground connections, range, offset,
+trigger, and clipping on the installed hardware before releasing the motor run.

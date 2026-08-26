@@ -31,7 +31,7 @@ def parse_window(value: str) -> tuple[str, float, float]:
     return parsed
 
 
-def decode(path: Path) -> np.ndarray:
+def decode(path: Path, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
     result = subprocess.run(
         [
             "ffmpeg",
@@ -44,7 +44,7 @@ def decode(path: Path) -> np.ndarray:
             "-ac",
             "1",
             "-ar",
-            str(SAMPLE_RATE),
+            str(sample_rate),
             "-f",
             "f32le",
             "pipe:1",
@@ -53,7 +53,7 @@ def decode(path: Path) -> np.ndarray:
         capture_output=True,
     )
     samples = np.frombuffer(result.stdout, dtype="<f4")
-    if len(samples) < SAMPLE_RATE:
+    if len(samples) < sample_rate:
         raise ValueError("recording contains less than one second of audio")
     return samples
 
@@ -102,32 +102,44 @@ def envelope_metrics(per_frame_power: np.ndarray, frame_rate: float) -> dict[str
     }
 
 
-def metrics(samples: np.ndarray, label: str, start: float, end: float) -> dict[str, object]:
-    selected = samples[round(start * SAMPLE_RATE) : round(end * SAMPLE_RATE)]
+def metrics(
+    samples: np.ndarray,
+    label: str,
+    start: float,
+    end: float,
+    sample_rate: int = SAMPLE_RATE,
+) -> dict[str, object]:
+    selected = samples[round(start * sample_rate) : round(end * sample_rate)]
     if len(selected) < 4_096:
         raise ValueError(f"{label}: audio window contains fewer than 4096 samples")
     selected = selected - np.mean(selected)
-    frame_size = 2_048
-    hop = 512
+    frame_size = 8_192 if sample_rate >= 32_000 else 2_048
+    hop = frame_size // 4
     frame_count = 1 + (len(selected) - frame_size) // hop
     frames = np.lib.stride_tricks.sliding_window_view(selected, frame_size)[::hop][:frame_count]
     spectra = np.abs(np.fft.rfft(frames * np.hanning(frame_size), axis=1)) ** 2
-    frequencies = np.fft.rfftfreq(frame_size, 1 / SAMPLE_RATE)
+    frequencies = np.fft.rfftfreq(frame_size, 1 / sample_rate)
     mean_spectrum = np.mean(spectra, axis=0)
     total_power = float(np.mean(selected * selected))
 
-    bands = {}
-    for name, low, high in (
+    band_limits = [
         ("sub_200", 20, 200),
         ("grind_200_500", 200, 500),
         ("mid_500_2000", 500, 2_000),
         ("high_2000_7500", 2_000, 7_500),
-    ):
+    ]
+    if sample_rate / 2 > 7_500:
+        band_limits.append(
+            ("upper_7500_20000", 7_500, min(20_000, sample_rate / 2))
+        )
+
+    bands = {}
+    for name, low, high in band_limits:
         mask = (frequencies >= low) & (frequencies < high)
         per_frame = np.mean(spectra[:, mask], axis=1)
         bands[name] = {
             "mean_db": round(db(float(np.mean(per_frame))), 2),
-            **envelope_metrics(per_frame, SAMPLE_RATE / hop),
+            **envelope_metrics(per_frame, sample_rate / hop),
         }
 
     return {
@@ -135,11 +147,14 @@ def metrics(samples: np.ndarray, label: str, start: float, end: float) -> dict[s
         "label": label,
         "start_s": start,
         "end_s": end,
+        "sample_rate_hz": sample_rate,
         "rms_dbfs": round(db(total_power), 2),
         "crest_db": round(20 * math.log10(max(float(np.max(np.abs(selected))), 1e-10) / math.sqrt(max(total_power, 1e-20))), 2),
         "bands": bands,
         "low_peaks": spectral_peaks(frequencies, mean_spectrum, 40, 1_000),
-        "electrical_peaks": spectral_peaks(frequencies, mean_spectrum, 1_000, 7_500),
+        "electrical_peaks": spectral_peaks(
+            frequencies, mean_spectrum, 1_000, min(20_000, sample_rate / 2)
+        ),
     }
 
 
@@ -147,10 +162,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("recording", type=Path)
     parser.add_argument("--window", action="append", type=parse_window, required=True)
+    parser.add_argument("--sample-rate", type=int, default=48_000)
     args = parser.parse_args()
-    samples = decode(args.recording)
+    if not 8_000 <= args.sample_rate <= 96_000:
+        parser.error("sample rate must be within 8000..=96000")
+    samples = decode(args.recording, args.sample_rate)
     for label, start, end in args.window:
-        print(json.dumps(metrics(samples, label, start, end), separators=(",", ":")))
+        print(
+            json.dumps(
+                metrics(samples, label, start, end, args.sample_rate), separators=(",", ":")
+            )
+        )
     return 0
 
 

@@ -48,10 +48,19 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
   power cycle through the available control path, flash firmware, stage volatile MCF settings, run
   scripts, and use the connected instruments without routine permission prompts. Existing hardware
   protections and the released 50--170 RPM envelope remain mandatory.
+- **The fail-closed baseline runner is prepared.** `firmware/scripts/09-run-loaded-profile.sh`
+  validates the 50--170 RPM profile, requires the EEPROM-verified golden image, fixed microphone,
+  OWON, camera, Hall/FG, telemetry, and Kasa evidence, and emits a hashed run manifest. Dry-run and
+  simulated acquisition checks pass. The instruments were not attached during preparation, so the
+  first launched session still begins with one-time device enumeration, probe/range/gain checks,
+  and an untouched-golden capture. Arbitrary raw register writes remain non-runnable by design;
+  candidate support will be kept narrow and added only for parameter families justified by that
+  baseline.
 
 ## Next
 
-After the OWON arrives, run the autonomous synchronized loaded-tuning batch on the exposed assembly.
+When Michael next signals launch with the instruments attached, run the autonomous synchronized
+loaded-tuning batch on the exposed assembly.
 Mount the dedicated microphone independently, close to the motor but just outside the future housing
 envelope, so it can remain fixed for the entire sequence. Hook up and qualify scope, Hall/FG,
 telemetry, Kasa power, and selective camera capture once; then record the untouched golden reference

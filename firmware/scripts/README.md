@@ -38,9 +38,10 @@ ramp and three consecutive FG samples in range, so merely crossing a setpoint do
 as arrival. `dwell` requires a live 1 Hz telemetry heartbeat and a continuously running state
 while an external camera and power logger gather the continuous evidence.
 
-`08-flash-and-unloaded-profile.sh` builds, flashes, power-cycles, stages the volatile image,
-and runs one of those profiles. `STILLAIR_CAMERA_URL` is required for synchronized recording
-and physical-motion analysis. The credential-bearing URL is fed to FFmpeg through a private
+`08-flash-and-unloaded-profile.sh` is the common synchronized acquisition runner. Its default
+`STILLAIR_CONFIG_MODE=stage` preserves the unloaded workflow: it builds, flashes, power-cycles,
+stages the volatile image, and runs one of those profiles. `STILLAIR_CAMERA_URL` is required for
+synchronized recording and physical-motion analysis. The credential-bearing URL is fed to FFmpeg through a private
 file descriptor rather than exposed in its arguments or logs. The wrapper waits for a real
 camera frame and a live Utility Plug power sample, retains camera audio when the stream provides
 it, records the camera-to-motor offset, and fails if the camera, plug logger, controller
@@ -51,8 +52,10 @@ Its deadline is
 derived from the selected profile, so endurance profiles do not need a manual timeout override.
 Any failed command releases the serial client, attempts controller disarm, then independently
 switches off the exact Kasa `Utility Plug`; a successful run leaves the 24 V supply available.
-Every run stages and read-back-verifies the volatile MCF image; `STILLAIR_SKIP_FLASH=1` skips
-only the ESP build/flash and is therefore safe after a fan-supply power cycle. Timestamped dwell
+An unloaded run stages and read-back-verifies the volatile MCF image. A loaded reference run uses
+`STILLAIR_CONFIG_MODE=verified`, requires the stored golden image to verify, and refuses to replace
+a failed baseline with a staged image. `STILLAIR_SKIP_FLASH=1` skips only the ESP build/flash.
+Timestamped dwell
 profiles also align their camera motion and 1 Hz AC power samples to the same motor timeline, so
 `analyze_profile_plateaus.py` and `analyze_profile_power.py` report physical regulation and input
 power for the same settled windows. Use
@@ -71,6 +74,41 @@ has also been reviewed for loaded MPET.
 
 Scripts 04 through 06 are loaded release tests. They begin with `config check` and require the
 committed golden image; staging the provisional image there would overwrite loaded tuning.
+
+## Autonomous loaded reference
+
+`09-run-loaded-profile.sh` is the fail-closed entry point for the first exposed loaded capture.
+It validates the profile before connecting to hardware, forces verified-golden mode, and requires
+the fixed dedicated microphone, OWON capture, camera motion guard, controller telemetry, physical
+Hall/FG, and Utility Plug evidence. It defaults to `51-loaded-golden-baseline.txt`, which measures
+50, 60, 80, 120, and 170 RPM and returns to verified `idle_off`. It will not accept `config stage`,
+`config apply`, raw register writes, an out-of-range speed, an unsafe direction change, or a profile
+that lacks a final stopped-state proof.
+
+```sh
+STILLAIR_DRY_RUN=1 scripts/09-run-loaded-profile.sh
+
+STILLAIR_CAMERA_URL='rtsps://…' \
+STILLAIR_SCOPE_ISOLATED_CONFIRMED=1 \
+scripts/09-run-loaded-profile.sh
+```
+
+The microphone defaults to the AVFoundation device name `Razer Seiren V3 Mini`; override
+`STILLAIR_AUDIO_DEVICE` if the enumerated name differs. Audio is retained as mono 24-bit/96 kHz
+WAV and analyzed at 48 kHz, preserving comparison bands through 20 kHz. The scope recipe defaults
+to `scope-loaded-startup.json`: SOX and FG at 250 ksample/s in discrete 5,000-sample frames. Its
+range, offset, ground references, and isolated VDS1022I model must be physically confirmed before
+setting `STILLAIR_SCOPE_ISOLATED_CONFIRMED=1`. The capture uses the Python API from
+`florentbr/OWON-VDS1022` pinned at commit `4c67805713906c20b4414b4225fd293adea4cb05`; it records
+inter-frame arrival gaps and never describes the frames as continuous acquisition.
+
+Each successful run prints a `run_dir` under `STILLAIR_EVIDENCE_ROOT` (default `/tmp`). Its
+`manifest.json` records the git commit, timing anchors, configuration mode, file sizes, and SHA-256
+hashes for every retained file, including each scope frame. A missing or malformed required source
+fails the run. This entry point deliberately captures the untouched golden reference only. Loaded
+candidate generation remains a separate tuning step: change one reviewed volatile candidate at a
+time, retain the golden run as the A/B control, and never commit EEPROM until the finalist repeats
+the release gates.
 
 `02-mpet-and-capture.txt` prints the raw extraction result and then a paste-ready configuration
 image. Review that capture before committing or applying it. MPET itself updates shadow

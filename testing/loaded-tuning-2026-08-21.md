@@ -162,3 +162,21 @@ housing installation, with one-step instructions when needed.
   listening from bed is the final subjective acceptance check.
 - Run loaded MPET as a captured comparison only, never as an automatic EEPROM replacement. Promote
   a candidate only if it improves the matched acoustic result and repeats all release checks.
+
+### Prepared acquisition path
+
+The pre-hardware automation is ready as of 2026-08-26. `09-run-loaded-profile.sh` validates and
+runs `51-loaded-golden-baseline.txt` in verified-golden mode, rejects configuration mutation and
+speeds outside 50--170 RPM, records the fixed microphone at 24-bit/96 kHz, captures timestamped
+discrete OWON frames, and bundles camera, controller, Hall/FG, Kasa, audio, and scope evidence in a
+hashed manifest. Its hardware-free validation and simulated scope path pass. No physical baseline
+has been recorded: the OWON, microphone, camera, and controller were not attached during this
+preparation, so device enumeration, microphone gain/clipping, scope range/offset, trigger quality,
+probe grounds, and cross-source timing still require the one-time watched hookup.
+
+The prepared entry point intentionally cannot mutate the loaded golden image. After the untouched
+reference is secured, each candidate must be generated in volatile shadow with an explicit reviewed
+change and its own evidence run. The current firmware does not treat an arbitrary raw register write
+as runnable configuration; it invalidates the configuration verdict. Keep that guard. Add or adjust
+a narrowly scoped candidate mechanism only after the baseline shows which parameter family the
+synchronized evidence justifies testing.

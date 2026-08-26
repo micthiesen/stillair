@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "name": "loaded-startup-sox-fg",
+  "sampling_rate": "250k",
+  "frame_hz": 2,
+  "channels": [
+    {
+      "number": 1,
+      "signal": "SOX",
+      "range": "5v",
+      "offset": 0.5,
+      "probe": "x1",
+      "coupling": "DC"
+    },
+    {
+      "number": 2,
+      "signal": "FG",
+      "range": "5v",
+      "offset": 0.5,
+      "probe": "x1",
+      "coupling": "DC"
+    }
+  ],
+  "trigger": {
+    "channel": 2,
+    "level": "1.5v",
+    "position": 0.25
+  }
+}

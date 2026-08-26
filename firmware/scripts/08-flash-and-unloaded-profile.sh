@@ -10,8 +10,14 @@ if [ -n "$board_port" ]; then
     board_port_explicit=1
 fi
 skip_flash=${STILLAIR_SKIP_FLASH:-0}
+config_mode=${STILLAIR_CONFIG_MODE:-stage}
 power_log_seconds=${STILLAIR_RUN_SECONDS:-}
 camera_url=${STILLAIR_CAMERA_URL:-}
+audio_device=${STILLAIR_AUDIO_DEVICE:-}
+require_audio=${STILLAIR_REQUIRE_AUDIO:-0}
+scope_recipe=${STILLAIR_SCOPE_RECIPE:-}
+require_scope=${STILLAIR_REQUIRE_SCOPE:-0}
+scope_simulate=${STILLAIR_SCOPE_SIMULATE:-0}
 camera_center=${STILLAIR_CAMERA_CENTER:-704,355}
 camera_radius=${STILLAIR_CAMERA_RADIUS:-110,205}
 # Track only the rigid inner arm. The outer magnet/tape stick visibly flexes above 140 RPM
@@ -21,21 +27,32 @@ camera_stick_radius=${STILLAIR_CAMERA_STICK_RADIUS:-0,100}
 camera_method=${STILLAIR_CAMERA_METHOD:-stick}
 camera_forward_sign=${STILLAIR_CAMERA_FORWARD_SIGN:-1}
 run_id=$(date +%Y%m%d-%H%M%S)
-motor_log="/tmp/stillair-${run_id}-motor.log"
-power_log="/tmp/stillair-${run_id}-power.log"
-camera_video="/tmp/stillair-${run_id}-rotor.mp4"
-camera_csv="/tmp/stillair-${run_id}-rotor.csv"
-camera_log="/tmp/stillair-${run_id}-camera.log"
-camera_progress="/tmp/stillair-${run_id}-camera.progress"
-camera_segment_dir="/tmp/stillair-${run_id}-camera-segments"
-camera_concat="/tmp/stillair-${run_id}-camera.concat"
-camera_guard_log="/tmp/stillair-${run_id}-camera-guard.log"
-camera_guard_stop="/tmp/stillair-${run_id}-camera-guard.stop"
-camera_decelerating="/tmp/stillair-${run_id}-camera-decelerating"
-plateau_log="/tmp/stillair-${run_id}-plateaus.log"
-power_plateau_log="/tmp/stillair-${run_id}-power-plateaus.log"
-tach_plateau_log="/tmp/stillair-${run_id}-tach-plateaus.log"
-fault_diagnostics_log="/tmp/stillair-${run_id}-fault-diagnostics.log"
+evidence_root=${STILLAIR_EVIDENCE_ROOT:-/tmp}
+run_dir="$evidence_root/stillair-$run_id"
+mkdir -p "$evidence_root"
+mkdir "$run_dir"
+motor_log="$run_dir/motor.log"
+power_log="$run_dir/power.log"
+camera_video="$run_dir/rotor.mp4"
+camera_csv="$run_dir/rotor.csv"
+camera_log="$run_dir/camera.log"
+camera_progress="$run_dir/camera.progress"
+camera_segment_dir="$run_dir/camera-segments"
+camera_concat="$run_dir/camera.concat"
+camera_guard_log="$run_dir/camera-guard.log"
+camera_guard_stop="$run_dir/camera-guard.stop"
+camera_decelerating="$run_dir/camera-decelerating"
+plateau_log="$run_dir/plateaus.json"
+power_plateau_log="$run_dir/power-plateaus.json"
+tach_plateau_log="$run_dir/tach-plateaus.jsonl"
+fault_diagnostics_log="$run_dir/fault-diagnostics.log"
+audio_file="$run_dir/microphone.wav"
+audio_log="$run_dir/microphone.log"
+audio_summary="$run_dir/audio-windows.jsonl"
+scope_dir="$run_dir/scope"
+scope_log="$run_dir/scope.log"
+scope_ready="$run_dir/scope.ready"
+run_manifest="$run_dir/manifest.json"
 utility_plug="$script_dir/utility-plug.sh"
 stillair="$firmware_dir/target/debug/stillair"
 image="$firmware_dir/app/target/riscv32imac-unknown-none-elf/debug/stillair"
@@ -49,6 +66,14 @@ if [ -z "$power_log_seconds" ]; then
     # an amount of idle time added to successful runs.
     power_log_seconds=$(awk '
         $1 == "dwell" { total += $2 }
+        $1 == "stream" && $2 ~ /^[0-9]+$/ {
+            for (i = 1; i <= NF; i++) if ($i == "--for") total += $(i + 1)
+        }
+        ($1 == "speed" || $1 == "estimator") && $2 == "sample" {
+            duration = 10
+            for (i = 1; i <= NF; i++) if ($i == "--for") duration = $(i + 1)
+            total += duration
+        }
         $1 == "wait" {
             for (i = 1; i <= NF; i++) if ($i == "--for") total += $(i + 1)
         }
@@ -61,6 +86,10 @@ camera_pid=
 camera_guard_pid=
 camera_guard_failed=0
 motor_pid=
+audio_pid=
+scope_pid=
+audio_start_ns=
+motor_start_ns=
 
 discover_board_port() {
     discovered_ports=()
@@ -136,6 +165,22 @@ finish_camera() {
     fi
 }
 
+finish_audio() {
+    if [ -n "$audio_pid" ]; then
+        kill -INT "$audio_pid" >/dev/null 2>&1 || true
+        wait "$audio_pid" >/dev/null 2>&1 || true
+        audio_pid=
+    fi
+}
+
+finish_scope() {
+    if [ -n "$scope_pid" ]; then
+        kill -TERM "$scope_pid" >/dev/null 2>&1 || true
+        wait "$scope_pid" >/dev/null 2>&1 || true
+        scope_pid=
+    fi
+}
+
 stop_power_logger() {
     if [ -n "$power_pid" ]; then
         stop_log_status=0
@@ -153,8 +198,8 @@ stop_power_logger() {
 
 ensure_power_off() {
     for _ in 1 2 3; do
-        if "$utility_plug" off >"/tmp/stillair-${run_id}-off-status.log" 2>&1 &&
-            grep -q '"on":false' "/tmp/stillair-${run_id}-off-status.log"; then
+        if "$utility_plug" off >"$run_dir/off-status.log" 2>&1 &&
+            grep -q '"on":false' "$run_dir/off-status.log"; then
             power_is_on=0
             return 0
         fi
@@ -189,9 +234,11 @@ fail_safe() {
     if [ "$status" -ne 0 ] && [ "$power_is_on" -eq 1 ]; then
         ensure_power_off || true
     fi
+    finish_audio
+    finish_scope
     finish_camera
     rm -f "$camera_progress" "$camera_guard_stop" "$camera_decelerating" \
-        "$camera_decelerating.command" "$camera_concat"
+        "$camera_decelerating.command" "$camera_concat" "$scope_ready"
     if [ "$status" -ne 0 ]; then
         if [ "$power_is_on" -eq 0 ]; then
             echo "profile failed; Utility Plug was switched off and verified" >&2
@@ -207,6 +254,27 @@ cd "$firmware_dir"
 cargo build -p stillair-cli --bins
 if [ "$power_log_seconds" -gt 3600 ]; then
     echo "STILLAIR_RUN_SECONDS must be at most 3600" >&2
+    exit 1
+fi
+case "$config_mode" in
+    stage | verified) ;;
+    *) echo "STILLAIR_CONFIG_MODE must be stage or verified" >&2; exit 1 ;;
+esac
+if [ "$require_audio" = "1" ] && [ -z "$audio_device" ]; then
+    echo "loaded runs require STILLAIR_AUDIO_DEVICE for the fixed dedicated microphone" >&2
+    exit 1
+fi
+if [ "$require_scope" = "1" ] && [ -z "$scope_recipe" ]; then
+    echo "loaded runs require STILLAIR_SCOPE_RECIPE" >&2
+    exit 1
+fi
+if [ -n "$scope_recipe" ] && [ ! -f "$scope_recipe" ]; then
+    echo "scope recipe does not exist: $scope_recipe" >&2
+    exit 1
+fi
+if [ -n "$scope_recipe" ] && [ "$scope_simulate" != "1" ] && \
+    [ "${STILLAIR_SCOPE_ISOLATED_CONFIRMED:-0}" != "1" ]; then
+    echo "set STILLAIR_SCOPE_ISOLATED_CONFIRMED=1 after physically confirming VDS1022I" >&2
     exit 1
 fi
 if [ -z "$camera_url" ]; then
@@ -263,10 +331,20 @@ if [ "$board_ready" -ne 1 ]; then
     echo "board console did not become responsive" >&2
     exit 1
 fi
-# The MCF image is volatile and is erased by every fan-supply power cycle. Re-stage it even
-# when the ESP firmware itself is current and flashing is skipped; readback makes this safe
-# and idempotent when the image happened to survive.
-"$stillair" --port "$board_port" config stage
+if [ "$config_mode" = "stage" ]; then
+    # Unloaded commissioning uses the reviewed volatile image after every motor-power cycle.
+    "$stillair" --port "$board_port" config stage
+else
+    # Loaded reference capture must observe the persistent golden image exactly as booted.
+    # Never turn a failed check into a staged run here: that would erase the baseline being
+    # measured and make `config=provisional` look like stored-image evidence.
+    config_check=$("$stillair" --port "$board_port" config check)
+    echo "$config_check"
+    if ! grep -q '"config":"verified"' <<<"$config_check"; then
+        echo "loaded reference requires config=verified; refusing to stage a substitute" >&2
+        exit 1
+    fi
+fi
 
 # Supply logging and MCF tracking run concurrently on their separate USB ports.
 if [ -n "$camera_url" ]; then
@@ -307,6 +385,52 @@ option rtsp_transport tcp"
         exit 1
     fi
 fi
+if [ -n "$audio_device" ]; then
+    audio_start_ns=$(python3 -c 'import time; print(time.time_ns())')
+    ffmpeg -hide_banner -loglevel error -nostats -y \
+        -thread_queue_size 512 -f avfoundation -i ":$audio_device" \
+        -map 0:a:0 -ac 1 -ar 96000 -c:a pcm_s24le "$audio_file" \
+        >"$audio_log" 2>&1 &
+    audio_pid=$!
+    for _ in $(seq 1 100); do
+        if ! job_running "$audio_pid"; then
+            echo "dedicated microphone capture exited before producing audio" >&2
+            tail -10 "$audio_log" >&2 || true
+            exit 1
+        fi
+        [ -s "$audio_file" ] && break
+        sleep 0.1
+    done
+    if [ ! -s "$audio_file" ]; then
+        echo "dedicated microphone produced no WAV header" >&2
+        exit 1
+    fi
+fi
+if [ -n "$scope_recipe" ]; then
+    scope_args=()
+    if [ "$scope_simulate" = "1" ]; then
+        scope_args+=(--simulate)
+    fi
+    rm -f "$scope_ready"
+    uv run "$script_dir/capture_owon_scope.py" \
+        --recipe "$scope_recipe" --output "$scope_dir" \
+        --seconds "$power_log_seconds" --ready-file "$scope_ready" \
+        "${scope_args[@]}" >"$scope_log" 2>&1 &
+    scope_pid=$!
+    for _ in $(seq 1 300); do
+        if ! job_running "$scope_pid"; then
+            echo "scope capture exited before its first verified frame" >&2
+            tail -20 "$scope_log" >&2 || true
+            exit 1
+        fi
+        [ -s "$scope_ready" ] && break
+        sleep 0.1
+    done
+    if [ ! -s "$scope_ready" ]; then
+        echo "scope capture produced no verified frame within 30 seconds" >&2
+        exit 1
+    fi
+fi
 "$utility_plug" log --for "$power_log_seconds" --id "$run_id" >"$power_log" 2>&1 &
 power_pid=$!
 for _ in $(seq 1 100); do
@@ -330,6 +454,8 @@ fi
 # Anchor the CLI's relative `# t=` timestamps to the Utility Plug's ISO timestamps. One-second
 # wall-clock resolution is sufficient because power plateaus discard their first two seconds.
 date -u '+# wall_start=%Y-%m-%dT%H:%M:%SZ' >"$motor_log"
+motor_start_ns=$(python3 -c 'import time; print(time.time_ns())')
+echo "# wall_start_ns=$motor_start_ns" >>"$motor_log"
 "$stillair" --port "$board_port" script "$profile" >>"$motor_log" 2>&1 &
 motor_pid=$!
 elapsed_tenths=0
@@ -357,6 +483,16 @@ while job_running "$motor_pid" && [ "$elapsed_tenths" -lt "$deadline_tenths" ]; 
         echo "Utility Plug power evidence stopped while the motor profile was running" >&2
         exit 1
     fi
+    if [ -n "$audio_pid" ] && ! job_running "$audio_pid"; then
+        echo "dedicated microphone capture stopped while the motor profile was running" >&2
+        tail -10 "$audio_log" >&2 || true
+        exit 1
+    fi
+    if [ -n "$scope_pid" ] && ! job_running "$scope_pid"; then
+        echo "scope evidence capture stopped while the motor profile was running" >&2
+        tail -20 "$scope_log" >&2 || true
+        exit 1
+    fi
     sleep 0.1
     elapsed_tenths=$((elapsed_tenths + 1))
 done
@@ -370,6 +506,30 @@ if ! wait "$motor_pid"; then
 fi
 motor_pid=
 stop_power_logger
+if [ -n "$audio_pid" ]; then
+    finish_audio
+    audio_probe=$(ffprobe -v error -select_streams a:0 \
+        -show_entries stream=sample_rate,channels,bits_per_sample \
+        -of default=noprint_wrappers=1 "$audio_file")
+    if ! grep -q '^sample_rate=96000$' <<<"$audio_probe" || \
+        ! grep -q '^channels=1$' <<<"$audio_probe" || \
+        ! grep -q '^bits_per_sample=24$' <<<"$audio_probe"; then
+        echo "dedicated microphone WAV is not mono 24-bit/96 kHz" >&2
+        echo "$audio_probe" >&2
+        exit 1
+    fi
+    uv run "$script_dir/analyze_profile_audio.py" "$motor_log" "$audio_file" \
+        --audio-start-ns "$audio_start_ns" --motor-start-ns "$motor_start_ns" \
+        >"$audio_summary"
+fi
+if [ -n "$scope_pid" ]; then
+    finish_scope
+    if [ ! -s "$scope_dir/summary.json" ]; then
+        echo "scope capture did not finish with a summary" >&2
+        tail -20 "$scope_log" >&2 || true
+        exit 1
+    fi
+fi
 if [ -n "$camera_pid" ]; then
     finish_camera
     if [ "$camera_guard_failed" -ne 0 ]; then
@@ -398,10 +558,37 @@ if grep -qE '^# t=[0-9.]+s stream [0-9]+ --for [0-9]+' "$motor_log"; then
     python3 "$script_dir/analyze_tach_streams.py" "$motor_log" >"$tach_plateau_log"
 fi
 rm -f "$camera_progress" "$camera_guard_stop" "$camera_decelerating" \
-    "$camera_decelerating.command" "$camera_concat"
+    "$camera_decelerating.command" "$camera_concat" "$scope_ready"
+
+git_commit=$(git -C "$repo_dir" rev-parse HEAD)
+manifest_args=(
+    --field "run_id=$run_id"
+    --field "git_commit=$git_commit"
+    --field "config_mode=$config_mode"
+    --field "motor_start_ns=$motor_start_ns"
+    --artifact "profile=$profile"
+    --artifact "motor_log=$motor_log"
+    --artifact "power_log=$power_log"
+)
+if [ -n "$camera_url" ]; then
+    manifest_args+=(--artifact "camera_video=$camera_video" --artifact "camera_csv=$camera_csv")
+fi
+if [ -n "$audio_device" ]; then
+    manifest_args+=(
+        --field "audio_start_ns=$audio_start_ns"
+        --artifact "microphone_wav=$audio_file"
+        --artifact "audio_summary=$audio_summary"
+    )
+fi
+if [ -n "$scope_recipe" ]; then
+    manifest_args+=(--artifact "scope_recipe=$scope_recipe" --artifact "scope_capture=$scope_dir")
+fi
+python3 "$script_dir/write_evidence_manifest.py" "$run_manifest" "${manifest_args[@]}"
 
 # Both tools verified their own stop and health conditions. Leave bench power available.
 trap - EXIT INT TERM
+echo "run_dir=$run_dir"
+echo "manifest=$run_manifest"
 echo "motor_log=$motor_log"
 echo "power_log=$power_log"
 if [ -n "$camera_url" ]; then
@@ -425,4 +612,12 @@ if [ -n "$camera_url" ]; then
     if [ -s "$plateau_log" ]; then
         cat "$plateau_log"
     fi
+fi
+if [ -n "$audio_device" ]; then
+    echo "microphone_wav=$audio_file"
+    cat "$audio_summary"
+fi
+if [ -n "$scope_recipe" ]; then
+    echo "scope_capture=$scope_dir"
+    cat "$scope_dir/summary.json"
 fi
