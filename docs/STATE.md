@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-26** (final acoustic configuration and tuning priorities recorded.)
+Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
 
 ## Now
 
@@ -38,33 +38,38 @@ Last updated: **2026-08-26** (final acoustic configuration and tuning priorities
 - **The remaining work is finite and ordered.** The microphone has arrived and is usable; the OWON
   is expected in roughly seven days. Rather than duplicate setup, acoustic and electrical tuning
   will run as one instrumented batch after it arrives, beginning with an untouched-golden baseline.
-  Michael will first install the decided 2 mm butyl/film damping panels on the motor and inside the
-  upper housing, making that damped assembly the fixed physical baseline for all final comparisons.
-  Then Michael will make a cleaner Hall-board mount and verify the sensor again before completing
-  the owner-designed cosmetic housing and printed power-cable conduit.
+  Source tuning happens on the exposed assembly; the decided 2 mm butyl/film motor and upper-housing
+  damping is installed afterward as a passive improvement and verified without changing the tune.
+  Michael will then make a cleaner Hall-board mount and complete the owner-designed cosmetic housing
+  and printed power-cable conduit.
+- **The final loaded tune is authorized to run autonomously.** When Michael says `next`, `begin the
+  loaded tune`, or equivalent, that is the launch signal and confirms that the room is clear, he is
+  continuously watching, and the immediate physical cutoff is available. Codex may control the fan,
+  power cycle through the available control path, flash firmware, stage volatile MCF settings, run
+  scripts, and use the connected instruments without routine permission prompts. Existing hardware
+  protections and the released 50--170 RPM envelope remain mandatory.
 
 ## Next
 
-After the OWON arrives and the damping panels are installed, run one synchronized loaded-tuning
-batch. Before changing any controller setting, record the current golden reference with the
-dedicated mic fixed at the close-motor position, plus scope, Hall/FG, telemetry, Kasa power, and
-selective camera video. Keep the physical acoustic configuration and mic fixed through every
-source-level comparison. Still evaluate every noise mode, prioritizing chirps and rough startup,
-then persistent electrical/commutation tones that remain audible at the bed; treat residual housing
-resonance and broadband airflow as lower controller-tuning priorities unless synchronized evidence
-shows a candidate changes them. After selecting and close-capturing a finalist, move the mic once
-to the bed and compare the restored golden image against the still-volatile finalist. Use the
-camera microphone only as an optional synchronization track, never as acoustic comparison evidence.
-Preserve the qualified image until a candidate repeats the release checks. The ordered contract is in
+After the OWON arrives, run the autonomous synchronized loaded-tuning batch on the exposed assembly.
+Mount the dedicated microphone independently, close to the motor but just outside the future housing
+envelope, so it can remain fixed for the entire sequence. Hook up and qualify scope, Hall/FG,
+telemetry, Kasa power, and selective camera capture once; then record the untouched golden reference
+before changing a controller setting. Diagnose and optimize chirps, rough startup/handoff,
+electrical/commutation tones, regulation, current waveform, and avoidable power loss until further
+safe changes produce no measurable improvement. Promote nothing until the finalist repeats the full
+applicable release checks. After the exposed finalist is captured, install the decided damping and
+completed housing without changing the tune or mic, then repeat the close-mic acoustic ladder and
+final mechanical/thermal checks. No formal bed-position recording is planned; Michael's listening
+from bed is the final subjective check. The ordered contract and autonomy boundaries are in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Remaining Roadmap
 
-1. **Synchronized loaded tune:** after the OWON arrives, capture the untouched golden baseline,
-   then compare acoustic and startup candidates with dedicated-mic audio, SOX/electrical frames,
-   telemetry, Hall/FG, Kasa power, and selective camera video. The camera is for startup, contact,
-   and rotor-position evidence; its microphone is synchronization-only. Keep the dedicated mic at
-   the close position until a finalist exists, then move it once for the final bed-position A/B.
+1. **Autonomous synchronized loaded tune:** after the OWON arrives, qualify one fixed instrumentation
+   setup, capture the exposed untouched-golden baseline, and exhaust meaningful startup, acoustic,
+   regulation, waveform, and efficiency candidates. Freeze only the best repeatable result, then
+   validate the passive damping and completed housing with the same fixed close microphone.
 2. **Final Hall-board mount:** make the cleaner permanent bracket, then repeat physical retention,
    gap, hand-rotation pulse, and driven Hall/FG agreement checks (`TACH-03B`).
 3. **Owner-led finish:** Michael will artfully create the two-motion cosmetic housing specified in
@@ -77,13 +82,12 @@ Preserve the qualified image until a candidate repeats the release checks. The o
 - **Lubricating before diagnosis:** deferred. The intermittent chirp may be bearing, contact,
   structural, or commutation-related; correlate it with rotor angle, drive state, and SOX before
   intervening.
-- **Camera as a mandatory steady-speed observer:** rejected. Hall/FG already cover stability; use
-  video only where startup motion, reversal, contact, or rotor-position correlation adds evidence.
-- **Separate microphone-only tuning pass:** rejected after the microphone arrived. A short setup
-  shakedown is fine, but the fan is already usable and the scope is only about seven days away, so
-  one baseline-first synchronized batch avoids duplicated setup and ambiguous causal conclusions.
-- **Loaded tuning on an improvised bench rig:** rejected. The installed ceiling assembly is the
-  actual support, rotor load, cable, acoustic, and airflow environment.
+- **Damping and housing before source tuning:** rejected. The exposed assembly provides the clearest
+  diagnostic signal; passive treatment follows the frozen source-level finalist and is verified as
+  an additional improvement without changing the controller configuration.
+- **Formal bed-position microphone A/B:** rejected. Moving the only dedicated microphone weakens the
+  complete-sequence comparison; keep it close and fixed, then use Michael's direct listening from
+  bed for the final user-facing judgment.
 - **Replacing the golden image directly from loaded MPET:** rejected. Preserve the qualified image
   as the A/B reference and promote only a fully repeated candidate.
 
