@@ -102,6 +102,12 @@ Because physical setup is easier to batch and the current golden image is alread
 defer candidate tuning until the scope is present. A short microphone shakedown may verify format,
 gain, mounting, and clipping, but it is not the formal reference and changes no motor setting.
 
+Before the formal reference, Michael will install the decided 2 mm butyl/film automotive damping
+panels on the motor and inside the stationary upper housing. Treat that damped assembly as the final
+acoustic test article: install it before the untouched-golden capture and keep it unchanged through
+all candidate comparisons. Earlier uncovered recordings remain diagnostic history, not the A/B
+baseline for final tuning.
+
 - Use the Razer Seiren V3 Mini or equivalent raw 24-bit/96 kHz USB condenser, mounted
   on the stationary upper housing about 2--3 inches from the motor with compliant isolation. Keep
   gain, orientation, and position fixed; capture a stopped-room baseline and lossless WAV.
@@ -119,6 +125,13 @@ gain, mounting, and clipping, but it is not the formal reference and changes no 
 - First qualify scope frame timing and retain raw samples plus sidecar metadata. Use the synchronized
   evidence to distinguish electrical/commutation tones from mechanical radiation and to correlate
   transient chirps with SOX/current distortion, command transitions, or rotor position.
+- Continue recording and judging every audible noise mode, but prioritize controller tuning by what
+  remains audible after damping: first the intermittent chirp and rough startup sequence, then
+  persistent narrowband tones that track PWM, commutation, electrical frequency, or current
+  distortion and remain audible at the bed. Residual housing resonance remains a comparison target
+  but is secondary after the panels have reduced panel radiation. Capture broadband blade/airflow
+  noise in the same ladder so it is not hidden, while treating it as a controller-tuning target only
+  if synchronized evidence shows that a drive candidate changes it.
 - Candidate order: characterize the reference; separate the steady electrical whine from transient
   chirps; localize the chirp; inspect startup current and handoff; compare startup parameters; then
   compare steady-state PWM/commutation candidates at matched measured speeds. Commit a new golden

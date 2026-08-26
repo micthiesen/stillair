@@ -25,6 +25,9 @@ tolerances.
 
 ## Acoustic intent
 
+- The final acoustic configuration includes the owner-selected 2 mm butyl/film automotive damping
+  panels on the motor and inside the stationary upper housing. Install them before the formal loaded
+  golden-reference capture and leave them unchanged through controller-tuning comparisons.
 - Attenuate airborne motor and controller tones after electrical tuning is complete.
 - Keep the stationary and rotating covers stiff enough that neither becomes an obvious resonant
   sounding board.
@@ -32,9 +35,9 @@ tolerances.
   or baffled path instead.
 - Do not add ventilation openings preemptively. Ordinary seams, service gaps, and the cable entry
   are acceptable, but acoustic closure is the starting configuration.
-- Judge the result with matched close-microphone and bed-position recordings against the uncovered
-  tuned baseline. Housing changes must be compared at identical speed, load, microphone position,
-  and gain.
+- Judge final controller tuning with matched close-microphone and bed-position recordings in the
+  damped final configuration. Any separate housing-effect comparison must use identical speed, load,
+  microphone position, and gain.
 
 ## Thermal design
 

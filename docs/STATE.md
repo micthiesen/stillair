@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-22** (instrumented tuning consolidated; synchronized baseline and tune next.)
+Last updated: **2026-08-26** (final acoustic configuration and tuning priorities recorded.)
 
 ## Now
 
@@ -38,19 +38,24 @@ Last updated: **2026-08-22** (instrumented tuning consolidated; synchronized bas
 - **The remaining work is finite and ordered.** The microphone has arrived and is usable; the OWON
   is expected in roughly seven days. Rather than duplicate setup, acoustic and electrical tuning
   will run as one instrumented batch after it arrives, beginning with an untouched-golden baseline.
+  Michael will first install the decided 2 mm butyl/film damping panels on the motor and inside the
+  upper housing, making that damped assembly the fixed physical baseline for all final comparisons.
   Then Michael will make a cleaner Hall-board mount and verify the sensor again before completing
   the owner-designed cosmetic housing and printed power-cable conduit.
 
 ## Next
 
-After the OWON arrives, run one synchronized loaded-tuning batch. Before changing any setting,
-record the current golden reference with the dedicated mic fixed at the close-motor position, plus
-scope, Hall/FG, telemetry, Kasa power, and selective camera video. Keep the mic fixed through every
-source-level comparison. After selecting and close-capturing a finalist, move the mic once to the
-bed and compare the restored golden image against the still-volatile finalist. Use the camera
-microphone only as an optional synchronization track, never as acoustic comparison evidence.
-Preserve the qualified image until a candidate repeats the release checks. The ordered contract is
-in
+After the OWON arrives and the damping panels are installed, run one synchronized loaded-tuning
+batch. Before changing any controller setting, record the current golden reference with the
+dedicated mic fixed at the close-motor position, plus scope, Hall/FG, telemetry, Kasa power, and
+selective camera video. Keep the physical acoustic configuration and mic fixed through every
+source-level comparison. Still evaluate every noise mode, prioritizing chirps and rough startup,
+then persistent electrical/commutation tones that remain audible at the bed; treat residual housing
+resonance and broadband airflow as lower controller-tuning priorities unless synchronized evidence
+shows a candidate changes them. After selecting and close-capturing a finalist, move the mic once
+to the bed and compare the restored golden image against the still-volatile finalist. Use the
+camera microphone only as an optional synchronization track, never as acoustic comparison evidence.
+Preserve the qualified image until a candidate repeats the release checks. The ordered contract is in
 [loaded-tuning-2026-08-21.md](../testing/loaded-tuning-2026-08-21.md).
 
 ## Remaining Roadmap
