@@ -105,10 +105,30 @@ inter-frame arrival gaps and never describes the frames as continuous acquisitio
 Each successful run prints a `run_dir` under `STILLAIR_EVIDENCE_ROOT` (default `/tmp`). Its
 `manifest.json` records the git commit, timing anchors, configuration mode, file sizes, and SHA-256
 hashes for every retained file, including each scope frame. A missing or malformed required source
-fails the run. This entry point deliberately captures the untouched golden reference only. Loaded
-candidate generation remains a separate tuning step: change one reviewed volatile candidate at a
-time, retain the golden run as the A/B control, and never commit EEPROM until the finalist repeats
-the release gates.
+fails the run. Both loaded wrappers require the repository to remain clean and on the same commit
+for the complete run, so the recorded commit identifies the firmware source rather than merely the
+latest nearby revision. The baseline entry point deliberately captures the untouched golden reference only. Loaded
+candidate generation remains a separate tuning step.
+
+After the untouched reference is secured, run one allowlisted golden-derived candidate with the
+same evidence stack and matched ladder:
+
+```sh
+STILLAIR_DRY_RUN=1 scripts/10-run-loaded-candidate.sh pwm-30khz
+
+STILLAIR_CAMERA_URL='rtsps://…' \
+STILLAIR_SCOPE_ISOLATED_CONFIRMED=1 \
+scripts/10-run-loaded-candidate.sh pwm-30khz
+```
+
+`10-run-loaded-candidate.sh` accepts `pwm-20khz`, `pwm-25khz`, `pwm-30khz`, `pwm-40khz`,
+`pwm-50khz`, `pwm-60khz`, `deadtime-off`, `deadtime-on`, `slew-125v-us`, or `slew-200v-us`.
+It verifies the stored golden image before evidence collection, then `config tune` restores that
+complete image in volatile shadow, changes exactly the named reviewed field, rechecks the preserved
+golden bits, and reports the distinct `config=tuning` verdict. The matched motor profile is
+`52-loaded-acoustic-candidate.txt`. The run manifest records the candidate name, application time,
+and device reply. No candidate path can commit EEPROM. Retain the golden run as the A/B control and
+never promote a finalist until it repeats the release gates.
 
 `02-mpet-and-capture.txt` prints the raw extraction result and then a paste-ready configuration
 image. Review that capture before committing or applying it. MPET itself updates shadow

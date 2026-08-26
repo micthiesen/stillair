@@ -11,6 +11,8 @@ if [ -n "$board_port" ]; then
 fi
 skip_flash=${STILLAIR_SKIP_FLASH:-0}
 config_mode=${STILLAIR_CONFIG_MODE:-stage}
+tune_candidate=${STILLAIR_TUNE_CANDIDATE:-}
+require_clean=${STILLAIR_REQUIRE_CLEAN:-0}
 power_log_seconds=${STILLAIR_RUN_SECONDS:-}
 camera_url=${STILLAIR_CAMERA_URL:-}
 audio_device=${STILLAIR_AUDIO_DEVICE:-}
@@ -27,6 +29,11 @@ camera_stick_radius=${STILLAIR_CAMERA_STICK_RADIUS:-0,100}
 camera_method=${STILLAIR_CAMERA_METHOD:-stick}
 camera_forward_sign=${STILLAIR_CAMERA_FORWARD_SIGN:-1}
 run_id=$(date +%Y%m%d-%H%M%S)
+run_git_commit=$(git -C "$repo_dir" rev-parse HEAD)
+if [ "$require_clean" = "1" ] && [ -n "$(git -C "$repo_dir" status --porcelain)" ]; then
+    echo "loaded evidence requires a clean worktree so the manifest identifies the binary" >&2
+    exit 1
+fi
 evidence_root=${STILLAIR_EVIDENCE_ROOT:-/tmp}
 run_dir="$evidence_root/stillair-$run_id"
 mkdir -p "$evidence_root"
@@ -46,6 +53,7 @@ plateau_log="$run_dir/plateaus.json"
 power_plateau_log="$run_dir/power-plateaus.json"
 tach_plateau_log="$run_dir/tach-plateaus.jsonl"
 fault_diagnostics_log="$run_dir/fault-diagnostics.log"
+candidate_log="$run_dir/candidate.log"
 audio_file="$run_dir/microphone.wav"
 audio_log="$run_dir/microphone.log"
 audio_summary="$run_dir/audio-windows.jsonl"
@@ -90,6 +98,7 @@ audio_pid=
 scope_pid=
 audio_start_ns=
 motor_start_ns=
+candidate_applied_ns=
 
 discover_board_port() {
     discovered_ports=()
@@ -260,6 +269,10 @@ case "$config_mode" in
     stage | verified) ;;
     *) echo "STILLAIR_CONFIG_MODE must be stage or verified" >&2; exit 1 ;;
 esac
+if [ -n "$tune_candidate" ] && [ "$config_mode" != "verified" ]; then
+    echo "loaded tuning candidates require STILLAIR_CONFIG_MODE=verified" >&2
+    exit 1
+fi
 if [ "$require_audio" = "1" ] && [ -z "$audio_device" ]; then
     echo "loaded runs require STILLAIR_AUDIO_DEVICE for the fixed dedicated microphone" >&2
     exit 1
@@ -335,9 +348,9 @@ if [ "$config_mode" = "stage" ]; then
     # Unloaded commissioning uses the reviewed volatile image after every motor-power cycle.
     "$stillair" --port "$board_port" config stage
 else
-    # Loaded reference capture must observe the persistent golden image exactly as booted.
-    # Never turn a failed check into a staged run here: that would erase the baseline being
-    # measured and make `config=provisional` look like stored-image evidence.
+    # Loaded capture must begin from the persistent golden image exactly as booted. A later
+    # candidate operation may derive one volatile field from this proven base, but a failed
+    # check is never turned into a staged substitute.
     config_check=$("$stillair" --port "$board_port" config check)
     echo "$config_check"
     if ! grep -q '"config":"verified"' <<<"$config_check"; then
@@ -444,6 +457,15 @@ done
 if ! grep -q '"on":true' "$power_log" 2>/dev/null; then
     echo "Utility Plug power evidence did not confirm the relay on" >&2
     exit 1
+fi
+if [ -n "$tune_candidate" ]; then
+    candidate_applied_ns=$(python3 -c 'import time; print(time.time_ns())')
+    "$stillair" --port "$board_port" config tune "$tune_candidate" >"$candidate_log"
+    if ! grep -q '"config":"tuning"' "$candidate_log"; then
+        echo "loaded candidate did not produce a verified tuning image" >&2
+        cat "$candidate_log" >&2
+        exit 1
+    fi
 fi
 if [ -n "$camera_pid" ]; then
     latest_camera_offset_us=$(awk -F= '$1 == "out_time_us" && $2 ~ /^[0-9]+$/ { value=$2 } END { if (value > 0) print value }' "$camera_progress")
@@ -561,15 +583,29 @@ rm -f "$camera_progress" "$camera_guard_stop" "$camera_decelerating" \
     "$camera_decelerating.command" "$camera_concat" "$scope_ready"
 
 git_commit=$(git -C "$repo_dir" rev-parse HEAD)
+if [ "$require_clean" = "1" ] && {
+    [ "$git_commit" != "$run_git_commit" ] ||
+        [ -n "$(git -C "$repo_dir" status --porcelain)" ]
+}; then
+    echo "repository changed during loaded evidence capture; refusing the manifest" >&2
+    exit 1
+fi
 manifest_args=(
     --field "run_id=$run_id"
-    --field "git_commit=$git_commit"
+    --field "git_commit=$run_git_commit"
     --field "config_mode=$config_mode"
     --field "motor_start_ns=$motor_start_ns"
     --artifact "profile=$profile"
     --artifact "motor_log=$motor_log"
     --artifact "power_log=$power_log"
 )
+if [ -n "$tune_candidate" ]; then
+    manifest_args+=(
+        --field "tune_candidate=$tune_candidate"
+        --field "candidate_applied_ns=$candidate_applied_ns"
+        --artifact "candidate_log=$candidate_log"
+    )
+fi
 if [ -n "$camera_url" ]; then
     manifest_args+=(--artifact "camera_video=$camera_video" --artifact "camera_csv=$camera_csv")
 fi

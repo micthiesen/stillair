@@ -164,6 +164,8 @@ pub async fn service_digital_speed(
 /// pending, which is what holds `SafeBoot` until the I²C task has actually looked.
 static VERDICT: CriticalSectionMutex<Cell<ConfigCheck>> =
     CriticalSectionMutex::new(Cell::new(ConfigCheck::Pending));
+static TUNE_CANDIDATE: CriticalSectionMutex<Cell<Option<mcf_config::TuneCandidate>>> =
+    CriticalSectionMutex::new(Cell::new(None));
 
 /// The latest configuration verdict, for the control loop.
 pub fn verdict() -> ConfigCheck {
@@ -172,6 +174,20 @@ pub fn verdict() -> ConfigCheck {
 
 /// Record a verdict. Called by the boot-time check and by every configuration operation.
 pub fn publish_verdict(check: ConfigCheck) {
+    if check != ConfigCheck::Tuning {
+        TUNE_CANDIDATE.lock(|cell| cell.set(None));
+    }
+    VERDICT.lock(|cell| cell.set(check));
+}
+
+pub fn tuning_candidate() -> Option<mcf_config::TuneCandidate> {
+    TUNE_CANDIDATE.lock(|cell| cell.get())
+}
+
+fn publish_tuning(candidate: mcf_config::TuneCandidate, check: ConfigCheck) {
+    TUNE_CANDIDATE.lock(|cell| {
+        cell.set((check == ConfigCheck::Tuning).then_some(candidate));
+    });
     VERDICT.lock(|cell| cell.set(check));
 }
 
@@ -187,6 +203,8 @@ pub enum Access {
     ConfigCheck,
     /// Stage the reviewed first-spin image in volatile shadow registers.
     ConfigStage,
+    /// Stage one reviewed loaded-field candidate in volatile shadow registers.
+    ConfigTune(mcf_config::TuneCandidate),
     /// Write the golden image, then verify it.
     ConfigApply,
     /// Emit the whole EEPROM configuration block, one register per line.
@@ -287,7 +305,7 @@ fn deadline_for(access: Access) -> Duration {
         Access::Read(_) | Access::Write { .. } | Access::MpetAbort => Duration::from_millis(500),
         // Two dozen reads apiece.
         Access::ConfigCheck | Access::ConfigDump | Access::MpetStatus => Duration::from_secs(5),
-        Access::ConfigStage => Duration::from_secs(10),
+        Access::ConfigStage | Access::ConfigTune(_) => Duration::from_secs(10),
         // Reads, writes and re-reads two dozen EEPROM-backed registers.
         Access::ConfigApply => Duration::from_secs(60),
     }
@@ -314,10 +332,13 @@ pub async fn service_access(mcf: &mut Mcf) {
             }
         }
         Access::ConfigCheck => {
-            let check = if verdict() == ConfigCheck::Provisional {
-                mcf_config::check_provisional(mcf).await
-            } else {
-                mcf_config::check(mcf, mcf_config::IMAGE).await
+            let check = match verdict() {
+                ConfigCheck::Provisional => mcf_config::check_provisional(mcf).await,
+                ConfigCheck::Tuning => match tuning_candidate() {
+                    Some(candidate) => mcf_config::check_loaded_candidate(mcf, candidate).await,
+                    None => ConfigCheck::Unverified,
+                },
+                _ => mcf_config::check(mcf, mcf_config::IMAGE).await,
             };
             publish_verdict(check);
             Ok(Answer::Config {
@@ -329,6 +350,15 @@ pub async fn service_access(mcf: &mut Mcf) {
         Access::ConfigStage => {
             let (applied, check) = mcf_config::stage(mcf).await;
             publish_verdict(check);
+            Ok(Answer::Config {
+                check,
+                written: applied.written,
+                unchanged: applied.unchanged,
+            })
+        }
+        Access::ConfigTune(candidate) => {
+            let (applied, check) = mcf_config::stage_loaded_candidate(mcf, candidate).await;
+            publish_tuning(candidate, check);
             Ok(Answer::Config {
                 check,
                 written: applied.written,

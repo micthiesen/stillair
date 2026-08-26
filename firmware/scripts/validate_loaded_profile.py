@@ -12,6 +12,11 @@ from pathlib import Path
 
 MIN_RPM = 50
 MAX_RPM = 170
+CANDIDATES = frozenset(
+    line
+    for line in Path(__file__).with_name("loaded-tune-candidates.txt").read_text().splitlines()
+    if line
+)
 
 
 @dataclass(frozen=True)
@@ -67,7 +72,7 @@ def duration_seconds(command: Command) -> int:
     return 0
 
 
-def validate(path: Path, mode: str) -> dict[str, object]:
+def validate(path: Path, mode: str, candidate: str | None = None) -> dict[str, object]:
     parsed = commands(path)
     errors: list[str] = []
     measurement_count = 0
@@ -76,6 +81,8 @@ def validate(path: Path, mode: str) -> dict[str, object]:
 
     if mode == "verified" and parsed[0].words[:2] != ("config", "check"):
         errors.append("verified profiles must begin with `config check`")
+    if mode == "candidate" and candidate not in CANDIDATES:
+        errors.append(f"unknown loaded tuning candidate {candidate!r}")
 
     for index, command in enumerate(parsed):
         words = command.words
@@ -83,8 +90,14 @@ def validate(path: Path, mode: str) -> dict[str, object]:
         if command.optional and words[0] in {"run", "pct", "dir", "stop", "disarm"}:
             errors.append(f"{prefix}: motor commands may not be optional")
 
-        if words[:2] in {("config", "apply"), ("config", "stage")}:
+        if words[:2] in {
+            ("config", "apply"),
+            ("config", "stage"),
+            ("config", "tune"),
+        }:
             errors.append(f"{prefix}: loaded profiles may not stage or commit configuration")
+        if mode == "candidate" and words[:2] == ("config", "check"):
+            errors.append(f"{prefix}: the candidate wrapper owns configuration verification")
         if words[:2] == ("reg", "write"):
             errors.append(f"{prefix}: raw configuration writes are not a loaded tuning mode")
 
@@ -136,7 +149,7 @@ def validate(path: Path, mode: str) -> dict[str, object]:
     if errors:
         raise ValueError("\n".join(errors))
 
-    return {
+    result: dict[str, object] = {
         "type": "loaded_profile_validation",
         "profile": str(path),
         "mode": mode,
@@ -146,14 +159,22 @@ def validate(path: Path, mode: str) -> dict[str, object]:
         "rpm_min": MIN_RPM,
         "rpm_max": MAX_RPM,
     }
+    if candidate is not None:
+        result["candidate"] = candidate
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("profile", type=Path)
-    parser.add_argument("--mode", choices=("verified",), default="verified")
+    parser.add_argument("--mode", choices=("verified", "candidate"), default="verified")
+    parser.add_argument("--candidate")
     args = parser.parse_args()
-    print(json.dumps(validate(args.profile, args.mode), separators=(",", ":")))
+    print(
+        json.dumps(
+            validate(args.profile, args.mode, args.candidate), separators=(",", ":")
+        )
+    )
     return 0
 
 

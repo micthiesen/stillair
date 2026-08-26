@@ -91,6 +91,7 @@ pub struct Simulator {
     hall_residual: u64,
     /// Register file. Reads and writes land here; nothing interprets them.
     registers: Vec<(u16, u32)>,
+    tune_candidate: Option<mcf_config::TuneCandidate>,
     mpet_started_at: Option<Millis>,
     stream_period_ms: Option<u64>,
     next_stream_at: Millis,
@@ -122,6 +123,7 @@ impl Simulator {
             fg_residual: 0,
             hall_residual: 0,
             registers,
+            tune_candidate: None,
             mpet_started_at: None,
             stream_period_ms: None,
             next_stream_at: Millis::ZERO,
@@ -249,11 +251,12 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
-            ConfigOp::Check | ConfigOp::Stage | ConfigOp::Apply => {
+            ConfigOp::Check | ConfigOp::Stage | ConfigOp::Tune(_) | ConfigOp::Apply => {
                 let mut written = 0;
                 let mut unchanged = 0;
                 let check = match operation {
                     ConfigOp::Apply => {
+                        self.tune_candidate = None;
                         let (applied, check) = block_on(mcf_config::apply(
                             &mut SimBus(&mut self.registers),
                             mcf_config::IMAGE,
@@ -263,24 +266,39 @@ impl Simulator {
                         check
                     }
                     ConfigOp::Stage => {
+                        self.tune_candidate = None;
                         let (applied, check) =
                             block_on(mcf_config::stage(&mut SimBus(&mut self.registers)));
                         written = applied.written;
                         unchanged = applied.unchanged;
                         check
                     }
-                    ConfigOp::Check => {
-                        if self.inputs.config == mcf_config::ConfigCheck::Provisional {
-                            block_on(mcf_config::check_provisional(&mut SimBus(
-                                &mut self.registers,
-                            )))
-                        } else {
-                            block_on(mcf_config::check(
+                    ConfigOp::Tune(candidate) => {
+                        let (applied, check) = block_on(mcf_config::stage_loaded_candidate(
+                            &mut SimBus(&mut self.registers),
+                            candidate,
+                        ));
+                        written = applied.written;
+                        unchanged = applied.unchanged;
+                        self.tune_candidate =
+                            (check == mcf_config::ConfigCheck::Tuning).then_some(candidate);
+                        check
+                    }
+                    ConfigOp::Check => match (self.inputs.config, self.tune_candidate) {
+                        (mcf_config::ConfigCheck::Provisional, _) => block_on(
+                            mcf_config::check_provisional(&mut SimBus(&mut self.registers)),
+                        ),
+                        (mcf_config::ConfigCheck::Tuning, Some(candidate)) => {
+                            block_on(mcf_config::check_loaded_candidate(
                                 &mut SimBus(&mut self.registers),
-                                mcf_config::IMAGE,
+                                candidate,
                             ))
                         }
-                    }
+                        _ => block_on(mcf_config::check(
+                            &mut SimBus(&mut self.registers),
+                            mcf_config::IMAGE,
+                        )),
+                    },
                     ConfigOp::Dump => unreachable!(),
                 };
                 self.inputs.config = check;
@@ -373,10 +391,13 @@ impl Simulator {
                 }
                 self.emit(&Reply::Ok);
             }
-            Request::Config(ConfigOp::Stage | ConfigOp::Apply) if !self.stopped_for_write() => self
-                .emit(&Reply::Error(
+            Request::Config(ConfigOp::Stage | ConfigOp::Tune(_) | ConfigOp::Apply)
+                if !self.stopped_for_write() =>
+            {
+                self.emit(&Reply::Error(
                     "configuration registers are writable only while stopped",
-                )),
+                ))
+            }
             Request::Config(operation) => self.config(operation),
             Request::Mpet(operation) => match operation {
                 MpetOp::Start | MpetOp::Electrical => {
@@ -524,6 +545,33 @@ mod tests {
     }
 
     #[test]
+    fn a_loaded_tuning_candidate_is_volatile_distinct_and_runnable() {
+        let mut sim = Simulator::new();
+        sim.send("config tune pwm-30khz").unwrap();
+        let reply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&reply, "ok"), Some("true"));
+        assert_eq!(field(&reply, "config"), Some("tuning"));
+        assert_eq!(
+            sim.register(stillair_core::mcf8316::reg::CONFIG_FIRST + 8)
+                & stillair_core::mcf8316::fields::PWM_FREQ_OUT_MASK,
+            stillair_core::mcf8316::fields::PWM_FREQ_OUT_30_KHZ
+        );
+        sim.send("config check").unwrap();
+        let checked = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&checked, "ok"), Some("true"));
+        assert_eq!(field(&checked, "config"), Some("tuning"));
+        run_until(&mut sim, 30_000, |line| {
+            field(line, "state") == Some("idle_off")
+        })
+        .expect("candidate never reached idle");
+        sim.send("run 60").unwrap();
+        let frame = run_until(&mut sim, 300_000, |line| {
+            field(line, "state") == Some("running")
+        });
+        assert!(frame.is_some(), "candidate was not permitted to run");
+    }
+
+    #[test]
     fn a_run_command_reaches_the_commanded_speed() {
         let mut sim = staged_simulator();
         run_until(&mut sim, 30_000, |line| {
@@ -577,6 +625,9 @@ mod tests {
         sim.send("config apply").unwrap();
         let apply = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
         assert_eq!(field(&apply, "ok"), Some("false"));
+        sim.send("config tune pwm-30khz").unwrap();
+        let tune = sim.receive(Duration::from_millis(10)).unwrap().unwrap();
+        assert_eq!(field(&tune, "ok"), Some("false"));
     }
 
     #[test]

@@ -138,7 +138,7 @@ unloaded bench.
   same normalized ramp through volatile `ALGO_DEBUG1.OVERRIDE` + `DIGITAL_SPEED_CTRL`.
   The MCF task checks the 20 Hz firmware ramp at each 50 ms service slice and performs I²C
   only when the word changes. Stop/fault revokes the hardware permission latch first and
-  then commands digital zero. Both `provisional` and `verified` verdicts use this path;
+  then commands digital zero. `provisional`, `tuning`, and `verified` verdicts use this path;
   non-runnable verdicts clear the override. Duty → speed mapping remains
   duty × MAX_SPEED (35 RPM = 19.4%, 170 RPM = 94.4% of the 180 RPM ceiling).
 - **External watchdog** (previously unconfigured — without these the EXT_WD path silently
@@ -191,6 +191,25 @@ The loaded 2026-08-21 candidate preserves these tuning values in a separate full
 `UNLOADED_IMAGE` remains the immutable qualified A/B baseline. `PROVISIONAL_IMAGE` still aliases
 the unloaded image for recovery work. Normal operation now verifies `IMAGE` directly from EEPROM
 after every motor-power cycle and does not stage volatile values.
+
+### Volatile loaded tuning candidates
+
+`config tune <candidate>` is the only runnable loaded-candidate mutation path. It first restores
+and verifies the complete `LOADED_IMAGE` in volatile shadow, then changes one named field whose
+datasheet layout is already encoded and tested. A second full read verifies the selected field and
+every preserved golden bit. Success reports `config=tuning`; this verdict permits operation but is
+distinct from both the unloaded `provisional` image and the persistent `verified` image. It never
+issues the EEPROM command, and a power cycle restores the stored golden image.
+
+The initial allowlist is `pwm-20khz`, `pwm-25khz`, `pwm-30khz`, `pwm-40khz`, `pwm-50khz`,
+`pwm-60khz`, `deadtime-off`, `deadtime-on`, `slew-125v-us`, and `slew-200v-us`. These candidates
+touch only `CLOSED_LOOP1.PWM_FREQ_OUT`, `CLOSED_LOOP1.DEADTIME_COMP_EN`, or
+`GD_CONFIG1.SLEW_RATE`; they cannot alter the speed ceiling, current and lock limits, startup,
+motor model, watchdog, fault modes, or board-interface fields. Loaded tuning deliberately has its
+own verdict so it does not activate the unloaded-only dynamic ILIMIT profile and accidentally turn
+a one-field experiment into a two-variable comparison. The 200 ms sentinel checks both the
+candidate field and the loaded-image speed/PI word, revoking operation if shadow reloads or the
+candidate disappears.
 
 ## Electrical control contract
 
@@ -336,13 +355,15 @@ The last clause of the safe-boot step ("stored configuration verified") is enfor
 - **The device's own verdict outranks ours.** The check reads `CONTROLLER_FAULT_STATUS` first
   and fails on `EEPROM_ERR` / `EEPROM_WRITE_LOCK` / `EEPROM_READ_LOCK`. The MCF CRCs its
   EEPROM at boot; if that failed, no amount of read-back agreement from us redeems the block.
-- **Five verdicts, not a boolean.** `pending` holds `SafeBoot` (with a
+- **Six verdicts, not a boolean.** `pending` holds `SafeBoot` (with a
   `CONFIG_CHECK_GRACE_MS` timeout, because a supervisor parked in `SafeBoot` reporting
   nothing is indistinguishable from a board that will not boot); `failed` is a fault, before
   or after boot; `verified` proceeds. `unverified` means the device is healthy but has no
   recognized runnable image, so it remains in `SafeBoot` while inspection and configuration
   commands stay available. `provisional` means the reviewed first-spin image passed read-back
-  in volatile shadow and permits bench operation. Every frame carries the verdict.
+  in volatile shadow and permits bench operation. `tuning` means a named one-field loaded
+  candidate passed golden-base and candidate read-back without an EEPROM commit. Every frame
+  carries the verdict.
 - **A configuration write invalidates the verdict.** Any successful `reg write` into
   `0x080..=0x0AE` re-runs the check automatically rather than leaving a stale `verified`
   standing. Raw writes change shadow only and deliberately do not spend an EEPROM cycle.

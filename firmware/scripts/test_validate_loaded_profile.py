@@ -63,6 +63,30 @@ wait idle_off --for 120
                 "verified",
             )
 
+    def test_accepts_known_candidate_with_configuration_owned_by_wrapper(self) -> None:
+        result = validate(
+            self.profile("run 50\nstream 1 --for 2\nstop\nwait idle_off\n"),
+            "candidate",
+            "pwm-30khz",
+        )
+        self.assertEqual(result["candidate"], "pwm-30khz")
+
+    def test_rejects_unknown_candidate_and_in_profile_tune(self) -> None:
+        with self.assertRaisesRegex(ValueError, "unknown loaded tuning candidate"):
+            validate(
+                self.profile("run 50\nstream 1 --for 2\nstop\nwait idle_off\n"),
+                "candidate",
+                "anything",
+            )
+        with self.assertRaisesRegex(ValueError, "may not stage"):
+            validate(
+                self.profile(
+                    "config tune pwm-30khz\nrun 50\nstream 1 --for 2\nstop\nwait idle_off\n"
+                ),
+                "candidate",
+                "pwm-30khz",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

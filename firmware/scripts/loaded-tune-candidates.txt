@@ -1,0 +1,10 @@
+pwm-20khz
+pwm-25khz
+pwm-30khz
+pwm-40khz
+pwm-50khz
+pwm-60khz
+deadtime-off
+deadtime-on
+slew-125v-us
+slew-200v-us

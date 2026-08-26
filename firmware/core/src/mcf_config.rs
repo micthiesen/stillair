@@ -202,6 +202,130 @@ pub const UNLOADED_IMAGE: &[Setting] = &[
 /// [`UNLOADED_IMAGE`] remains available for A/B comparison and regression diagnosis.
 pub const PROVISIONAL_IMAGE: &[Setting] = UNLOADED_IMAGE;
 
+/// A reviewed one-field experiment derived from the complete loaded golden image.
+///
+/// These are deliberately named values rather than arbitrary words. Each candidate changes
+/// only a field whose layout has already been transcribed from the TI datasheet and leaves
+/// the 180 RPM ceiling, fault behavior, motor model, startup sequence, and board-interface
+/// fields identical to [`LOADED_IMAGE`]. The operation is volatile and cannot commit EEPROM.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TuneCandidate {
+    Pwm20Khz,
+    Pwm25Khz,
+    Pwm30Khz,
+    Pwm40Khz,
+    Pwm50Khz,
+    Pwm60Khz,
+    DeadtimeOff,
+    DeadtimeOn,
+    Slew125VPerUs,
+    Slew200VPerUs,
+}
+
+impl TuneCandidate {
+    pub const ALL: &[Self] = &[
+        Self::Pwm20Khz,
+        Self::Pwm25Khz,
+        Self::Pwm30Khz,
+        Self::Pwm40Khz,
+        Self::Pwm50Khz,
+        Self::Pwm60Khz,
+        Self::DeadtimeOff,
+        Self::DeadtimeOn,
+        Self::Slew125VPerUs,
+        Self::Slew200VPerUs,
+    ];
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Pwm20Khz => "pwm-20khz",
+            Self::Pwm25Khz => "pwm-25khz",
+            Self::Pwm30Khz => "pwm-30khz",
+            Self::Pwm40Khz => "pwm-40khz",
+            Self::Pwm50Khz => "pwm-50khz",
+            Self::Pwm60Khz => "pwm-60khz",
+            Self::DeadtimeOff => "deadtime-off",
+            Self::DeadtimeOn => "deadtime-on",
+            Self::Slew125VPerUs => "slew-125v-us",
+            Self::Slew200VPerUs => "slew-200v-us",
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL
+            .iter()
+            .copied()
+            .find(|candidate| candidate.as_str().eq_ignore_ascii_case(name))
+    }
+
+    pub const fn setting(self) -> Setting {
+        use crate::mcf8316::fields;
+
+        match self {
+            Self::Pwm20Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_20_KHZ,
+            ),
+            Self::Pwm25Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_25_KHZ,
+            ),
+            Self::Pwm30Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_30_KHZ,
+            ),
+            Self::Pwm40Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_40_KHZ,
+            ),
+            Self::Pwm50Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_50_KHZ,
+            ),
+            Self::Pwm60Khz => Setting::masked(
+                "CLOSED_LOOP1.PWM_FREQ_OUT",
+                0x088,
+                fields::PWM_FREQ_OUT_MASK,
+                fields::PWM_FREQ_OUT_60_KHZ,
+            ),
+            Self::DeadtimeOff => Setting::masked(
+                "CLOSED_LOOP1.DEADTIME_COMP_EN",
+                0x088,
+                fields::DEADTIME_COMP_EN,
+                0,
+            ),
+            Self::DeadtimeOn => Setting::masked(
+                "CLOSED_LOOP1.DEADTIME_COMP_EN",
+                0x088,
+                fields::DEADTIME_COMP_EN,
+                fields::DEADTIME_COMP_EN,
+            ),
+            Self::Slew125VPerUs => Setting::masked(
+                "GD_CONFIG1.SLEW_RATE",
+                reg::GD_CONFIG1,
+                fields::SLEW_RATE_MASK,
+                fields::SLEW_RATE_125_V_PER_US,
+            ),
+            Self::Slew200VPerUs => Setting::masked(
+                "GD_CONFIG1.SLEW_RATE",
+                reg::GD_CONFIG1,
+                fields::SLEW_RATE_MASK,
+                fields::SLEW_RATE_200_V_PER_US,
+            ),
+        }
+    }
+}
+
 /// Put the live configuration shadow into standby mode without committing EEPROM.
 ///
 /// A device previously stored in sleep mode stops acknowledging I2C while SPEED is low.
@@ -264,7 +388,7 @@ pub enum ConfigFault {
 
 /// The device's configuration-readiness verdict, covering both volatile and stored images.
 ///
-/// Five values rather than a `bool` because "we have not checked yet", "there is nothing to
+/// Distinct values rather than a `bool` because "we have not checked yet", "there is nothing to
 /// check against yet", and "we checked and it is right" are three genuinely different things,
 /// and collapsing the middle one into either neighbour is how a safety gate becomes theatre.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -279,6 +403,10 @@ pub enum ConfigCheck {
     /// The reviewed first-spin image is present in volatile shadow registers. This permits
     /// bench operation but is intentionally lost at the next MCF power cycle.
     Provisional,
+    /// A reviewed one-field candidate derived from the loaded golden image is present in
+    /// volatile shadow. Unlike `Provisional`, this does not activate unloaded-only runtime
+    /// current-profile changes, so a candidate comparison changes exactly its named field.
+    Tuning,
     /// Every setting in [`IMAGE`] read back as required.
     Verified,
     Failed(ConfigFault),
@@ -292,7 +420,7 @@ impl ConfigCheck {
 
     /// May the supervisor leave `SafeBoot` on this verdict?
     pub const fn permits_operation(self) -> bool {
-        matches!(self, Self::Provisional | Self::Verified)
+        matches!(self, Self::Provisional | Self::Tuning | Self::Verified)
     }
 
     pub const fn as_str(self) -> &'static str {
@@ -300,6 +428,7 @@ impl ConfigCheck {
             Self::Pending => "pending",
             Self::Unverified => "unverified",
             Self::Provisional => "provisional",
+            Self::Tuning => "tuning",
             Self::Verified => "verified",
             Self::Failed(_) => "failed",
         }
@@ -409,6 +538,96 @@ pub async fn check_provisional<B: RegisterBus>(bus: &mut B) -> ConfigCheck {
         ConfigCheck::Verified => ConfigCheck::Provisional,
         other => other,
     }
+}
+
+/// Re-read a loaded one-field candidate against its golden base.
+pub async fn check_loaded_candidate<B: RegisterBus>(
+    bus: &mut B,
+    candidate: TuneCandidate,
+) -> ConfigCheck {
+    let status = match bus.read(reg::CONTROLLER_FAULT_STATUS).await {
+        Ok(status) => status,
+        Err(_) => {
+            return ConfigCheck::Failed(ConfigFault::Unreadable {
+                address: reg::CONTROLLER_FAULT_STATUS,
+            })
+        }
+    };
+    if status & EEPROM_SUSPECT != 0 {
+        return ConfigCheck::Failed(ConfigFault::DeviceEeprom);
+    }
+
+    let override_setting = candidate.setting();
+    for golden in LOADED_IMAGE {
+        match bus.read(golden.address).await {
+            Ok(read) if golden.address == override_setting.address => {
+                let preserved_mask = golden.mask & !override_setting.mask;
+                if read & preserved_mask != golden.value & preserved_mask
+                    || !override_setting.matches(read)
+                {
+                    return ConfigCheck::Failed(ConfigFault::Mismatch {
+                        address: golden.address,
+                    });
+                }
+            }
+            Ok(read) if golden.matches(read) => {}
+            Ok(_) => {
+                return ConfigCheck::Failed(ConfigFault::Mismatch {
+                    address: golden.address,
+                })
+            }
+            Err(_) => {
+                return ConfigCheck::Failed(ConfigFault::Unreadable {
+                    address: golden.address,
+                })
+            }
+        }
+    }
+    ConfigCheck::Tuning
+}
+
+/// Restore the loaded golden image in volatile shadow, apply one reviewed field override,
+/// and verify both the override and every preserved golden bit. Never commits EEPROM.
+pub async fn stage_loaded_candidate<B: RegisterBus>(
+    bus: &mut B,
+    candidate: TuneCandidate,
+) -> (Applied, ConfigCheck) {
+    let (mut applied, base_check) = write_volatile_image(bus, LOADED_IMAGE).await;
+    if base_check != ConfigCheck::Verified {
+        return (applied, base_check);
+    }
+
+    let candidate_image = [candidate.setting()];
+    let (override_applied, write_failure) = write_shadow(bus, &candidate_image).await;
+    applied.written += override_applied.written;
+    applied.unchanged += override_applied.unchanged;
+    if let Some(failure) = write_failure {
+        return (applied, failure);
+    }
+    (applied, check_loaded_candidate(bus, candidate).await)
+}
+
+/// Cheaply detect a reset or loss of the selected candidate between full checks.
+pub async fn check_loaded_candidate_sentinel<B: RegisterBus>(
+    bus: &mut B,
+    candidate: TuneCandidate,
+) -> ConfigCheck {
+    for setting in [PROVISIONAL_SENTINEL, candidate.setting()] {
+        match bus.read(setting.address).await {
+            Ok(value) if setting.matches(value) => {}
+            Ok(_) => {
+                return ConfigCheck::Failed(ConfigFault::Mismatch {
+                    address: setting.address,
+                })
+            }
+            Err(_) => {
+                return ConfigCheck::Failed(ConfigFault::Unreadable {
+                    address: setting.address,
+                })
+            }
+        }
+    }
+    ConfigCheck::Tuning
 }
 
 /// Cheaply detect an MCF reset that silently reloaded EEPROM while its rail stayed high.
@@ -676,6 +895,148 @@ mod tests {
     fn the_committed_image_is_the_complete_loaded_capture() {
         assert_eq!(IMAGE, LOADED_IMAGE);
         assert_eq!(IMAGE.len(), reg::configuration().count());
+    }
+
+    #[test]
+    fn loaded_candidates_claim_only_reviewed_acoustic_fields() {
+        use crate::mcf8316::fields;
+
+        for candidate in TuneCandidate::ALL {
+            let setting = candidate.setting();
+            let allowed = match setting.address {
+                0x088 => {
+                    setting.mask == fields::PWM_FREQ_OUT_MASK
+                        || setting.mask == fields::DEADTIME_COMP_EN
+                }
+                reg::GD_CONFIG1 => setting.mask == fields::SLEW_RATE_MASK,
+                _ => false,
+            };
+            assert!(
+                allowed,
+                "{} touches an unreviewed field",
+                candidate.as_str()
+            );
+            assert_eq!(setting.value & !setting.mask, 0);
+        }
+    }
+
+    #[test]
+    fn host_and_firmware_candidate_names_cannot_drift() {
+        let host_names = include_str!("../../scripts/loaded-tune-candidates.txt");
+        assert_eq!(host_names.lines().count(), TuneCandidate::ALL.len());
+        for candidate in TuneCandidate::ALL {
+            assert!(
+                host_names.lines().any(|name| name == candidate.as_str()),
+                "{} is absent from the host allowlist",
+                candidate.as_str()
+            );
+        }
+    }
+
+    #[test]
+    fn a_loaded_candidate_restores_golden_then_changes_only_its_mask() {
+        let candidate = TuneCandidate::Pwm30Khz;
+        let override_setting = candidate.setting();
+        let mut bus = FakeBus::default();
+        bus.registers.insert(reg::CONTROLLER_FAULT_STATUS, 0);
+        bus.registers.insert(0x080, 0xDEAD_BEEF);
+
+        let (_, verdict) = block_on(stage_loaded_candidate(&mut bus, candidate));
+        assert_eq!(verdict, ConfigCheck::Tuning);
+        for golden in LOADED_IMAGE {
+            let read = bus.registers.get(&golden.address).copied().unwrap_or(0);
+            if golden.address == override_setting.address {
+                assert!(override_setting.matches(read));
+                assert_eq!(
+                    read & !override_setting.mask,
+                    golden.value & !override_setting.mask
+                );
+            } else {
+                assert!(
+                    golden.matches(read),
+                    "{} did not return to golden",
+                    golden.name
+                );
+            }
+        }
+        assert_eq!(
+            bus.registers.get(&reg::ALGO_CTRL1),
+            None,
+            "a tuning candidate must never issue the EEPROM command"
+        );
+    }
+
+    #[test]
+    fn every_named_loaded_candidate_round_trips_without_an_eeprom_command() {
+        for candidate in TuneCandidate::ALL {
+            let mut bus = FakeBus::default();
+            bus.registers.insert(reg::CONTROLLER_FAULT_STATUS, 0);
+            for golden in LOADED_IMAGE {
+                bus.registers.insert(golden.address, golden.value);
+            }
+            let (_, verdict) = block_on(stage_loaded_candidate(&mut bus, *candidate));
+            assert_eq!(verdict, ConfigCheck::Tuning, "{}", candidate.as_str());
+            assert_eq!(
+                block_on(check_loaded_candidate(&mut bus, *candidate)),
+                ConfigCheck::Tuning,
+                "{}",
+                candidate.as_str()
+            );
+            assert_eq!(
+                bus.registers.get(&reg::ALGO_CTRL1),
+                None,
+                "{} issued an EEPROM command",
+                candidate.as_str()
+            );
+        }
+    }
+
+    #[test]
+    fn a_candidate_override_that_does_not_stick_is_not_runnable() {
+        let candidate = TuneCandidate::Pwm30Khz;
+        let mut bus = FakeBus::default();
+        bus.registers.insert(reg::CONTROLLER_FAULT_STATUS, 0);
+        for golden in LOADED_IMAGE {
+            bus.registers.insert(golden.address, golden.value);
+        }
+        bus.write_ignored = Some(candidate.setting().address);
+        let (_, verdict) = block_on(stage_loaded_candidate(&mut bus, candidate));
+        assert_eq!(
+            verdict,
+            ConfigCheck::Failed(ConfigFault::Mismatch {
+                address: candidate.setting().address
+            })
+        );
+    }
+
+    #[test]
+    fn the_loaded_candidate_sentinel_detects_shadow_reload() {
+        let candidate = TuneCandidate::Pwm30Khz;
+        let mut bus = FakeBus::default();
+        bus.registers.insert(reg::CONTROLLER_FAULT_STATUS, 0);
+        for golden in LOADED_IMAGE {
+            bus.registers.insert(golden.address, golden.value);
+        }
+        let setting = candidate.setting();
+        let current = bus.registers[&setting.address];
+        bus.registers
+            .insert(setting.address, setting.merge(current));
+        assert_eq!(
+            block_on(check_loaded_candidate_sentinel(&mut bus, candidate)),
+            ConfigCheck::Tuning
+        );
+
+        let golden = LOADED_IMAGE
+            .iter()
+            .find(|item| item.address == setting.address)
+            .unwrap();
+        bus.registers.insert(setting.address, golden.value);
+        assert_eq!(
+            block_on(check_loaded_candidate_sentinel(&mut bus, candidate)),
+            ConfigCheck::Failed(ConfigFault::Mismatch {
+                address: setting.address
+            })
+        );
     }
 
     #[test]
@@ -1148,7 +1509,11 @@ mod tests {
 
     #[test]
     fn a_motor_rail_falling_edge_invalidates_any_runnable_verdict() {
-        for verdict in [ConfigCheck::Provisional, ConfigCheck::Verified] {
+        for verdict in [
+            ConfigCheck::Provisional,
+            ConfigCheck::Tuning,
+            ConfigCheck::Verified,
+        ] {
             assert_eq!(after_pgood_loss(true, verdict), ConfigCheck::Unverified);
             assert_eq!(after_pgood_loss(false, verdict), verdict);
         }
@@ -1293,11 +1658,13 @@ mod tests {
         assert!(!ConfigCheck::Failed(ConfigFault::DeviceEeprom).permits_operation());
         assert!(!ConfigCheck::Unverified.permits_operation());
         assert!(ConfigCheck::Provisional.permits_operation());
+        assert!(ConfigCheck::Tuning.permits_operation());
         assert!(ConfigCheck::Verified.permits_operation());
 
         assert!(!ConfigCheck::Pending.settled());
         assert!(ConfigCheck::Unverified.settled());
         assert!(ConfigCheck::Provisional.settled());
+        assert!(ConfigCheck::Tuning.settled());
         assert!(ConfigCheck::Verified.settled());
         assert!(ConfigCheck::Failed(ConfigFault::TimedOut).settled());
     }

@@ -1,0 +1,22 @@
+# Matched exposed-fan ladder for one golden-derived volatile tuning candidate. The wrapper
+# verifies the stored golden base, starts every evidence source, and applies the named field
+# before this motor-only profile begins.
+wait idle_off --for 30
+run 50
+estimator sample --for 45 --interval-ms 100
+wait speed 50 --within 2 --for 60
+stream 10 --for 30
+run 60
+wait speed 60 --within 2 --for 30
+stream 10 --for 30
+run 80
+wait speed 80 --within 2 --for 30
+stream 10 --for 30
+run 120
+wait speed 120 --within 3 --for 35
+stream 10 --for 30
+run 170
+wait speed 170 --within 3 --for 45
+stream 10 --for 45
+stop
+wait idle_off --for 180

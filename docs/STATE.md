@@ -53,14 +53,23 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
   OWON, camera, Hall/FG, telemetry, and Kasa evidence, and emits a hashed run manifest. Dry-run and
   simulated acquisition checks pass. The instruments were not attached during preparation, so the
   first launched session still begins with one-time device enumeration, probe/range/gain checks,
-  and an untouched-golden capture. Arbitrary raw register writes remain non-runnable by design;
-  candidate support will be kept narrow and added only for parameter families justified by that
-  baseline.
+  and an untouched-golden capture. `10-run-loaded-candidate.sh` now provides matched, hashed runs
+  for named PWM-frequency, dead-time-compensation, and gate-slew candidates. Each operation restores
+  the complete golden base, changes one reviewed field in volatile shadow, verifies preserved bits,
+  uses a distinct `tuning` verdict that cannot activate unloaded-only current behavior, and has no
+  EEPROM commit path. Host simulation, all-candidate readback tests, and the app build pass; this
+  firmware has not yet been flashed to the installed controller. Arbitrary raw register writes
+  remain non-runnable.
+- **The physical goal is paused until the full observability suite is available and Michael resumes
+  it.** No blind acoustic or performance iteration should run meanwhile. With Michael watching a
+  clear fan and holding the cutoff, bounded flashing and commissioning checks remain authorized if
+  they do not claim missing evidence and the currently active provisional firmware is restored
+  afterward.
 
 ## Next
 
-When Michael next signals launch with the instruments attached, run the autonomous synchronized
-loaded-tuning batch on the exposed assembly.
+After the remaining observability tools are present and Michael explicitly resumes the goal, run
+the autonomous synchronized loaded-tuning batch on the exposed assembly.
 Mount the dedicated microphone independently, close to the motor but just outside the future housing
 envelope, so it can remain fixed for the entire sequence. Hook up and qualify scope, Hall/FG,
 telemetry, Kasa power, and selective camera capture once; then record the untouched golden reference

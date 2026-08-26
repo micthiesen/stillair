@@ -174,9 +174,22 @@ has been recorded: the OWON, microphone, camera, and controller were not attache
 preparation, so device enumeration, microphone gain/clipping, scope range/offset, trigger quality,
 probe grounds, and cross-source timing still require the one-time watched hookup.
 
-The prepared entry point intentionally cannot mutate the loaded golden image. After the untouched
-reference is secured, each candidate must be generated in volatile shadow with an explicit reviewed
-change and its own evidence run. The current firmware does not treat an arbitrary raw register write
-as runnable configuration; it invalidates the configuration verdict. Keep that guard. Add or adjust
-a narrowly scoped candidate mechanism only after the baseline shows which parameter family the
-synchronized evidence justifies testing.
+The baseline entry point intentionally cannot mutate the loaded golden image. After the untouched
+reference is secured, `10-run-loaded-candidate.sh` can run a matched profile against one named
+golden-derived volatile override. The initial allowlist covers PWM frequency, dead-time compensation,
+and gate slew rate. Firmware restores and verifies the entire loaded image before applying the one
+masked field, reports the distinct `tuning` verdict, watches the field for shadow reset, and provides
+no EEPROM commit path. It also keeps the unloaded dynamic-current profile inactive, preserving a
+true one-variable comparison. Arbitrary raw register writes remain non-runnable. Startup and other
+parameter families should receive similarly narrow named candidates only after the synchronized
+baseline identifies a reason to test them.
+
+This candidate mechanism has passed host simulation, all-candidate golden/readback checks, profile
+validation, clippy, and the embedded app build. It has not been flashed or exercised on the installed
+controller yet, and no physical or acoustic conclusion follows from the software-only result.
+
+The loaded-tuning goal is paused at Michael's direction until the full observability suite is
+available. This is an evidence boundary, not an operating-permission boundary: while the room is
+clear and Michael is continuously watching with the physical cutoff, bounded flashing and tests are
+authorized if they do not draw acoustic or performance conclusions without the missing instruments
+and the currently active provisional firmware is restored afterward.

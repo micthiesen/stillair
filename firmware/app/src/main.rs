@@ -519,6 +519,16 @@ async fn mcf_task(mut mcf: Mcf) {
             if check != ConfigCheck::Provisional {
                 mcf::publish_verdict(check);
             }
+        } else if mcf::verdict() == ConfigCheck::Tuning {
+            let check = match mcf::tuning_candidate() {
+                Some(candidate) => {
+                    mcf_config::check_loaded_candidate_sentinel(&mut mcf, candidate).await
+                }
+                None => ConfigCheck::Unverified,
+            };
+            if check != ConfigCheck::Tuning {
+                mcf::publish_verdict(check);
+            }
         }
 
         let outcome = mcf.fault_status().await;

@@ -72,6 +72,9 @@ pub enum ConfigOp {
     Check,
     /// Write the reviewed first-spin image to volatile shadow registers only.
     Stage,
+    /// Restore the loaded golden image in volatile shadow, then apply one reviewed field
+    /// override. The candidate receives the distinct tuning verdict and cannot commit EEPROM.
+    Tune(crate::mcf_config::TuneCandidate),
     /// Write every setting in the golden image the device does not already satisfy, then
     /// verify by read-back. A bench operation: the device gates it on the fan being stopped.
     Apply,
@@ -154,6 +157,10 @@ pub fn parse(line: &str) -> Result<Request, ParseError> {
             Ok(Request::Config(ConfigOp::Check))
         } else if is(operation, "stage") {
             Ok(Request::Config(ConfigOp::Stage))
+        } else if is(operation, "tune") {
+            let candidate = crate::mcf_config::TuneCandidate::from_name(argument()?)
+                .ok_or(ParseError::BadArgument)?;
+            Ok(Request::Config(ConfigOp::Tune(candidate)))
         } else if is(operation, "apply") {
             Ok(Request::Config(ConfigOp::Apply))
         } else if is(operation, "dump") {
@@ -442,6 +449,7 @@ pub const HELP: &[&str] = &[
     "disarm                    immediately revoke drive permission",
     "config check              re-verify the MCF's stored configuration",
     "config stage              load the volatile first-spin image (stopped only)",
+    "config tune <candidate>   load one volatile golden-derived tuning candidate",
     "config apply              write the golden image (only while stopped)",
     "config dump               read the whole EEPROM configuration block",
     "mpet start|electrical|status|abort   controlled parameter extraction service",
@@ -496,6 +504,7 @@ pub const fn config_fault_name(check: ConfigCheck) -> Option<&'static str> {
         ConfigCheck::Pending
         | ConfigCheck::Unverified
         | ConfigCheck::Provisional
+        | ConfigCheck::Tuning
         | ConfigCheck::Verified => None,
     }
 }
@@ -750,10 +759,17 @@ mod tests {
     fn configuration_operations_parse() {
         assert_eq!(parse("config check"), Ok(Request::Config(ConfigOp::Check)));
         assert_eq!(parse("config stage"), Ok(Request::Config(ConfigOp::Stage)));
+        assert_eq!(
+            parse("config tune pwm-30khz"),
+            Ok(Request::Config(ConfigOp::Tune(
+                crate::mcf_config::TuneCandidate::Pwm30Khz
+            )))
+        );
         assert_eq!(parse("CONFIG Apply"), Ok(Request::Config(ConfigOp::Apply)));
         assert_eq!(parse("config dump"), Ok(Request::Config(ConfigOp::Dump)));
         assert_eq!(parse("config"), Err(ParseError::MissingArgument));
         assert_eq!(parse("config erase"), Err(ParseError::BadArgument));
+        assert_eq!(parse("config tune arbitrary"), Err(ParseError::BadArgument));
     }
 
     #[test]
@@ -800,7 +816,11 @@ mod tests {
         assert!(failed.contains("\"detail\":\"mismatch\""), "{failed}");
         assert!(failed.contains("\"addr\":138"), "{failed}");
 
-        for check in [ConfigCheck::Verified, ConfigCheck::Provisional] {
+        for check in [
+            ConfigCheck::Verified,
+            ConfigCheck::Provisional,
+            ConfigCheck::Tuning,
+        ] {
             let line = Reply::Config {
                 check,
                 written: 3,

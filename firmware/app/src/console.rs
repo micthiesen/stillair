@@ -255,7 +255,7 @@ async fn config(operation: ConfigOp) {
     let access = match operation {
         ConfigOp::Check => mcf::Access::ConfigCheck,
         ConfigOp::Dump => mcf::Access::ConfigDump,
-        ConfigOp::Stage | ConfigOp::Apply => {
+        ConfigOp::Stage | ConfigOp::Tune(_) | ConfigOp::Apply => {
             // The same gate as a raw configuration write, for the same reasons: EEPROM
             // discipline, and the fact that `MAX_SPEED` decides what every clamped duty
             // means. `CONFIG_FIRST` stands in for the block as a whole.
@@ -269,6 +269,7 @@ async fn config(operation: ConfigOp) {
             }
             match operation {
                 ConfigOp::Stage => mcf::Access::ConfigStage,
+                ConfigOp::Tune(candidate) => mcf::Access::ConfigTune(candidate),
                 ConfigOp::Apply => mcf::Access::ConfigApply,
                 _ => unreachable!(),
             }
@@ -276,7 +277,10 @@ async fn config(operation: ConfigOp) {
     };
 
     let result = mcf::request_config(access).await;
-    if matches!(operation, ConfigOp::Stage | ConfigOp::Apply) {
+    if matches!(
+        operation,
+        ConfigOp::Stage | ConfigOp::Tune(_) | ConfigOp::Apply
+    ) {
         CONFIG_SERVICE_ACTIVE.store(false, Ordering::Release);
     }
     match result {

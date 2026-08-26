@@ -544,7 +544,7 @@ impl Supervisor {
                     return;
                 }
             }
-            ConfigCheck::Verified => {}
+            ConfigCheck::Tuning | ConfigCheck::Verified => {}
         }
         self.transition(FanState::IdleOff, now);
     }
@@ -988,6 +988,15 @@ mod tests {
     fn verified_image_does_not_depend_on_the_provisional_current_profile() {
         let mut bench = Bench::new();
         bench.inputs.config = ConfigCheck::Verified;
+        bench.inputs.current_profile_ready = false;
+        bench.run_ms(config::SAFE_BOOT_HOLD_MS + 1_000);
+        assert_eq!(bench.supervisor.state(), FanState::IdleOff);
+    }
+
+    #[test]
+    fn loaded_tuning_image_does_not_activate_the_unloaded_current_profile() {
+        let mut bench = Bench::new();
+        bench.inputs.config = ConfigCheck::Tuning;
         bench.inputs.current_profile_ready = false;
         bench.run_ms(config::SAFE_BOOT_HOLD_MS + 1_000);
         assert_eq!(bench.supervisor.state(), FanState::IdleOff);
