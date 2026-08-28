@@ -12,7 +12,7 @@
     "one_line": "Hold the component side toward you with C1/C2 at upper-left, J6 at top, and J8 at lower-right."
   },
   "references": {
-    "AGND": "TP4",
+    "AGND": "TP26",
     "PGND": "TP3"
   },
   "test_points": {
@@ -44,6 +44,8 @@
       "expected": "Power-ground reference for RAW24, VM24, and high-current measurements."
     },
     "TP4": {
+      "available": false,
+      "condition": "Physical ring detached on this V1 board; do not probe or attach a wire.",
       "net": "AGND",
       "x_mm": 85.00,
       "y_mm": 53.50,
@@ -57,7 +59,7 @@
       "x_mm": 77.20,
       "y_mm": 53.50,
       "class": "rail3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Large ring on the top edge above C7; left of TP4 and right of C2.",
       "expected": "Approximately 3.3 V when the board is powered."
     },
@@ -66,7 +68,7 @@
       "x_mm": 123.00,
       "y_mm": 96.75,
       "class": "rail12",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Lower-right tach area, immediately left of J8 and above C27; beside U9.",
       "expected": "Approximately 12 V when the tach supply is healthy."
     },
@@ -75,7 +77,7 @@
       "x_mm": 89.60,
       "y_mm": 80.35,
       "class": "rail3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Immediately upper-right of U1, below TP12, beside C14 and the R4-R7 pull-up column.",
       "expected": "Approximately 3.3 V when the MCF8316D analog regulator is alive."
     },
@@ -84,7 +86,7 @@
       "x_mm": 74.75,
       "y_mm": 85.70,
       "class": "rail1v5",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Upper ring of the TP8/TP16 pair immediately left of U1, near C15 and R8.",
       "expected": "Approximately 1.5 V when the MCF8316D digital regulator is alive."
     },
@@ -93,7 +95,7 @@
       "x_mm": 91.00,
       "y_mm": 64.50,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Above SW1, immediately right of R3 and below C9/C10.",
       "expected": "High, approximately 3.3 V, when the board rails are healthy."
     },
@@ -102,7 +104,7 @@
       "x_mm": 96.65,
       "y_mm": 93.60,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Bottom ring of the four-ring TP11/TP24/TP27/TP10 column between U1 and U10.",
       "expected": "State-dependent 0 V or 3.3 V safety-latch clear signal; interpret only within a named test state."
     },
@@ -111,7 +113,7 @@
       "x_mm": 96.65,
       "y_mm": 87.00,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Top ring of the four-ring TP11/TP24/TP27/TP10 column immediately right of U1.",
       "expected": "State-dependent 0 V or 3.3 V permission-latch output; interpret only within a named test state."
     },
@@ -120,7 +122,7 @@
       "x_mm": 89.60,
       "y_mm": 78.20,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Immediately upper-right of U1 and directly above TP7, beside R7.",
       "expected": "Approximately 3.3 V while drive is disabled; approximately 0 V only when hardware permits drive."
     },
@@ -129,7 +131,7 @@
       "x_mm": 108.90,
       "y_mm": 72.78,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Upper ring of the TP13/TP14 pair below C20 and left of the ESP module.",
       "expected": "A 0-to-3.3 V heartbeat waveform after the ESP firmware starts."
     },
@@ -138,7 +140,7 @@
       "x_mm": 108.90,
       "y_mm": 74.93,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Lower ring of the TP13/TP14 pair below C20 and above U6.",
       "expected": "High when the external watchdog is satisfied; low when it times out."
     },
@@ -147,7 +149,7 @@
       "x_mm": 105.35,
       "y_mm": 93.20,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Bottom-center safety area above R34, between U10 and U7.",
       "expected": "Normally high; a deliberate low resets the external watchdog."
     },
@@ -156,7 +158,7 @@
       "x_mm": 74.75,
       "y_mm": 88.20,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Lower ring of the TP8/TP16 pair immediately left of U1, above L1.",
       "expected": "State-dependent 0-to-3.3 V MCF external-watchdog signal."
     },
@@ -165,7 +167,7 @@
       "x_mm": 92.90,
       "y_mm": 75.20,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Second ring in the TP20/TP17/TP18/TP19 column beside R4-R7, right of U1.",
       "expected": "High when the MCF reports no aggregate fault; low during a fault."
     },
@@ -174,7 +176,7 @@
       "x_mm": 92.90,
       "y_mm": 77.35,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Third ring in the TP20/TP17/TP18/TP19 column beside R4-R7, right of U1.",
       "expected": "Approximately 3.3 V while idle, with 0-to-3.3 V I2C activity during MCF transactions."
     },
@@ -183,7 +185,7 @@
       "x_mm": 92.90,
       "y_mm": 79.50,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Bottom ring in the TP20/TP17/TP18/TP19 column beside R4-R7, right of U1.",
       "expected": "Approximately 3.3 V while idle, with 0-to-3.3 V I2C clock activity during MCF transactions."
     },
@@ -192,7 +194,7 @@
       "x_mm": 92.90,
       "y_mm": 73.05,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Top ring in the TP20/TP17/TP18/TP19 column beside R4-R7, right of U1.",
       "expected": "High while stopped; 0-to-3.3 V pulses while the MCF reports rotation."
     },
@@ -201,7 +203,7 @@
       "x_mm": 126.00,
       "y_mm": 85.50,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Unlabelled single ring at the far-right edge in the tach corner, beside R43/Q3 and below TP23.",
       "expected": "0 V or 3.3 V depending on Hall state; one physical rotor edge per revolution in operation."
     },
@@ -210,7 +212,7 @@
       "x_mm": 115.00,
       "y_mm": 77.15,
       "class": "analog3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Middle-right tach area, left of TP23 and just above C32/R49.",
       "expected": "Speed-dependent analog tach voltage; near its stopped baseline with no Hall edges."
     },
@@ -219,7 +221,7 @@
       "x_mm": 124.50,
       "y_mm": 77.25,
       "class": "analog3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Large labelled ring at the far-right edge beside Q3, above TP21.",
       "expected": "Approximately 2.58 V from the 10.0 kOhm / 35.7 kOhm reference divider."
     },
@@ -228,7 +230,7 @@
       "x_mm": 96.65,
       "y_mm": 89.20,
       "class": "logic3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Unlabelled second ring in the TP11/TP24/TP27/TP10 column immediately right of U1.",
       "expected": "High in the healthy state; low when the analog overspeed comparator trips."
     },
@@ -237,7 +239,7 @@
       "x_mm": 109.30,
       "y_mm": 59.10,
       "class": "analog3v3",
-      "reference": "TP4",
+      "reference": "TP26",
       "location": "Immediately below and right of J6, beside U12 and R21/R58.",
       "expected": "Approximately half of USB VBUS, nominally 2.5 V with a 5 V USB source."
     },
@@ -289,7 +291,7 @@
       "location": "Bottom edge right of centre, left of H2/J8.",
       "orientation": "Component-side view, left-to-right: pins 1, 2, 3.",
       "pins": {"1": "3V3", "2": "HALL_TACH", "3": "AGND"},
-      "warning": "Prefer TP21 for Hall probing and TP4 for AGND."
+      "warning": "Prefer TP21 for Hall probing and TP26 for AGND."
     },
     "J4": {
       "name": "TEMP",
@@ -303,7 +305,7 @@
       "location": "Top edge left of centre, above U3.",
       "orientation": "Component-side view, left-to-right across the board pads: pin 4, pin 3, pin 2, pin 1.",
       "pins": {"1": "AGND", "2": "3V3", "3": "SDA", "4": "SCL"},
-      "warning": "Prefer TP18/TP19 and TP4."
+      "warning": "Prefer TP18/TP19 and TP26."
     },
     "J6": {
       "name": "USB-C",

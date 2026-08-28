@@ -32,7 +32,7 @@ PCB-01, component side, not to scale
 
   TOP: J5 / J6 USB-C
   +----------------------------------------------------------------+
-  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |
+  | H3   C1      C2      TP5  TP4-X     J5       TP26/28   J6   H4 |
   | TP1  J1/Q1       TP3                                           |
   |                   TP2       U3/TP9            ESP U2            |
   | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |
@@ -53,7 +53,7 @@ at the board:
 ```text
 TP7 (MCF_AVDD), DC volts
 Find:   Immediately upper-right of U1, below TP12, beside C14 and R4-R7.
-Clip:   With power off, black to TP4 (AGND), red to TP7.
+Clip:   With power off, black to TP26 (AGND), red to TP7.
 Wire:   Clip directly once; add a temporary pigtail only for repeated work or an unstable clip.
 Expect: About 3.3 V after power-up.
 Report: `TP7: __ V, steady/rising/falling`
@@ -66,8 +66,9 @@ before any lead moves.
 
 ## Ground and instrument rules
 
-- **TP4 is the default AGND reference** for logic, analog, 3.3 V, 12 V tach, and MCF internal-rail
-  measurements. TP26 and TP28 are additional AGND access near J6.
+- **TP26 is the default AGND reference** for logic, analog, 3.3 V, 12 V tach, and MCF internal-rail
+  measurements. TP28 is the backup. TP4's physical ring detached on this V1 board and must not be
+  probed or wired again.
 - **TP3 is the default PGND reference** for RAW24 and VM24. TP27 is a second PGND point near U1.
 - AGND and PGND join only through the board's designed net tie. Do not casually bridge them with
   multiple instrument grounds.
@@ -116,7 +117,7 @@ Coordinates are retained in the JSON map for verification. Human instructions us
 | TP1 | RAW24 | Far left edge, left of R1/R2 and above D1 |
 | TP2 | VM24 | Lower ring of TP3/TP2 pair, right of C2/F1 |
 | TP3 | PGND | Upper ring of TP3/TP2 pair, right of C2/F1 |
-| TP4 | AGND | Large top-edge ring above C11/U3, right of TP5 |
+| TP4 | AGND | **Unavailable:** physical ring detached; do not probe or wire |
 | TP5 | 3V3 | Large top-edge ring above C7, left of TP4 |
 | TP6 | +12V_TACH | Lower-right tach area, left of J8 and above C27 |
 | TP7 | MCF_AVDD | Upper-right of U1, below TP12, beside C14/R4-R7 |
@@ -179,7 +180,7 @@ J7 pin 1 is board 3.3 V, not a power input. A programmer must not drive it while
 - **J3 HALL, bottom edge:** left-to-right is pin 1 3V3, pin 2 HALL_TACH, pin 3 AGND.
 - **J4 TEMP, bottom edge:** left-to-right is pin 1 TEMP_SENSE, pin 2 AGND.
 - **J5 I2C, top edge:** board pads left-to-right are pin 4 SCL, pin 3 SDA, pin 2 3V3,
-  pin 1 AGND. Prefer TP18/TP19/TP4.
+  pin 1 AGND. Prefer TP18/TP19/TP26.
 - **J6 USB-C, top edge:** use a cable rather than hand-probing. VBUS does not power the board;
   TP25 exposes the divided VBUS_SENSE signal.
 - **JP1 MODE/SYNC:** left-to-right is pin 1 AGND, pin 2 MODE_SYNC, pin 3 3V3.

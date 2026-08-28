@@ -76,6 +76,9 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
   pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary
   pigtail criteria. `pcb/tools/probe_guide.py` prints the exact hookup/report contract and verifies
   the retained map against the board file.
+- **TP4 is physically unavailable on this V1 board.** Its AGND test-point ring detached during the
+  initial unpowered resistance checks on 2026-08-28. Do not probe, solder, or attach a pigtail to
+  TP4. The retained map and generated instructions now use TP26 as default AGND and TP28 as backup.
 - **The physical goal is paused until the full observability suite is available and Michael resumes
   it.** No blind acoustic or performance iteration should run meanwhile. With Michael watching a
   clear fan and holding the cutoff, bounded flashing and commissioning checks remain authorized if

@@ -54,7 +54,7 @@ PCB-01, component side, not to scale
 
   TOP: J5 / J6 USB-C
   +----------------------------------------------------------------+
-  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |
+  | H3   C1      C2      TP5  TP4-X     J5       TP26/28   J6   H4 |
   | TP1  J1/Q1       TP3                                           |
   |                   TP2       U3/TP9            ESP U2            |
   | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |
@@ -115,6 +115,10 @@ def show_connector(data: dict, ref: str) -> int:
 
 def show_probe(data: dict, ref: str, mode: str) -> int:
     item = data["test_points"][ref]
+    if item.get("available") is False:
+        print(f"{ref} ({item['net']}) is unavailable on this board: {item['condition']}")
+        print(f"Use {data['references'][item['net']]} instead.")
+        return 1
     reference = item.get("reference")
     reference_net = (
         data["test_points"][reference]["net"] if reference in data["test_points"] else None
