@@ -35,9 +35,9 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
 - **The provisional automation intent is occupied-by-default.** After final startup and endurance
   qualification, a confirmed arrival should start forward 1%; temperature may later boost to 20%
   and return to 1%, while manual Off, faults, reboots, and power restoration remain no-start gates.
-- **The remaining work is finite and ordered.** The microphone has arrived and is usable; the OWON
-  is expected in roughly seven days. Rather than duplicate setup, acoustic and electrical tuning
-  will run as one instrumented batch after it arrives, beginning with an untouched-golden baseline.
+- **The remaining work is finite and ordered.** The microphone, OWON, Kasa plug, Ubiquiti camera,
+  and ESP are connected through the commissioning setup. Rather than duplicate setup, acoustic and
+  electrical tuning will run as one instrumented batch, beginning with an untouched-golden baseline.
   Source tuning happens on the exposed assembly; the decided 2 mm butyl/film motor and upper-housing
   damping is installed afterward as a passive improvement and verified without changing the tune.
   Michael will then make a cleaner Hall-board mount and complete the owner-designed cosmetic housing
@@ -51,9 +51,12 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
 - **The fail-closed baseline runner is prepared.** `firmware/scripts/09-run-loaded-profile.sh`
   validates the 50--170 RPM profile, requires the EEPROM-verified golden image, fixed microphone,
   OWON, camera, Hall/FG, telemetry, and Kasa evidence, and emits a hashed run manifest. Dry-run and
-  simulated acquisition checks pass. The instruments were not attached during preparation, so the
-  first launched session still begins with one-time device enumeration, probe/range/gain checks,
-  and an untouched-golden capture. `10-run-loaded-candidate.sh` now provides matched, hashed runs
+  simulated acquisition checks pass. Static preflight on 2026-08-28 qualified the USB hub, Kasa,
+  VDS1022I frame capture, FG probe, fixed 24-bit/96 kHz microphone, and the private Ubiquiti RTSP
+  path. It corrected the 5 V scope offset from 0.5 to 0.2 so 3.3 V FG no longer clips. Dynamic SOX,
+  FG, camera-guard, and cross-source timing checks remain open because the installed firmware could
+  not read the MCF8316D during the preflight; confirm the physical controller-power path before any
+  motion. `10-run-loaded-candidate.sh` now provides matched, hashed runs
   for named PWM-frequency, dead-time-compensation, and gate-slew candidates. Each operation restores
   the complete golden base, changes one reviewed field in volatile shadow, verifies preserved bits,
   uses a distinct `tuning` verdict that cannot activate unloaded-only current behavior, and has no

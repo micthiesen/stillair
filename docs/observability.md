@@ -214,3 +214,9 @@ frames with unknown inter-frame data; the JSONL index retains each arrival gap s
 can mistake this mode for gap-free streaming. The initial SOX/FG recipe is a safe preflight starting
 point, not a calibrated setup: confirm the VDS1022I model, common-ground connections, range, offset,
 trigger, and clipping on the installed hardware before releasing the motor run.
+
+The installed-scope preflight on 2026-08-28 identified VDS1022I serial `VDS1022I26190076`, hardware
+version `V5.0.1`, and repeatable 5,000-sample frames at about 249,940 sample/s through the commissioning
+USB hub. With a 5 V range, a centered `0.5` offset clips the 3.3 V FG high at 2.5 V. The retained
+SOX/FG recipe therefore uses offset `0.2`, which measured the stationary FG high at 3.24--3.32 V and
+keeps the nominal 0--3.3 V signals inside the approximately -1 to +4 V window.

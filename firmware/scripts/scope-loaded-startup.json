@@ -8,7 +8,7 @@
       "number": 1,
       "signal": "SOX",
       "range": "5v",
-      "offset": 0.5,
+      "offset": 0.2,
       "probe": "x1",
       "coupling": "DC"
     },
@@ -16,7 +16,7 @@
       "number": 2,
       "signal": "FG",
       "range": "5v",
-      "offset": 0.5,
+      "offset": 0.2,
       "probe": "x1",
       "coupling": "DC"
     }

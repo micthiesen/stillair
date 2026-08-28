@@ -169,10 +169,14 @@ The pre-hardware automation is ready as of 2026-08-26. `09-run-loaded-profile.sh
 runs `51-loaded-golden-baseline.txt` in verified-golden mode, rejects configuration mutation and
 speeds outside 50--170 RPM, records the fixed microphone at 24-bit/96 kHz, captures timestamped
 discrete OWON frames, and bundles camera, controller, Hall/FG, Kasa, audio, and scope evidence in a
-hashed manifest. Its hardware-free validation and simulated scope path pass. No physical baseline
-has been recorded: the OWON, microphone, camera, and controller were not attached during this
-preparation, so device enumeration, microphone gain/clipping, scope range/offset, trigger quality,
-probe grounds, and cross-source timing still require the one-time watched hookup.
+hashed manifest. Its hardware-free validation and simulated scope path pass. Static physical
+preflight on 2026-08-28 qualified the commissioning USB hub, Kasa control and metering, Ubiquiti G4
+Instant stream at 1280x720/30 fps, Razer microphone at mono 24-bit/96 kHz without clipping, and
+VDS1022I discrete frames at about 249,940 sample/s. The connected FG probe measured 3.24--3.32 V
+after moving the 5 V-range offset from 0.5 to 0.2; 0.5 had clipped the high at 2.5 V. No physical
+baseline has been recorded. The installed firmware could not read the MCF8316D during this preflight,
+so dynamic SOX/FG response, camera-guard tracking, and cross-source timing remain open until the
+physical controller-power path is confirmed and a bounded motion shakedown passes.
 
 The baseline entry point intentionally cannot mutate the loaded golden image. After the untouched
 reference is secured, `10-run-loaded-candidate.sh` can run a matched profile against one named

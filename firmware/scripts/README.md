@@ -93,6 +93,10 @@ STILLAIR_SCOPE_ISOLATED_CONFIRMED=1 \
 scripts/09-run-loaded-profile.sh
 ```
 
+When `STILLAIR_CAMERA_URL` is unset, the runner reads the RTSP URL from
+`${XDG_CONFIG_HOME:-$HOME/.config}/stillair/camera-url` or the path named by
+`STILLAIR_CAMERA_URL_FILE`. Keep that file outside the repository and readable only by its owner.
+
 The microphone defaults to the AVFoundation device name `Razer Seiren V3 Mini`; override
 `STILLAIR_AUDIO_DEVICE` if the enumerated name differs. Audio is retained as mono 24-bit/96 kHz
 WAV and analyzed at 48 kHz, preserving comparison bands through 20 kHz. The scope recipe defaults

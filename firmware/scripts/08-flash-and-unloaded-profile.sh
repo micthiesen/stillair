@@ -15,6 +15,10 @@ tune_candidate=${STILLAIR_TUNE_CANDIDATE:-}
 require_clean=${STILLAIR_REQUIRE_CLEAN:-0}
 power_log_seconds=${STILLAIR_RUN_SECONDS:-}
 camera_url=${STILLAIR_CAMERA_URL:-}
+camera_url_file=${STILLAIR_CAMERA_URL_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/stillair/camera-url}
+if [ -z "$camera_url" ] && [ -r "$camera_url_file" ]; then
+    IFS= read -r camera_url <"$camera_url_file"
+fi
 audio_device=${STILLAIR_AUDIO_DEVICE:-}
 require_audio=${STILLAIR_REQUIRE_AUDIO:-0}
 scope_recipe=${STILLAIR_SCOPE_RECIPE:-}
