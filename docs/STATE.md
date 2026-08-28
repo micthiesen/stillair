@@ -79,6 +79,13 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
 - **TP4 is physically unavailable on this V1 board.** Its AGND test-point ring detached during the
   initial unpowered resistance checks on 2026-08-28. Do not probe, solder, or attach a pigtail to
   TP4. The retained map and generated instructions now use TP26 as default AGND and TP28 as backup.
+- **Unpowered measurements localize the communication failure to the MCF internal rails.** With USB
+  and 24 V removed, VM24-to-PGND measured 30--40 MOhm and board 3V3-to-AGND measured about 900 MOhm,
+  ruling out hard shorts on the input and main logic rail. MCF_AVDD at TP7 measured about 5 Ohm to
+  TP26 AGND and buzzed in both polarities; MCF_DVDD at TP8 measured about 3 Ohm to TP26. Two shorted
+  MCF-generated rails make U1 internal damage much more likely than one failed bypass capacitor.
+  Do not power the board. Before replacing U1, remove C14 and C15 while unpowered and remeasure TP7
+  and TP8 to exclude the two rail bypass capacitors conclusively.
 - **The physical goal is paused until the full observability suite is available and Michael resumes
   it.** No blind acoustic or performance iteration should run meanwhile. With Michael watching a
   clear fan and holding the cutoff, bounded flashing and commissioning checks remain authorized if
@@ -87,9 +94,10 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
 
 ## Next
 
-Diagnose PCB-01 on the bench before any installed work or tuning. Begin fully unpowered with the
-standardized TP2 (VM24) to TP3 (PGND) resistance check. If no hard short exists, use a
-current-limited 24 V bench source, establish input current and TP5 3V3, then check TP7 MCF_AVDD and
+Repair PCB-01 on the bench before any installed work or tuning. Keep it unpowered; remove C14 and
+C15 and remeasure TP7/TP8 to distinguish bypass-capacitor shorts from the leading U1 internal-failure
+diagnosis. Replace U1 if either short remains with its bypass capacitor absent. After repair, use a
+current-limited 24 V bench source, establish input current and TP5 3V3, then verify TP7 MCF_AVDD and
 TP8 MCF_DVDD before interpreting I2C. Do not return the board overhead until the ESP enumerates, the
 MCF responds, configuration verifies, and a stopped no-motor bench soak passes.
 
