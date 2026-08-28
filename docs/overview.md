@@ -75,6 +75,7 @@ Slab verification and the local installation-approval path are site-specific exe
 - [controls.md](controls.md) — motor-control contract and required state behavior
 - [home-automation.md](home-automation.md) — provisional presence, comfort, and vacation behavior
 - [observability.md](observability.md) — measurement authority, J8/scope hookups, synchronized evidence
+- [probing.md](probing.md) — PCB-01 orientation, human test-point locations, connector pin views, and probe workflow
 - [motor-contingency.md](motor-contingency.md) — motor rejection criteria and least-disruption fallback paths
 - [build.md](build.md) — build sequence, procurement gates, commissioning
 - [integration.md](integration.md) — dependency spine, parallel tracks, and energy-sized next work

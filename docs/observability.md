@@ -4,7 +4,8 @@ Defines how Stillair is observed during commissioning, which signal is authorita
 each claim, and how electrical waveforms join the existing synchronized evidence bundle.
 This document owns the measurement architecture. Test limits remain in
 [`testing/test-matrix.csv`](../testing/test-matrix.csv), motor behavior remains in
-[`controls.md`](controls.md), and circuit details remain in [`electrical.md`](electrical.md).
+[`controls.md`](controls.md), circuit details remain in [`electrical.md`](electrical.md), and exact
+human probe locations and hookup wording live in [`probing.md`](probing.md).
 
 ## Measurement principles
 

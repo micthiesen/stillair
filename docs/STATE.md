@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
+Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF communication loss.)
 
 ## Now
 
@@ -63,6 +63,19 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
   EEPROM commit path. Host simulation, all-candidate readback tests, and the app build pass; this
   firmware has not yet been flashed to the installed controller. Arbitrary raw register writes
   remain non-runnable.
+- **PCB-01 is down on the bench and must be diagnosed before tuning resumes.** During instrument
+  preflight, the ESP booted but the MCF8316D returned address NACK after the built-in wake pulse,
+  recovery-address scan, explicit `fault clear`, and an extended full power removal. This began
+  before a later visible spark while J8 was being cleaned, so the spark does not explain the
+  original MCF loss but may have added damage. The board is now clean, discharged, and connected
+  only to data-only USB, which cannot power or enumerate the ESP by itself. Do not reapply ordinary
+  24 V until unpowered short checks pass; then use a current-limited bench supply and verify rails
+  before attempting firmware communication.
+- **PCB-01 probing is now a retained, board-verified workflow.** [`probing.md`](probing.md) and
+  `pcb/pcb-01/probe-map.json` contain component-relative locations for all 28 test points, connector
+  pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary
+  pigtail criteria. `pcb/tools/probe_guide.py` prints the exact hookup/report contract and verifies
+  the retained map against the board file.
 - **The physical goal is paused until the full observability suite is available and Michael resumes
   it.** No blind acoustic or performance iteration should run meanwhile. With Michael watching a
   clear fan and holding the cutoff, bounded flashing and commissioning checks remain authorized if
@@ -71,8 +84,14 @@ Last updated: **2026-08-26** (autonomous final loaded-tuning sequence locked.)
 
 ## Next
 
-After the remaining observability tools are present and Michael explicitly resumes the goal, run
-the autonomous synchronized loaded-tuning batch on the exposed assembly.
+Diagnose PCB-01 on the bench before any installed work or tuning. Begin fully unpowered with the
+standardized TP2 (VM24) to TP3 (PGND) resistance check. If no hard short exists, use a
+current-limited 24 V bench source, establish input current and TP5 3V3, then check TP7 MCF_AVDD and
+TP8 MCF_DVDD before interpreting I2C. Do not return the board overhead until the ESP enumerates, the
+MCF responds, configuration verifies, and a stopped no-motor bench soak passes.
+
+After the controller is healthy, the remaining observability tools are present, and Michael
+explicitly resumes the goal, run the autonomous synchronized loaded-tuning batch on the exposed assembly.
 Mount the dedicated microphone independently, close to the motor but just outside the future housing
 envelope, so it can remain fixed for the entire sequence. Hook up and qualify scope, Hall/FG,
 telemetry, Kasa power, and selective camera capture once; then record the untouched golden reference

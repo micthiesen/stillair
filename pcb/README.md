@@ -29,6 +29,15 @@ option stays open). The Hall daughterboard (18 × 8 mm, DRV5033) is a second tin
 should ride in the same order/panel. A possible V2 reshape to a horizontal donut board is
 noted in the handoff doc.
 
+## Human probing map
+
+PCB-01 test-point and connector locations are retained in `pcb-01/probe-map.json`; the human
+workflow, ground-domain rules, and temporary-wire policy are in [`docs/probing.md`](../docs/probing.md).
+Use `pcb/tools/probe_guide.py TP7`, `pcb/tools/probe_guide.py J8`, or
+`pcb/tools/probe_guide.py TP2 --mode resistance` to print a complete one-step instruction. Run
+`pcb/tools/probe_guide.py --verify-board` after any layout revision so the retained map cannot silently
+drift from the board.
+
 ## JLCPCB order config (researched 2026-07)
 
 - Standard 4-layer 1.6 mm with the order-form copper dropdown set to **2 oz outer / 1 oz

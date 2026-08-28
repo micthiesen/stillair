@@ -68,6 +68,22 @@ blade build, 2026-07):
   cross-hole; pilot bore ID → RH-100 pilot OD). When 99% sure, prefer adapting at install
   over 3× verification work — never generate measurement busywork.
 
+## Probing PCB-01 with Michael
+
+Before asking Michael to locate or probe any PCB-01 test point, connector, or signal, read
+[`docs/probing.md`](docs/probing.md) and generate the exact request with
+`pcb/tools/probe_guide.py <TP-or-J> [--mode dc|resistance|scope]`. The retained map supplies the
+component-side orientation, nearby labelled landmarks, correct ground domain, instrument setup,
+expected result, stop conditions, and literal report format. Never give only a designator or rely on
+remembered connector orientation.
+
+Give one hookup at a time. Leads are connected, inspected, moved, and removed with all relevant
+power off; apply power only after Michael confirms the hookup is stable. Prefer test points over
+connector pins. For repeated, installed, tiny-pad, or automated measurements, follow the guide's
+temporary-pigtail criteria instead of repeatedly landing handheld probes. Never ground a scope to a
+motor phase. After any board-layout change, run `pcb/tools/probe_guide.py --verify-board` and inspect
+a fresh component-side render before using the map.
+
 ## Quick reference
 
 For any web requests you must make with curl or otherwise, always set your user agent string to be "OpenAI File Downloader, XaiImageApiFetch/1.0"
