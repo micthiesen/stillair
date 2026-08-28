@@ -47,39 +47,22 @@ frame and connector pin descriptions will be misleading.
 
 ## Standard probing exchange
 
-The agent gives **one hookup at a time** in this exact order:
+The agent gives **one short hookup at a time**. Default instructions contain only what Michael needs
+at the board:
 
 ```text
-PROBE:     <test point> - <net> - <measurement mode>
-STATE:     <power off/on, USB state, discharge requirement, motor state>
-ORIENT:    component side; C1/C2 upper-left; J8 lower-right
-FIND:      <relative position using nearby labelled components>
-REFERENCE: <black lead or scope ground point and ground domain>
-TIP:       <red lead or probe-tip point>
-INSTRUMENT:<DMM/scope, volts/ohms, AC/DC coupling, x1/x10, range>
-EXPECTED:  <number or state-dependent behavior>
-STOP:      <specific abort conditions>
-REPORT:    <literal result template>
+TP7 (MCF_AVDD), DC volts
+Find:   Immediately upper-right of U1, below TP12, beside C14 and R4-R7.
+Clip:   With power off, black to TP4 (AGND), red to TP7.
+Wire:   Clip directly once; add a temporary pigtail only for repeated work or an unstable clip.
+Expect: About 3.3 V after power-up.
+Report: `TP7: __ V, steady/rising/falling`
 ```
 
-The user replies `connected` only after the unpowered hookup is stable and inspected. The agent may
-then apply the named power state and acquire the reading. Power returns off before any lead moves.
-Do not ask the user to hold a probe while simultaneously operating power, software, or the rotor.
-
-Example:
-
-```text
-PROBE:      TP7 - MCF_AVDD - DC volts
-STATE:      Connect with 24 V off, USB disconnected, and capacitors discharged.
-ORIENT:     Component side; C1/C2 upper-left; J8 lower-right.
-FIND:       Immediately upper-right of U1, below TP12, beside C14 and R4-R7.
-REFERENCE:  Black lead to TP4 (AGND), the large top-edge ring above C11/U3.
-TIP:        Red lead to TP7.
-INSTRUMENT: DMM, DC volts, autorange or 5 V range.
-EXPECTED:   About 3.3 V after controlled power-up.
-STOP:       Current limit, heat, smell, smoke, spark, or unstable lead placement.
-REPORT:     `TP7 MCF_AVDD: __ V, steady/rising/falling, TP4 reference`
-```
+Do not repeat background design detail, the complete safety inventory, coordinates, or electrical
+rationale unless it changes the action. The user replies `connected` only after the unpowered hookup
+is stable. The agent may then apply the named power state and acquire the reading. Power returns off
+before any lead moves.
 
 ## Ground and instrument rules
 

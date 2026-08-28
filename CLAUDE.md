@@ -77,6 +77,11 @@ component-side orientation, nearby labelled landmarks, correct ground domain, in
 expected result, stop conditions, and literal report format. Never give only a designator or rely on
 remembered connector orientation.
 
+Present the generated request in concise, natural bench language. By default include only the
+relative location, exact clip points, whether a temporary pigtail is worthwhile, expected result,
+and literal report template. Keep coordinates, circuit rationale, and the full safety inventory in
+the guide unless one changes the immediate action.
+
 Give one hookup at a time. Leads are connected, inspected, moved, and removed with all relevant
 power off; apply power only after Michael confirms the hookup is stable. Prefer test points over
 connector pins. For repeated, installed, tiny-pad, or automated measurements, follow the guide's

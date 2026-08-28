@@ -100,22 +100,17 @@ def connector_diagram(ref: str, pins: dict[str, str]) -> str:
 
 def show_connector(data: dict, ref: str) -> int:
     item = data["connectors"][ref]
-    print(f"CONNECTOR {ref} - {item['name']}")
-    print(f"ORIENT: {data['orientation']['one_line']}")
-    print(f"FIND:   {item['location']}")
-    print(f"PINS:   {item['orientation']}")
+    print(f"{ref} ({item['name']})")
+    print("Board: Components up, large capacitors upper-left.")
+    print(f"Find:  {item['location']}")
+    print(f"Pins:  {item['orientation']}")
     print(connector_diagram(ref, item["pins"]))
-    print(f"CAUTION: {item['warning']}")
+    if ref == "J8":
+        print("Wire:  Use a populated header or temporary pigtails for repeated work; do not keep hooking the bare pads.")
+    else:
+        print("Wire:  Use the matching test point instead when one exists.")
+        print(f"Note:  {item['warning']}")
     return 0
-
-
-def resistance_setup(item: dict) -> str:
-    if item["class"] in {"power24", "rail12", "rail3v3", "rail1v5"}:
-        return (
-            "DMM on resistance after first verifying the target is below 1 V. "
-            "A low initial reading may rise while capacitors charge."
-        )
-    return "DMM on resistance; use only for a named unpowered continuity or short test."
 
 
 def show_probe(data: dict, ref: str, mode: str) -> int:
@@ -124,40 +119,40 @@ def show_probe(data: dict, ref: str, mode: str) -> int:
     reference_net = (
         data["test_points"][reference]["net"] if reference in data["test_points"] else None
     )
-    print(f"PROBE {ref} - {item['net']} - {mode.upper()}")
-    print(f"ORIENT: {data['orientation']['one_line']}")
-    print(f"FIND:   {item['location']}")
+    print(f"{ref} ({item['net']}), {mode}")
+    print("Board:  Components up, large capacitors upper-left.")
+    print(f"Find:   {item['location']}")
 
     if mode == "resistance":
-        print("STATE:  All power off, USB disconnected, and bulk capacitors discharged.")
-        print(f"METER:  {resistance_setup(item)}")
         if reference:
-            print(f"BLACK:  {reference} ({reference_net})")
-            print(f"RED:    {ref} ({item['net']})")
+            print(
+                f"Clip:   With power and USB off and the board discharged, black to "
+                f"{reference} ({reference_net}), red to {ref}. Use resistance mode."
+            )
         else:
-            print(f"TARGET: {ref} is a reference node; name the other node before measuring.")
+            print(f"Clip:   {ref} is a reference node; name the other node before measuring.")
+        print("Wire:   Clip directly for one reading. Add a temporary pigtail only if the clip will not stay or we will repeat it.")
         print(
-            "EXPECT: No universal resistance value. For a short check, the reading should not "
-            "remain near 0 ohms; report whether it rises, settles, or beeps continuously."
+            "Expect: The reading may start low and climb as capacitors charge; it should not stay near 0 ohms."
         )
-        print("STOP:   Any measured voltage, warmth, sound, spark, or stable near-zero resistance.")
-        print(f"REPORT: `{ref} to {reference or '<other>'}: initial __ ohm; settled __ ohm; rising yes/no; beep yes/no`")
+        print(f"Report: `{ref} to {reference or '<other>'}: initial __ ohm -> settled __ ohm; continuous beep yes/no`")
         return 0
 
     setup = CLASS_SETUP[item["class"]][mode]
-    print("STATE:  Attach every lead with power off. Apply power only after the hookup is inspected.")
-    print(f"SETUP:  {setup}")
     if reference:
-        print(f"GROUND: {reference} ({reference_net})")
-        print(f"TIP:    {ref} ({item['net']})")
+        print(
+            f"Clip:   With power off, ground/black to {reference} ({reference_net}); "
+            f"tip/red to {ref}."
+        )
     else:
-        print(f"TARGET: {ref} is the {item['net']} reference node, not a signal target.")
-    print(f"EXPECT: {item['expected']}")
+        print(f"Clip:   {ref} is the {item['net']} reference node, not a signal target.")
+    print(f"Meter:  {setup}")
+    print("Wire:   Clip directly for one reading. Add a temporary pigtail for repeated captures or if the clip will not stay.")
+    print(f"Expect: {item['expected']}")
     if mode == "scope":
-        print("REPORT: screenshot/capture plus min, max, mean, frequency if present, probe ratio, and ground point.")
+        print("Report: capture plus min, max, mean, frequency if present, probe ratio, and ground point.")
     else:
-        print(f"REPORT: `{ref} ({item['net']}): __ V, steady/rising/falling, reference {reference or '<other>'}`")
-    print("STOP:   Unexpected current limit, heat, smell, smoke, spark, or unstable lead placement.")
+        print(f"Report: `{ref} ({item['net']}): __ V, steady/rising/falling`")
     return 0
 
 
