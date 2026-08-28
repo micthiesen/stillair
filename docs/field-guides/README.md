@@ -11,6 +11,16 @@ UV_CACHE_DIR=/tmp/stillair-uv-cache uv run --with reportlab \
 The generated PDF is written to
 `output/pdf/stillair-integration-field-guides.pdf`.
 
+For a concise PCB-01 rebuild handout with only the manually installed parts and the removable
+installed-tuning leads, run:
+
+```bash
+UV_CACHE_DIR=/tmp/stillair-uv-cache uv run --with reportlab \
+  python3 docs/field-guides/build_pcb01_rebuild_booklet.py
+```
+
+This writes `output/pdf/pcb01-rebuild-and-tuning-leads.pdf`. Print it two-sided on the long edge.
+
 The sheets are intentionally concise. They complement, rather than replace, the detailed
 requirements and vendor procedures. A `HOLD` badge means the guide records the boundary but
 does not authorize work beyond it.
