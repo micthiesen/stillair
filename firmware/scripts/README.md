@@ -65,6 +65,11 @@ container, where Kasa credentials already live, refuses any device other than th
 Plug identity and address, and reconnects boundedly after transient TPAP failures without running
 periodic rediscovery through an active evidence stream.
 
+`check-mcf-presence.sh` is the safe repeated check after connector cleanup or probing. It powers
+the controller, holds one serial connection through boot, passes only when the MCF8316D answers the
+firmware's wake-and-address scan, and returns Kasa power off on every exit. Override automatic board
+port detection with `STILLAIR_PORT=/dev/cu.usbmodem...` when needed.
+
 For recovery or A/B work, script 03 begins with `config stage`. This loads and
 read-back-verifies the reviewed GL100 first-spin settings in volatile shadow only. It must be
 repeated after every motor-power cycle, and it never commits EEPROM. A fresh unverified
