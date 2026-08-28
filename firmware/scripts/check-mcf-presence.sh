@@ -4,6 +4,8 @@ set -euo pipefail
 script_dir=$(cd "$(dirname "$0")" && pwd)
 utility_plug="$script_dir/utility-plug.sh"
 board_port=${STILLAIR_PORT:-}
+board_port_explicit=0
+[ -n "$board_port" ] && board_port_explicit=1
 timeout_seconds=${STILLAIR_MCF_CHECK_TIMEOUT:-20}
 session_name="stillair-mcf-check-$$"
 log_file="/tmp/stillair-mcf-presence-$$.log"
@@ -67,6 +69,9 @@ while board_port_present; do
     fi
     sleep 0.1
 done
+if [ "$board_port_explicit" -eq 0 ]; then
+    board_port=
+fi
 
 "$utility_plug" on >/dev/null
 plug_on=1
@@ -81,6 +86,7 @@ done
 if [ -z "$board_port" ]; then
     discover_board_port
 fi
+deadline=$((SECONDS + timeout_seconds))
 
 # Keep one serial connection open through the entire boot. Reopening the port for separate
 # CLI commands resets the ESP and can make a queued `fault clear` look more useful than it was.
