@@ -76,9 +76,9 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
   pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary
   pigtail criteria. `pcb/tools/probe_guide.py` prints the exact hookup/report contract and verifies
   the retained map against the board file.
-- **TP4 is physically unavailable on this V1 board.** Its AGND test-point ring detached during the
-  initial unpowered resistance checks on 2026-08-28. Do not probe, solder, or attach a pigtail to
-  TP4. The retained map and generated instructions now use TP26 as default AGND and TP28 as backup.
+- **TP4 detached only on the failed PCB-01.** Its AGND ring broke during the initial unpowered
+  resistance checks on 2026-08-28. TP4 on the replacement board is intact, accessible, and valid
+  for bench checks. Installed tuning leads still use TP26 by default because it is near USB/J8.
 - **Unpowered measurements localize the communication failure to the MCF internal rails.** With USB
   and 24 V removed, VM24-to-PGND measured 30--40 MOhm and board 3V3-to-AGND measured about 900 MOhm,
   ruling out hard shorts on the input and main logic rail. MCF_AVDD at TP7 measured about 5 Ohm to

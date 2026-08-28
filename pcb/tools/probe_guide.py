@@ -54,7 +54,7 @@ PCB-01, component side, not to scale
 
   TOP: J5 / J6 USB-C
   +----------------------------------------------------------------+
-  | H3   C1      C2      TP5  TP4-X     J5       TP26/28   J6   H4 |
+  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |
   | TP1  J1/Q1       TP3                                           |
   |                   TP2       U3/TP9            ESP U2            |
   | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |

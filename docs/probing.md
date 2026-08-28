@@ -32,7 +32,7 @@ PCB-01, component side, not to scale
 
   TOP: J5 / J6 USB-C
   +----------------------------------------------------------------+
-  | H3   C1      C2      TP5  TP4-X     J5       TP26/28   J6   H4 |
+  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |
   | TP1  J1/Q1       TP3                                           |
   |                   TP2       U3/TP9            ESP U2            |
   | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |
@@ -66,9 +66,9 @@ before any lead moves.
 
 ## Ground and instrument rules
 
-- **TP26 is the default AGND reference** for logic, analog, 3.3 V, 12 V tach, and MCF internal-rail
-  measurements. TP28 is the backup. TP4's physical ring detached on this V1 board and must not be
-  probed or wired again.
+- **TP26 is the default AGND reference** for installed logic, analog, 3.3 V, 12 V tach, and MCF
+  internal-rail measurements because it is near the USB/J8 side. TP4 is an accessible bench AGND
+  reference on the replacement board; TP28 is the backup.
 - **TP3 is the default PGND reference** for RAW24 and VM24. TP27 is a second PGND point near U1.
 - AGND and PGND join only through the board's designed net tie. Do not casually bridge them with
   multiple instrument grounds.
@@ -117,7 +117,7 @@ Coordinates are retained in the JSON map for verification. Human instructions us
 | TP1 | RAW24 | Far left edge, left of R1/R2 and above D1 |
 | TP2 | VM24 | Lower ring of TP3/TP2 pair, right of C2/F1 |
 | TP3 | PGND | Upper ring of TP3/TP2 pair, right of C2/F1 |
-| TP4 | AGND | **Unavailable:** physical ring detached; do not probe or wire |
+| TP4 | AGND | Large top-edge ring above C11/U3, immediately right of TP5 |
 | TP5 | 3V3 | Large top-edge ring above C7, left of TP4 |
 | TP6 | +12V_TACH | Lower-right tach area, left of J8 and above C27 |
 | TP7 | MCF_AVDD | Upper-right of U1, below TP12, beside C14/R4-R7 |

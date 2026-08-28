@@ -104,7 +104,8 @@ def page_tuning_leads(c: Canvas, page_no: int) -> None:
         "All sources removed and bulk capacitors discharged. Solder once, route insulated wire "
         "flat, add Kapton strain relief away from each joint, inspect under magnification, then "
         "continuity-check every lead to its named net and for adjacent-pad shorts. Cap every free "
-        "end before power. Never wire TP4, motor phases, switch nodes, or USB data pads. Remove "
+        "end before power. TP4 is also usable AGND; never wire motor phases, switch nodes, or USB "
+        "data pads. Remove "
         "the pigtails after the complete exposed and housed tuning campaign, then clean and inspect.",
         35,
         96,

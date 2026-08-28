@@ -44,8 +44,6 @@
       "expected": "Power-ground reference for RAW24, VM24, and high-current measurements."
     },
     "TP4": {
-      "available": false,
-      "condition": "Physical ring detached on this V1 board; do not probe or attach a wire.",
       "net": "AGND",
       "x_mm": 85.00,
       "y_mm": 53.50,
