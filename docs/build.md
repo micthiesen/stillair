@@ -23,6 +23,17 @@ beginning at the lowest useful speed with continuous observation and a reachable
    normal-range speed and shutdown checks, and thermal verification then run in that final
    support/load/acoustic environment.
 
+### Replacement PCB-01 service path (2026-08-28)
+
+The replacement board passed hand-populated C34/U8 continuity and initial 18 V rail checks, but
+its native USB never enumerated after known cables, forced ROM boot, host restart, and J6 pin
+reflow. UART0 on J7 is the recovery path. A DSD TECH SH-U09C2 FT232RNL USB-UART adapter is ordered;
+fast domestic TC2030 cables were unavailable. The selected domestic fallback is a lightweight
+prewired 6-pin JST-SH pigtail soldered once to J7 pins 2--6, with J7.1 left unconnected, followed
+by continuity and adjacent-pad isolation checks and strain relief before power. The runtime
+firmware must expose its physical console on UART0 before this replaces J6 for tuning; see
+[controls.md](controls.md#commissioning-interface-and-build-policy).
+
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
 - **Mock first, cheap**: an MDF or 3D-printed Ø210 disk + three printed/threaded-rod

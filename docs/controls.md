@@ -52,6 +52,13 @@ unreliable. USB supplies communication only because J6 VBUS does not power the b
 and strain-relieve the cable outside all moving geometry, and keep the physical low-voltage
 cutoff reachable without entering the sweep.
 
+Replacement-board recovery note (2026-08-28): the current application protocol is bound to the
+ESP32-C6 USB Serial/JTAG peripheral, so J7 can enter the ROM UART downloader and flash firmware but
+does not yet carry the `stillair` runtime console. Before J7 becomes the installed commissioning
+path, bind the same line protocol and writer to UART0 on GPIO16/17 and verify it through the host
+CLI. The selected temporary harness connects only J7 pins 2--6; pin 1 is board 3V3 and remains
+deliberately isolated from the USB-UART adapter while the board is powered from 24 V.
+
 `stillair --port <device> wifi` reports the associated radio's current RSSI, a plain-language
 quality band, the weakest RSSI sampled since boot, sampling failures, observed disconnect
 transitions, and the last successful sample time. The application samples every 10 seconds on
