@@ -3,11 +3,16 @@
 An implementation contract, not firmware. Application code lives in
 [`firmware/`](../firmware/) (Rust, `no_std`, ESP32-C6); this doc defines what it must do.
 
-## Selected hardware
+This document describes the installed V1 hardware unless a section says otherwise. PCB-01 V2 keeps
+the behavioral contract but changes the supervisor to `ESP32-C6-WROOM-1-N8`, moves MCF ALARM from
+GPIO14 to GPIO10, and replaces J7/USB service with the J5 UART interface specified in
+[`pcb-01-v2.md`](pcb-01-v2.md). Do not apply the V1 physical pin or service instructions to V2.
+
+## Selected V1 hardware
 
 - Motor: CubeMars GL100 KV10, 24 V, 20 pole pairs.
-- Controller: custom 78 × 58 mm V1/V2 board around MCF8316DVRGFR (no TI evaluation module;
-  swapped from the ULV variant 2026-07 — see [electrical.md](electrical.md) SCH-03).
+- Controller: custom 78 × 58 mm V1 board around MCF8316DVRGFR (no TI evaluation module;
+  swapped from the ULV variant 2026-07; see [electrical.md](electrical.md) SCH-03).
 - Supervisor: ESP32-C6-MINI-1-H4 (same 4 MB capacity and footprint as N4, but −40 to 105 °C
   instead of −40 to 85 °C).
 - Supply: Mean Well GST60A24-P1J, 24 V / 2.5 A / 60 W.

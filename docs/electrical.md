@@ -1,11 +1,12 @@
-# PCB handoff (V1 / V2 controller)
+# PCB handoff (PCB-01 V1 controller)
 
 > **Temporary**: the original schematic-block and placement-zone diagrams are still viewable at
 > https://stillair-fan-design.syas.chatgpt.site/electrical (requires ChatGPT auth). Remove this
 > link once the KiCad schematic is captured.
 
-Defines the V1 and V2 controller board for the CubeMars GL100 KV10. This is a circuit and
-layout brief, not a released design: capture and peer-review the final schematic in
+Defines the V1 controller board for the CubeMars GL100 KV10. V2 is specified separately in
+[`pcb-01-v2.md`](pcb-01-v2.md); that document controls every V2 component, interface, net, board
+rule, and validation delta. This is the V1 circuit and layout record: capture and peer-review in
 [`pcb/`](../pcb/) (KiCad), verify footprints, run ERC/DRC, and compare the MCF power stage
 directly with TI's reference layout.
 
@@ -25,10 +26,9 @@ Rotor magnet -> DRV5033 -> LM2907 -> TLV1701
 
 The custom V1 board replaces the TI evaluation module. V1 is deliberately roomy and
 instrumented (full USB, direct I²C, scope header, test pads, rework links, manual
-clear/DRVOFF controls); V2 keeps the same outline and mounting holes and removes only
-development features proven unnecessary.
+clear/DRVOFF controls). Those choices remain the as-built V1 record, not V2 requirements.
 
-## PCB-01 mechanical definition
+## PCB-01 V1 mechanical definition
 
 - Outline: 78.0 × 58.0 mm, R3 corners.
 - Construction: four-layer FR-4, 1.6 mm.
@@ -37,33 +37,9 @@ development features proven unnecessary.
 - Mounting: four Ø3.2 mm NPTH at (6,6), (72,6), (6,52), (72,52) mm from the lower-left
   (66 × 46 mm hole rectangle). Keep all copper and components outside an Ø8 mm circle around
   each hole; use 6–8 mm M3 standoffs and leave the holes isolated from circuit ground.
-- Keep V2 on the same outline and hole pattern. Do not shrink V2; the spare area buys thermal
-  copper, probe access, connector clearance, and RF separation without changing the housing.
-
-**Open V2 option — horizontal donut board.** Once the housing exists, V2 may instead become an
-annular board mounted horizontally around the spindle, replacing the same-outline rule and the
-EB-100 bracket entirely. Geometry that makes it viable: between the plate underside (Z6) and
-the carrier top (Z68 after the 2026-07-27/28 stack shortening) the housing interior is a Ø194
-cylinder that is empty except for the
-Ø16 spindle, the three Ø16 standoffs at r75, the tether run near Y−82, and the cable drop. The
-low-risk shape is ID Ø30–40 (generous non-contact clearance around the spindle) × OD ≤Ø130,
-entirely inside the standoff circle — ~12,500 mm², nearly 3× the rectangle — leaving a wide
-annular air path at the wall if the final housing's thermal test demonstrates a need for
-concealed ventilation. Mount on three M3 bosses tapped into the MC-100
-carrier top, which also puts J2 beside the motor's phase-lead window. Zones translate to
-angular separation: MCF power stage at one clock position, tach/analog 120–180° away.
-
-Open questions if pursued: RF first — the board sits sandwiched between the stainless plate
-above and the carrier/motor below, so the ESP module goes at the outer rim, antenna facing
-radially out through the plastic wall, clocked away from standoffs/tether, sitting mid-gap
-(Z ~30–50 in the shortened interior) to keep the 15 mm metal clearance; verify with a real RSSI check. Connectors face
-up/down, so all service means dropping the housing (acceptable for a dev-stripped V2).
-
-The real cost: the V1→V2 plan inherits V1's validated layout, and a donut V2 is a new layout —
-the layout-sensitive results (PCB-02 bus transients, TACH calibration/noise floor, thermal,
-RF) need a partial re-run instead of being inherited. Decide only after V1 bring-up and a
-housing prototype; V1 stays the rectangle regardless, and if the donut is chosen, delete
-EB-100 from the parts register rather than carrying both.
+- V2 does not inherit this outline, hole pattern, or the abandoned annular-board option. Its
+  rectangular outline and four M3 hole coordinates follow V2 placement as specified in
+  [`pcb-01-v2.md`](pcb-01-v2.md).
 
 **Fabrication** (decided 2026-07-30): JLCPCB fabricates AND assembles. Board options:
 4-layer JLC04161H-7628 stackup, 1.6 mm, 2 oz outer / 1 oz inner, ENIG, **Standard PCBA**

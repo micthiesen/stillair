@@ -3,9 +3,16 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-29** (switched J7 harness documented; UART runtime and automated boot tooling prepared.)
+Last updated: **2026-08-29** (PCB-01 V2 implementation specification completed and adversarially converged.)
 
 ## Now
+
+- **PCB-01 V2 is fully specified for schematic capture and layout.** The exact component schedule,
+  connector and GPIO maps, complete ratsnest, WROOM/automatic-UART service design, test access,
+  stackup and net classes, placement groups, firmware deltas, assembly split, and validation gates
+  are frozen in [pcb-01-v2.md](pcb-01-v2.md). Exact outline dimensions and placement coordinates are
+  intentionally deferred to KiCad. Seven adversarial rounds were run; the final fresh round returned
+  no useful electrical, manufacturing, service, firmware, history, or tooling feedback.
 
 - **The installed fan retains its provisional 50--170 RPM loaded release.** The complete ceiling
   assembly, persistent golden MCF image, Apple Home control, cold-power recovery, nine 50 RPM
@@ -70,8 +77,8 @@ critical gate that decides whether the board can return overhead for final loade
 
 ## Learned Recently
 
-- Conditional PCB-01 V2 trigger, service-edge concept, deletion candidates, and evidence-first
-  simplification rules: [pcb-01-v2.md](pcb-01-v2.md).
+- Complete PCB-01 V2 schematic/layout handoff, exact BOM and ratsnest, evidence-based simplifications,
+  implementation gates, and seven-round review record: [pcb-01-v2.md](pcb-01-v2.md).
 - Switched J7 construction, monochrome wire patterns, automated RTS connection, and manual
   fallback: [pcb-01-j7-usb-uart.pdf](../output/pdf/pcb-01-j7-usb-uart.pdf) and
   [build.md](build.md#replacement-pcb-01-service-path-2026-08-28).
