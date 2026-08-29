@@ -41,8 +41,14 @@ doc gets updated in the same commit as the board.
 
 | Designator | What | KiCad project |
 |---|---|---|
-| PCB-01 | 78 × 58 mm V1/V2 controller, 4-layer | `pcb/pcb-01/pcb-01.kicad_pro` |
+| PCB-01 V1 | Released 78 × 58 mm controller, 4-layer | `pcb/pcb-01/pcb-01.kicad_pro` |
+| PCB-01 V2 | Fresh controller redesign, 4-layer; outline follows placement | `pcb/pcb-01-v2/pcb-01-v2.kicad_pro` |
 | PCB-02 | 24 × 8 mm DRV5033 Hall daughterboard, 2-layer | `pcb/pcb-02/pcb-02.kicad_pro` (own small fab order; grown from spec'd 18 × 8 on 2026-07-30) |
+
+PCB-01 V2 is a fresh project, not a copy of V1. Its sole circuit/layout authority is
+`docs/pcb-01-v2.md`; V1 is evidence only. Load `pcb/pcb-01-v2/.konnect/project.json` for its
+constraints. Do not transfer the V1 outline, holes, placement, routes, zones, probe map, or DRC
+waivers.
 
 ## Konnect scope — settled 2026-07-30, after PCB-01 shipped to fab
 
@@ -173,9 +179,10 @@ and only reading the actual datasheet page corrected it.
 
 1. **Confirm the MCP is live**: call `list_toolboxes`. If Konnect's tools are absent, stop and
    tell Michael — never fall back to editing `.kicad_*` files as text.
-2. **Load the project config**: `load_user_config`, then `get_effective_config` with
-   `project_dir` = `pcb/pcb-01`. Project rules live in `pcb/pcb-01/.konnect/project.json` and
-   are committed; they encode the JLCPCB constraints and the safety-critical routing rules.
+2. **Load the project config**: `load_user_config`, then `get_effective_config` with the exact
+   target project directory (`pcb/pcb-01`, `pcb/pcb-01-v2`, or `pcb/pcb-02`). Project rules live
+   in that directory's `.konnect/project.json` and are committed; they encode the board-specific
+   JLCPCB constraints and safety-critical routing rules.
 3. **Load only the toolsets you need** (`load_toolset`), and `unload_toolset` when switching
    tasks. Only `project` and `config` are loaded at startup; the other 16 are on demand.
 4. **For any PCB (not schematic) operation, KiCad must be running** with the board open and

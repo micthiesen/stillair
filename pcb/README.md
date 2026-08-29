@@ -10,6 +10,9 @@ of that doc.
 
 - `pcb-01/` — the controller board (**PCB-01**). Captured, routed, and ordered from JLCPCB
   2026-07-30 (order W2026073105230212).
+- `pcb-01-v2/` — the fresh **PCB-01 V2** controller project. It is intentionally not cloned from
+  V1. The unpopulated project and V2-specific Konnect rules are initialized; capture and placement
+  follow [`docs/pcb-01-v2.md`](../docs/pcb-01-v2.md).
 - `pcb-02/` — the 24 × 8 mm DRV5033 Hall daughterboard (**PCB-02**). Created 2026-07-30:
   schematic captured (ERC clean), 2-layer board set up (outline, M2 hole pair as the BR-100
   datum, JLCPCB rules). Ships as its own small order — PCB-01 already went out separately.
@@ -17,7 +20,7 @@ of that doc.
 ## Tooling
 
 KiCad 10 plus the [Konnect](https://github.com/mixelpixx/Konnect) MCP server, wired up in
-`.mcp.json` (Claude Code) and `~/.codex/config.toml` (Codex). The operating manual — who
+`.mcp.json` (Claude Code) and `.codex/config.toml` (Codex), both project-scoped. The operating manual — who
 drives what, session startup, and the quirks — is the **`/pcb` skill** at
 [`.claude/skills/pcb/SKILL.md`](../.claude/skills/pcb/SKILL.md). Board constraints and the
 safety-critical routing rules are committed as Konnect project config in
