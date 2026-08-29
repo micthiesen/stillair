@@ -42,6 +42,9 @@ use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{channel, timer, LSGlobalClkSource, Ledc, LowSpeed};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
+#[cfg(feature = "uart-console")]
+use esp_hal::uart::{Config as UartConfig, Uart};
+#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
 use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
@@ -59,6 +62,11 @@ mod matter;
 mod mcf;
 mod output;
 mod wifi_diag;
+
+#[cfg(all(feature = "uart-console", feature = "usb-console"))]
+compile_error!("select exactly one console transport: uart-console or usb-console");
+#[cfg(not(any(feature = "uart-console", feature = "usb-console")))]
+compile_error!("select exactly one console transport: uart-console or usb-console");
 
 use board::{
     Board, FG_PULSES, HALL_LAST_EDGE_MS, HALL_PERIOD_MS, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH,
@@ -270,12 +278,24 @@ async fn main(spawner: embassy_executor::Spawner) {
     // Status and bounded register service must outlive stalls in Matter/Wi-Fi, but remain
     // preemptible by the Priority3 control and watchdog path.
     mcf_executor.spawn(mcf_task(mcf).unwrap());
-    // The tuning console and network stack remain on the thread-mode executor.
+    // The tuning console and network stack remain on the thread-mode executor. PCB-01's
+    // service build uses J7 UART0 by default because the replacement board's native USB
+    // does not enumerate. `usb-console` retains the original transport for known-good boards.
+    #[cfg(feature = "uart-console")]
+    let (console_rx, console_tx) = Uart::new(peripherals.UART0, UartConfig::default())
+        .expect("UART0 at 115200 must be configurable")
+        .with_tx(peripherals.GPIO16)
+        .with_rx(peripherals.GPIO17)
+        .into_async()
+        .split();
+    #[cfg(feature = "usb-console")]
     let (usb_rx, usb_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
         .into_async()
         .split();
-    spawner.spawn(output::writer_task(usb_tx).unwrap());
-    spawner.spawn(console::console_task(usb_rx).unwrap());
+    #[cfg(feature = "usb-console")]
+    let (console_rx, console_tx) = (usb_rx, usb_tx);
+    spawner.spawn(output::writer_task(console_tx).unwrap());
+    spawner.spawn(console::console_task(console_rx).unwrap());
     spawner.spawn(console::stream_task().unwrap());
     spawner.spawn(wifi_diag::sample_task().unwrap());
 

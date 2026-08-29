@@ -52,12 +52,25 @@ unreliable. USB supplies communication only because J6 VBUS does not power the b
 and strain-relieve the cable outside all moving geometry, and keep the physical low-voltage
 cutoff reachable without entering the sweep.
 
-Replacement-board recovery note (2026-08-28): the current application protocol is bound to the
-ESP32-C6 USB Serial/JTAG peripheral, so J7 can enter the ROM UART downloader and flash firmware but
-does not yet carry the `stillair` runtime console. Before J7 becomes the installed commissioning
-path, bind the same line protocol and writer to UART0 on GPIO16/17 and verify it through the host
-CLI. The selected temporary harness connects only J7 pins 2--6; pin 1 is board 3V3 and remains
-deliberately isolated from the USB-UART adapter while the board is powered from 24 V.
+Replacement-board recovery note (updated 2026-08-29): the application defaults to the same
+`stillair` line protocol and bounded writer on UART0 at 115200 baud, GPIO16 TX / GPIO17 RX. The
+`usb-console` feature retains the original ESP32-C6 USB Serial/JTAG transport as an exclusive
+build-time alternative; enabling both or neither fails the build. The J7 harness connects only
+pins 2--6, with pin 1/board-3V3 and adapter VCC deliberately isolated while PCB-01 uses its normal
+power input.
+
+D/BOOT connects removably to the FTDI adapter's active-low RTS output and also to a normally-open
+manual switch returning to AGND. E/EN has its own normally-open reset switch to AGND. The common
+runner enters the ROM loader by verifying Kasa power off, exclusively opening the exact FT232
+port, asserting RTS across cold power-up, releasing it, then invoking `espflash` with no pre-reset
+and a watchdog post-reset. Every helper failure releases RTS and attempts a verified power-off.
+The host CLI also explicitly deasserts RTS whenever it opens this FTDI family for ordinary runtime
+traffic, preventing a later power event from accidentally selecting the ROM loader.
+Manual fallback requires power off and unplugging D from RTS before holding the BOOT switch during
+power-up; never press that switch while D remains on RTS. Host builds and mocked sequencing pass.
+Physical qualification must still prove adapter detection and polarity, absence of harmful
+back-powering, ROM sync, verified flash, watchdog reset, runtime CLI traffic, and failure cleanup
+before autonomous hardware use.
 
 `stillair --port <device> wifi` reports the associated radio's current RSSI, a plain-language
 quality band, the weakest RSSI sampled since boot, sampling failures, observed disconnect

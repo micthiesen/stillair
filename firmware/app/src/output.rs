@@ -1,4 +1,4 @@
-//! The single writer for everything that leaves the board over USB.
+//! The single writer for everything that leaves the board over the selected service link.
 //!
 //! **Why this exists rather than just calling `esp_println!`.** That macro takes
 //! `esp-sync`'s raw lock, which on RISC-V clears the global interrupt-enable bit — not a
@@ -23,6 +23,9 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embedded_io_async::Write as _;
+#[cfg(feature = "uart-console")]
+use esp_hal::uart::UartTx;
+#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtagTx;
 use esp_hal::Async;
 use stillair_core::console::Line;
@@ -42,6 +45,11 @@ static LINES: Channel<CriticalSectionRawMutex, Line, QUEUE> = Channel::new();
 /// is identifiable as such rather than quietly short.
 static DROPPED: AtomicU32 = AtomicU32::new(0);
 
+#[cfg(feature = "uart-console")]
+type ConsoleTx = UartTx<'static, Async>;
+#[cfg(feature = "usb-console")]
+type ConsoleTx = UsbSerialJtagTx<'static, Async>;
+
 /// Queue one line. Never blocks, never disables interrupts, safe from any priority.
 pub fn line(line: Line) {
     if LINES.try_send(line).is_err() {
@@ -56,7 +64,7 @@ pub fn dropped() -> u32 {
 
 /// Drains the queue to the link.
 #[embassy_executor::task]
-pub async fn writer_task(mut tx: UsbSerialJtagTx<'static, Async>) {
+pub async fn writer_task(mut tx: ConsoleTx) {
     loop {
         let mut line = LINES.receive().await;
         // The newline goes in the same buffer as the payload so one line is one write, and

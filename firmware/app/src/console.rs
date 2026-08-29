@@ -2,7 +2,7 @@
 //!
 //! Transport and plumbing only — every parsing and formatting decision lives in
 //! `stillair_core::console`, where it is host-tested. This module reads lines off the
-//! USB-serial-JTAG link, routes each request to whichever task owns the thing it asks
+//! selected service link, routes each request to whichever task owns the thing it asks
 //! about, and prints the reply.
 //!
 //! Replies go out through [`crate::output`], the single bounded queue that every line — log
@@ -17,6 +17,9 @@ use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_sync::channel::Channel;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Read;
+#[cfg(feature = "uart-console")]
+use esp_hal::uart::UartRx;
+#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
@@ -75,9 +78,14 @@ pub fn latest() -> Option<Telemetry> {
 /// Longest request line accepted. Anything longer is a malformed line, not a command.
 const LINE_LIMIT: usize = 96;
 
+#[cfg(feature = "uart-console")]
+type ConsoleRx = UartRx<'static, Async>;
+#[cfg(feature = "usb-console")]
+type ConsoleRx = UsbSerialJtagRx<'static, Async>;
+
 /// Reads and services console requests.
 #[embassy_executor::task]
-pub async fn console_task(mut rx: UsbSerialJtagRx<'static, Async>) {
+pub async fn console_task(mut rx: ConsoleRx) {
     let mut line: heapless::String<LINE_LIMIT> = heapless::String::new();
     let mut overflowed = false;
     let mut chunk = [0u8; 32];
@@ -85,7 +93,7 @@ pub async fn console_task(mut rx: UsbSerialJtagRx<'static, Async>) {
     emit(&Reply::Ok);
 
     loop {
-        let read = match rx.read(&mut chunk).await {
+        let read = match Read::read(&mut rx, &mut chunk).await {
             Ok(read) => read,
             Err(_) => continue,
         };

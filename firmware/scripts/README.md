@@ -65,6 +65,15 @@ container, where Kasa credentials already live, refuses any device other than th
 Plug identity and address, and reconnects boundedly after transient TPAP failures without running
 periodic rediscovery through an active evidence stream.
 
+The runner defaults to `STILLAIR_CONSOLE_TRANSPORT=uart`: the application uses J7 UART0, the
+exact FTDI VID/PID is auto-detected, and `enter_uart_bootloader.py` holds adapter RTS active-low
+across a verified Kasa cold start before `espflash --before no-reset --after watchdog-reset`.
+The helper releases RTS and attempts verified power-off on every failure. Set
+`STILLAIR_PORT=/dev/cu...` to override detection. `STILLAIR_CONSOLE_TRANSPORT=usb` builds the
+retained native-USB transport and uses the original flash/power-cycle path. The UART automation is
+host-tested only until the completed switched harness passes the physical qualification recorded
+in `docs/controls.md`.
+
 `check-mcf-presence.sh` is the safe repeated check after connector cleanup or probing. It powers
 the controller, holds one serial connection through boot, passes only when the MCF8316D answers the
 firmware's wake-and-address scan, and returns Kasa power off on every exit. Override automatic board

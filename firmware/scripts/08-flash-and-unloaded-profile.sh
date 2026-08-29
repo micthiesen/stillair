@@ -10,6 +10,7 @@ if [ -n "$board_port" ]; then
     board_port_explicit=1
 fi
 skip_flash=${STILLAIR_SKIP_FLASH:-0}
+console_transport=${STILLAIR_CONSOLE_TRANSPORT:-uart}
 config_mode=${STILLAIR_CONFIG_MODE:-stage}
 tune_candidate=${STILLAIR_TUNE_CANDIDATE:-}
 require_clean=${STILLAIR_REQUIRE_CLEAN:-0}
@@ -66,6 +67,7 @@ scope_log="$run_dir/scope.log"
 scope_ready="$run_dir/scope.ready"
 run_manifest="$run_dir/manifest.json"
 utility_plug="$script_dir/utility-plug.sh"
+uart_bootloader="$script_dir/enter_uart_bootloader.py"
 stillair="$firmware_dir/target/debug/stillair"
 image="$firmware_dir/app/target/riscv32imac-unknown-none-elf/debug/stillair"
 profile=${1:-"$script_dir/18-unloaded-startup-camera.txt"}
@@ -105,6 +107,12 @@ motor_start_ns=
 candidate_applied_ns=
 
 discover_board_port() {
+    if [ "$console_transport" = "uart" ]; then
+        detected=$(UV_CACHE_DIR=/tmp/stillair-uart-boot-uv-cache \
+            uv run --with pyserial python3 "$uart_bootloader" --print-port) || return 1
+        board_port=$detected
+        return 0
+    fi
     discovered_ports=()
     discovered_callout_ports=()
     while IFS= read -r candidate; do
@@ -273,6 +281,10 @@ case "$config_mode" in
     stage | verified) ;;
     *) echo "STILLAIR_CONFIG_MODE must be stage or verified" >&2; exit 1 ;;
 esac
+case "$console_transport" in
+    uart | usb) ;;
+    *) echo "STILLAIR_CONSOLE_TRANSPORT must be uart or usb" >&2; exit 1 ;;
+esac
 if [ -n "$tune_candidate" ] && [ "$config_mode" != "verified" ]; then
     echo "loaded tuning candidates require STILLAIR_CONFIG_MODE=verified" >&2
     exit 1
@@ -308,27 +320,41 @@ case "$camera_url" in
         exit 1
         ;;
 esac
-"$utility_plug" on
 if [ "$skip_flash" -eq 0 ]; then
     cd "$firmware_dir/app"
-    cargo build
-
-    # The ESP dev board is powered from the controller rail. Restore the rail and wait for USB
-    # before flashing, then cycle the whole fan supply and restage the volatile MCF image.
-    if ! wait_for_board_port; then
-        echo "board port did not appear after enabling Utility Plug" >&2
-        exit 1
+    if [ "$console_transport" = "uart" ]; then
+        cargo build
+        if ! wait_for_board_port; then
+            echo "FTDI USB-UART adapter port is unavailable" >&2
+            exit 1
+        fi
+        cd "$repo_dir"
+        UV_CACHE_DIR=/tmp/stillair-uart-boot-uv-cache \
+            uv run --with pyserial python3 "$uart_bootloader" --port "$board_port"
+        power_is_on=1
+        espflash flash --port "$board_port" --before no-reset --after watchdog-reset \
+            --non-interactive "$image"
+    else
+        cargo build --no-default-features --features usb-console
+        "$utility_plug" on
+        # Native USB boards retain the original DTR/RTS reset and post-flash power-cycle path.
+        if ! wait_for_board_port; then
+            echo "board port did not appear after enabling Utility Plug" >&2
+            exit 1
+        fi
+        cd "$repo_dir"
+        espflash flash --port "$board_port" --non-interactive "$image"
+        "$utility_plug" cycle
+        if [ "$board_port_explicit" -eq 0 ]; then
+            board_port=
+        fi
+        if ! wait_for_board_port; then
+            echo "board port did not return after flash/power cycle" >&2
+            exit 1
+        fi
     fi
-    cd "$repo_dir"
-    espflash flash --port "$board_port" --non-interactive "$image"
-    "$utility_plug" cycle
-    if [ "$board_port_explicit" -eq 0 ]; then
-        board_port=
-    fi
-    if ! wait_for_board_port; then
-        echo "board port did not return after flash/power cycle" >&2
-        exit 1
-    fi
+else
+    "$utility_plug" on
 fi
 if [ -z "$board_port" ] || [ ! -e "$board_port" ]; then
     if ! wait_for_board_port; then

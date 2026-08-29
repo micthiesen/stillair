@@ -27,11 +27,17 @@ beginning at the lowest useful speed with continuous observation and a reachable
 
 The replacement board passed hand-populated C34/U8 continuity and initial 18 V rail checks, but
 its native USB never enumerated after known cables, forced ROM boot, host restart, and J6 pin
-reflow. UART0 on J7 is the recovery path. A DSD TECH SH-U09C2 FT232RNL USB-UART adapter is ordered;
-fast domestic TC2030 cables were unavailable. The selected domestic fallback is a lightweight
-prewired 6-pin JST-SH pigtail soldered once to J7 pins 2--6, with J7.1 left unconnected, followed
-by continuity and adjacent-pad isolation checks and strain relief before power. The runtime
-firmware must expose its physical console on UART0 before this replaces J6 for tuning; see
+reflow. UART0 on J7 is the recovery path through a DSD TECH SH-U09C2 FT232RNL USB-UART adapter.
+Solder one light lead to each J7 pin 2--6 and leave J7.1/board-3V3 isolated. A/B/C connect TX,
+RX, and AGND to adapter RXD, TXD, and GND. D/BOOT branches to adapter RTS and to a normally-open
+momentary switch whose other terminal returns to C/AGND. E/EN uses the same switch-to-C pattern
+for manual reset. Disconnect D from RTS before using the BOOT switch; never ground an actively
+driven RTS output. Check every intended connection and adjacent-pad isolation before power.
+
+The application now defaults to the J7 UART0 console, while a `usb-console` build feature retains
+the original native-USB transport. The synchronized runner can assert active-low RTS, cold-cycle
+the Kasa supply, release BOOT, flash with `--before no-reset`, and watchdog-reset into the UART
+application. This sequence is host-tested but not yet physically qualified; see
 [controls.md](controls.md#commissioning-interface-and-build-policy).
 The printable direct end-to-end pad map is
 [`pcb-01-j7-usb-uart.pdf`](../output/pdf/pcb-01-j7-usb-uart.pdf).
