@@ -70,6 +70,8 @@ critical gate that decides whether the board can return overhead for final loade
 
 ## Learned Recently
 
+- Conditional PCB-01 V2 trigger, service-edge concept, deletion candidates, and evidence-first
+  simplification rules: [pcb-01-v2.md](pcb-01-v2.md).
 - Switched J7 construction, monochrome wire patterns, automated RTS connection, and manual
   fallback: [pcb-01-j7-usb-uart.pdf](../output/pdf/pcb-01-j7-usb-uart.pdf) and
   [build.md](build.md#replacement-pcb-01-service-path-2026-08-28).

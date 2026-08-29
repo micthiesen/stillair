@@ -30,7 +30,8 @@ Direct drive, low voltage, simple structure:
   low-speed operating point.
 - **Drive**: TI MCF8316D sensorless FOC driver with integrated FETs, on a custom 78 × 58 mm
   four-layer controller PCB. The V1 board doubles as the development board (no TI evaluation
-  module needed); V2 keeps the same outline and mounting holes.
+  module needed). V2 is only a contingency or optional later redesign; it may be smaller and does
+  not inherit the V1 outline automatically. See [pcb-01-v2.md](pcb-01-v2.md).
 - **Supervisor**: ESP32-C6-MINI-1-H4 running Matter over Wi-Fi (rs-matter, pure Rust), used
   from Apple Home. It configures the MCF over I²C and commands speed/direction; it never
   switches motor phases.
@@ -76,6 +77,7 @@ Slab verification and the local installation-approval path are site-specific exe
 - [home-automation.md](home-automation.md) — provisional presence, comfort, and vacation behavior
 - [observability.md](observability.md) — measurement authority, J8/scope hookups, synchronized evidence
 - [probing.md](probing.md) — PCB-01 orientation, human test-point locations, connector pin views, and probe workflow
+- [pcb-01-v2.md](pcb-01-v2.md) — conditional experience-based simplification and serviceability brief
 - [motor-contingency.md](motor-contingency.md) — motor rejection criteria and least-disruption fallback paths
 - [build.md](build.md) — build sequence, procurement gates, commissioning
 - [integration.md](integration.md) — dependency spine, parallel tracks, and energy-sized next work
