@@ -395,9 +395,12 @@ so Michael can watch the block appear instead of reviewing it at the end.
   boxes from the *current* stored rotation; a move that also rotates a non-square part
   reports false overlaps (or misses real ones). Hand-verify the rot-swapped box for those
   parts, or apply rot first and re-check.
-- **Schematic→board sync after file-based schematic edits is Michael running F8**
-  (Update PCB from Schematic) — kicad-cli has no headless equivalent. New components land
-  wherever he drops them (fine, anywhere); Claude re-places them from the file afterward.
+- **Schematic-to-board sync after file-based schematic edits uses Computer Use to run F8**
+  (Update PCB from Schematic); kicad-cli has no headless equivalent. First close stand-alone
+  KiCad editors, open the `.kicad_pro`, launch Schematic Editor from the project manager's
+  Tools menu or large button, and minimize the project-manager window so yabai gives the
+  editor the full tile. New components land wherever the update drops them (fine, anywhere);
+  the agent re-places them from the file afterward.
   "No net found for pad MP" warnings during F8 are connector mounting tabs — benign.
 - **`add_component_annotation` takes `key`/`value`** (not `property_name`/`property_value`).
 
