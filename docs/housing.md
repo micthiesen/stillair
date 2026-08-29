@@ -55,8 +55,10 @@ PCB-01 heat reaches the structure through internal convection and radiation plus
 mounting interfaces. Keep reasonable free air volume around the board and do not pack the upper
 cavity with thermal or acoustic insulation.
 
-Thermal adequacy is decided with the complete final housing installed during `DRV-05`: eight hours
-at 170 RPM, motor below 70 C and PCB below 85 C. If that test fails, respond in this order:
+For installed V1, thermal adequacy is decided with the complete final housing installed during
+`DRV-05`: eight hours at 170 RPM, motor below 70 C and PCB below 85 C. PCB-01 V2 instead uses
+`PCB-V2-TEMP-01` through `PCB-V2-THERM-01`: U12 is the chamber proxy and an independent U2-area
+probe must remain at or below 75 C. If the applicable test fails, respond in this order:
 
 1. Confirm sensor placement and eliminate a mechanical rub or tuning loss.
 2. Improve stationary conduction into MC-100 or MP-100.
@@ -67,7 +69,7 @@ problem.
 
 ## Temperature observation
 
-The GL100 has no documented built-in temperature output. PCB-01 provides J4 `TEMP_SENSE`, a 10 kOhm
+The GL100 has no documented built-in temperature output. PCB-01 V1 provides J4 `TEMP_SENSE`, a 10 kOhm
 pull-up divider to GPIO6 for the purchased Vishay `NTCALUG01T103G501` ring-lug NTC. Mount the NTC on
 a stationary GL100 surface or the immediately adjacent MC-100 motor-mount region, with the final
 location recorded so later tests remain comparable. It may not attach to the rotating shell.
@@ -76,10 +78,12 @@ The NTC input is electrically complete but firmware acquisition remains `TODO(te
 does not currently appear in console telemetry. Until that is implemented, read the NTC with an
 external meter/logger or use an independent attached temperature logger for `DRV-05`.
 
-PCB-01 has no dedicated numeric board-temperature sensor. The MCF8316D reports internal
-overtemperature warning/shutdown states, and firmware treats either as a stop, but those threshold
-bits are protection rather than a qualification thermometer. Attach an independent thermocouple or
-temperature probe at the MCF/board thermal region for the 85 C PCB measurement.
+PCB-01 V1 has no dedicated numeric board-temperature sensor. Its independent thermocouple or probe
+at the MCF/board thermal region uses the historical 85 C acceptance limit. PCB-01 V2 deletes J4 and
+its external NTC divider and instead uses the on-board `TMP1075DGKR` specified in
+[pcb-01-v2.md](pcb-01-v2.md#digital-chamber-temperature). U12 is only the chamber proxy; V2 still
+requires an independent probe at the U2 area and a temperature at or below 75 C. The MCF8316D
+overtemperature warning/shutdown bits remain protection rather than a qualification thermometer.
 
 ## Mechanical and service interfaces
 

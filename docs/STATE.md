@@ -3,16 +3,18 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-29** (PCB-01 V2 implementation specification completed and adversarially converged.)
+Last updated: **2026-08-29** (PCB-01 V2 chamber-temperature revision completed and adversarially converged.)
 
 ## Now
 
 - **PCB-01 V2 is fully specified for schematic capture and layout.** The exact component schedule,
   connector and GPIO maps, complete ratsnest, WROOM/automatic-UART service design, test access,
-  stackup and net classes, placement groups, firmware deltas, assembly split, and validation gates
-  are frozen in [pcb-01-v2.md](pcb-01-v2.md). Exact outline dimensions and placement coordinates are
-  intentionally deferred to KiCad. Seven adversarial rounds were run; the final fresh round returned
-  no useful electrical, manufacturing, service, firmware, history, or tooling feedback.
+  on-board digital chamber sensor, stackup and net classes, placement groups, firmware deltas,
+  assembly split, and validation gates are frozen in [pcb-01-v2.md](pcb-01-v2.md). J4 and its
+  external NTC path are deleted; TMP1075 uses a dedicated GPIO6/GPIO11 bus. Exact outline dimensions
+  and placement coordinates are intentionally deferred to KiCad. The full spec now records eighteen
+  adversarial rounds, including eleven fresh rounds for this sensor revision; round 18 returned no
+  useful electrical, firmware, commissioning, sourcing, documentation, or tooling feedback.
 
 - **The installed fan retains its provisional 50--170 RPM loaded release.** The complete ceiling
   assembly, persistent golden MCF image, Apple Home control, cold-power recovery, nine 50 RPM
@@ -78,7 +80,8 @@ critical gate that decides whether the board can return overhead for final loade
 ## Learned Recently
 
 - Complete PCB-01 V2 schematic/layout handoff, exact BOM and ratsnest, evidence-based simplifications,
-  implementation gates, and seven-round review record: [pcb-01-v2.md](pcb-01-v2.md).
+  digital chamber-temperature telemetry, implementation gates, and review record:
+  [pcb-01-v2.md](pcb-01-v2.md).
 - Switched J7 construction, monochrome wire patterns, automated RTS connection, and manual
   fallback: [pcb-01-j7-usb-uart.pdf](../output/pdf/pcb-01-j7-usb-uart.pdf) and
   [build.md](build.md#replacement-pcb-01-service-path-2026-08-28).

@@ -5,7 +5,9 @@ An implementation contract, not firmware. Application code lives in
 
 This document describes the installed V1 hardware unless a section says otherwise. PCB-01 V2 keeps
 the behavioral contract but changes the supervisor to `ESP32-C6-WROOM-1-N8`, moves MCF ALARM from
-GPIO14 to GPIO10, and replaces J7/USB service with the J5 UART interface specified in
+GPIO14 to GPIO10, removes the external-NTC path, reuses GPIO6/GPIO11 for a dedicated
+`TMP1075DGKR` chamber-sensor bus at I2C address `0x48`, and replaces J7/USB service with the J5 UART
+interface specified in
 [`pcb-01-v2.md`](pcb-01-v2.md). Do not apply the V1 physical pin or service instructions to V2.
 
 ## Selected V1 hardware
@@ -141,13 +143,17 @@ unloaded bench.
   mode before the I2C address probe, because an already-configured MCF watchdog is live after
   wake; MCU_CLEAR_N remains low until SPEED is zero. Once the control task starts, heartbeat
   service again requires observed control-loop progress.
-- Drive the MCF I2C bus through the dedicated GPIO0/1 software transport. Ordinary bits run
+- On V1, drive the MCF I2C bus through the dedicated GPIO0/1 software transport. Ordinary bits run
   near 100 kHz, followed by an explicit `MCF_I2C_INTERBYTE_US` (110 us) SCL-low hold after
   every byte ACK or NACK. TI requires at least 100 us between bytes, which the ESP hardware
   packet engine cannot insert. Slowing that engine to 5 kHz and 2.5 kHz still produced
   intermittent NACKs on the real board because a slow bit period is not the specified pause.
   The transport permits the MCF's documented clock stretching up to its 4.66 ms internal
   timeout. Protocol CRC and nine-clock bus recovery remain enabled.
+  V2 retains GPIO0/1 as a dedicated MCF bus with all of those framing, timing, stretching, CRC, and
+  recovery semantics. Its TMP1075 uses a separate standard-I2C bus on GPIO6/GPIO11, so sensor
+  failures and address `0x48` cannot enter MCF traffic or fault accounting. The exact V2 transaction
+  and telemetry contract is in [pcb-01-v2.md](pcb-01-v2.md#firmware-feasibility-contract).
 - Set every configurable fault mode to latched Hi-Z (0h) and OCP_MODE to latched —
   **except `EXT_WDT_FAULT_MODE`, whose encoding is inverted: 1b = latched Hi-Z** (0b is
   report-only). The only non-latchable paths are IPD start-attempt retry (electrical.md)

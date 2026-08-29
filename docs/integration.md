@@ -94,6 +94,6 @@ checkpoint, on the installed ceiling assembly rather than an improvised loaded b
 ## Future only on explicit request
 
 Do not suggest, schedule, or use these as blockers unless Michael explicitly asks to resume
-one: ENC-100 cosmetic housing, TEMP_SENSE firmware, intentional-imbalance testing,
+one: ENC-100 cosmetic housing, V1 TEMP_SENSE firmware, intentional-imbalance testing,
 exhaustive start matrices, exhaustive acoustic testing, network/Matter resilience testing,
 exhaustive fault permutations, tether rework, catcher rework, or PCB-bracket CAD.

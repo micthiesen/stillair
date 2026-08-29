@@ -35,8 +35,8 @@ to use repeatedly.
 - Firmware-independent `DRV5033 -> LM2907 -> TLV1701 -> U6` overspeed shutdown.
 - U5 drive-permission latch, U6 power-cycle-only safety lock, TPS3435 window watchdog, MCF external
   watchdog, active-low fault wired-OR, and Q2 open-drain control of MCF `DRVOFF`.
-- MCF I2C telemetry, FG, Hall plausibility, ALARM, nFAULT, SOX, WDO diagnostics, the external NTC
-  input, and physical RESET, BOOT, and permission-clear buttons.
+- MCF I2C telemetry, FG, Hall plausibility, ALARM, nFAULT, SOX, WDO diagnostics, on-board digital
+  chamber-temperature telemetry, and physical RESET, BOOT, and permission-clear buttons.
 - Four copper layers, 2 oz outer copper, 1 oz inner copper, ENIG, top-side SMD assembly, separate
   AGND and PGND domains, and one explicit net-tie join.
 
@@ -55,6 +55,9 @@ to use repeatedly.
 - U3 pin 11 MODE/SYNC connects directly to AGND, selecting the proven default PFM mode.
 - Test access becomes labelled plated through-holes grouped along accessible edges. Phase outputs
   are measured at J2 only with a rated differential probe.
+- U12 becomes a `TMP1075DGKR` digital temperature sensor on a dedicated GPIO6/GPIO11 I2C bus. It
+  measures the chamber at a thermally quiet board edge without consuming an ESP ADC channel or
+  sharing the MCF recovery bus.
 - Mounting remains four M3 clearance holes near the corners, but coordinates and outline follow
   placement.
 
@@ -63,10 +66,12 @@ to use repeatedly.
 - C6 spare bulk footprint, C32 unused optional LM2907 input capacitor, and C36-C40 alternate filter
   capacitor bank.
 - F1 and its bridge. The wall-box 3 A ATO fuse remains the source protection boundary.
-- Native USB J6, U12, R20-R21, V1 R55-R58, CC resistors, VBUS divider, VBUS test point, and all
-  USB/VBUS nets. New V2 R55-R57 identifiers are reassigned below.
+- Native USB J6, the V1 U12 USB-protection function, R21, the V1 USB function/value of R20, V1
+  R55-R58, CC resistors, VBUS divider, VBUS test point, and all USB/VBUS nets. The R20 designator is
+  not deleted: U12, R20, and new V2 R55-R57 are reassigned below.
 - J7 Tag-Connect, J8 debug header, and the external JST-SH I2C connector previously called J5. SDA
   and SCL remain available as edge test holes.
+- J4 and the external NTC input. V1 R19 and R20 are reassigned as U12 bus pull-ups.
 - Duplicate ground test pads and every V1 placement-only DRC waiver.
 
 The USB deletion is intentional. V2 recovery and the runtime console use UART. Before ordering, the
@@ -83,7 +88,6 @@ connector name, pin 1, and signal order. Cable drawings must state the same view
 | J1 POWER | Molex `43045-0200`, Micro-Fit 3.0 right-angle | 1 `RAW24`, 2 `PGND` | Preserve existing cable exactly |
 | J2 MOTOR | Molex `43650-0300`, Micro-Fit 3.0 right-angle | 1 `PHASE_W`, 2 `PHASE_V`, 3 `PHASE_U` | Preserve existing cable exactly |
 | J3 HALL | JST `B3B-PH-K-S(LF)(SN)`, PH 2.0 mm, PHR-3 mate | 1 `3V3`, 2 `HALL_TACH`, 3 `AGND` | Preserve existing cable exactly |
-| J4 TEMP | JST `B2B-PH-K-S(LF)(SN)`, PH 2.0 mm, PHR-2 mate | 1 `TEMP_SENSE`, 2 `AGND` | Retain `NTCALUG01T103G501` NTC input |
 | J5 SERVICE | JST `B5B-PH-K-S(LF)(SN)`, `C157993`, PHR-5 mate | 1 `AGND`, 2 `UART_TX`, 3 `UART_RX_CONN`, 4 `RTS_N`, 5 `DTR_N` | No power; accessible edge |
 
 J5 directions are from the board perspective: pin 2 is output, pin 3 is input. Adapter VCC must be
@@ -137,13 +141,14 @@ GPIO9 has R12 10 k pull-up, SW2 to AGND, and Q4 BOOT control. GPIO8 retains R13 
 | 2 | 3V3 | 3V3 |
 | 3 | EN | `ESP_EN` |
 | 4,5 | GPIO4,5 | no connect |
-| 6 | GPIO6 | `TEMP_SENSE` |
+| 6 | GPIO6 | `TEMP_SDA` |
 | 7 | GPIO7 | `HALL_TACH` |
 | 8 | GPIO0 | `ESP_SDA` |
 | 9 | GPIO1 | `ESP_SCL` |
 | 10 | GPIO8 | `ESP_GPIO8` pull-up only |
 | 11 | GPIO10 | `ALARM`, moved from GPIO14 |
-| 12-14 | GPIO11-13 | no connect |
+| 12 | GPIO11 | `TEMP_SCL` |
+| 13,14 | GPIO12,13 | no connect |
 | 15 | GPIO9 | `ESP_BOOT` |
 | 16 | GPIO18 | `ARM_PULSE` |
 | 17 | GPIO19 | `WD_HEARTBEAT` |
@@ -157,6 +162,21 @@ GPIO9 has R12 10 k pull-up, SW2 to AGND, and Q4 BOOT control. GPIO8 retains R13 
 | 25 | GPIO16/TXD0 | `UART_TX` |
 | 26 | GPIO3 | `ESP_DIR` |
 | 27 | GPIO2 | `ESP_SPEED` |
+
+### Digital chamber temperature
+
+U12 is TI `TMP1075DGKR`, a 12-bit local digital sensor powered from 3V3. Connect SDA pin 1 to
+`TEMP_SDA`, SCL pin 2 to `TEMP_SCL`, GND pin 4 to AGND, V+ pin 8 to 3V3, and address pins A2/A1/A0
+pins 5/6/7 to AGND. This fixes the 7-bit address at `0x48`. R19 and R20 pull TEMP_SDA and TEMP_SCL
+to 3V3 with 4.7 k each. C20 is U12's local 100 nF bypass from V+ to AGND. ALERT pin 3 is no-connect:
+chamber temperature is diagnostic telemetry and has no authority over U5, U6, DRVOFF, speed limits,
+or drive permission.
+
+U12 measures air temperature plus residual local-board heating, not remote motor temperature. Its
+placement and validation below make it the defined chamber-temperature proxy. The TEMP_SDA/TEMP_SCL bus is
+electrically separate from the GPIO0/GPIO1 MCF bus, so U12 cannot see MCF control words, CRC bytes,
+or address-recovery sweeps and cannot hold the motor-controller bus low. R6/R7 and R16/R17 retain
+their existing MCF-bus functions only.
 
 ### Permission, watchdog, and persistent lock
 
@@ -203,7 +223,8 @@ LCSC identifiers freeze the intended item. Substitution requires review and a sp
 | C11,C12,C14,C15 | 4 | 1 uF, 50 V, X5R, 10% | 0603 | `C15849` |
 | C13 | 1 | 47 nF, 100 V, X7R, 10% | 0805 | `C107126` |
 | C16 | 1 | 22 uF, 25 V, X7R, 10% | 1210 | `C309062` |
-| C18,C20,C22,C24,C25,C41-C43 | 8 | 100 nF, 16 V, X7R, 10% | 0402 | Samsung `CL05B104KO5NNNC`, `C1525` |
+| C18,C22,C24,C25,C41-C43 | 7 | 100 nF, 16 V, X7R, 10% | 0402 | Samsung `CL05B104KO5NNNC`, `C1525` |
+| C20 | 1 | 100 nF, 16 V, X7R, 10%; U12 local bypass | 0402 | Samsung `CL05B104KO5NNNC`, `C1525` |
 | C19 | 1 | 1 uF, 25 V, X5R, 10% | 0402 | `C52923` |
 | C23 | 1 | 10 uF, 25 V, X5R, 10% | 0805 | `C15850` |
 | C26 | 1 | 10 uF, 63 V, X7R, 10% | 1210 | Murata, `C437568` |
@@ -220,9 +241,9 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 
 | Refs | Qty | Value/function | Footprint | Exact source |
 |---|---:|---|---|---|
-| R1,R3,R8,R9,R11-R13,R18,R19,R29-R35,R37,R42-R44,R46,R47,R49,R50,R55,R56 | 26 | 10 k | 0402 | `0402WGF1002TCE`, `C25744` |
+| R1,R3,R8,R9,R11-R13,R18,R29-R35,R37,R42-R44,R46,R47,R49,R50,R55,R56 | 25 | 10 k | 0402 | `0402WGF1002TCE`, `C25744` |
 | R2,R10,R25,R27,R31 | 5 | 100 k | 0402 | `C25741` |
-| R4-R7,R28 | 5 | 4.7 k | 0402 | Yageo `RC0402FR-074K7L`, `C105871` |
+| R4-R7,R19,R20,R28 | 7 | 4.7 k | 0402 | Yageo `RC0402FR-074K7L`, `C105871` |
 | R14,R15,R24,R36,R38,R45 | 6 | 100 ohm | 0402 | `C25076` |
 | R16,R17 | 2 | 0 ohm I2C isolation links | 0402 | `C17168` |
 | R26 | 1 | 1 k | 0402 | `C11702` |
@@ -258,18 +279,19 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | U8 | TI `LM2907M-14/NOPB` | SOIC-14 | in hand, hand solder |
 | U9 | TI `TLV1701AIDBVR` | SOT-23-5 | `C130035` |
 | U10,U11 | TI `SN74LVC1G17DCKR` | SC-70-5 | `C10425` |
+| U12 | TI `TMP1075DGKR` | `Package_SO:VSSOP-8_3x3mm_P0.65mm` (DGK) | `C2864807`; JLCPCB assembled |
 | J1 | Molex `43045-0200` | exact right-angle footprint | hand |
 | J2 | Molex `43650-0300` | exact right-angle footprint | hand |
 | J3 | JST `B3B-PH-K-S(LF)(SN)` | vertical PH 1x3 | `C131339`, hand |
-| J4 | JST `B2B-PH-K-S(LF)(SN)` | vertical PH 1x2 | `C131337`, hand |
 | J5 | JST `B5B-PH-K-S(LF)(SN)` | vertical PH 1x5 | `C157993`, hand |
 | SW1-SW3 | C&K `PTS645SK43SMTR92LFS` | PTS645 SMD | `C221871`, RESET/BOOT/CLEAR |
 | NT1 | copper net-tie, no purchased part | two 2.0 mm F.Cu pads | excluded from BOM |
-| TP1-TP29 | bare plated test holes | custom 2.4 mm pad, 1.0 mm finished hole | no component |
+| TP1-TP31 | bare plated test holes | custom 2.4 mm pad, 1.0 mm finished hole | no component |
 | H1-H4 | M3 clearance | 3.2 mm NPTH, no annulus | mechanical, positions deferred |
 
-Custom U1, U2, U3, U5/U6, NT1, and test-hole footprints require explicit pin/pad review. U2 must
-reproduce Espressif's current land pattern and antenna keepout, not adapt the V1 MINI footprint.
+Custom U1, U2, U3, U5/U6, NT1, and test-hole footprints require explicit pin/pad review. Explicitly
+review U12's standard DGK symbol-to-pad mapping. U2 must reproduce Espressif's current land pattern
+and antenna keepout, not adapt the V1 MINI footprint.
 
 ## Exact connectivity and ratsnest
 
@@ -284,8 +306,8 @@ Pins absent here are in the explicit no-connect statements or duplicate power/EP
 | `PMOS_GATE` | D1.2 anode, Q1.1, R1.1, R2.2 |
 | `VM24` | Q1.3, D1.1 cathode, D2.1, C1.1,C2.1,C3.1,C4.1,C5.1,C7.1,C8.1,C12.2, R2.1,R39.1, U1.9-U1.11, U3.2,U3.3, TP2.1 |
 | `PGND` | J1.2, D2.2, C1.2-C5.2, U1.12,U1.15,U1.18, NT1.1, TP3.1 |
-| `AGND` | all logic/analog capacitor ground pins; J3.3,J4.2,J5.1; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; NT1.2; TP4.1 |
-| `3V3` | C9.1,C10.1,C17.1,C18.1,C22.1,C24.1,C25.1,C41.1,C42.1,C43.1; D9.2; J3.1; R4.1-R7.1,R11.1-R13.1,R18.1,R19.1,R29.1-R31.1,R34.1,R35.1,R37.1,R42.1,R43.2,R50.1,R52.1; U2.2; U3.4,U3.9; U5.2,U5.7,U5.8; U6.2,U6.8; U7.8; U9.5; U10.5; U11.5; TP5.1 |
+| `AGND` | all logic/analog capacitor ground pins; J3.3,J5.1; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; U12.4-U12.7; NT1.2; TP4.1 |
+| `3V3` | C9.1,C10.1,C17.1,C18.1,C20.1,C22.1,C24.1,C25.1,C41.1,C42.1,C43.1; D9.2; J3.1; R4.1-R7.1,R11.1-R13.1,R18.1-R20.1,R29.1-R31.1,R34.1,R35.1,R37.1,R42.1,R43.2,R50.1,R52.1; U2.2; U3.4,U3.9; U5.2,U5.7,U5.8; U6.2,U6.8; U7.8; U9.5; U10.5; U11.5; U12.8; TP5.1 |
 | `U3_VCC` | C11.1, R3.1, U3.8 |
 | `PGOOD` | R3.2, D3.1, D8.1, U2.20, U3.1, TP9.1 |
 
@@ -324,16 +346,17 @@ U3 pins 5, 6, and 7 are no-connects.
 | `MCF_EXT_WD` | U1.32, R38.2, TP16.1 |
 
 U1 pins 22-25, 33, 36, and 37 are no-connects. U1 EP41 is AGND and gets at least 12 filled-and-
-capped thermal vias, nominal 0.20 mm drill, distributed across the pad.
+capped thermal vias, 0.30 mm drill, distributed across the pad, matching the proven V1 footprint.
 
-### ESP service and temperature
+### ESP service
 
 | Net | Required endpoints |
 |---|---|
 | `ESP_EN` | U2.3, R11.2, C19.1, SW1.1, Q4.3 |
 | `ESP_BOOT` | U2.15, R12.2, SW2.1, Q4.6 |
 | `ESP_GPIO8` | U2.10, R13.2 |
-| `TEMP_SENSE` | U2.6, J4.1, R19.2, C20.1 |
+| `TEMP_SDA` | U2.6, R19.2, U12.1, TP30.1 |
+| `TEMP_SCL` | U2.12, R20.2, U12.2, TP31.1 |
 | `HALL_TACH` | U2.7, J3.2, Q3.1, R43.1, TP21.1 |
 | `UART_TX` | U2.25, J5.2 |
 | `UART_RX_CONN` | J5.3, R57.1 |
@@ -347,8 +370,8 @@ capped thermal vias, nominal 0.20 mm drill, distributed across the pad.
 | `MCU_CLEAR_N` | U2.23, R18.2, D6.1 |
 | `WDO` | U2.21, U7.7, R37.2, D4.1, TP14.1 |
 
-U2 pads 4,5,12,13,14,22 are no-connects. No copper, vias, components, or test points may enter the
-official antenna keepout except allowed module pads.
+U2 pads 4,5,13,14,22 and U12 pin 3 are no-connects. No copper, vias, components, or test points
+may enter the official antenna keepout except allowed module pads.
 
 ### Permission and watchdog
 
@@ -401,7 +424,7 @@ node; no separate `TACH_PGOOD_N` net exists.
 
 ## Test and service access
 
-TP1-TP29 use 2.4 mm copper, 1.0 mm finished plated hole, no paste, and mask opening both sides. Keep
+TP1-TP31 use 2.4 mm copper, 1.0 mm finished plated hole, no paste, and mask opening both sides. Keep
 at least 2.54 mm center spacing and clearance for a miniature hook clip or 24-28 AWG pigtail. Print
 full net names. Group by subsystem; exact edge and order follow routing.
 
@@ -417,7 +440,7 @@ full net names. Group by subsystem; exact edge and order follow routing.
 | 8 | MCF_DVDD | 17 | NFAULT |  |  |
 | 9 | PGOOD | 18 | SDA |  |  |
 | 26 | ALARM | 27 | WD_MR | 28 | U7_WDI |
-| 29 | WD_EN |  |  |  |  |
+| 29 | WD_EN | 30 | TEMP_SDA | 31 | TEMP_SCL |
 
 J5 supplies UART access and SW1/SW2 direct EN/BOOT. Do not add phase pads or use an earth-grounded
 scope on a phase. Use a rated differential probe at J2.
@@ -427,11 +450,12 @@ scope on a phase. Use a rated differential probe at J2.
 - Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C.
 - F.Cu/B.Cu 2 oz, In1/In2 1 oz; ENIG, green mask, white silk, plated through vias.
 - Minimum copper-to-edge 0.25 mm except intentional connector body overhang. Minimum signal track
-  0.20 mm and standard via 0.60/0.30 mm. No blind, buried, stacked, or microvias.
+  0.20 mm and every via, including filled-and-capped thermal via-in-pad, uses at least 0.30 mm drill.
+  The standard via is 0.60/0.30 mm. No blind, buried, stacked, or microvias.
 - Minimum plated-hole edge to track/copper clearance is 0.30 mm on every layer. The 0.20/0.25 mm
   class clearances below apply only where no plated hole is involved and the chosen fab permits them.
 - Put every component on the front. All SMD parts use front-side assembly only; the named hand parts
-  C1, C2, and J1-J5 retain their through-hole footprints. B.Cu carries no components.
+  C1, C2, J1-J3, and J5 retain their through-hole footprints. B.Cu carries no components.
 - Filled-and-capped via-in-pad is required under U1 EP and U4 EP if used there. Confirm JLC POFV.
 - Record actual copper weights in KiCad instead of the V1 generic 0.035 mm on all layers.
 
@@ -471,17 +495,24 @@ Exact coordinates are deferred. These relationships are mandatory.
    remain accessible installed.
 6. Put U2 on an outward edge, antenna away from motor, aluminum plate, fasteners, bulk capacitors,
    connectors, and cables. Keep the official all-layer keepout and at least 15 mm free space ahead.
-7. Group J5, SW1, SW2, Q4, and R55-R57 at an accessible edge. Put SW3 where it is deliberate but not
+7. Put U12 and C20 at a quiet outer edge exposed to chamber air, outside the antenna keepout and
+   away from U1, U3, Q1, R39, bulk capacitors, phase copper, and enclosure contact points. Keep U12
+   at least 5 mm from the U2 body and 10 mm from those heat sources where placement permits. Do not
+   put it beneath a connector or cable. Keep C20 at U12 pins 8/4, route TEMP_SDA/TEMP_SCL together
+   over AGND with R19/R20 nearby,
+   and avoid broad power copper beneath or immediately around U12 that would conduct local heat into
+   the sensor. Do not split the AGND return plane to thermally isolate it.
+8. Group J5, SW1, SW2, Q4, and R55-R57 at an accessible edge. Put SW3 where it is deliberate but not
    accidentally pressed while probing.
    Reserve at least 18 mm normal to the board above J5 for the mated PHR-5 housing and contacts, plus
    a 12 mm lateral cable-bend corridor in the chosen exit direction. Keep that volume clear of the
    enclosure, screws, buttons, probe approach, and other cable bundles inside the 110 x 80 x 25 mm
    controller envelope.
-8. Group TP1-TP29 along accessible edges. A point may use the nearest edge rather than a long route.
+9. Group TP1-TP31 along accessible edges. A point may use the nearest edge rather than a long route.
    Sensitive analog test stubs must be minimal.
-9. Put H1-H4 near final corners with screw, washer, standoff, and tool keepouts. Coordinates follow
+10. Put H1-H4 near final corners with screw, washer, standoff, and tool keepouts. Coordinates follow
    placement and the housing support pattern.
-10. Reserve at least 8 mm beyond power/motor mating faces. Preserve iron access to hand parts.
+11. Reserve at least 8 mm beyond power/motor mating faces. Preserve iron access to hand parts.
 
 Silk must label connectors and pin 1, RESET/BOOT/CLEAR, RV1 direction, TP nets, W/V/U, power polarity,
 board name/revision, and `PHASES: DIFFERENTIAL PROBE ONLY`. Every polarized part and cable interface
@@ -506,15 +537,31 @@ must be unambiguous.
   unrelated FTDI device when more than one is present.
 - Update the app board wiring, controls pin table/comments, and ALARM-path tests for GPIO10 before V2
   firmware qualification. The existing GPIO14 implementation is V1-only.
-- TEMP_SENSE may remain unimplemented until the ADC/Matter TRNG conflict is resolved. It is not in
-  the independent safety chain and does not block hardware.
+- Keep the current MCF-owned `SoftI2c` dedicated to GPIO0/GPIO1, preserving its full target discovery,
+  control-word, CRC, recovery, and 110 us inter-byte behavior. Create a separate standard-mode I2C
+  controller/service on GPIO6 TEMP_SDA and GPIO11 TEMP_SCL at 100 kHz. It writes pointer `0x00` to
+  U12 address `0x48`, repeated-start reads two bytes MSB first, interprets bits 15:4 as
+  signed two's-complement units of 0.0625 C, converts to milli-C by rounding half-milli values away
+  from zero, and rejects replies with nonzero bits 3:0 or values outside -55 C to 125 C. No U12
+  transaction may use the MCF transport, and no MCF transaction may use TEMP_SDA/TEMP_SCL. A U12
+  NACK, malformed value, or physically stuck temperature bus must not increment MCF bus-failure
+  accounting, initiate MCF address recovery, or change drive state.
+- Poll U12 once per second after allowing at least 35 ms after power/reset for its first conversion.
+  This covers the 27.5 ms default period at +10% variation plus 0.3 ms reset-to-conversion start
+  without accepting the indistinguishable reset value of 0 C as a measurement. Add
+  `chamber_temp_milli_c: Option<i32>` to core/app telemetry and render it as JSON integer milli-C when
+  valid or JSON `null` after any failed/malformed read. Add a final `chamber_temp_milli_c` CSV column;
+  render `null` as an empty field. Tests must cover positive, negative, zero, first-conversion delay,
+  NACK, malformed/out-of-range data, JSON, CSV, and proof that sensor errors do not enter MCF fault
+  accounting, including reads attempted immediately before and at the 35 ms boundary. Do not
+  configure ALERT or add temperature-based drive, speed, or permission behavior.
 - Preserve D-generation MCF settings, standby not sleep, ALARM_PIN_EN, OTW_REP, EXT_WDT enabled as
   GPIO tickle, 1000 ms timeout, and latched Hi-Z watchdog fault action.
 
 ## Assembly and sourcing
 
-- JLC assembles all top-side SMD except U8 if LM2907 remains unavailable. Hand parts are exactly C1,
-  C2, J1-J5, and U8.
+- JLC assembles all top-side SMD except U8. U8 is always supplied from the in-hand stock and hand
+  soldered. The complete hand-part set is C1, C2, J1-J3, J5, and U8.
 - C34 is machine assembled. There are no bridges, jumper-shaped fuses, or DNP option parts.
 - NT1 is copper, not a purchase item. Keep it in connectivity checks and exclude it from purchase/PnP.
 - Fab BOM includes exact MPN and LCSC fields. PnP includes every JLC ref and no hand refs. The hand
@@ -523,10 +570,12 @@ must be unambiguous.
   schedule. V1 BOM rows remain historical evidence and must not be used to order V2.
 - Before V2 service, replace or explicitly version every operator artifact that currently names J7,
   SH-U09C2, the switched RTS harness, or V1 TP numbering: `docs/build.md`, `docs/probing.md`,
-  `docs/controls.md`, `firmware/scripts/README.md`, every source/reference/generator under
+  `docs/controls.md`, `docs/housing.md`, `docs/observability.md`, `docs/integration.md`,
+  `testing/test-matrix.csv`, `firmware/scripts/README.md`, every source/reference/generator under
   `docs/field-guides/` (including `soldering-videos.md`), all generated printable service/rebuild
-  sheets, and the probe map. Keep V1 instructions and generators explicitly labelled for V1; never
-  present or regenerate them as V2 instructions. Build a separately titled V2 operator package.
+  sheets, and the probe map. Keep V1 J4/NTC, 85 C board limit, GPIO6, service, and probe instructions
+  explicitly labelled for V1; never present or regenerate them as V2 instructions. Build a
+  separately titled V2 operator package.
 - Before V2 fab export, add a `pcb-01-v2` project/config to `pcb/tools/jlc_fab.py` so the exact command
   `python3 pcb/tools/jlc_fab.py pcb-01-v2` reads `pcb/pcb-01-v2`, includes machine-assembled C34,
   excludes only the exact hand parts and copper/no-part refs in this schedule, and emits V2 Gerbers,
@@ -544,13 +593,18 @@ These validate the specified design and do not invite unrelated safety expansion
 
 ### Capture and layout
 
-- Check every IC symbol against current manufacturer data, especially U1,U2,U4,U5/U6,U7,Q4,U8.
+- Check every IC symbol against current manufacturer data, especially U1,U2,U4,U5/U6,U7,Q4,U8,
+  U12. Confirm the DGK top-view pin order, address straps, `0x48` address, and ALERT no-connect.
 - Machine-compare the KiCad exported netlist with this ratsnest. Confirm every scheduled ref appears
   exactly once and every schematic ref is scheduled.
 - Confirm J1/J2/J3 footprint numbering against existing cables and Q4 symbol/footprint/truth table.
 - ERC: zero unexplained errors/warnings. DRC: zero unconnected and zero unexplained violations.
 - Verify actual stackup, through-via-only rule, high-current neck checks, POFV, all-layer antenna
   keepout, and the single NT1 crossing.
+- Before capture/layout validation, set the V2 Konnect project's accessible-test-point rule to the
+  complete `TP1` through `TP31` set. Any scaffold or rule that stops at TP29 predates the dedicated
+  temperature bus and is incomplete; TP30 TEMP_SDA and TP31 TEMP_SCL must receive the same edge-
+  access validation as every other test hole.
 - Render front/back copper, mask, silk, drill map, and component-side 3D view. Inspect connector
   orientation, cables, probes, screws, hand access, antenna, phases, and return continuity.
 - Create a V2-specific probe map with the final layout, ground references, installed-access notes,
@@ -577,10 +631,21 @@ These validate the specified design and do not invite unrelated safety expansion
 5. Calibrate 200 RPM trip, record raw reset near 180 RPM, verify Hall/FG plausibility, and run the
    existing TACH matrix without architecture changes.
 6. Verify MCF communication, address recovery, wake, watchdog, ALARM, nFAULT, SOX, FG, DIR, stop,
-   and digital speed command before energizing the installed motor.
-7. Repeat applicable no-load, loaded, insertion, cutoff, coast, stall, fault, thermal, EMI, and
-   closed-housing tests for the new layout. Record measured data in the test matrix. The U2-area
-   board temperature must remain at or below 75 C at worst-case steady operation.
+   digital speed command, and concurrent TMP1075 reads before energizing the installed motor. Capture
+   concurrent traffic and prove that a complete MCF recovery sweep appears only on SDA/SCL, U12
+   traffic appears only on TEMP_SDA/TEMP_SCL, and either bus remains functional when the other is
+   held low during an engineering-board fault-injection test.
+7. With the board powered, motor stopped, and temperatures equilibrated for at least 10 minutes,
+   compare U12 with a calibrated reference probe adjacent to its package; require agreement within
+   2 C. Repeat at powered closed-housing steady operation, verify the reported value rises
+   monotonically when the chamber is warmed, and verify sensor polling does not disturb MCF
+   transactions. Record the local offset if stable; do not hide excess or variable error with a
+   firmware correction.
+8. Repeat applicable no-load, loaded, insertion, cutoff, coast, stall, fault, thermal, EMI, and
+   closed-housing tests for the new layout. The V2 thermal gate is the established eight-hour run at
+   170 RPM in the final closed housing. Throughout that run, the U2-area board temperature, measured
+   with a separate probe at U2 rather than inferred from U12, must remain at or below 75 C. Record
+   both U2 and U12 traces and all other measured data in the test matrix.
 
 ## Evidence and adversarial review
 
@@ -603,3 +668,14 @@ unroutable constraints, service hazards, sourcing errors, and incomplete validat
 | 5 | Electrical/history convergence; service and generated-artifact convergence | Electrical/history lenses found no useful feedback. Applied one service finding: the main integration-binder and PCB rebuild-booklet generators are now included in the V1-version/V2-replacement gate because they can regenerate F1, C34, J7, and GPIO14 instructions. A fresh round is required. |
 | 6 | Electrical/tool boundary; service/manufacturing; history/tooling | Clarified probe parameterization as a future V2 implementation gate. Expanded V1-versioning to every field-guide source/reference, including stale C34 soldering media. Added an exact `jlc_fab.py pcb-01-v2` requirement with V2-specific population rules and outputs. A fresh round is required. |
 | 7 | Electrical/spec convergence; service/manufacturing convergence; history/tool-boundary convergence | No useful feedback from any lens. The spec is converged for schematic capture and layout. |
+| 8 | Sensor electrical/ratsnest; firmware/telemetry end to end; thermal/layout/manufacturing | Electrical and physical lenses found no useful defect. Applied firmware findings: require a single shared-bus owner with a standard TMP1075 transaction path, isolate sensor errors from MCF recovery/fault accounting, and define optional JSON/CSV telemetry plus tests. Also corrected the initial comparison to power U12 while holding the motor stopped. A fresh round is required. |
+| 9 | Electrical/protocol convergence; firmware/evidence convergence; sourcing/layout/doc convergence | Electrical lens found no useful defect. Applied cross-document findings: version the dedicated-MCF transport rule for V1 and define V2 shared ownership; add canonical V2 temperature and U2 thermal matrix rows; mark stale J4/85 C operator material as V1; and make U8 unconditionally hand-assembled from in-hand stock. Raised the first-read gate from 30 ms to 35 ms to cover worst-case conversion timing and required boundary tests. A fresh round is required. |
+| 10 | Hardware/firmware convergence; commissioning end to end; operator-doc convergence | Applied operator-doc findings: `housing.md`, `DRV-05`, and `motor-contingency.md` now label 85 C as V1-only, point V2 to its independent U2-area 75 C limit, and state that U12 cannot substitute for the U2 probe. Hardware, bus, timing, and ratsnest lenses otherwise found no useful defect. A fresh round is required. |
+| 11 | Electrical/spec convergence; telemetry/matrix convergence; documentation convergence | Electrical lens found no useful defect. Corrected the matrix's pre-35 ms wording: the field remains present but unavailable as JSON `null` and empty CSV. Bound V2's U2-area 75 C gate to the established eight-hour 170 RPM final-housing run. A fresh round is required. |
+| 12 | Electrical/bus convergence; firmware/commissioning convergence; sourcing/doc convergence | Applied one bus-architecture finding: the implemented broad MCF recovery sweep would send MCF control/CRC bytes to a shared U12 at `0x48`, while excluding that valid MCF address would weaken recovery. U12 now uses a dedicated GPIO6/GPIO11 I2C bus with R19/R20 pull-ups and TP30/TP31; the MCF bus and complete recovery behavior remain unchanged. A fresh round is required. |
+| 13 | Dedicated-bus electrical/firmware convergence; sourcing/ref-reuse convergence; validation convergence | Applied one wording finding: the delete list now explicitly deletes R21 and only R20's V1 USB function/value, while retaining and reassigning the R20 designator as V2's TEMP_SCL pull-up. The dedicated bus, ratsnest, firmware, and validation lenses otherwise found no useful defect. A fresh round is required. |
+| 14 | Electrical/spec convergence; firmware/commissioning convergence; tooling/ref-reuse convergence | Two lenses found no useful defect. Added one capture gate: the concurrent V2 Konnect project rule must cover TP1-TP31 rather than the pre-sensor TP1-TP29 set, including edge accessibility for TEMP_SDA and TEMP_SCL. A fresh round is required. |
+| 15 | Electrical/spec convergence; firmware/commissioning convergence; Konnect/tooling convergence | Hardware and firmware lenses found no useful defect. Updated the committed V2 Konnect project rule itself from TP1-TP29 to TP1-TP31, explicitly naming TEMP_SDA and TEMP_SCL, so the documented accessibility gate is enforced. A fresh round is required. |
+| 16 | Electrical/firmware convergence; commissioning/tooling convergence; fabrication-rule convergence | Two lenses found no useful defect. Resolved a pre-existing via-rule contradiction: 0.20 mm filled/capped thermal vias are now an explicit exception limited to U1/U4 exposed pads, while every ordinary via retains the 0.30 mm minimum. Konnect's project-wide minimum permits the exception and its design rule preserves the ordinary limit. A fresh round is required. |
+| 17 | Electrical/commissioning convergence; fabrication-rule enforcement convergence | Two lenses found no useful defect. The remaining lens showed Konnect's scalar 0.20 mm minimum could not enforce the intended EP-only exception. Removed the exception: all vias now use at least 0.30 mm drill, and U1 uses the proven V1 twelve-via 0.30 mm POFV pattern. A fresh round is required. |
+| 18 | Electrical/spec convergence; firmware/commissioning convergence; fabrication/tooling convergence | No useful feedback from any lens. The chamber-sensor revision, dedicated bus, complete ratsnest, firmware and telemetry contract, V1/V2 documentation boundary, validation evidence, and Konnect rules are converged for schematic capture and layout. |

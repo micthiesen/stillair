@@ -21,7 +21,8 @@ The motor system is acceptable only when the final loaded rotor demonstrates:
 - no identifiable motor/controller/bearing/structural tone at the released sleep speed;
 - no fault, stall, reversal, current saturation, worsening jitter, or supply collapse;
 - the required eight-hour 170 RPM thermal result, with RMS phase current normally below
-  0.8 A, investigation above 1.0 A, motor below 70 degrees C, and PCB below 85 degrees C;
+  0.8 A, investigation above 1.0 A, motor below 70 degrees C, and the installed PCB-01 V1 below
+  85 degrees C; PCB-01 V2 instead uses its separate 75 degrees C U2-area gate;
 - clean stop, cutoff, windmilling restart, and reversal behavior; and
 - preserved 180 RPM MCF ceiling and independently calibrated analog overspeed protection.
 
