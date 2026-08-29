@@ -70,7 +70,10 @@ Last updated: **2026-08-28** (JLCPCB quality complaint submitted for replacement
   3.3 V. Native USB still produced no macOS enumeration after known cables, connector orientations,
   forced ROM boot, Mac restart, and J6 pin reflow. R20/R21 each measured about 21 Ohm with no data-line
   short. U2's hidden USB joints or U2 itself remain the leading fault; UART0 on J7 is the fallback.
-  `firmware/scripts/check_board_usb.py` is the authoritative permission-independent recheck.
+  `firmware/scripts/check_board_usb.py` is the authoritative permission-independent recheck. A DSD
+  TECH SH-U09C2 FT232RNL USB-UART adapter is ordered. Fast domestic TC2030 cables were unavailable;
+  the fallback is a lightweight prewired 6-pin JST-SH pigtail soldered once to J7 pins 2-6, with J7.1
+  (board 3V3) deliberately left disconnected and the cable strain-relieved before use.
 - **A JLCPCB PCBA quality complaint is pending for the replacement board's U2 USB failure.** The
   complaint was submitted on 2026-08-28 at 19:39:21 against SMT job
   `SMT026073063521-12177845A` in order `W2026073105230212`. It identifies one defective U2 as a
