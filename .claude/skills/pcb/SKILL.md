@@ -75,9 +75,10 @@ fraction of the agent fan-out PCB-01's 170 parts needed.
    bom/bom.csv; MPN/LCSC/DNP fields as you go; label-based wiring convention.
 2. **Schematic validation**: `run_erc` + `find_orphan_items` / `find_shorted_nets` /
    `find_single_pin_nets`, cross-check against bom.csv.
-3. **Board setup** (file-side): outline, mounting holes, stackup + net classes via
-   `.kicad_pro` JSON (never the Konnect rule tools), `.kicad_dru` for custom rules, verify
-   with a headless DRC parse.
+3. **Board setup** (KiCad GUI): outline and mounting holes through safe board operations;
+   stackup, constraints, and net classes through Board Setup (never the broken Konnect rule
+   tools or direct `.kicad_pro` edits); `.kicad_dru` for custom rules; verify with a headless
+   DRC parse.
 4. **Placement**: plan in `pcb/tools/` scripts (+ per-group Sonnet planners only when the
    board is big enough to need them), apply via file write, validate with check_plan-style
    geometry checks. Michael fine-tunes on canvas.
@@ -186,7 +187,14 @@ and only reading the actual datasheet page corrected it.
 3. **Load only the toolsets you need** (`load_toolset`), and `unload_toolset` when switching
    tasks. Only `project` and `config` are loaded at startup; the other 16 are on demand.
 4. **For any PCB (not schematic) operation, KiCad must be running** with the board open and
-   the IPC API enabled — see the quirks below. Ask Michael to open it; he'll say when it's up.
+   the IPC API enabled — see the quirks below. Launch it through the project-manager workflow
+   below when host GUI permissions are available; ask Michael only when automation is blocked.
+
+When the task needs KiCad's GUI, read
+[references/kicad-gui.md](references/kicad-gui.md). It covers project-owned editor launch,
+window cleanup, the yabai audit, Codex-hosted macOS automation, and the fresh-project
+scaffold checklist. Codex may launch and operate KiCad directly when the host permissions are
+available; Michael does not need to repeat routine setup clicks.
 
 ## Toolsets
 
@@ -244,10 +252,10 @@ so Michael can watch the block appear instead of reviewing it at the end.
   carried 0.5 min diameter a session later; 11 legal vias flagged before the constraint was
   actually entered. After any Board Setup change, confirm via a headless DRC diff.
 
-- **Never text-edit `.kicad_sch` / `.kicad_pcb` / `.kicad_sym` / `.kicad_mod` / `fp-lib-table`
-  / `sym-lib-table`.** They are object graphs with UUIDs and cross-references; a `sed` breaks
-  them silently. Everything goes through Konnect. `.kicad_pro` is JSON and tolerates careful
-  edits, but prefer the MCP there too.
+- **Never text-edit `.kicad_sch` / `.kicad_pcb` / `.kicad_pro` / `.kicad_sym` /
+  `.kicad_mod` / `fp-lib-table` / `sym-lib-table`.** They are protected KiCad sources with
+  cross-references and tool-owned structure. Use Konnect or KiCad's GUI and verify the saved
+  result.
 - **Schematic tools are file-based; PCB tools are not.** Schematic edits go through Konnect's
   S-expression engine and work with KiCad closed. PCB tools speak the KiCad 10 IPC API over a
   socket and need KiCad **running** with the board open and the API enabled
@@ -334,11 +342,8 @@ so Michael can watch the block appear instead of reviewing it at the end.
   a KiCad 10 board — they corrupt it.** All four write KiCad-5-era S-expressions:
   `add_layer` nests malformed entries inside F.Cu's line with colliding layer IDs, and the
   others insert `(min_clearance …)` / `(netclass …)` tokens the KiCad 10 parser rejects — the
-  board then fails to load entirely. In KiCad 10, design rules and net classes live in the
-  `.kicad_pro` JSON (`board.design_settings.rules`, `net_settings.classes` +
-  `netclass_patterns`), and a 4-layer stack is `(4 "In1.Cu" power)` / `(6 "In2.Cu" power)` as
-  siblings in the layers block. Edit the `.kicad_pro` JSON directly (it is not an
-  object-graph file) and verify with `kicad-cli pcb drc` afterward, which is a full parse.
+  board then fails to load entirely. Configure layers, stackup, design rules, and net classes
+  in KiCad's Board Setup dialog, then verify with `kicad-cli pcb drc`, which is a full parse.
   `set_board_size` and `add_mounting_hole` are fine.
 - **`add_board_text` writes valid KiCad 10 `gr_text` but omits `(justify mirror)` on back
   layers** (verified on PCB-02, 2026-07-30) — B.SilkS text comes out readable from the
@@ -395,11 +400,11 @@ so Michael can watch the block appear instead of reviewing it at the end.
   boxes from the *current* stored rotation; a move that also rotates a non-square part
   reports false overlaps (or misses real ones). Hand-verify the rot-swapped box for those
   parts, or apply rot first and re-check.
-- **Schematic-to-board sync after file-based schematic edits uses Computer Use to run F8**
-  (Update PCB from Schematic); kicad-cli has no headless equivalent. First close stand-alone
-  KiCad editors, open the `.kicad_pro`, launch Schematic Editor from the project manager's
-  Tools menu or large button, and minimize the project-manager window so yabai gives the
-  editor the full tile. New components land wherever the update drops them (fine, anywhere);
+- **Schematic-to-board sync after file-based schematic edits uses the KiCad GUI to run F8**
+  (Update PCB from Schematic); kicad-cli has no headless equivalent. Follow
+  [references/kicad-gui.md](references/kicad-gui.md): close stand-alone editors, open the
+  `.kicad_pro`, launch Schematic Editor from the project manager, minimize the manager, and
+  audit the window state. New components land wherever the update drops them (fine, anywhere);
   the agent re-places them from the file afterward.
   "No net found for pad MP" warnings during F8 are connector mounting tabs — benign.
 - **`add_component_annotation` takes `key`/`value`** (not `property_name`/`property_value`).

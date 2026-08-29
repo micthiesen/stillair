@@ -63,8 +63,9 @@ to use repeatedly.
 
 ### Delete
 
-- C6 spare bulk footprint, C32 unused optional LM2907 input capacitor, and C36-C40 alternate filter
-  capacitor bank.
+- C6 spare bulk footprint, C32 unused optional LM2907 input capacitor, and the never-populated
+  C36-C40 five-footprint 0805 alternate filter-capacitor array beside U1. Do not carry their pads,
+  DNP records, or placement reservation into V2.
 - F1 and its bridge. The wall-box 3 A ATO fuse remains the source protection boundary.
 - Native USB J6, the V1 U12 USB-protection function, R21, the V1 USB function/value of R20, V1
   R55-R58, CC resistors, VBUS divider, VBUS test point, and all USB/VBUS nets. The R20 designator is
@@ -205,6 +206,15 @@ revolution to voltage. C34 is the charge-pump timing capacitor; R48/RV1 set scal
 ripple capacitor. U9 compares VTACH with VREF and R54 adds hysteresis. D9 clamps its input. Adjust
 for 200 RPM trip and verify raw comparator reset near 180 RPM; U6 remains latched until power cycle.
 
+RV1 is a one-time engineering calibration control for the independent analog overspeed threshold,
+not a user speed control. Its adjustment absorbs LM2907 timing, divider, and component tolerances.
+Leave it accessible for bring-up, label it `OVERSPEED CAL`, record the final setting and measured
+trip/reset speeds, then apply a removable witness mark across the screw and body after calibration.
+Calibrate with bridge drive disabled while injecting HALL_TACH. Observe raw `OVERSPEED_N` at TP15:
+sweep upward to record trip, then downward to record the raw comparator reset even though U6 remains
+latched. Do not infer raw reset from DRVOFF or OS_LOCK_OK. After each complete sweep, power-cycle the
+low-voltage rails, confirm U6 re-arms, and only then begin the next trim trial.
+
 ## Exact component schedule
 
 All components are populated unless marked hand or mechanical. There are no DNP option footprints.
@@ -214,7 +224,7 @@ LCSC identifiers freeze the intended item. Substitution requires review and a sp
 
 | Refs | Qty | Exact requirement | Footprint | Source/MPN |
 |---|---:|---|---|---|
-| C1,C2 | 2 | 470 uF, 50 V, low-ESR, 105 C | radial D10 P5 | Panasonic `EEU-FR1H471`, hand |
+| C1,C2 | 2 | 470 uF, 50 V, low-ESR, 105 C | `Capacitor_THT:CP_Radial_D10.0mm_P5.00mm` | Panasonic `EEU-FR1H471`, hand |
 | C3,C4 | 2 | 10 uF, 50 V, X7R, 10% | 1210 | `C2918502` |
 | C5 | 1 | 100 nF, 50 V, X7R, 10% | 0603 | `C14663` |
 | C7 | 1 | 2.2 uF, 100 V, X7R, 10% | 1210 | `C153036` |
@@ -485,7 +495,10 @@ exception and must be encoded as a scoped rule area rather than weakening the ne
 Exact coordinates are deferred. These relationships are mandatory.
 
 1. Group J1, Q1, D1, D2, C1-C5, and U1 VM entry as one power region. J1 reaches an edge without its
-   cable crossing service pads.
+   cable crossing service pads. Place C1 and C2 parallel with at least 12.1 mm center-to-center
+   spacing. Their unchanged 10.6 mm footprint courtyards must have at least 1.5 mm edge clearance,
+   exactly 1.0 mm more than V1's measured 11.1 mm centers and 0.5 mm courtyard gap, so normally
+   inserted cans remain upright rather than touching and tilting.
 2. Put U1 beside J2. Route paired half-bridges directly, parallel, one layer, to J2 in W/V/U order.
 3. Limit the PGND island to bulk/TVS returns, MCF power grounds, phase current, J1 return, and NT1. No
    Hall, tach, MCU, watchdog, or RF circuit goes over it.
@@ -514,9 +527,9 @@ Exact coordinates are deferred. These relationships are mandatory.
    placement and the housing support pattern.
 11. Reserve at least 8 mm beyond power/motor mating faces. Preserve iron access to hand parts.
 
-Silk must label connectors and pin 1, RESET/BOOT/CLEAR, RV1 direction, TP nets, W/V/U, power polarity,
-board name/revision, and `PHASES: DIFFERENTIAL PROBE ONLY`. Every polarized part and cable interface
-must be unambiguous.
+Silk must label connectors and pin 1, RESET/BOOT/CLEAR, RV1 as `OVERSPEED CAL` with trip-increase and
+trip-decrease direction, TP nets, W/V/U, power polarity, board name/revision, and
+`PHASES: DIFFERENTIAL PROBE ONLY`. Every polarized part and cable interface must be unambiguous.
 
 ## Firmware feasibility contract
 
@@ -575,7 +588,11 @@ must be unambiguous.
   `docs/field-guides/` (including `soldering-videos.md`), all generated printable service/rebuild
   sheets, and the probe map. Keep V1 J4/NTC, 85 C board limit, GPIO6, service, and probe instructions
   explicitly labelled for V1; never present or regenerate them as V2 instructions. Build a
-  separately titled V2 operator package.
+  separately titled V2 operator package. In particular, the current `TACH-01` row is V1-only: its
+  V2 replacement must require observing TP15 `OVERSPEED_N` for the upward trip and downward raw
+  comparator reset, prohibit using DRVOFF or OS_LOCK_OK as raw-reset evidence, and require a
+  low-voltage power cycle plus confirmed U6 re-arm after every complete sweep before another RV1
+  trim trial.
 - Before V2 fab export, add a `pcb-01-v2` project/config to `pcb/tools/jlc_fab.py` so the exact command
   `python3 pcb/tools/jlc_fab.py pcb-01-v2` reads `pcb/pcb-01-v2`, includes machine-assembled C34,
   excludes only the exact hand parts and copper/no-part refs in this schedule, and emits V2 Gerbers,
@@ -607,6 +624,8 @@ These validate the specified design and do not invite unrelated safety expansion
   access validation as every other test hole.
 - Render front/back copper, mask, silk, drill map, and component-side 3D view. Inspect connector
   orientation, cables, probes, screws, hand access, antenna, phases, and return continuity.
+- Machine-check C1/C2 center spacing at or above 12.1 mm and courtyard edge clearance at or above
+  1.5 mm; confirm the component-side render shows both cans parallel and independently insertable.
 - Create a V2-specific probe map with the final layout, ground references, installed-access notes,
   and component-side render at `pcb/pcb-01-v2/probe-map.json`. The V1 map is prohibited because TP
   numbers are deliberately reassigned. Before V2 layout release, implement `--board` and `--map`
@@ -628,8 +647,9 @@ These validate the specified design and do not invite unrelated safety expansion
    is masked by a high source and nFAULT remains diagnostic only.
 4. Verify U6 power-up delay, low-voltage-only reset, comparator trip, tach-supply PG trip, and fast
    discharge on PGOOD loss.
-5. Calibrate 200 RPM trip, record raw reset near 180 RPM, verify Hall/FG plausibility, and run the
-   existing TACH matrix without architecture changes.
+5. Calibrate the 200 RPM trip using the RV1 procedure above, record raw reset near 180 RPM, verify
+   Hall/FG plausibility, and run the V2-versioned TACH matrix. The analog architecture and target
+   speeds remain unchanged; the current V1 `TACH-01` procedure is not sufficient for V2 evidence.
 6. Verify MCF communication, address recovery, wake, watchdog, ALARM, nFAULT, SOX, FG, DIR, stop,
    digital speed command, and concurrent TMP1075 reads before energizing the installed motor. Capture
    concurrent traffic and prove that a complete MCF recovery sweep appears only on SDA/SCL, U12
@@ -679,3 +699,5 @@ unroutable constraints, service hazards, sourcing errors, and incomplete validat
 | 16 | Electrical/firmware convergence; commissioning/tooling convergence; fabrication-rule convergence | Two lenses found no useful defect. Resolved a pre-existing via-rule contradiction: 0.20 mm filled/capped thermal vias are now an explicit exception limited to U1/U4 exposed pads, while every ordinary via retains the 0.30 mm minimum. Konnect's project-wide minimum permits the exception and its design rule preserves the ordinary limit. A fresh round is required. |
 | 17 | Electrical/commissioning convergence; fabrication-rule enforcement convergence | Two lenses found no useful defect. The remaining lens showed Konnect's scalar 0.20 mm minimum could not enforce the intended EP-only exception. Removed the exception: all vias now use at least 0.30 mm drill, and U1 uses the proven V1 twelve-via 0.30 mm POFV pattern. A fresh round is required. |
 | 18 | Electrical/spec convergence; firmware/commissioning convergence; fabrication/tooling convergence | No useful feedback from any lens. The chamber-sensor revision, dedicated bus, complete ratsnest, firmware and telemetry contract, V1/V2 documentation boundary, validation evidence, and Konnect rules are converged for schematic capture and layout. |
+| 19 | Bulk-cap mechanical spacing; option-bank deletion; overspeed-calibration procedure | C1/C2 geometry and C36-C40 deletion lenses found no defect. Applied one commissioning finding: define bridge-disabled TP15 observation of raw comparator trip/reset and low-voltage power-cycle/re-arm between RV1 trim trials. A fresh round is required. |
+| 20 | Mechanical/electrical convergence; calibration/commissioning convergence; V1 evidence convergence | C1/C2 spacing, C36-C40 deletion, and the RV1 circuit were consistent. Applied one documentation finding: the canonical V1 `TACH-01` row lacks TP15 raw-reset evidence and U6 re-arm between trials, so the spec now makes that row V1-only and defines its required V2 replacement. A fresh round is required. |

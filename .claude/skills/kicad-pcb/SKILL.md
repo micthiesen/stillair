@@ -20,9 +20,8 @@ argument-hint: "[layout task]"
 
 - **`create_netclass`, `assign_net_to_class`, `set_design_rules`, `add_layer` — never, on any
   KiCad 10 board.** They write KiCad-5-era S-expressions; the board then fails to parse
-  entirely. Net classes and design rules are JSON in `.kicad_pro`
-  (`net_settings.classes` + `netclass_patterns`, `board.design_settings.rules`); edit that
-  file directly and verify with a full-parse `kicad-cli pcb drc` afterward.
+  entirely. Configure net classes, design rules, layers, and stackup in KiCad's Board Setup
+  dialog, never by editing `.kicad_pro`, and verify with a full-parse `kicad-cli pcb drc`.
 - **Do not layout/route through Konnect at all on this project.** Placement is planned in
   scripts (`pcb/tools/`: `board_model.py`, `apply_positions.py`, `place_targeted.py`,
   `check_plan.py`) and applied via file writes with KiCad closed; routing and pours are

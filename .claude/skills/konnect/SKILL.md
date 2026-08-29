@@ -24,9 +24,13 @@ If asked to directly edit any of these:
 
 ## The Three Channels
 
-### Channel 1: Konnect MCP (for ALL modifications)
+### Channel 1: Konnect MCP or KiCad GUI (for ALL modifications)
 
-All writes go through MCP tools. Check they are available first (`list_toolboxes`). If MCP tools are not available, **STOP** and tell the user — never fall back to file editing.
+All writes go through Konnect MCP tools or KiCad itself. Prefer Konnect when it exposes a safe,
+working operation. Use the KiCad GUI for project settings or operations the MCP cannot perform
+safely. Check Konnect is available first (`list_toolboxes`). If it is unavailable, GUI-only work may
+continue when the task can be completed and verified entirely in KiCad; never fall back to direct
+file editing.
 
 ### Channel 2: Exported netlists/BOMs (for reads and analysis)
 
@@ -42,7 +46,7 @@ Only to answer questions not available through exports (sheet hierarchy, title b
 2. **Classify the task** — read-only (Channel 2 or 3) or write (Channel 1)
 3. **Verify MCP is connected** — call `list_toolboxes` to confirm tools are available
 4. **Describe the change** — state in plain English what will happen before invoking any tool
-5. **Execute** — use Konnect MCP tools only
+5. **Execute** — use Konnect MCP tools or KiCad's GUI only
 6. **Verify** — re-query the design to confirm the change landed correctly
 
 ## Decision Tree
