@@ -70,6 +70,19 @@ the controller, holds one serial connection through boot, passes only when the M
 firmware's wake-and-address scan, and returns Kasa power off on every exit. Override automatic board
 port detection with `STILLAIR_PORT=/dev/cu.usbmodem...` when needed.
 
+`check_board_usb.py` is the permission-independent native-USB check. It passes only when macOS's
+live I/O Registry contains exactly one ESP32-C6 USB Serial/JTAG device (VID `0x303a`, PID `0x1001`)
+continuously for 0.5 seconds. Serial `/dev` nodes are reported separately and do not decide the
+enumeration result. Run it while connecting or resetting the board:
+
+```sh
+firmware/scripts/check_board_usb.py
+```
+
+Exit 0 means enumerated, 1 means not detected during the polling window, 2 means ambiguous or
+unstable, and 3 means the host probe itself failed. A nonzero result never claims which hardware
+element caused the failure.
+
 For recovery or A/B work, script 03 begins with `config stage`. This loads and
 read-back-verifies the reviewed GL100 first-spin settings in volatile shadow only. It must be
 repeated after every motor-power cycle, and it never commits EEPROM. A fresh unverified

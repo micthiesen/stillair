@@ -63,11 +63,14 @@ Last updated: **2026-08-28** (replacement PCB-01 passed unpowered population che
   EEPROM commit path. Host simulation, all-candidate readback tests, and the app build pass; this
   firmware has not yet been flashed to the installed controller. Arbitrary raw register writes
   remain non-runnable.
-- **The replacement PCB-01 has passed its unpowered hand-population checks.** C34 continuity to
+- **The replacement PCB-01 has passed its unpowered hand-population checks and basic power rails.** C34 continuity to
   U8 pin 2 and AGND passed with no short. U8's +12V_TACH, AGND, VTACH, and intentional internal-net
-  connections passed continuity checks, and +12V_TACH did not short to AGND. This verifies the
-  probed solder connections, not powered operation. A brief no-motor rail/MCF check followed by an
-  unloaded motor start is next.
+  connections passed continuity checks, and +12V_TACH did not short to AGND. At 18 V with a 0.25 A
+  limit, input current settled near 0.023 A, TP5 was 3.328 V, TP25 was 2.480 V, and ESP_EN was about
+  3.3 V. Native USB still produced no macOS enumeration after known cables, connector orientations,
+  forced ROM boot, Mac restart, and J6 pin reflow. R20/R21 each measured about 21 Ohm with no data-line
+  short. U2's hidden USB joints or U2 itself remain the leading fault; UART0 on J7 is the fallback.
+  `firmware/scripts/check_board_usb.py` is the authoritative permission-independent recheck.
 - **PCB-01 probing is now a retained, board-verified workflow.** [`probing.md`](probing.md) and
   `pcb/pcb-01/probe-map.json` contain component-relative locations for all 28 test points, connector
   pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary
