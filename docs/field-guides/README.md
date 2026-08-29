@@ -21,6 +21,15 @@ UV_CACHE_DIR=/tmp/stillair-uv-cache uv run --with reportlab \
 
 This writes `output/pdf/pcb01-rebuild-and-tuning-leads.pdf`. Print it two-sided on the long edge.
 
+For the one-page direct wiring map from PCB-01 J7 to the DSD TECH SH-U09C2 adapter, run:
+
+```bash
+UV_CACHE_DIR=/tmp/stillair-uv-cache uv run --with reportlab \
+  python3 docs/field-guides/build_j7_usb_uart_guide.py
+```
+
+This writes `output/pdf/pcb-01-j7-usb-uart.pdf`. Print it one-sided in landscape orientation.
+
 The sheets are intentionally concise. They complement, rather than replace, the detailed
 requirements and vendor procedures. A `HOLD` badge means the guide records the boundary but
 does not authorize work beyond it.

@@ -33,6 +33,8 @@ prewired 6-pin JST-SH pigtail soldered once to J7 pins 2--6, with J7.1 left unco
 by continuity and adjacent-pad isolation checks and strain relief before power. The runtime
 firmware must expose its physical console on UART0 before this replaces J6 for tuning; see
 [controls.md](controls.md#commissioning-interface-and-build-policy).
+The printable direct end-to-end pad map is
+[`pcb-01-j7-usb-uart.pdf`](../output/pdf/pcb-01-j7-usb-uart.pdf).
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 
