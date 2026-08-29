@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-28** (replacement PCB-01 passed unpowered population checks.)
+Last updated: **2026-08-28** (JLCPCB quality complaint submitted for replacement PCB-01 U2 USB failure.)
 
 ## Now
 
@@ -71,6 +71,13 @@ Last updated: **2026-08-28** (replacement PCB-01 passed unpowered population che
   forced ROM boot, Mac restart, and J6 pin reflow. R20/R21 each measured about 21 Ohm with no data-line
   short. U2's hidden USB joints or U2 itself remain the leading fault; UART0 on J7 is the fallback.
   `firmware/scripts/check_board_usb.py` is the authoritative permission-independent recheck.
+- **A JLCPCB PCBA quality complaint is pending for the replacement board's U2 USB failure.** The
+  complaint was submitted on 2026-08-28 at 19:39:21 against SMT job
+  `SMT026073063521-12177845A` in order `W2026073105230212`. It identifies one defective U2 as a
+  component-function failure, not owner-repairable, with the design conforming to the datasheet,
+  and requests a replacement PCBA. Four board photos and `IMG_3587.mov` were attached. JLCPCB's
+  independently reloaded result page showed `Submitted` / `Processing` and promised a response
+  within 24 hours; the site displayed no separate case number.
 - **PCB-01 probing is now a retained, board-verified workflow.** [`probing.md`](probing.md) and
   `pcb/pcb-01/probe-map.json` contain component-relative locations for all 28 test points, connector
   pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary

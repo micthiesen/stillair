@@ -120,6 +120,15 @@ BP-100 blade set. The owner accepted the delivered parts and order contents as r
 blade-root qualification MEC-01/02/02B passed by owner report. MEC-05 assembled rotor
 balance/runout remains open.
 
+One of the two assembled PCB-01s from JLCPCB order **W2026073105230212** has a
+non-enumerating U2 native-USB interface despite valid power rails, forced ROM boot, known-good
+cables, intact series resistors, and no USB-line short. A PCBA quality complaint requesting a
+replacement was submitted 2026-08-28 at 19:39:21 against SMT job
+**SMT026073063521-12177845A**, with four board photos and `IMG_3587.mov`. The reloaded JLCPCB
+result page showed **Submitted / Processing** and promised a response within 24 hours; it exposed
+no separate case number. Electrical findings and the UART0 fallback are retained in
+`docs/STATE.md`.
+
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),
 MC-100 $48.83 and RH-100 $42.08 (both 6061-T6, bead blast + natural matte anodize;
