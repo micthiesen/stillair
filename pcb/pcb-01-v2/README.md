@@ -4,6 +4,18 @@ Fresh, intentionally unpopulated KiCad project for the PCB-01 V2 controller. The
 layout authority is [`docs/pcb-01-v2.md`](../../docs/pcb-01-v2.md). Do not copy V1 placement,
 routing, zones, outline, mounting coordinates, probe map, or DRC waivers into this project.
 
+The reusable project setup is complete:
+
+- 4-layer, 1.6 mm stackup: 2 oz outer copper, 1 oz inner copper, with In1.Cu and In2.Cu
+  classified as power-plane layers.
+- Board minimums: 0.20 mm clearance and track width, 0.60/0.30 mm via, 0.30 mm
+  copper-to-hole clearance, and 0.25 mm copper-to-edge clearance.
+- Default net class: 0.20 mm clearance and track width, 0.60/0.30 mm via.
+- Project symbol fields: `MPN`, `LCSC`, `Note`, and `DNP`.
+- Empty project-local `pcb01-v2-parts` symbol and footprint libraries are registered.
+
+The schematic, outline, holes, components, nets, placement, and routing remain intentionally empty.
+
 Konnect project rules are committed in `.konnect/project.json`. A new Codex task started from this
 repository loads the project-scoped Konnect server from `.codex/config.toml`; Claude Code uses the
 same server through the repository `.mcp.json`.

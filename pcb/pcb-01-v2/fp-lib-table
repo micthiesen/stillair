@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+
+  (lib (name "pcb01-v2-parts") (type "KiCad") (uri "/Users/michael/Code/stillair/pcb/pcb-01-v2/pcb01-v2-parts.pretty") (options "") (descr ""))
+)
