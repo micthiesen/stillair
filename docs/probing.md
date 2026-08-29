@@ -108,6 +108,11 @@ For repeated J8 work, populate the selected 1.27 mm header or attach inspected p
 the board is on the bench. Repeatedly landing handheld hooks on the bare J8 pads is not an acceptable
 installed workflow.
 
+The replacement PCB-01 has three retained tuning leads: **J8.9 SOX is black, TP20 FG is yellow,
+and TP26 AGND is blue.** The OWON stays fixed on SOX + FG for the entire tuning campaign. CH1 uses
+black, CH2 uses yellow, and both common channel grounds use blue. Do not move or rewire the scope
+during unloaded or loaded tuning.
+
 ## Test-point location index
 
 Coordinates are retained in the JSON map for verification. Human instructions use landmarks first.

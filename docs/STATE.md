@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF communication loss.)
+Last updated: **2026-08-28** (replacement PCB-01 passed unpowered population checks.)
 
 ## Now
 
@@ -63,14 +63,11 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
   EEPROM commit path. Host simulation, all-candidate readback tests, and the app build pass; this
   firmware has not yet been flashed to the installed controller. Arbitrary raw register writes
   remain non-runnable.
-- **PCB-01 is down on the bench and must be diagnosed before tuning resumes.** During instrument
-  preflight, the ESP booted but the MCF8316D returned address NACK after the built-in wake pulse,
-  recovery-address scan, explicit `fault clear`, and an extended full power removal. This began
-  before a later visible spark while J8 was being cleaned, so the spark does not explain the
-  original MCF loss but may have added damage. The board is now clean, discharged, and connected
-  only to data-only USB, which cannot power or enumerate the ESP by itself. Do not reapply ordinary
-  24 V until unpowered short checks pass; then use a current-limited bench supply and verify rails
-  before attempting firmware communication.
+- **The replacement PCB-01 has passed its unpowered hand-population checks.** C34 continuity to
+  U8 pin 2 and AGND passed with no short. U8's +12V_TACH, AGND, VTACH, and intentional internal-net
+  connections passed continuity checks, and +12V_TACH did not short to AGND. This verifies the
+  probed solder connections, not powered operation. A brief no-motor rail/MCF check followed by an
+  unloaded motor start is next.
 - **PCB-01 probing is now a retained, board-verified workflow.** [`probing.md`](probing.md) and
   `pcb/pcb-01/probe-map.json` contain component-relative locations for all 28 test points, connector
   pin views, ground domains, expected readings, one-probe-at-a-time instructions, and temporary
@@ -79,27 +76,29 @@ Last updated: **2026-08-28** (PCB-01 removed for bench diagnosis after MCF commu
 - **TP4 detached only on the failed PCB-01.** Its AGND ring broke during the initial unpowered
   resistance checks on 2026-08-28. TP4 on the replacement board is intact, accessible, and valid
   for bench checks. Installed tuning leads still use TP26 by default because it is near USB/J8.
-- **Unpowered measurements localize the communication failure to the MCF internal rails.** With USB
-  and 24 V removed, VM24-to-PGND measured 30--40 MOhm and board 3V3-to-AGND measured about 900 MOhm,
-  ruling out hard shorts on the input and main logic rail. MCF_AVDD at TP7 measured about 5 Ohm to
-  TP26 AGND and buzzed in both polarities; MCF_DVDD at TP8 measured about 3 Ohm to TP26. Two shorted
-  MCF-generated rails make U1 internal damage much more likely than one failed bypass capacitor.
-  Do not power the board. Before replacing U1, remove C14 and C15 while unpowered and remeasure TP7
-  and TP8 to exclude the two rail bypass capacitors conclusively.
-- **The physical goal is paused until the full observability suite is available and Michael resumes
-  it.** No blind acoustic or performance iteration should run meanwhile. With Michael watching a
+- **The fixed tuning leads are installed with physical colors that override earlier draft colors:**
+  J8.9 SOX is black, TP20 FG is yellow, and TP26 AGND is blue. OWON CH1 remains on SOX, CH2 remains
+  on FG, and both common grounds use TP26 for the entire unloaded and loaded tuning campaign. Do not
+  move or rewire the scope during tuning.
+- **The failed PCB-01 remains quarantined with apparent MCF internal-rail shorts.** With USB and
+  24 V removed, VM24-to-PGND measured 30--40 MOhm and board 3V3-to-AGND measured about 900 MOhm,
+  while MCF_AVDD measured about 5 Ohm and MCF_DVDD about 3 Ohm to AGND. Do not power the failed
+  board. C14/C15 removal remains the optional conclusive postmortem; it is not part of replacement
+  board qualification.
+- **The physical goal is paused until the replacement board qualifies and Michael resumes it.** No
+  blind acoustic or performance iteration should run meanwhile. With Michael watching a
   clear fan and holding the cutoff, bounded flashing and commissioning checks remain authorized if
   they do not claim missing evidence and the currently active provisional firmware is restored
   afterward.
 
 ## Next
 
-Repair PCB-01 on the bench before any installed work or tuning. Keep it unpowered; remove C14 and
-C15 and remeasure TP7/TP8 to distinguish bypass-capacitor shorts from the leading U1 internal-failure
-diagnosis. Replace U1 if either short remains with its bypass capacitor absent. After repair, use a
-current-limited 24 V bench source, establish input current and TP5 3V3, then verify TP7 MCF_AVDD and
-TP8 MCF_DVDD before interpreting I2C. Do not return the board overhead until the ESP enumerates, the
-MCF responds, configuration verifies, and a stopped no-motor bench soak passes.
+Qualify the replacement PCB-01 beside the fan before reinstalling it. Use a current-limited 24 V
+source for a brief no-motor check: establish input current and TP5 3V3, verify TP7 MCF_AVDD and TP8
+MCF_DVDD, confirm ESP enumeration and MCF communication, and verify the active provisional firmware.
+If those pass, connect the motor and perform the next unloaded start with the normal safety chain and
+Michael watching the clear assembly. Do not begin tuning or return the board overhead until this
+unloaded qualification passes.
 
 After the controller is healthy, the remaining observability tools are present, and Michael
 explicitly resumes the goal, run the autonomous synchronized loaded-tuning batch on the exposed assembly.

@@ -126,6 +126,14 @@ Probe J8.1 relative to J8.2 PGND with a correctly configured x10 probe. The norm
 target is at most 35 V and 40 V rejects the design. Verify the probe and scope range cover the
 possible excursion before applying power.
 
+### Retained tuning hookup
+
+The replacement board's installed leads are **J8.9 SOX black, TP20 FG yellow, and TP26 AGND blue**.
+The tuning campaign fixes OWON CH1 to SOX, CH2 to FG, and both common channel grounds to the blue
+AGND lead. Do not move or rewire the scope during unloaded or loaded tuning. Complete any required
+VM24 x10/PGND bus qualification before making this fixed connection; VM24 is not substituted into
+CH2 during the tuning campaign.
+
 ### Motor phases
 
 Never connect a scope ground clip to U, V, or W. The VDS1022I's isolated USB does not make
@@ -150,8 +158,8 @@ observer.
 ### Loaded steady-speed acoustic comparison
 
 - Analog 1: SOX to AGND.
-- Analog 2: VM24 through x10 to PGND, or FG to AGND when exact electrical-cycle alignment is
-  more useful than bus ripple.
+- Analog 2: FG to AGND. The retained campaign keeps this fixed for electrical-cycle alignment;
+  VM24 bus qualification is a separate pre-tuning capture.
 - Hold camera/microphone position and gain fixed. Compare candidates at measured Hall speed,
   not merely equal command.
 - Retain time waveform, current-envelope spectrum, microphone spectrum, Hall/FG stability,
@@ -220,4 +228,5 @@ The installed-scope preflight on 2026-08-28 identified VDS1022I serial `VDS1022I
 version `V5.0.1`, and repeatable 5,000-sample frames at about 249,940 sample/s through the commissioning
 USB hub. With a 5 V range, a centered `0.5` offset clips the 3.3 V FG high at 2.5 V. The retained
 SOX/FG recipe therefore uses offset `0.2`, which measured the stationary FG high at 3.24--3.32 V and
-keeps the nominal 0--3.3 V signals inside the approximately -1 to +4 V window.
+keeps the nominal 0--3.3 V signals inside the approximately -1 to +4 V window. The replacement
+board implements that fixed recipe with black SOX, yellow FG, and blue TP26 AGND leads.

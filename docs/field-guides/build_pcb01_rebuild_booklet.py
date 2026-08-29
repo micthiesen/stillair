@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen.canvas import Canvas
 
@@ -45,39 +46,28 @@ def page_tuning_leads(c: Canvas, page_no: int) -> None:
     # Exact test-point locations from pcb/pcb-01/probe-map.json. J8 marks the
     # connector body because its individual 1.27 mm pads are too small to label.
     points = [
-        (0.965, 0.235),  # J8
-        ((92.90 - 50.0) / 78.0, (108.0 - 73.05) / 58.0),  # TP20 FG
-        ((92.90 - 50.0) / 78.0, (108.0 - 75.20) / 58.0),  # TP17 NFAULT
-        ((89.60 - 50.0) / 78.0, (108.0 - 78.20) / 58.0),  # TP12 DRVOFF
-        ((97.38 - 50.0) / 78.0, (108.0 - 56.45) / 58.0),  # TP26 AGND
-        ((72.30 - 50.0) / 78.0, (108.0 - 74.00) / 58.0),  # TP2/TP3 pair
+        (0.965, 0.235, colors.black),  # J8.9 SOX, black lead
+        ((92.90 - 50.0) / 78.0, (108.0 - 73.05) / 58.0, colors.HexColor("#d6a900")),
+        ((97.38 - 50.0) / 78.0, (108.0 - 56.45) / 58.0, BLUE),
     ]
-    for index, (px, py) in enumerate(points, start=1):
-        numbered(c, index, dx + px * dw, dy + py * dh)
+    for index, (px, py, color) in enumerate(points, start=1):
+        numbered(c, index, dx + px * dw, dy + py * dh, color)
 
     c.setFillColor(PAPER)
     c.setStrokeColor(LINE)
     c.roundRect(50, 326, 512, 30, 7, stroke=1, fill=1)
     c.setFillColor(INK)
     c.setFont("Helvetica-Bold", 7.4)
-    labels = [
-        "1 J8 SOX/SPEED",
-        "2 TP20 FG",
-        "3 TP17 NFAULT",
-        "4 TP12 DRVOFF",
-        "5 TP26 AGND",
-        "6 TP2/TP3 VM24",
-    ]
+    labels = ["1 J8.9 SOX - BLACK", "2 TP20 FG - YELLOW", "3 TP26 AGND - BLUE"]
     for index, label in enumerate(labels):
-        c.drawString(60 + (index % 3) * 168, 344 - (index // 3) * 12, label)
+        c.drawString(60 + index * 168, 338, label)
 
     mini_card(
         c,
-        "NORMAL TUNING: LOW-VOLTAGE PIGTAILS",
-        "Use 30 AWG insulated wire, 50-100 mm. Fit J8.9 SOX (white), J8.6 SPEED (green), "
-        "TP20 FG (yellow), TP17 NFAULT (orange), TP12 DRVOFF (blue), and TP26 AGND "
-        "(black). Label both ends. Make insulated test loops at the free ends. For the OWON, "
-        "CH1 is SOX and CH2 selects FG/SPEED/NFAULT/DRVOFF; both channel grounds use AGND.",
+        "FIXED TUNING SETUP - DO NOT MOVE THE SCOPE",
+        "Physical leads: J8.9 SOX black, TP20 FG yellow, TP26 AGND blue. OWON CH1 uses black, "
+        "CH2 uses yellow, and both common channel grounds use blue. Keep this hookup unchanged "
+        "through unloaded and loaded tuning. Firmware already records SPEED, NFAULT, and DRVOFF.",
         35,
         190,
         350,
@@ -87,10 +77,10 @@ def page_tuning_leads(c: Canvas, page_no: int) -> None:
     )
     mini_card(
         c,
-        "VM24: DIRECT x10 PROBE",
-        "Do not add a long VM24 pigtail. With power off, attach the x10 tip directly to TP2 "
-        "and its spring ground to TP3. Strain-relieve the probe before mounting. In a bus "
-        "session, every OWON ground must use PGND.",
+        "VM24: ONE-TIME BEFORE TUNING",
+        "If the required bus capture is still open, complete it before fixing the OWON to these "
+        "leads: x10 tip directly on TP2, spring ground on TP3. Do not substitute VM24 into CH2 "
+        "during tuning.",
         397,
         190,
         180,
