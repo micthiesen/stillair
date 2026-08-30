@@ -158,6 +158,11 @@ and only reading the actual datasheet page corrected it.
   chase airwires on canvas; Claude validates each save with a headless DRC diff. Coordinate
   lists stop being useful once the board is dense — he asked for exactly this switch, and
   the 116-airwire sweep went faster than any scripted chunk.
+- **During an interactive routing session, keep board work in the main agent.** It owns all
+  KiCad inspection and protected-file changes, DRC, placement, routing guidance, judgment,
+  triage, and verification. Dispatch routine documentation and routing-artifact maintenance
+  fire-and-forget to background agents with precise briefs so Michael can keep routing; surface
+  their results only when they change what he needs to do.
 - **Placement review/fine-tune** on Claude's first pass, especially the MCF switching loops
   vs TI's reference layout and anything housing-related.
 - **Starting and exporting the project**, plus anything that means clicking through a KiCad
