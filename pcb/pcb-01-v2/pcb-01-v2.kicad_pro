@@ -107,7 +107,7 @@
         "items_not_allowed": "error",
         "length_out_of_range": "error",
         "lib_footprint_issues": "warning",
-        "lib_footprint_mismatch": "warning",
+        "lib_footprint_mismatch": "ignore",
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
         "mirrored_text_on_front_layer": "warning",
@@ -539,6 +539,7 @@
       "netlist": "",
       "plot": "",
       "specctra_dsn": "",
+      "step": "",
       "vrml": ""
     },
     "page_layout_descr_file": ""
@@ -611,12 +612,54 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MPN",
+          "name": "MPN",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Note",
+          "name": "Note",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "DNP",
+          "name": "DNP",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Group",
+          "name": "Group",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
         }
       ],
-      "filter_string": "",
-      "group_symbols": true,
+      "filter_string": "U2",
+      "group_symbols": false,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -682,13 +725,37 @@
         "uuid": "9eaea4b3-54ec-4325-9957-8e422ec56271"
       }
     ],
-    "used_designators": "",
+    "used_designators": "U1-4,U7-9",
     "variants": []
   },
   "sheets": [
     [
       "9eaea4b3-54ec-4325-9957-8e422ec56271",
       "pcb-01-v2"
+    ],
+    [
+      "5b322641-8cb1-4ce8-9782-daab131ff0e2",
+      "SCH-01 24V Input"
+    ],
+    [
+      "a4e63c8e-f472-4de3-944e-2beb5d930353",
+      "SCH-02 3V3 Rail"
+    ],
+    [
+      "f09166ce-7845-4e93-a09c-3eedc19defaa",
+      "SCH-03 MCF Power Stage"
+    ],
+    [
+      "d2c43c80-5fcd-4b51-9ae7-b4b0ead668f9",
+      "SCH-04 Supervisor + Service"
+    ],
+    [
+      "20f5b734-10f2-4c15-8fd2-0bf9d6e1e598",
+      "SCH-05 Permission + Watchdog"
+    ],
+    [
+      "46f5cc5d-fb87-48cc-adbf-1df1cf3b6269",
+      "SCH-06 Hall + Overspeed"
     ]
   ],
   "text_variables": {},

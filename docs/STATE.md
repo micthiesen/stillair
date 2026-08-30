@@ -3,18 +3,17 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-29** (PCB-01 V2 chamber-temperature revision completed and adversarially converged.)
+Last updated: **2026-08-29** (PCB-01 V2 KiCad capture and placement completed and board-review converged.)
 
 ## Now
 
-- **PCB-01 V2 is fully specified for schematic capture and layout.** The exact component schedule,
-  connector and GPIO maps, complete ratsnest, WROOM/automatic-UART service design, test access,
-  on-board digital chamber sensor, stackup and net classes, placement groups, firmware deltas,
-  assembly split, and validation gates are frozen in [pcb-01-v2.md](pcb-01-v2.md). J4 and its
-  external NTC path are deleted; TMP1075 uses a dedicated GPIO6/GPIO11 bus. Exact outline dimensions
-  and placement coordinates are intentionally deferred to KiCad. The full spec now records eighteen
-  adversarial rounds, including eleven fresh rounds for this sensor revision; round 18 returned no
-  useful electrical, firmware, commissioning, sourcing, documentation, or tooling feedback.
+- **PCB-01 V2 is captured, placed, and ready for manual trace routing.** The 88 x 64 mm KiCad board
+  contains the exact 78-net/395-endpoint ratsnest, 162 top-side footprints, four-layer stackup,
+  19 zones and rule areas, final placement, keepouts, fiducials, silkscreen, 3D models, probe map,
+  assembly split, and guarded JLCPCB export. ERC is clean; the pre-route DRC has only 315 expected
+  unconnected items and two expected isolated In2 3V3-fill warnings. Six sequential implemented-board
+  review rounds converged with no useful electrical, DFM, visual, mechanical, or routing feedback.
+  The board handoff and routing checklist are in [pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md).
 
 - **The installed fan retains its provisional 50--170 RPM loaded release.** The complete ceiling
   assembly, persistent golden MCF image, Apple Home control, cold-power recovery, nine 50 RPM
@@ -54,22 +53,17 @@ Last updated: **2026-08-29** (PCB-01 V2 chamber-temperature revision completed a
 
 ## Next
 
-Build and qualify the switched J7 harness on the accessible replacement board before any ceiling
-installation. With all power removed, attach pins 2--6 per the printed sheet, inspect under
-magnification, and prove every intended connection plus adjacent-pad isolation. Then connect only
-the USB adapter and check for unintended board back-powering before applying current-limited 18 V.
-
-Run the automated path end to end: exact-FTDI detection, RTS polarity, Kasa cold ROM entry,
-verified `espflash`, watchdog reset, and `stillair --port ... state`. Exercise the BOOT and RESET
-switches only under the documented conditions, including the unplug-RTS manual fallback. Finish
-PCB-01B AVDD/DVDD and MCF communication, restore the active provisional firmware if any recovery
-image was used, and perform the brief unloaded start beside the fan. Physical qualification is the
-critical gate that decides whether the board can return overhead for final loaded tuning.
+Route PCB-01 V2 in the order and widths in the interactive checklist linked from
+[pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md). Preserve the encoded keepouts and named local
+escape areas, refill all zones, and finish with zero unconnected items and zero DRC violations.
+Then run `python3 pcb/tools/jlc_fab.py pcb-01-v2`, inspect the generated Gerbers, drill map, BOM,
+CPL, POFV notes, and assembly locator, and place the JLCPCB order using the tracked fabrication
+notes. The export command now refuses to create orderable Gerbers until the final DRC gate passes.
 
 ## Candidates Not Chosen
 
-- **Wait for JLCPCB before continuing:** deferred. A replacement may still be useful, but it does
-  not answer whether the completed UART recovery path works.
+- **Qualify the switched J7 harness first:** still useful for the installed V1 replacement board,
+  but it does not advance the now-ready V2 manufacturing package.
 - **Adopt manual-only BOOT now:** held as the immediate fallback. The removable D-to-RTS connection
   costs no board rework and deserves one controlled qualification first.
 - **Return the board overhead and start loaded tuning:** blocked on UART communication, remaining
@@ -79,6 +73,9 @@ critical gate that decides whether the board can return overhead for final loade
 
 ## Learned Recently
 
+- Ready-to-route PCB-01 V2 KiCad project, routing vocabulary, guarded JLCPCB exporter, probe map,
+  assembly package, and implemented-board review record:
+  [pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md) and [pcb-01-v2.md](pcb-01-v2.md).
 - Complete PCB-01 V2 schematic/layout handoff, exact BOM and ratsnest, evidence-based simplifications,
   digital chamber-temperature telemetry, implementation gates, and review record:
   [pcb-01-v2.md](pcb-01-v2.md).

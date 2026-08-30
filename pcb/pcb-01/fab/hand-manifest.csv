@@ -1,0 +1,6 @@
+Comment,Designator,Footprint,MPN,LCSC Part #
+470uF 50V,"C1,C2",Capacitor_THT:CP_Radial_D10.0mm_P5.00mm,EEU-FR1H471,
+100nF 1% C0G,C34,Capacitor_SMD:C_0603_1608Metric,,
+POWER,J1,Connector_Molex:Molex_Micro-Fit_3.0_43045-0200_2x01_P3.00mm_Horizontal,43045-0200,
+MOTOR,J2,Connector_Molex:Molex_Micro-Fit_3.0_43650-0300_1x03_P3.00mm_Horizontal,43650-0300,
+LM2907M-14,U8,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,LM2907M-14/NOPB,

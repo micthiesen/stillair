@@ -1,0 +1,107 @@
+(version 1)
+
+(rule "Default routing"
+  (condition "A.NetName != ''")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.20mm) (opt 0.25mm))
+  (constraint via_diameter (min 0.60mm) (opt 0.60mm))
+  (constraint hole_size (min 0.30mm) (opt 0.30mm)))
+
+(rule "Sensitive analog"
+  (condition "A.NetName == 'HALL_TACH' || A.NetName == 'LM_TACHIN' || A.NetName == 'VTACH_RAW' || A.NetName == 'VTACH' || A.NetName == 'VREF' || A.NetName == 'RSCALE_MID' || A.NetName == 'TACH_BIAS' || A.NetName == 'TACH_CP1' || A.NetName == 'TACH_DELAY' || A.NetName == 'TACH_FB' || A.NetName == 'TLV_INN' || A.NetName == 'TEMP_SCL' || A.NetName == 'TEMP_SDA'")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.20mm) (opt 0.25mm))
+  (constraint via_diameter (min 0.60mm) (opt 0.60mm))
+  (constraint hole_size (min 0.30mm) (opt 0.30mm)))
+
+(rule "Low voltage local rails"
+  (condition "A.NetName == 'AGND' || A.NetName == 'TACH_DRAIN' || A.NetName == 'BUCK_SW' || A.NetName == 'MCF_BUCK' || A.NetName == 'MCF_AVDD' || A.NetName == 'MCF_DVDD' || A.NetName == 'U3_VCC'")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.25mm) (opt 0.50mm))
+  (constraint via_diameter (min 0.60mm) (opt 0.60mm))
+  (constraint hole_size (min 0.30mm) (opt 0.30mm)))
+
+(rule "3V3 rail"
+  (condition "A.NetName == '3V3'")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.50mm) (opt 0.50mm))
+  (constraint via_diameter (min 0.60mm) (opt 0.60mm))
+  (constraint hole_size (min 0.30mm) (opt 0.30mm)))
+
+(rule "Protected tach rails"
+  (condition "A.NetName == '+12V_TACH' || A.NetName == 'TACH_LDO_IN'")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.40mm) (opt 0.40mm))
+  (constraint via_diameter (min 0.60mm) (opt 0.60mm))
+  (constraint hole_size (min 0.30mm) (opt 0.30mm)))
+
+(rule "24 V power"
+  (condition "A.NetName == 'RAW24' || A.NetName == 'VM24' || A.NetName == 'PGND'")
+  (constraint clearance (min 0.25mm))
+  (constraint track_width (min 2.00mm) (opt 2.00mm))
+  (constraint via_diameter (min 1.00mm) (opt 1.00mm))
+  (constraint hole_size (min 0.50mm) (opt 0.50mm)))
+
+(rule "Motor phases"
+  (condition "A.NetName == 'PHASE_U' || A.NetName == 'PHASE_V' || A.NetName == 'PHASE_W'")
+  (constraint clearance (min 0.25mm))
+  (constraint track_width (min 2.00mm) (opt 2.00mm))
+  (constraint via_diameter (min 1.00mm) (opt 1.00mm))
+  (constraint hole_size (min 0.50mm) (opt 0.50mm))
+  (constraint disallow via))
+
+(rule "U1 phase pad escape"
+  (condition "(A.NetName == 'PHASE_U' || A.NetName == 'PHASE_V' || A.NetName == 'PHASE_W') && A.enclosedByArea('U1 phase escape')")
+  (constraint track_width (min 0.30mm) (opt 2.00mm)))
+
+(rule "U1 power pad escape"
+  (condition "(A.NetName == 'VM24' || A.NetName == 'PGND') && A.enclosedByArea('U1 power escape')")
+  (constraint track_width (min 0.30mm) (opt 2.00mm)))
+
+(rule "U3 VM24 pad escape"
+  (condition "A.NetName == 'VM24' && A.enclosedByArea('U3 VM24 escape')")
+  (constraint track_width (min 0.25mm) (opt 2.00mm)))
+
+(rule "PGND stays in motor region"
+  (condition "A.NetName == 'PGND' && !A.enclosedByArea('PGND motor routing')")
+  (constraint disallow track via zone))
+
+(rule "Noisy power to sensitive analog clearance"
+  (condition "((A.NetName == 'PHASE_U' || A.NetName == 'PHASE_V' || A.NetName == 'PHASE_W' || A.NetName == 'BUCK_SW' || A.NetName == 'RAW24' || A.NetName == 'VM24' || A.NetName == 'PGND') && (B.NetName == 'HALL_TACH' || B.NetName == 'LM_TACHIN' || B.NetName == 'VTACH_RAW' || B.NetName == 'VTACH' || B.NetName == 'VREF' || B.NetName == 'RSCALE_MID' || B.NetName == 'TACH_BIAS' || B.NetName == 'TACH_CP1' || B.NetName == 'TACH_DELAY' || B.NetName == 'TACH_FB' || B.NetName == 'TLV_INN')) || ((B.NetName == 'PHASE_U' || B.NetName == 'PHASE_V' || B.NetName == 'PHASE_W' || B.NetName == 'BUCK_SW' || B.NetName == 'RAW24' || B.NetName == 'VM24' || B.NetName == 'PGND') && (A.NetName == 'HALL_TACH' || A.NetName == 'LM_TACHIN' || A.NetName == 'VTACH_RAW' || A.NetName == 'VTACH' || A.NetName == 'VREF' || A.NetName == 'RSCALE_MID' || A.NetName == 'TACH_BIAS' || A.NetName == 'TACH_CP1' || A.NetName == 'TACH_DELAY' || A.NetName == 'TACH_FB' || A.NetName == 'TLV_INN'))")
+  (constraint clearance (min 0.80mm)))
+
+(rule "U2 antenna foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'U2' && A.intersectsArea('U2 antenna all-layer keepout')")
+  (constraint disallow pad footprint))
+
+(rule "H1 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'H1' && A.intersectsArea('H1 M3 copper keepout')")
+  (constraint disallow pad footprint))
+
+(rule "H2 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'H2' && A.intersectsArea('H2 M3 copper keepout')")
+  (constraint disallow pad footprint))
+
+(rule "H3 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'H3' && A.intersectsArea('H3 M3 copper keepout')")
+  (constraint disallow pad footprint))
+
+(rule "H4 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'H4' && A.intersectsArea('H4 M3 copper keepout')")
+  (constraint disallow pad footprint))
+
+(rule "FID1 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'FID1' && A.intersectsArea('FID1 assembly fiducial keepout')")
+  (constraint disallow pad footprint))
+
+(rule "FID2 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'FID2' && A.intersectsArea('FID2 assembly fiducial keepout')")
+  (constraint disallow pad footprint))
+
+(rule "FID3 foreign components"
+  (condition "(A.Type == 'Pad' || A.Type == 'Footprint') && A.Reference != 'FID3' && A.intersectsArea('FID3 assembly fiducial keepout')")
+  (constraint disallow pad footprint))
+
+(rule "ESP32 EP thermal web"
+  (condition "A.memberOfFootprint('U2')")
+  (constraint connection_width (min 0.10mm)))

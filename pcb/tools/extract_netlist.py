@@ -1,17 +1,37 @@
 """Extract review artifacts from the BOARD file (the source of truth):
 a netlist markdown (components + per-net pin lists) and a positions dump.
 
-Usage: extract_netlist.py <out-netlist.md> [out-positions.txt]
+Usage: extract_netlist.py [--board board.kicad_pcb] <out-netlist.md> [out-positions.txt]
 Used by the board-truth review loop (see the /pcb skill)."""
+import argparse
+import os
 import re
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 sys.path.insert(0, "/Users/michael/Code/stillair/pcb/tools")
 import board_model
 
-text = open(board_model.BOARD_FILE).read()
-parts = board_model.load()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--board", type=Path, default=Path(board_model.BOARD_FILE))
+parser.add_argument("out_netlist", type=Path)
+parser.add_argument("out_positions", nargs="?", type=Path)
+args = parser.parse_args()
+
+
+def safe_write(path: Path, content: str) -> None:
+    protected_suffixes = {".kicad_pcb", ".kicad_sch", ".kicad_pro", ".kicad_sym"}
+    if path.suffix.lower() in protected_suffixes:
+        raise SystemExit(f"refusing to overwrite KiCad source file: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
+    temporary.write_text(content)
+    os.replace(temporary, path)
+
+
+text = args.board.read_text()
+parts = board_model.load(str(args.board))
 
 props = {}
 for m in re.finditer(r'\(footprint "([^"]+)"(.*?)\n\t\)', text, re.S):
@@ -27,7 +47,7 @@ for m in re.finditer(r'\(footprint "([^"]+)"(.*?)\n\t\)', text, re.S):
     props[ref] = d
 
 out = []
-out.append("# PCB-01 board-extracted netlist (source of truth: pcb-01.kicad_pcb)")
+out.append(f"# Board-extracted netlist (source of truth: {args.board.name})")
 out.append("# Generated read-only from the board file. Pad numbers are footprint pad")
 out.append("# numbers; map them to pin FUNCTIONS via the part's datasheet.")
 out.append("")
@@ -64,18 +84,18 @@ for ref in sorted(parts, key=sortkey):
 for net in sorted(nets):
     out.append(f"{net}: {', '.join(nets[net])}")
 
-path = sys.argv[1]
-open(path, "w").write("\n".join(out) + "\n")
-print(f"{len(parts)} parts, {len(nets)} nets -> {path}")
+safe_write(args.out_netlist, "\n".join(out) + "\n")
+print(f"{len(parts)} parts, {len(nets)} nets -> {args.out_netlist}")
 
-if len(sys.argv) > 2:
+if args.out_positions:
     lines = [
         f"{r} {parts[r].anchor[0]:.2f} {parts[r].anchor[1]:.2f} rot {parts[r].rot:g}"
         for r in sorted(parts, key=sortkey)
     ]
-    open(sys.argv[2], "w").write(
-        "PCB-01 part positions (mm, KiCad frame, Y down). "
-        f"Board x {board_model.BOARD[0]}-{board_model.BOARD[2]}, "
-        f"y {board_model.BOARD[1]}-{board_model.BOARD[3]}.\n" + "\n".join(lines) + "\n"
+    safe_write(
+        args.out_positions,
+        f"Part positions from {args.board.name} (mm, KiCad frame, Y down).\n"
+        + "\n".join(lines)
+        + "\n",
     )
-    print(f"{len(lines)} positions -> {sys.argv[2]}")
+    print(f"{len(lines)} positions -> {args.out_positions}")

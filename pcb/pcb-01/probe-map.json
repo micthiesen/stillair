@@ -11,6 +11,7 @@
     "right": "ESP32-C6 module, J8, and tach circuitry",
     "one_line": "Hold the component side toward you with C1/C2 at upper-left, J6 at top, and J8 at lower-right."
   },
+  "board_diagram": "PCB-01 V1, component side, not to scale\n\n  TOP: J5 / J6 USB-C\n  +----------------------------------------------------------------+\n  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |\n  | TP1  J1/Q1       TP3                                           |\n  |                   TP2       U3/TP9            ESP U2            |\n  | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |\n  |                       TP11/24/27/10       U7/U9       TP6  J8  |\n  | H1      C6/J2             J4                    J3          H2 |\n  +----------------------------------------------------------------+\n  BOTTOM: J2 / J4 / J3\n\nOrientation check: C1/C2 are upper-left and J8 is lower-right.",
   "references": {
     "AGND": "TP26",
     "PGND": "TP3"
@@ -310,6 +311,7 @@
       "location": "Top edge right of centre, above U12.",
       "orientation": "USB-C receptacle; use a cable rather than hand-probing its fine pads.",
       "pins": {"function": "USB data and VBUS sense only"},
+      "verify": false,
       "warning": "USB VBUS does not power the board. Use TP25 for VBUS_SENSE."
     },
     "J7": {

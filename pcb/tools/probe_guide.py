@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[2]
-MAP_PATH = REPO / "pcb" / "pcb-01" / "probe-map.json"
+DEFAULT_MAP_PATH = REPO / "pcb" / "pcb-01" / "probe-map.json"
 
 
 CLASS_SETUP = {
@@ -49,67 +49,29 @@ CLASS_SETUP = {
 }
 
 
-BOARD_MAP = r"""
-PCB-01, component side, not to scale
-
-  TOP: J5 / J6 USB-C
-  +----------------------------------------------------------------+
-  | H3   C1      C2      TP5  TP4       J5       TP26/28   J6   H4 |
-  | TP1  J1/Q1       TP3                                           |
-  |                   TP2       U3/TP9            ESP U2            |
-  | D2   TP8/16   U1   TP12/7  TP20/17/18/19   TP22      TP23/21  |
-  |                       TP11/24/27/10       U7/U9       TP6  J8  |
-  | H1      C6/J2             J4                    J3          H2 |
-  +----------------------------------------------------------------+
-  BOTTOM: J2 / J4 / J3
-
-Orientation check: C1/C2 are upper-left and J8 is lower-right.
-""".strip()
-
-
-def load_map() -> dict:
-    return json.loads(MAP_PATH.read_text())
+def load_map(path: Path) -> dict:
+    return json.loads(path.read_text())
 
 
 def normalize_net(net: str) -> str:
     return net.rsplit("/", 1)[-1]
 
 
-def connector_diagram(ref: str, pins: dict[str, str]) -> str:
-    if ref == "J8":
-        return "\n".join(
-            [
-                "    inboard       board edge",
-                f"  1 {pins['1']:<12}  2 {pins['2']}",
-                f"  3 {pins['3']:<12}  4 {pins['4']}",
-                f"  5 {pins['5']:<12}  6 {pins['6']}",
-                f"  7 {pins['7']:<12}  8 {pins['8']}",
-                f"  9 {pins['9']:<12} 10 {pins['10']}",
-                "        top to bottom",
-            ]
-        )
-    if ref == "J7":
-        return "\n".join(
-            [
-                f"  top:     2 {pins['2']:<8}  4 {pins['4']:<8}  6 {pins['6']}",
-                f"  bottom:  1 {pins['1']:<8}  3 {pins['3']:<8}  5 {pins['5']}",
-            ]
-        )
-    return "  " + " | ".join(f"{pin} {net}" for pin, net in pins.items())
+def connector_diagram(item: dict) -> str:
+    if "diagram" in item:
+        return "\n".join(item["diagram"])
+    return "  " + " | ".join(f"{pin} {net}" for pin, net in item["pins"].items())
 
 
 def show_connector(data: dict, ref: str) -> int:
     item = data["connectors"][ref]
     print(f"{ref} ({item['name']})")
-    print("Board: Components up, large capacitors upper-left.")
+    print(f"Board: {data['orientation']['one_line']}")
     print(f"Find:  {item['location']}")
     print(f"Pins:  {item['orientation']}")
-    print(connector_diagram(ref, item["pins"]))
-    if ref == "J8":
-        print("Wire:  Use a populated header or temporary pigtails for repeated work; do not keep hooking the bare pads.")
-    else:
-        print("Wire:  Use the matching test point instead when one exists.")
-        print(f"Note:  {item['warning']}")
+    print(connector_diagram(item))
+    print(f"Wire:  {item.get('wire', 'Use the matching test point instead when one exists.')}")
+    print(f"Note:  {item['warning']}")
     return 0
 
 
@@ -124,7 +86,7 @@ def show_probe(data: dict, ref: str, mode: str) -> int:
         data["test_points"][reference]["net"] if reference in data["test_points"] else None
     )
     print(f"{ref} ({item['net']}), {mode}")
-    print("Board:  Components up, large capacitors upper-left.")
+    print(f"Board:  {data['orientation']['one_line']}")
     print(f"Find:   {item['location']}")
 
     if mode == "resistance":
@@ -167,11 +129,11 @@ def list_targets(data: dict) -> int:
     return 0
 
 
-def verify_board(data: dict) -> int:
+def verify_board(data: dict, board_path: Path) -> int:
     sys.path.insert(0, str(REPO / "pcb" / "tools"))
     import board_model
 
-    parts = board_model.load(str(REPO / data["source_board"]))
+    parts = board_model.load(str(board_path))
     errors: list[str] = []
     for ref, expected in data["test_points"].items():
         part = parts.get(ref)
@@ -185,7 +147,7 @@ def verify_board(data: dict) -> int:
             errors.append(f"{ref}: map net {expected['net']} differs from board {sorted(nets)}")
 
     for ref, expected in data["connectors"].items():
-        if ref == "J6":
+        if expected.get("verify") is False:
             continue
         part = parts.get(ref)
         if part is None:
@@ -205,10 +167,11 @@ def verify_board(data: dict) -> int:
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
-    print(
-        f"PASS: {len(data['test_points'])} test points and "
-        f"{len(data['connectors']) - 1} pin-mapped connectors match PCB-01"
+    verified_connectors = sum(
+        item.get("verify", True) is not False for item in data["connectors"].values()
     )
+    print(f"PASS: {len(data['test_points'])} test points and "
+          f"{verified_connectors} pin-mapped connectors match {data['board']}")
     return 0
 
 
@@ -216,18 +179,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Print standardized PCB-01 probe hookup and reporting instructions."
     )
-    parser.add_argument("target", nargs="?", help="TP1..TP28, J1..J8, JP1, list, or map")
+    parser.add_argument("target", nargs="?", help="target from the selected map, or list/map")
     parser.add_argument("--mode", choices=("dc", "resistance", "scope"), default="dc")
+    parser.add_argument("--map", dest="map_path", type=Path, default=DEFAULT_MAP_PATH,
+                        help="probe-map JSON (default: PCB-01 V1)")
+    parser.add_argument("--board", dest="board_path", type=Path,
+                        help="KiCad board to verify (default: source_board from the map)")
     parser.add_argument("--verify-board", action="store_true")
     args = parser.parse_args()
-    data = load_map()
+    data = load_map(args.map_path)
+    board_path = args.board_path or REPO / data["source_board"]
 
     if args.verify_board:
-        return verify_board(data)
+        return verify_board(data, board_path)
     if not args.target or args.target.lower() == "list":
         return list_targets(data)
     if args.target.lower() == "map":
-        print(BOARD_MAP)
+        print(data["board_diagram"])
         return 0
 
     ref = args.target.upper()

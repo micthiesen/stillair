@@ -1,9 +1,9 @@
 # PCB-01 V2 design specification
 
-Status: **design baseline for schematic capture and layout**. This document replaces the former
-contingency brief. It is the controlling electrical and PCB handoff for PCB-01 V2. Exact footprint
-positions, board dimensions, trace geometry, via positions, and zone polygons are deliberately left
-to the KiCad placement and routing pass. Everything else is frozen here.
+Status: **captured and placed, ready for trace routing**. This document replaces the former
+contingency brief and remains the controlling electrical and PCB handoff for PCB-01 V2. Exact
+footprints, the 88 x 64 mm outline, mounting coordinates, placement, keepouts, zones, and routing
+rules are implemented in `pcb/pcb-01-v2/`. Everything except trace routing is frozen here.
 
 V2 is a one-off controller redesign, not a productionization exercise. It preserves the V1 motor,
 power, Hall-cable, drive-permission, watchdog, and independent overspeed behavior. It removes V1
@@ -297,7 +297,7 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | SW1-SW3 | C&K `PTS645SK43SMTR92LFS` | PTS645 SMD | `C221871`, RESET/BOOT/CLEAR |
 | NT1 | copper net-tie, no purchased part | two 2.0 mm F.Cu pads | excluded from BOM |
 | TP1-TP31 | bare plated test holes | custom 2.4 mm pad, 1.0 mm finished hole | no component |
-| H1-H4 | M3 clearance | 3.2 mm NPTH, no annulus | mechanical, positions deferred |
+| H1-H4 | M3 clearance | 3.2 mm NPTH, no annulus | mechanical, final coordinates in KiCad |
 
 Custom U1, U2, U3, U5/U6, NT1, and test-hole footprints require explicit pin/pad review. Explicitly
 review U12's standard DGK symbol-to-pad mapping. U2 must reproduce Espressif's current land pattern
@@ -316,7 +316,7 @@ Pins absent here are in the explicit no-connect statements or duplicate power/EP
 | `PMOS_GATE` | D1.2 anode, Q1.1, R1.1, R2.2 |
 | `VM24` | Q1.3, D1.1 cathode, D2.1, C1.1,C2.1,C3.1,C4.1,C5.1,C7.1,C8.1,C12.2, R2.1,R39.1, U1.9-U1.11, U3.2,U3.3, TP2.1 |
 | `PGND` | J1.2, D2.2, C1.2-C5.2, U1.12,U1.15,U1.18, NT1.1, TP3.1 |
-| `AGND` | all logic/analog capacitor ground pins; J3.3,J5.1; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; U12.4-U12.7; NT1.2; TP4.1 |
+| `AGND` | all logic/analog capacitor ground pins; D9.1; J3.3,J5.1; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; U12.4-U12.7; NT1.2; TP4.1 |
 | `3V3` | C9.1,C10.1,C17.1,C18.1,C20.1,C22.1,C24.1,C25.1,C41.1,C42.1,C43.1; D9.2; J3.1; R4.1-R7.1,R11.1-R13.1,R18.1-R20.1,R29.1-R31.1,R34.1,R35.1,R37.1,R42.1,R43.2,R50.1,R52.1; U2.2; U3.4,U3.9; U5.2,U5.7,U5.8; U6.2,U6.8; U7.8; U9.5; U10.5; U11.5; U12.8; TP5.1 |
 | `U3_VCC` | C11.1, R3.1, U3.8 |
 | `PGOOD` | R3.2, D3.1, D8.1, U2.20, U3.1, TP9.1 |
@@ -492,7 +492,8 @@ exception and must be encoded as a scoped rule area rather than weakening the ne
 
 ## Placement and routing organization
 
-Exact coordinates are deferred. These relationships are mandatory.
+The implemented coordinates are in the KiCad board. These relationships remain mandatory during
+routing and any later placement adjustment.
 
 1. Group J1, Q1, D1, D2, C1-C5, and U1 VM entry as one power region. J1 reaches an edge without its
    cable crossing service pads. Place C1 and C2 parallel with at least 12.1 mm center-to-center
@@ -519,8 +520,8 @@ Exact coordinates are deferred. These relationships are mandatory.
    accidentally pressed while probing.
    Reserve at least 18 mm normal to the board above J5 for the mated PHR-5 housing and contacts, plus
    a 12 mm lateral cable-bend corridor in the chosen exit direction. Keep that volume clear of the
-   enclosure, screws, buttons, probe approach, and other cable bundles inside the 110 x 80 x 25 mm
-   controller envelope.
+   enclosure, screws, buttons, probe approach, and other cable bundles inside the V2
+   120 x 90 x 30 mm controller service envelope.
 9. Group TP1-TP31 along accessible edges. A point may use the nearest edge rather than a long route.
    Sensitive analog test stubs must be minimal.
 10. Put H1-H4 near final corners with screw, washer, standoff, and tool keepouts. Coordinates follow
@@ -593,12 +594,12 @@ trip-decrease direction, TP nets, W/V/U, power polarity, board name/revision, an
   comparator reset, prohibit using DRVOFF or OS_LOCK_OK as raw-reset evidence, and require a
   low-voltage power cycle plus confirmed U6 re-arm after every complete sweep before another RV1
   trim trial.
-- Before V2 fab export, add a `pcb-01-v2` project/config to `pcb/tools/jlc_fab.py` so the exact command
-  `python3 pcb/tools/jlc_fab.py pcb-01-v2` reads `pcb/pcb-01-v2`, includes machine-assembled C34,
-  excludes only the exact hand parts and copper/no-part refs in this schedule, and emits V2 Gerbers,
-  drill, BOM, CPL, and LCSC map under `pcb/pcb-01-v2/fab/`. V1 hardcoded C34/J7/J8/JP1/DNP
-  exclusions may not affect V2. This is a future capture/release gate, not a claim that the current
-  V1-only generator already supports V2.
+- `pcb/tools/jlc_fab.py` has a separate `pcb-01-v2` configuration. The assembly-only command reads
+  the current board and emits the V2 BOM, CPL, exact LCSC map, assembly/hand manifests, derived U1
+  POFV coordinates, fabrication notes, and four-page assembly locator under `pcb/pcb-01-v2/fab/`.
+  It includes machine-assembled C34 and excludes only the exact hand and no-part references in this
+  schedule. The full command additionally emits Gerbers and drill data, and must run only after
+  routing, zone refill, and zero-unconnected DRC.
 - Recheck stock before order. Shortage does not authorize changing value, tolerance, dielectric,
   package, pinout, or safety behavior. Record an approved substitute here first.
 - Order at least two assembled boards. Inspect U2 castellations, U1/QFN and thermal fill, U4 EP,
@@ -615,7 +616,9 @@ These validate the specified design and do not invite unrelated safety expansion
 - Machine-compare the KiCad exported netlist with this ratsnest. Confirm every scheduled ref appears
   exactly once and every schematic ref is scheduled.
 - Confirm J1/J2/J3 footprint numbering against existing cables and Q4 symbol/footprint/truth table.
-- ERC: zero unexplained errors/warnings. DRC: zero unconnected and zero unexplained violations.
+- Ready-to-route gate: ERC has zero violations; DRC has only the 315 expected unrouted connections
+  and two expected isolated In2 3V3-fill warnings. Final release gate after routing and zone refill:
+  zero unconnected items and zero unexplained violations, including no isolated-fill warnings.
 - Verify actual stackup, through-via-only rule, high-current neck checks, POFV, all-layer antenna
   keepout, and the single NT1 crossing.
 - Before capture/layout validation, set the V2 Konnect project's accessible-test-point rule to the
@@ -626,16 +629,10 @@ These validate the specified design and do not invite unrelated safety expansion
   orientation, cables, probes, screws, hand access, antenna, phases, and return continuity.
 - Machine-check C1/C2 center spacing at or above 12.1 mm and courtyard edge clearance at or above
   1.5 mm; confirm the component-side render shows both cans parallel and independently insertable.
-- Create a V2-specific probe map with the final layout, ground references, installed-access notes,
-  and component-side render at `pcb/pcb-01-v2/probe-map.json`. The V1 map is prohibited because TP
-  numbers are deliberately reassigned. Before V2 layout release, implement `--board` and `--map`
-  arguments in `probe_guide.py` so the exact V2 gate is
-  `pcb/tools/probe_guide.py --board pcb/pcb-01-v2/pcb-01-v2.kicad_pcb --map pcb/pcb-01-v2/probe-map.json --verify-board`.
-  Its help/target validation and generated orientation text must come from the selected map rather
-  than hardcoded J6/J7/J8 or TP1-TP28 data. Fabrication remains blocked until that command passes and
-  its fresh component-side render is inspected. This command is intentionally not runnable before
-  the V2 KiCad project, map, and tool arguments are created; it is an implementation gate, not a
-  claim about the current V1-only tool.
+- The V2-specific `pcb/pcb-01-v2/probe-map.json` records all final coordinates, ground references,
+  installed-access notes, and connector orientation. `probe_guide.py` accepts explicit board/map
+  paths without changing the V1 default. The V2 verification gate passes for all 31 test points and
+  four pin-mapped connectors; rerun it after any placement change.
 
 ### Engineering-board bring-up
 
@@ -702,3 +699,21 @@ unroutable constraints, service hazards, sourcing errors, and incomplete validat
 | 19 | Bulk-cap mechanical spacing; option-bank deletion; overspeed-calibration procedure | C1/C2 geometry and C36-C40 deletion lenses found no defect. Applied one commissioning finding: define bridge-disabled TP15 observation of raw comparator trip/reset and low-voltage power-cycle/re-arm between RV1 trim trials. A fresh round is required. |
 | 20 | Mechanical/electrical convergence; calibration/commissioning convergence; V1 evidence convergence | C1/C2 spacing, C36-C40 deletion, and the RV1 circuit were consistent. Applied one documentation finding: the canonical V1 `TACH-01` row lacks TP15 raw-reset evidence and U6 re-arm between trials, so the spec now makes that row V1-only and defines its required V2 replacement. A fresh round is required. |
 | 21 | Mechanical/electrical convergence; commissioning evidence convergence; V1 history convergence | No useful feedback from any lens. The exact C1/C2 footprint and added clearance, complete C36-C40 deletion, RV1 function and calibration sequence, and V1/V2 TACH evidence boundary are converged. |
+
+### Implemented KiCad board review, 2026-08-29
+
+The review target for these rounds was the actual saved V2 KiCad project and freshly generated
+board artifacts, not this specification. Every useful finding was applied before the next round.
+
+| Round | Lenses | Useful findings and disposition |
+|---:|---|---|
+| 1 | Electrical/safety; physical placement; DFM | Corrected U1 exposed-pad net assignment, tightened power and decoupling placement, completed zones/keepouts/rules, and repaired paste, mask, and silk details. |
+| 2 | Electrical/routing; assembly/DFM; visual | Moved C3/C28/C41, added bounded U1/U3 escape areas and PGND/noisy-net rules, completed fiducials, models, and assembly metadata. |
+| 3 | Rule enforcement; routing feasibility; fabrication | Replaced intersection-based rule exceptions with fully enclosed areas, aligned J2 with the three phase exits, completed fabrication notes and POFV derivation, and added the four-page locator. |
+| 4 | Ground-domain safety; mechanical/model; generated artifacts | Extended the PGND island to every required motor-return pad, prohibited PGND zones outside its routing area, fixed locator coverage, aligned U2's official model, added conservative J1/J2/RV1 envelopes, corrected J2 silk, and raised the V2 service envelope to 120 x 90 x 30 mm. |
+| 5 | Electrical convergence; DFM convergence; visual/service | Electrical and DFM lenses found no useful defect. Added adjacent RV1 calibration/direction marking and connector identity labels. |
+| 6 | Recovered-board electrical; DFM/package; final visual | Hardened the board-extraction tool after a review-output path error, recovered and machine-proved the exact board state, folded `J5/UART` into its adjacent pinout line, and reran every current-board check. All three lenses returned no useful feedback. |
+
+The resulting board has 162 top-side footprints, 19 zones/rule areas, zero tracks and routing vias,
+78 named nets, and 395 pad endpoints. ERC is clean. Before routing, DRC contains only 315 expected
+unconnected items and two expected isolated-fill warnings from the unconnected In2 3V3 region.

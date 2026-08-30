@@ -460,14 +460,18 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 
 ## EB-100 PCB bracket and ENC-100 housing
 
-- PCB is 78 × 58 × 1.6 mm, **mounted horizontally under the plate** (~Z12–35): the
+- PCB-01 V1 is 78 × 58 × 1.6 mm; PCB-01 V2 is 88 × 64 × 1.6 mm. Both are **mounted
+  horizontally under the plate** (~Z12–35): the
   2026-07-27/28 raise leaves a 62 mm interior (Z6–Z68), which kills both vertical
   orientations (78-along-Z needed 97; 58-along-Z needed 77+). EB-100 becomes a horizontal
   bracket/standoff arrangement off the same MP-100 taps — redesign details at bracket
   design time. See [electrical.md](electrical.md) > PCB-01 mechanical definition.
-- PCB mounting holes are (6,6), (72,6), (6,52), (72,52) mm from the board's lower-left.
-- Reserve 110 × 80 × 25 mm including connectors and cable bends, with 8 mm service clearance
-  beyond power and motor edges.
+- V1 mounting holes are (6,6), (72,6), (6,52), (72,52) mm from its lower-left. V2 mounting holes
+  are (5,5), (83,5), (5,59), (83,59) mm from its lower-left.
+- Preserve the 110 × 80 × 25 mm V1 service envelope. Reserve 120 × 90 × 30 mm for V2, including
+  connectors and cable bends, with at least 8 mm service clearance beyond power and motor mating
+  faces and 15 mm free space ahead of the antenna. The V2 envelope supersedes the smaller value
+  only when installing V2.
 - EB-100 is a 1.5 mm bent 5052 bracket (or print) fixed to MP-100 at two M3 points and
   supporting the PCB on four M3 standoffs (6–8 mm; holes isolated from circuit ground). Add a
   secondary metal retention lanyard and independent clamps for DC input, phases, Hall cable,

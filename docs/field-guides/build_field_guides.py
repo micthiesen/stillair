@@ -654,7 +654,7 @@ def page_3c(c: Canvas, n: int) -> None:
     s.checkboxes([
         "BR-100 remains owner hand-fabricated; validate around the physical motor, PCB-02, cable, and Hall gap.",
         "Populate PCB-01 connectors before defining EB-100 and real cable bends.",
-        "Reserve 110 x 80 x 25 mm for PCB-01 plus connector and service clearance.",
+        "Reserve 110 x 80 x 25 mm for PCB-01 V1; V2 requires 120 x 90 x 30 mm.",
         "Use four 6-8 mm M3 standoffs and keep isolated mounting holes clear of circuit ground.",
         "Provide independent PCB retention and clamp cables independently of the bracket.",
     ], x + 14, y + 154, w - 28, 8.9)
@@ -1147,7 +1147,8 @@ def page_3c_visual(c: Canvas, n: int) -> None:
     s.y = 395
     x, y, w, h = s.panel("PCB-01 BRACKET ENVELOPE", 140, BLUE_BG, BLUE, BLUE)
     c.setFillColor(WHITE); c.setStrokeColor(BLUE); c.rect(x+18,y+34,220,72,stroke=1,fill=1)
-    c.setFillColor(BLUE); c.setFont("Helvetica-Bold",9); c.drawCentredString(x+128,y+70,"110 x 80 x 25 mm SERVICE ENVELOPE")
+    c.setFillColor(BLUE); c.setFont("Helvetica-Bold",8); c.drawCentredString(x+128,y+73,"V1: 110 x 80 x 25 mm")
+    c.drawCentredString(x+128,y+63,"V2: 120 x 90 x 30 mm SERVICE ENVELOPE")
     s.text("Four 6-8 mm M3 standoffs. Keep isolated mounting holes clear of circuit ground. Independent PCB retention and cable clamps. Preserve connector and cable-bend keepouts.", x+260,y+92,w-280,8.6,bold=True)
     x, y, w, h = s.panel("HAND-ROTATION RELEASE", 115, GREEN_BG, GREEN, GREEN)
     s.checkbox_grid([
