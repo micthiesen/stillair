@@ -17,9 +17,6 @@ use embassy_sync::blocking_mutex::CriticalSectionMutex;
 use embassy_sync::channel::Channel;
 use embassy_time::{Duration, Timer};
 use embedded_io_async::Read;
-#[cfg(feature = "uart-console")]
-use esp_hal::uart::UartRx;
-#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtagRx;
 use esp_hal::Async;
 use portable_atomic::AtomicBool;
@@ -78,9 +75,6 @@ pub fn latest() -> Option<Telemetry> {
 /// Longest request line accepted. Anything longer is a malformed line, not a command.
 const LINE_LIMIT: usize = 96;
 
-#[cfg(feature = "uart-console")]
-type ConsoleRx = UartRx<'static, Async>;
-#[cfg(feature = "usb-console")]
 type ConsoleRx = UsbSerialJtagRx<'static, Async>;
 
 /// Reads and services console requests.

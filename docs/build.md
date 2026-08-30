@@ -23,7 +23,7 @@ beginning at the lowest useful speed with continuous observation and a reachable
    normal-range speed and shutdown checks, and thermal verification then run in that final
    support/load/acoustic environment.
 
-### Replacement PCB-01 service path (2026-08-28)
+### Replacement PCB-01 V1 service path (historical, 2026-08-28)
 
 The replacement board passed hand-populated C34/U8 continuity and initial 18 V rail checks, but
 its native USB never enumerated after known cables, forced ROM boot, host restart, and J6 pin
@@ -34,13 +34,18 @@ momentary switch whose other terminal returns to C/AGND. E/EN uses the same swit
 for manual reset. Disconnect D from RTS before using the BOOT switch; never ground an actively
 driven RTS output. Check every intended connection and adjacent-pad isolation before power.
 
-The application now defaults to the J7 UART0 console, while a `usb-console` build feature retains
-the original native-USB transport. The synchronized runner can assert active-low RTS, cold-cycle
+At the time of this V1 investigation, the application defaulted to the J7 UART0 console while a
+`usb-console` build feature retained native USB. The synchronized runner could assert active-low
+RTS, cold-cycle
 the Kasa supply, release BOOT, flash with `--before no-reset`, and watchdog-reset into the UART
 application. This sequence is host-tested but not yet physically qualified; see
 [controls.md](controls.md#commissioning-interface-and-build-policy).
 The printable direct end-to-end pad map is
 [`pcb-01-j7-usb-uart.pdf`](../output/pdf/pcb-01-j7-usb-uart.pdf).
+
+PCB-01 V2 does not use this harness. V2 has native USB-C at J4 with manual BOOT and RESET switches;
+normal 24 V board power is required because USB VBUS is not connected to the power tree. Hold BOOT,
+tap RESET, release BOOT, then flash through J4.
 
 ## Mount build-first plan (2026-07 review; supports incremental in-person building)
 

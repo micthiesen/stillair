@@ -67,7 +67,7 @@ def scheduled_refs(spec: str) -> tuple[set[str], set[str]]:
 
 
 ENDPOINT = re.compile(
-    r"\b([A-Z]+)(\d+)\.(\d+)(?:-((?:[A-Z]+\d+\.)?\d+))?(?:/tab)?"
+    r"\b([A-Z]+)(\d+)\.([A-Z]*\d+|SH)(?:-((?:[A-Z]+\d+\.)?(?:[A-Z]*\d+|SH)))?(?:/tab)?"
 )
 
 
@@ -76,14 +76,19 @@ def expand_endpoints(text: str) -> set[str]:
     for match in ENDPOINT.finditer(text.replace("`", "")):
         prefix, ref_s, pin_s, tail = match.groups()
         ref_number = int(ref_s)
-        pin_number = int(pin_s)
         if tail is None:
-            endpoints.add(f"{prefix}{ref_number}.{pin_number}")
+            endpoints.add(f"{prefix}{ref_number}.{pin_s}")
             continue
         if "." not in tail:
-            end_pin = int(tail)
+            pin_match = re.fullmatch(r"([A-Z]*)(\d+)", pin_s)
+            tail_match = re.fullmatch(r"([A-Z]*)(\d+)", tail)
+            if not pin_match or not tail_match or pin_match.group(1) != tail_match.group(1):
+                raise ValueError(f"invalid endpoint pin range: {match.group(0)}")
+            pin_prefix = pin_match.group(1)
+            pin_number = int(pin_match.group(2))
+            end_pin = int(tail_match.group(2))
             endpoints.update(
-                f"{prefix}{ref_number}.{pin}"
+                f"{prefix}{ref_number}.{pin_prefix}{pin}"
                 for pin in range(pin_number, end_pin + 1)
             )
             continue
@@ -93,17 +98,26 @@ def expand_endpoints(text: str) -> set[str]:
             raise ValueError(f"invalid endpoint range tail: {match.group(0)}")
         end_prefix, end_ref_s = end_match.groups()
         end_ref_number = int(end_ref_s)
-        end_pin = int(end_pin_text)
+        pin_match = re.fullmatch(r"([A-Z]*)(\d+)", pin_s)
+        end_pin_match = re.fullmatch(r"([A-Z]*)(\d+)", end_pin_text)
+        if not pin_match or not end_pin_match:
+            raise ValueError(f"invalid endpoint range pins: {match.group(0)}")
+        pin_prefix, pin_number_s = pin_match.groups()
+        end_pin_prefix, end_pin_s = end_pin_match.groups()
+        if pin_prefix != end_pin_prefix:
+            raise ValueError(f"mixed pin-prefix endpoint range: {match.group(0)}")
+        pin_number = int(pin_number_s)
+        end_pin = int(end_pin_s)
         if end_prefix != prefix:
             raise ValueError(f"mixed-prefix endpoint range: {match.group(0)}")
         if end_ref_number == ref_number:
             endpoints.update(
-                f"{prefix}{ref_number}.{pin}"
+                f"{prefix}{ref_number}.{pin_prefix}{pin}"
                 for pin in range(pin_number, end_pin + 1)
             )
         elif end_pin == pin_number:
             endpoints.update(
-                f"{prefix}{number}.{pin_number}"
+                f"{prefix}{number}.{pin_prefix}{pin_number}"
                 for number in range(ref_number, end_ref_number + 1)
             )
         else:
@@ -213,11 +227,14 @@ def main() -> int:
     expected_refs, mechanical_refs = scheduled_refs(spec)
     expected = expected_nets(spec, expected_refs)
     actual_refs, actual = actual_netlist(args.netlist)
-    actual = {
-        name: endpoints
-        for name, endpoints in actual.items()
-        if not name.startswith("unconnected-(")
-    }
+    normalized: defaultdict[str, set[str]] = defaultdict(set)
+    for name, endpoints in actual.items():
+        if name.startswith("unconnected-("):
+            continue
+        # KiCad prefixes local labels with their hierarchical sheet path in the
+        # exported netlist. The frozen schedule uses the label itself.
+        normalized[name.rsplit("/", 1)[-1]].update(endpoints)
+    actual = dict(normalized)
 
     failures = 0
     failures += report_set("Missing schematic references", expected_refs - actual_refs)

@@ -41,28 +41,10 @@ pub struct SerialLink {
 
 impl SerialLink {
     pub fn open(path: &str) -> io::Result<Self> {
-        let mut port = serialport::new(path, 115_200)
+        let port = serialport::new(path, 115_200)
             .timeout(Duration::from_millis(50))
             .open()
             .map_err(|error| io::Error::other(format!("{path}: {error}")))?;
-        // PCB-01's recovery harness wires this exact FTDI family RTS# to active-low
-        // ESP_BOOT. Normal console ownership must release that line explicitly so a later
-        // power event cannot turn an ordinary tuning session into a ROM-loader boot. Do not
-        // require modem control from the retained native USB Serial/JTAG transport.
-        let controls_boot = serialport::available_ports().is_ok_and(|ports| {
-            ports.into_iter().any(|candidate| {
-                candidate.port_name == path
-                    && matches!(
-                        candidate.port_type,
-                        serialport::SerialPortType::UsbPort(info)
-                            if info.vid == 0x0403 && info.pid == 0x6001
-                    )
-            })
-        });
-        if controls_boot {
-            port.write_request_to_send(false)
-                .map_err(|error| io::Error::other(format!("{path}: release RTS: {error}")))?;
-        }
         Ok(Self {
             port,
             path: path.to_string(),

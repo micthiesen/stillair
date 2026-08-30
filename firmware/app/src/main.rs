@@ -1,12 +1,12 @@
 //! Stillair ceiling-fan supervisor firmware.
 //!
-//! Runs on the ESP32-C6-MINI-1-H4 on the custom 78 × 58 mm controller board.
+//! Runs on the ESP32-C6-WROOM-1-N8 on the custom PCB-01 V2 controller board.
 //! The supervisor configures the MCF8316D over I²C and commands speed/direction;
 //! it never switches motor phases. The behavioral contract lives in `docs/controls.md`
 //! and is implemented — and unit-tested on the host — in `stillair-core`; this crate is
 //! only the wiring that turns that contract into GPIO edges.
 //!
-//! GPIO map (verified against the ESP32-C6-MINI-1 datasheet; GPIO15 is the only strap
+//! GPIO map (verified against the ESP32-C6-WROOM-1 datasheet; GPIO15 is the only strap
 //! pin used — its JTAG-select strap is ignored with default eFuses and the external
 //! pull-up satisfies its no-float requirement):
 //!
@@ -15,12 +15,13 @@
 //! | 0 / 1   | SDA / SCL (MCF I²C)          |
 //! | 2       | SPEED PWM                    |
 //! | 3       | DIR                          |
-//! | 6       | NTC ADC (optional, ADC1_CH6) |
+//! | 6       | TEMP_SDA                     |
 //! | 7       | HALL_TACH sense (plausibility check input) |
+//! | 10      | MCF ALARM (active-high)      |
+//! | 11      | TEMP_SCL                     |
 //! | 12 / 13 | USB D− / D+                  |
-//! | 14      | MCF ALARM (active-high)      |
 //! | 15      | MCU_CLEAR_N (open-drain out) |
-//! | 16 / 17 | UART TX / RX                 |
+//! | 16 / 17 | NC                           |
 //! | 18      | permission ARM_PULSE         |
 //! | 19      | watchdog heartbeat           |
 //! | 20      | MCF FG                       |
@@ -42,9 +43,6 @@ use esp_hal::ledc::timer::TimerIFace;
 use esp_hal::ledc::{channel, timer, LSGlobalClkSource, Ledc, LowSpeed};
 use esp_hal::time::Rate;
 use esp_hal::timer::timg::TimerGroup;
-#[cfg(feature = "uart-console")]
-use esp_hal::uart::{Config as UartConfig, Uart};
-#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
 use esp_rtos::embassy::InterruptExecutor;
 use static_cell::StaticCell;
@@ -62,11 +60,6 @@ mod matter;
 mod mcf;
 mod output;
 mod wifi_diag;
-
-#[cfg(all(feature = "uart-console", feature = "usb-console"))]
-compile_error!("select exactly one console transport: uart-console or usb-console");
-#[cfg(not(any(feature = "uart-console", feature = "usb-console")))]
-compile_error!("select exactly one console transport: uart-console or usb-console");
 
 use board::{
     Board, FG_PULSES, HALL_LAST_EDGE_MS, HALL_PERIOD_MS, HALL_PULSES, PGOOD_FELL, PGOOD_HIGH,
@@ -165,7 +158,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     let pgood = Input::new(peripherals.GPIO22, floating);
     PGOOD_HIGH.store(pgood.is_high(), Ordering::Release);
     let nfault = Input::new(peripherals.GPIO21, floating);
-    let alarm = Input::new(peripherals.GPIO14, floating);
+    let alarm = Input::new(peripherals.GPIO10, floating);
     let fg = Input::new(peripherals.GPIO20, floating);
     let hall = Input::new(peripherals.GPIO7, floating);
 
@@ -278,22 +271,11 @@ async fn main(spawner: embassy_executor::Spawner) {
     // Status and bounded register service must outlive stalls in Matter/Wi-Fi, but remain
     // preemptible by the Priority3 control and watchdog path.
     mcf_executor.spawn(mcf_task(mcf).unwrap());
-    // The tuning console and network stack remain on the thread-mode executor. PCB-01's
-    // service build uses J7 UART0 by default because the replacement board's native USB
-    // does not enumerate. `usb-console` retains the original transport for known-good boards.
-    #[cfg(feature = "uart-console")]
-    let (console_rx, console_tx) = Uart::new(peripherals.UART0, UartConfig::default())
-        .expect("UART0 at 115200 must be configurable")
-        .with_tx(peripherals.GPIO16)
-        .with_rx(peripherals.GPIO17)
+    // The tuning console and network stack remain on the thread-mode executor. PCB-01 V2
+    // exposes the C6's native USB Serial/JTAG peripheral; GPIO12/13 remain dedicated to it.
+    let (console_rx, console_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
         .into_async()
         .split();
-    #[cfg(feature = "usb-console")]
-    let (usb_rx, usb_tx) = UsbSerialJtag::new(peripherals.USB_DEVICE)
-        .into_async()
-        .split();
-    #[cfg(feature = "usb-console")]
-    let (console_rx, console_tx) = (usb_rx, usb_tx);
     spawner.spawn(output::writer_task(console_tx).unwrap());
     spawner.spawn(console::console_task(console_rx).unwrap());
     spawner.spawn(console::stream_task().unwrap());

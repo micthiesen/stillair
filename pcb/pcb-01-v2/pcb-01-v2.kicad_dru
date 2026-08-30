@@ -105,3 +105,15 @@
 (rule "ESP32 EP thermal web"
   (condition "A.memberOfFootprint('U2')")
   (constraint connection_width (min 0.10mm)))
+
+(rule "USB 2.0 differential pair"
+  (condition "A.NetClass == 'USB'")
+  (constraint clearance (min 0.20mm))
+  (constraint track_width (min 0.18mm) (opt 0.20mm) (max 0.22mm))
+  (constraint diff_pair_gap (min 0.18mm) (opt 0.20mm) (max 0.22mm))
+  (constraint skew (max 0.50mm))
+  (constraint disallow via))
+
+(rule "GCT USB4105 locating pegs"
+  (condition "A.memberOfFootprint('J4') && B.memberOfFootprint('J4')")
+  (constraint hole_clearance (min 0.19mm)))

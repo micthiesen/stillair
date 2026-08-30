@@ -2,17 +2,18 @@
   "design_rules": [
     "PCB-01 V2 is a fresh capture governed by docs/pcb-01-v2.md. The V1 KiCad board is evidence only: do not clone its placement, routes, zones, outline, hole coordinates, test-point map, or DRC waivers.",
     "Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C, four layers, 2 oz outer and 1 oz inner copper, ENIG, green mask, white silk, plated through vias only. No blind, buried, stacked, or microvias.",
-    "Exact outline and H1-H4 coordinates follow completed placement. Prefer smaller than 78 x 58 mm without forcing a size target. Four M3 clearance holes remain near final corners with screw, washer, standoff, copper, component, and tool keepouts.",
+    "The frozen outline is 88 x 64 mm. Four M3 clearance holes remain near the corners with screw, washer, standoff, copper, component, and tool keepouts.",
     "Minimum signal track 0.20 mm, every via drill including filled-and-capped thermal via-in-pad at least 0.30 mm, standard via 0.60/0.30 mm, copper-to-edge 0.25 mm, and plated-hole edge to copper 0.30 mm on every layer. Use the stricter PHASE and POWER24 class rules from docs/pcb-01-v2.md.",
-    "All components and all SMD assembly are on F.Cu. C1, C2, J1, J2, J3, and J5 retain their specified through-hole footprints. B.Cu carries no components.",
+    "All components and all SMD assembly are on F.Cu. C1, C2, J1, J2, and J3 retain their specified through-hole footprints. B.Cu carries no components.",
     "Layer plan: F.Cu components and local loops; In1 continuous AGND except the compact PGND motor island; In2 broad VM24 and 3V3 regions; B.Cu AGND pour plus unavoidable signals. No split plane beneath a fast or sensitive signal. NT1 is the only AGND-PGND crossing.",
     "No copper on any layer under the ESP32-C6-WROOM-1 antenna. Put U2 at an outward edge with at least 15 mm free space ahead and away from motor, aluminum, fasteners, bulk capacitors, connectors, and cables.",
     "The analog overspeed chain Hall to LM2907 to TLV1701 to U6 lock to DRVOFF must function without firmware or MCF participation. Firmware never drives DRVOFF directly. Only a low-voltage power cycle resets the lock.",
     "Keep phases, switch nodes, and motor-current return out of the tach region. Route HALL_TACH and VTACH over uninterrupted AGND. Keep the U1 phase escapes within the exact 0.30 mm by 1.0 mm exception in docs/pcb-01-v2.md, then merge immediately into 2.0 mm trunks without vias or layer changes to J2.",
     "Filled-and-capped via-in-pad is required under U1 EP and U4 EP when vias are used there. Confirm JLCPCB POFV. DRC must reject high-current neckdowns, antenna-keepout copper, domain bypass around NT1, unfilled zones, and unconnected items.",
     "Every scheduled component must appear exactly once, carry the exact MPN and LCSC fields from docs/pcb-01-v2.md, and use a manufacturer-verified symbol pinout and footprint. Do not invent values, pins, parts, or substitutions.",
+    "J4 is the only service interface. Route USB D-/D+ as a 0.20 mm/0.20 mm differential pair on F.Cu with no vias and no more than 0.50 mm skew. Preserve connector duplicate-contact joins, place U13 data ESD and U14 CC ESD immediately behind J4, use 5.1 k CC pull-downs, and never connect USB VBUS to the board power tree.",
     "Create a new V2 probe map after final placement. The V1 map and V1 DRC waivers are prohibited. TP1-TP31 must remain accessible, including TP30 TEMP_SDA and TP31 TEMP_SCL, with minimal sensitive analog stubs.",
-    "Michael owns all trace routing and copper pours. The agent owns complete schematic capture, footprint assignment, board setup, outline and hole setup after placement, footprint placement, silkscreen, rendering, ERC, DRC, parity checks, and design review."
+    "Michael owns all signal and power trace routing. The agent owns complete schematic capture, footprint assignment, board setup, outline and holes, footprint placement, rule areas, copper zones, keepouts, silkscreen, rendering, ERC, DRC, parity checks, and design review."
   ],
   "fab_constraints": {
     "fab_house": "JLCPCB",

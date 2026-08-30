@@ -6,8 +6,8 @@ An implementation contract, not firmware. Application code lives in
 This document describes the installed V1 hardware unless a section says otherwise. PCB-01 V2 keeps
 the behavioral contract but changes the supervisor to `ESP32-C6-WROOM-1-N8`, moves MCF ALARM from
 GPIO14 to GPIO10, removes the external-NTC path, reuses GPIO6/GPIO11 for a dedicated
-`TMP1075DGKR` chamber-sensor bus at I2C address `0x48`, and replaces J7/USB service with the J5 UART
-interface specified in
+`TMP1075DGKR` chamber-sensor bus at I2C address `0x48`, and uses the native USB-C service interface
+specified in
 [`pcb-01-v2.md`](pcb-01-v2.md). Do not apply the V1 physical pin or service instructions to V2.
 
 ## Selected V1 hardware
@@ -59,25 +59,16 @@ unreliable. USB supplies communication only because J6 VBUS does not power the b
 and strain-relieve the cable outside all moving geometry, and keep the physical low-voltage
 cutoff reachable without entering the sweep.
 
-Replacement-board recovery note (updated 2026-08-29): the application defaults to the same
-`stillair` line protocol and bounded writer on UART0 at 115200 baud, GPIO16 TX / GPIO17 RX. The
-`usb-console` feature retains the original ESP32-C6 USB Serial/JTAG transport as an exclusive
-build-time alternative; enabling both or neither fails the build. The J7 harness connects only
-pins 2--6, with pin 1/board-3V3 and adapter VCC deliberately isolated while PCB-01 uses its normal
-power input.
+The application exposes the `stillair` line protocol and bounded writer through the ESP32-C6 native
+USB Serial/JTAG peripheral. GPIO12 is USB D- and GPIO13 is USB D+; GPIO16/GPIO17 remain unused, and
+firmware must not remap or disable the USB peripheral or burn `DIS_USB_SERIAL_JTAG`. USB VBUS does
+not power the target, so normal board power is required before enumeration.
 
-D/BOOT connects removably to the FTDI adapter's active-low RTS output and also to a normally-open
-manual switch returning to AGND. E/EN has its own normally-open reset switch to AGND. The common
-runner enters the ROM loader by verifying Kasa power off, exclusively opening the exact FT232
-port, asserting RTS across cold power-up, releasing it, then invoking `espflash` with no pre-reset
-and a watchdog post-reset. Every helper failure releases RTS and attempts a verified power-off.
-The host CLI also explicitly deasserts RTS whenever it opens this FTDI family for ordinary runtime
-traffic, preventing a later power event from accidentally selecting the ROM loader.
-Manual fallback requires power off and unplugging D from RTS before holding the BOOT switch during
-power-up; never press that switch while D remains on RTS. Host builds and mocked sequencing pass.
-Physical qualification must still prove adapter detection and polarity, absence of harmful
-back-powering, ROM sync, verified flash, watchdog reset, runtime CLI traffic, and failure cleanup
-before autonomous hardware use.
+V2 recovery is deliberately manual and adapter-free: hold BOOT, tap RESET, release BOOT, then flash
+through J4. Tap RESET or power-cycle after flashing. The runner must not depend on FTDI VID/PID,
+RTS/DTR, UART0, or a signal harness. Physical qualification must prove both normal application
+enumeration and ROM-loader enumeration with two known-good data cables before autonomous hardware
+use.
 
 `stillair --port <device> wifi` reports the associated radio's current RSSI, a plain-language
 quality band, the weakest RSSI sampled since boot, sampling failures, observed disconnect
@@ -607,8 +598,8 @@ simulator pass says nothing about motor constants or physical behavior.
 - Integration notes: rs-matter-embassy is a **git dependency** (its crates.io release is a
   placeholder); mirror its examples' `[patch.crates-io]` esp-hal pin table rather than
   fighting version skew. Prefer the `rustcrypto` feature over the vendored-mbedtls default to
-  stay pure Rust. rs-matter has **no Matter OTA yet** — keep the UART/USB programming path
-  (J6/J7) accessible on the installed unit.
+  stay pure Rust. rs-matter has **no Matter OTA yet**, so keep the physical USB programming path
+  (J6 on V1, J4 on V2) accessible on the installed unit.
 - The ESP32-C6 leaves an 802.15.4 path open, and rs-matter-embassy supports Thread on C6, but
   Matter-over-Thread is not a first-release requirement.
 

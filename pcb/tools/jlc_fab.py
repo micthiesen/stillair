@@ -76,10 +76,13 @@ BOARDS = {
             *(f"TP{n}" for n in range(1, 32)),
             *(f"H{n}" for n in range(1, 5)),
         },
-        "dnp_refs": set(),
-        # Complete V2 hand-populated set. J3/J5 have LCSC numbers but the
-        # frozen assembly split still requires hand soldering.
-        "hand_solder": {"C1", "C2", "J1", "J2", "J3", "J5", "U8"},
+        # Optional USB tuning shunts are pads only unless signal-integrity
+        # measurements justify fitting them.
+        "dnp_refs": {"C44", "C45"},
+        # Complete V2 hand-populated set. J3 has an LCSC number but the frozen
+        # assembly split still requires hand soldering. Native USB J4 and both
+        # ESD arrays U13/U14 are JLCPCB-assembled.
+        "hand_solder": {"C1", "C2", "J1", "J2", "J3", "U8"},
         "require_lcsc": True,
         "require_mpn": True,
     },

@@ -28,9 +28,9 @@
 <circle cx="120.80" cy="66.78" r="0.8" fill="#232722"/>
 <circle cx="120.80" cy="66.78" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
 <text x="120.80" y="67.63" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">3</text>
-<circle cx="112.55" cy="49.55" r="0.8" fill="#232722"/>
-<circle cx="112.55" cy="49.55" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
-<text x="112.55" y="50.40" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">4</text>
+<circle cx="120.09" cy="53.68" r="0.8" fill="#232722"/>
+<circle cx="120.09" cy="53.68" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
+<text x="120.09" y="54.53" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">4</text>
 <circle cx="149.89" cy="70.19" r="0.8" fill="#232722"/>
 <circle cx="149.89" cy="70.19" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
 <text x="149.89" y="71.04" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">5</text>
@@ -121,18 +121,24 @@
 <circle cx="83.82" cy="133.93" r="0.8" fill="#232722"/>
 <circle cx="83.82" cy="133.93" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
 <text x="83.82" y="134.78" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">34</text>
+<circle cx="98.18" cy="133.93" r="0.8" fill="#232722"/>
+<circle cx="98.18" cy="133.93" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
+<text x="98.18" y="134.78" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">35</text>
+<circle cx="108.95" cy="133.93" r="0.8" fill="#232722"/>
+<circle cx="108.95" cy="133.93" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
+<text x="108.95" y="134.78" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">36</text>
 <circle cx="19.18" cy="81.86" r="0.8" fill="#232722"/>
 <circle cx="19.18" cy="81.86" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
-<text x="19.18" y="82.71" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">35</text>
+<text x="19.18" y="82.71" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">37</text>
 <circle cx="42.52" cy="78.27" r="0.8" fill="#232722"/>
 <circle cx="42.52" cy="78.27" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
-<text x="42.52" y="79.12" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">36</text>
+<text x="42.52" y="79.12" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">38</text>
 <circle cx="42.52" cy="63.91" r="0.8" fill="#232722"/>
 <circle cx="42.52" cy="63.91" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
-<text x="42.52" y="64.76" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">37</text>
+<text x="42.52" y="64.76" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">39</text>
 <circle cx="134.09" cy="71.09" r="0.8" fill="#232722"/>
 <circle cx="134.09" cy="71.09" r="2.35" fill="white" stroke="#2f5b3c" stroke-width="0.55"/>
-<text x="134.09" y="71.94" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">38</text>
+<text x="134.09" y="71.94" text-anchor="middle" font-family="sans-serif" font-size="2.5" font-weight="700">40</text>
 <circle cx="177.0" cy="29.0" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
 <text x="177.0" y="29.62" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">1</text>
 <text x="180.2" y="28.9" font-family="sans-serif" font-size="2.4" font-weight="700">C3</text>
@@ -271,18 +277,26 @@
 <text x="235.2" y="47.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP18</text>
 <circle cx="232.0" cy="51.0" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
 <text x="232.0" y="51.62" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">35</text>
-<text x="235.2" y="50.9" font-family="sans-serif" font-size="2.4" font-weight="700">TP27</text>
-<text x="235.2" y="53.1" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP27</text>
+<text x="235.2" y="50.9" font-family="sans-serif" font-size="2.4" font-weight="700">TP19</text>
+<text x="235.2" y="53.1" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP19</text>
 <circle cx="232.0" cy="56.5" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
 <text x="232.0" y="57.12" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">36</text>
-<text x="235.2" y="56.4" font-family="sans-serif" font-size="2.4" font-weight="700">TP28</text>
-<text x="235.2" y="58.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP28</text>
+<text x="235.2" y="56.4" font-family="sans-serif" font-size="2.4" font-weight="700">TP20</text>
+<text x="235.2" y="58.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP20</text>
 <circle cx="232.0" cy="62.0" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
 <text x="232.0" y="62.62" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">37</text>
-<text x="235.2" y="61.9" font-family="sans-serif" font-size="2.4" font-weight="700">TP29</text>
-<text x="235.2" y="64.1" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP29</text>
+<text x="235.2" y="61.9" font-family="sans-serif" font-size="2.4" font-weight="700">TP27</text>
+<text x="235.2" y="64.1" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP27</text>
 <circle cx="232.0" cy="67.5" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
 <text x="232.0" y="68.12" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">38</text>
-<text x="235.2" y="67.4" font-family="sans-serif" font-size="2.4" font-weight="700">U1</text>
-<text x="235.2" y="69.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">MCF8316DVRGFR</text>
+<text x="235.2" y="67.4" font-family="sans-serif" font-size="2.4" font-weight="700">TP28</text>
+<text x="235.2" y="69.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP28</text>
+<circle cx="232.0" cy="73.0" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
+<text x="232.0" y="73.62" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">39</text>
+<text x="235.2" y="72.9" font-family="sans-serif" font-size="2.4" font-weight="700">TP29</text>
+<text x="235.2" y="75.1" font-family="sans-serif" font-size="1.8" fill="#5d625c">TP29</text>
+<circle cx="232.0" cy="78.5" r="1.7" fill="white" stroke="#2f5b3c" stroke-width="0.4"/>
+<text x="232.0" y="79.12" text-anchor="middle" font-family="sans-serif" font-size="1.9" font-weight="700">40</text>
+<text x="235.2" y="78.4" font-family="sans-serif" font-size="2.4" font-weight="700">U1</text>
+<text x="235.2" y="80.6" font-family="sans-serif" font-size="1.8" fill="#5d625c">MCF8316DVRGFR</text>
 </svg>

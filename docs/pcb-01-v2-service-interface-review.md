@@ -1,6 +1,12 @@
 # PCB-01 V2 service-interface review handoff
 
-Status: **open, blocks routing the J5 service cluster and blocks ordering PCB-01 V2**
+Status: **closed and superseded 2026-08-30**
+
+Decision: PCB-01 V2 uses native USB-C only. J5, Q4, R55-R57, the FTDI adapter path, and all
+RTS/DTR/UART nets were removed from the schematic and PCB. J4 connects the ESP32-C6 native USB
+Serial/JTAG peripheral through series damping and dedicated data/CC ESD protection; board power is
+required, and BOOT/RESET provide manual ROM recovery. The analysis below is retained only as the
+record of why the FTDI design was rejected.
 
 Date: 2026-08-29
 
@@ -120,4 +126,3 @@ board as unavailable, but do not infer a specific V1 root cause.
 - [Espressif ESP32-C6 DevKitC schematic](https://docs.espressif.com/projects/esp-dev-kits/en/latest/_static/esp32-c6-devkitc-1/schematics/esp32-c6-devkitc-1-schematics.pdf)
 - [onsemi BC847BDW1T1G datasheet](https://www.onsemi.com/download/data-sheet/pdf/bc846bdw1t1-d.pdf)
 - [TI SN74LV125A product page](https://www.ti.com/product/SN74LV125A)
-

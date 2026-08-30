@@ -2,8 +2,9 @@
 
 Production-intent KiCad 10 project for the 88 x 64 mm PCB-01 V2 controller. The schematic,
 footprints, exact ratsnest, four-layer board setup, placement, rule areas, copper zones, keepouts,
-fiducials, silkscreen, and assembly metadata are complete. All 162 footprints are on the component
-side. Tracks and routing vias are intentionally absent so the next operation is manual routing.
+fiducials, silkscreen, and assembly metadata are complete. All 166 footprints are on the component
+side. Tracks are intentionally absent. The only two vias are the adjacent AGND returns for the USB
+ESD arrays, so the next operation is manual routing.
 
 The frozen circuit and layout authority is
 [`docs/pcb-01-v2.md`](../../docs/pcb-01-v2.md). Do not import V1 routing, placement, zones, probe
@@ -18,10 +19,11 @@ Use the deliberately small routing vocabulary encoded in `pcb-01-v2.kicad_dru`:
 
 | Use | Track | Via |
 |---|---:|---:|
-| Signals and sensitive analog | 0.25 mm | 0.60/0.30 mm |
+| Signals and sensitive analog | 0.20 mm | 0.60/0.30 mm |
 | Local rails and 3V3 | 0.50 mm | 0.60/0.30 mm |
 | RAW24, VM24, and PGND | 2.00 mm | 1.00/0.50 mm |
 | PHASE_U/V/W | 2.00 mm | none |
+| USB D+/D- pair | 0.20 mm, 0.20 mm gap | none |
 
 The only narrower power exceptions are the named, tightly bounded U1 and U3 pad-escape areas. The
 rules require the complete track item to remain inside the area. Widen immediately after the pad.
@@ -35,15 +37,15 @@ clearance is 0.20 mm; 24 V and motor-phase clearance is 0.25 mm; copper-to-edge 
 ## Current verification state
 
 - ERC: zero violations.
-- Schematic parity: 155 refs, 78 named nets, and 395 endpoints match the frozen schedule.
-- Board: 162 top-side footprints, zero tracks, and zero routing vias.
-- Pre-route DRC: 315 expected unconnected items and two expected `isolated_copper` warnings from the
-  intentionally unrouted In2 3V3 region; no other violation.
+- Schematic parity: 159 refs, 78 named nets, and 411 endpoints match the frozen schedule.
+- Board: 166 top-side footprints, zero tracks, and two intentional USB-ESD AGND vias.
+- Pre-route DRC: 328 expected unconnected items and one expected `isolated_copper` warning from the
+  wholly unrouted In2 3V3 region; no other violation.
 - Probe map: 31 test points and four pin-mapped connectors match the board.
-- Assembly export: 53 machine BOM lines, 116 top-side CPL placements, and seven hand refs.
+- Assembly export: 55 machine BOM lines, 119 top-side CPL placements, and six hand refs.
 
 After routing, refill all zones and require zero unconnected items and zero unexplained DRC
-violations. The two current isolated-copper warnings must also disappear when their connections are
+violations. The current isolated-copper warning must also disappear when its connections are
 routed.
 
 Useful checks from the repository root:

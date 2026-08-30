@@ -3,5 +3,4 @@ Comment,Designator,Footprint,MPN,LCSC Part #
 43045-0200 POWER,J1,Connector_Molex:Molex_Micro-Fit_3.0_43045-0200_2x01_P3.00mm_Horizontal,43045-0200,
 43650-0300,J2,Connector_Molex:Molex_Micro-Fit_3.0_43650-0300_1x03_P3.00mm_Horizontal,43650-0300,
 B3B-PH-K-S(LF)(SN),J3,Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical,B3B-PH-K-S(LF)(SN),C131339
-B5B-PH-K-S(LF)(SN),J5,Connector_JST:JST_PH_B5B-PH-K_1x05_P2.00mm_Vertical,B5B-PH-K-S(LF)(SN),C157993
 LM2907M-14/NOPB,U8,Package_SO:SOIC-14_3.9x8.7mm_P1.27mm,LM2907M-14/NOPB,

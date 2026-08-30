@@ -5,9 +5,11 @@ board edge), then for each DRC-flagged ref searches a ring of candidate
 positions around its footprint's bounding box and writes the best clear spot
 back into the file (only the property's `(at ...)` line changes).
 """
-import json, re, math, sys
+import json, re, math, os, sys
 
-BOARD = "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+BOARD = os.environ.get(
+    "STILLAIR_BOARD", "/Users/michael/Code/stillair/pcb/pcb-01/pcb-01.kicad_pcb"
+)
 DRC_JSON = sys.argv[1]
 APPLY = "--apply" in sys.argv
 

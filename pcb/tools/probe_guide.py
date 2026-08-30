@@ -156,7 +156,7 @@ def verify_board(data: dict, board_path: Path) -> int:
         board_pins = {
             number: normalize_net(net)
             for number, net, _, _ in part.pads
-            if number and number.isdigit() and net
+            if number and net
         }
         for pin, net in expected["pins"].items():
             if board_pins.get(pin) != normalize_net(net):

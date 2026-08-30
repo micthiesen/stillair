@@ -23,9 +23,6 @@ use core::sync::atomic::{AtomicU32, Ordering};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embedded_io_async::Write as _;
-#[cfg(feature = "uart-console")]
-use esp_hal::uart::UartTx;
-#[cfg(feature = "usb-console")]
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtagTx;
 use esp_hal::Async;
 use stillair_core::console::Line;
@@ -45,9 +42,6 @@ static LINES: Channel<CriticalSectionRawMutex, Line, QUEUE> = Channel::new();
 /// is identifiable as such rather than quietly short.
 static DROPPED: AtomicU32 = AtomicU32::new(0);
 
-#[cfg(feature = "uart-console")]
-type ConsoleTx = UartTx<'static, Async>;
-#[cfg(feature = "usb-console")]
 type ConsoleTx = UsbSerialJtagTx<'static, Async>;
 
 /// Queue one line. Never blocks, never disables interrupts, safe from any priority.

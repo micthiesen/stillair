@@ -10,11 +10,6 @@ publish = false
 # for the C6 via `app/.cargo/config.toml`.
 [workspace]
 
-[features]
-default = ["uart-console"]
-uart-console = []
-usb-console = []
-
 [[bin]]
 name = "stillair"
 path = "src/main.rs"

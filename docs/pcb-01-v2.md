@@ -6,9 +6,10 @@ footprints, the 88 x 64 mm outline, mounting coordinates, placement, keepouts, z
 rules are implemented in `pcb/pcb-01-v2/`. Everything except trace routing is frozen here.
 
 V2 is a one-off controller redesign, not a productionization exercise. It preserves the V1 motor,
-power, Hall-cable, drive-permission, watchdog, and independent overspeed behavior. It removes V1
-development interfaces that were awkward or redundant and makes the remaining service access safe
-to use repeatedly.
+power, Hall-cable, drive-permission, watchdog, and independent overspeed behavior. It uses the
+ESP32-C6 native USB Serial/JTAG peripheral as its only wired programming, recovery, and runtime-
+console interface. The board must be powered from J1 for USB operation; USB VBUS never powers or
+back-powers the board.
 
 ## Scope and authority
 
@@ -21,9 +22,8 @@ to use repeatedly.
   into V2.
 - Connector compatibility is required only for J1 POWER, J2 MOTOR, and J3 HALL. Their orientation may
   change. V1 outline, holes, board position, and every other connector may change.
-- The board stays rectangular and should be smaller than 78 x 58 mm if the placement remains clean.
-  Do not force a size target. Freeze the outline around the completed placement with comfortable
-  connector, antenna, probe, hand-soldering, and mounting clearances.
+- The implemented board is rectangular, 88 x 64 mm. Its outline and four M3 holes are fixed by the
+  completed placement and the mechanical, connector, antenna, probe, and routing clearances.
 
 ## Frozen design decisions
 
@@ -47,10 +47,12 @@ to use repeatedly.
   This N8 module is rated to 85 C rather than V1's 105 C. Its measured local board temperature must
   remain at or below 75 C in the closed housing, preserving 10 C margin; otherwise select and source
   an approved 105 C WROOM variant before capture rather than waiving the limit.
-- J5 becomes a keyed 5-pin JST PH service connector carrying AGND, TX, RX, active-low RTS, and
-  active-low DTR. It carries no board power.
-- Q4 and R55-R56 implement Espressif's two-transistor RTS/DTR automatic BOOT/RESET circuit. R57 adds
-  470 ohm series resistance at UART RX. Direct RESET and BOOT buttons remain.
+- J4 is a data-capable USB-C receptacle wired to the ESP32-C6 native USB Serial/JTAG peripheral.
+  U13 provides connector-side data ESD protection, U14 protects CC1/CC2, R58/R59 provide 22 ohm
+  series termination, and R60/R61 provide independent 5.1 k CC pull-downs behind U14. C44/C45 are intentionally unpopulated
+  0402 tuning pads and are the only DNP option parts on V2.
+- USB VBUS is a connector-local net with no path to 3V3, VM24, or an ESP GPIO. Direct RESET and BOOT
+  buttons provide deterministic ROM-download recovery without an automatic RTS/DTR circuit.
 - C34 becomes a true 1206, 100 nF, 50 V, C0G, 1% JLCPCB-assembled part.
 - U3 pin 11 MODE/SYNC connects directly to AGND, selecting the proven default PFM mode.
 - Test access becomes labelled plated through-holes grouped along accessible edges. Phase outputs
@@ -67,17 +69,18 @@ to use repeatedly.
   C36-C40 five-footprint 0805 alternate filter-capacitor array beside U1. Do not carry their pads,
   DNP records, or placement reservation into V2.
 - F1 and its bridge. The wall-box 3 A ATO fuse remains the source protection boundary.
-- Native USB J6, the V1 U12 USB-protection function, R21, the V1 USB function/value of R20, V1
-  R55-R58, CC resistors, VBUS divider, VBUS test point, and all USB/VBUS nets. The R20 designator is
-  not deleted: U12, R20, and new V2 R55-R57 are reassigned below.
+- The V1 USB connector, ESD part, VBUS divider, VBUS test point, and reference assignments. V2 uses
+  the newly specified J4/U13/R58-R61/C44/C45 circuit below. R20 remains the TEMP_SCL pull-up.
+- The interim V2 FTDI service interface in its entirety: J5, Q4, R55-R57, `UART_TX`,
+  `UART_RX_CONN`, `UART_RX`, `RTS_N`, `DTR_N`, `AUTO_EN_B`, and `AUTO_BOOT_B`. Do not reuse these
+  references for V2 USB parts.
 - J7 Tag-Connect, J8 debug header, and the external JST-SH I2C connector previously called J5. SDA
   and SCL remain available as edge test holes.
 - J4 and the external NTC input. V1 R19 and R20 are reassigned as U12 bus pull-ups.
 - Duplicate ground test pads and every V1 placement-only DRC waiver.
 
-The USB deletion is intentional. V2 recovery and the runtime console use UART. Before ordering, the
-service circuit must pass the UART qualification below using a development module or engineering
-board. Failure blocks fabrication; it does not add USB back by default.
+The FTDI deletion is intentional. There is no auxiliary UART header, adapter, auto-reset circuit,
+or associated placement reservation. Native USB qualification below is a fabrication gate.
 
 ## External interfaces
 
@@ -89,30 +92,16 @@ connector name, pin 1, and signal order. Cable drawings must state the same view
 | J1 POWER | Molex `43045-0200`, Micro-Fit 3.0 right-angle | 1 `RAW24`, 2 `PGND` | Preserve existing cable exactly |
 | J2 MOTOR | Molex `43650-0300`, Micro-Fit 3.0 right-angle | 1 `PHASE_W`, 2 `PHASE_V`, 3 `PHASE_U` | Preserve existing cable exactly |
 | J3 HALL | JST `B3B-PH-K-S(LF)(SN)`, PH 2.0 mm, PHR-3 mate | 1 `3V3`, 2 `HALL_TACH`, 3 `AGND` | Preserve existing cable exactly |
-| J5 SERVICE | JST `B5B-PH-K-S(LF)(SN)`, `C157993`, PHR-5 mate | 1 `AGND`, 2 `UART_TX`, 3 `UART_RX_CONN`, 4 `RTS_N`, 5 `DTR_N` | No power; accessible edge |
+| J4 USB | GCT `USB4105-GF-A`, USB-C, `C3020560` | A6/B6 `USB_DP`; A7/B7 `USB_DN`; A5 `USB_CC1`; B5 `USB_CC2`; A4/A9/B4/B9 local `USB_VBUS`; grounds and shell `AGND`; SBU no-connect | Data only; accessible north edge; board power required |
 
-J5 directions are from the board perspective: pin 2 is output, pin 3 is input. Adapter VCC must be
-absent or unconnected. Label the cable `GND TX RX RTS DTR` with board-perspective directions.
+### Native USB programming and recovery
 
-The specified service adapter is FTDI `UMFT231XA-01`, a 3.3 V full-handshake UART module. The V1
-DSD TECH SH-U09C2 is incompatible because it does not expose DTR. Build the PHR-5 cable as follows:
-adapter GND to J5.1, adapter RXD to J5.2, adapter TXD to J5.3, adapter RTS# to J5.4, and adapter DTR#
-to J5.5. Leave FTDI V3OUT, VCC, VBUS, and every other pin unconnected. Keep the module's default
-3.3 V VCCIO configuration and use a data-capable USB Mini-B cable. Its default USB identity is
-VID:PID `0403:6015`; do not reuse the current SH-U09C2/FT232 `0403:6001` identity.
-
-### Automatic programming
-
-Q4 follows the ESP32-C6 DevKitC v1.3 anti-reset reference circuit, including its cross-coupled
-emitters and 10 k base resistors. Q4A is collector 3, emitter 4, base 5. Q4B is collector 6,
-emitter 1, base 2. Confirm this onsemi SOT-363 Style 1 mapping in the symbol and footprint.
-
-| RTS_N | DTR_N | ESP_EN | ESP_BOOT | Result |
-|---:|---:|---|---|---|
-| 1 | 1 | released | released | normal run |
-| 0 | 1 | low | released | reset asserted |
-| 1 | 0 | released | low | download strap asserted |
-| 0 | 0 | released | released | no continuous reset |
+The ESP32-C6 USB Serial/JTAG peripheral provides flashing and the runtime console on GPIO12/13.
+Normal flashing needs no strap manipulation while the running firmware leaves that peripheral
+enabled. The guaranteed recovery sequence is: power the board from J1, hold BOOT, tap and release
+RESET, release BOOT, then flash through J4. After flashing, tap RESET or power-cycle. Both USB-C plug
+orientations must work. Connecting USB to an unpowered board must not raise 3V3 or partially power
+U2.
 
 ## Functional architecture
 
@@ -133,8 +122,9 @@ firmware holds PWM command at zero because loaded V1 commissioning showed PWM de
 
 ### ESP32-C6 supervisor
 
-U2 is powered only from 3V3. EN has R11 10 k pull-up, C19 1 uF to AGND, SW1 to AGND, and Q4 reset.
-GPIO9 has R12 10 k pull-up, SW2 to AGND, and Q4 BOOT control. GPIO8 retains R13 10 k pull-up.
+U2 is powered only from 3V3. EN has R11 10 k pull-up, C19 1 uF to AGND, and SW1 to AGND. GPIO9 has
+R12 10 k pull-up and SW2 to AGND. GPIO8 retains R13 10 k pull-up. No USB or service-cable net can
+source 3V3.
 
 | U2 pad | ESP signal | V2 net/function |
 |---:|---|---|
@@ -149,7 +139,8 @@ GPIO9 has R12 10 k pull-up, SW2 to AGND, and Q4 BOOT control. GPIO8 retains R13 
 | 10 | GPIO8 | `ESP_GPIO8` pull-up only |
 | 11 | GPIO10 | `ALARM`, moved from GPIO14 |
 | 12 | GPIO11 | `TEMP_SCL` |
-| 13,14 | GPIO12,13 | no connect |
+| 13 | GPIO12 | `USB_D_MCU_N` |
+| 14 | GPIO13 | `USB_D_MCU_P` |
 | 15 | GPIO9 | `ESP_BOOT` |
 | 16 | GPIO18 | `ARM_PULSE` |
 | 17 | GPIO19 | `WD_HEARTBEAT` |
@@ -159,8 +150,7 @@ GPIO9 has R12 10 k pull-up, SW2 to AGND, and Q4 BOOT control. GPIO8 retains R13 
 | 21 | GPIO23 | `WDO` diagnostic |
 | 22 | NC | no connect |
 | 23 | GPIO15 | `MCU_CLEAR_N`, open-drain |
-| 24 | GPIO17/RXD0 | `UART_RX` through R57 |
-| 25 | GPIO16/TXD0 | `UART_TX` |
+| 24,25 | GPIO17,16 | no connect |
 | 26 | GPIO3 | `ESP_DIR` |
 | 27 | GPIO2 | `ESP_SPEED` |
 
@@ -244,6 +234,7 @@ LCSC identifiers freeze the intended item. Substitution requires review and a sp
 | C31 | 1 | 10 nF, 50 V, X7R, 10% | 0402 | `C15195` |
 | C34 | 1 | 100 nF, 50 V, C0G, 1% | 1206 | Murata `GCM31C5C1H104FA16L`, `C1864297` |
 | C35 | 1 | 2.2 uF, 50 V, X5R, 10% | 0805 | `C377773` |
+| C44,C45 | 2 | DNP USB tuning pads, populate only from measured signal-integrity evidence | 0402 | no fitted part |
 
 ### Resistors, potentiometer, and inductor
 
@@ -251,7 +242,7 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 
 | Refs | Qty | Value/function | Footprint | Exact source |
 |---|---:|---|---|---|
-| R1,R3,R8,R9,R11-R13,R18,R29-R35,R37,R42-R44,R46,R47,R49,R50,R55,R56 | 25 | 10 k | 0402 | `0402WGF1002TCE`, `C25744` |
+| R1,R3,R8,R9,R11-R13,R18,R29-R35,R37,R42-R44,R46,R47,R49,R50 | 23 | 10 k | 0402 | `0402WGF1002TCE`, `C25744` |
 | R2,R10,R25,R27,R31 | 5 | 100 k | 0402 | `C25741` |
 | R4-R7,R19,R20,R28 | 7 | 4.7 k | 0402 | Yageo `RC0402FR-074K7L`, `C105871` |
 | R14,R15,R24,R36,R38,R45 | 6 | 100 ohm | 0402 | `C25076` |
@@ -265,7 +256,8 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | R52 | 1 | 10.0 k, 0.1% | 0402 | `RT0402BRD0710KL`, `C190095` |
 | R53 | 1 | 35.7 k, 1% | 0402 | `FRC0402F3572TS`, `C2998133`; RV1 absorbs tolerance |
 | R54 | 1 | 90.9 k, 0.1% | 0402 | `CPF0402B90K9E1`, `C2079068` |
-| R57 | 1 | 470 ohm UART RX series | 0402 | `0402WGF4700TCE`, `C25117` |
+| R58,R59 | 2 | 22 ohm USB series termination | 0402 | `0402WGF220JTCE`, `C25092` |
+| R60,R61 | 2 | 5.1 k USB-C CC pull-down | 0402 | `0402WGF5101TCE`, `C25905` |
 | RV1 | 1 | 200 k, 10-turn | Bourns 3224W | `3224W-1-204E`, `C55072` |
 | L1 | 1 | 47 uH | SWPA6045S | `SWPA6045S470MT`, `C36414` |
 
@@ -279,7 +271,6 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | D9 | onsemi `BAT54SLT1G` | SOT-23 | `C19726` |
 | Q1 | `DMP6023LE-13` | SOT-223, tab=2 | `C154901` |
 | Q2,Q3 | `2N7002K-7` | SOT-23 | `C85047` |
-| Q4 | onsemi `BC847BDW1T1G` | SOT-363 Style 1 | `C82368` |
 | U1 | TI `MCF8316DVRGFR` | VQFN-40 RGF + EP | `C47122159` |
 | U2 | Espressif `ESP32-C6-WROOM-1-N8` | official 29-pad land pattern | `C5366877` |
 | U3 | TI `TPSM365R6V3RDNR` | RDN-11 | `C18208843` |
@@ -290,10 +281,11 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | U9 | TI `TLV1701AIDBVR` | SOT-23-5 | `C130035` |
 | U10,U11 | TI `SN74LVC1G17DCKR` | SC-70-5 | `C10425` |
 | U12 | TI `TMP1075DGKR` | `Package_SO:VSSOP-8_3x3mm_P0.65mm` (DGK) | `C2864807`; JLCPCB assembled |
+| U13,U14 | TI `TPD2EUSB30DRTR` | `Package_TO_SOT_SMD:Texas_DRT-3` | `C97502`; JLCPCB assembled |
 | J1 | Molex `43045-0200` | exact right-angle footprint | hand |
 | J2 | Molex `43650-0300` | exact right-angle footprint | hand |
 | J3 | JST `B3B-PH-K-S(LF)(SN)` | vertical PH 1x3 | `C131339`, hand |
-| J5 | JST `B5B-PH-K-S(LF)(SN)` | vertical PH 1x5 | `C157993`, hand |
+| J4 | GCT `USB4105-GF-A` | `Connector_USB:USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal` | `C3020560`; JLCPCB assembled |
 | SW1-SW3 | C&K `PTS645SK43SMTR92LFS` | PTS645 SMD | `C221871`, RESET/BOOT/CLEAR |
 | NT1 | copper net-tie, no purchased part | two 2.0 mm F.Cu pads | excluded from BOM |
 | TP1-TP31 | bare plated test holes | custom 2.4 mm pad, 1.0 mm finished hole | no component |
@@ -316,7 +308,7 @@ Pins absent here are in the explicit no-connect statements or duplicate power/EP
 | `PMOS_GATE` | D1.2 anode, Q1.1, R1.1, R2.2 |
 | `VM24` | Q1.3, D1.1 cathode, D2.1, C1.1,C2.1,C3.1,C4.1,C5.1,C7.1,C8.1,C12.2, R2.1,R39.1, U1.9-U1.11, U3.2,U3.3, TP2.1 |
 | `PGND` | J1.2, D2.2, C1.2-C5.2, U1.12,U1.15,U1.18, NT1.1, TP3.1 |
-| `AGND` | all logic/analog capacitor ground pins; D9.1; J3.3,J5.1; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; U12.4-U12.7; NT1.2; TP4.1 |
+| `AGND` | all logic/analog capacitor ground pins, including C44.2,C45.2; D9.1; J3.3; J4.A1,J4.A12,J4.B1,J4.B12,J4.SH; Q2.2,Q3.2; R1.2,R8.2-R10.2,R25.2,R27.2,R32.2,R33.2,R41.2,R47.2,R49.2,R53.2,R60.2,R61.2; RV1.2,RV1.3; SW1.2,SW2.2,SW3.2; U1.2,U1.4,U1.26,U1.41; U2.1,U2.28,U2.29; U3.10,U3.11; U4.4,U4.9; U5.4; U6.1,U6.4; U7.4; U8.12; U9.2; U10.3; U11.3; U12.4-U12.7; U13.3,U14.3; NT1.2; TP4.1 |
 | `3V3` | C9.1,C10.1,C17.1,C18.1,C20.1,C22.1,C24.1,C25.1,C41.1,C42.1,C43.1; D9.2; J3.1; R4.1-R7.1,R11.1-R13.1,R18.1-R20.1,R29.1-R31.1,R34.1,R35.1,R37.1,R42.1,R43.2,R50.1,R52.1; U2.2; U3.4,U3.9; U5.2,U5.7,U5.8; U6.2,U6.8; U7.8; U9.5; U10.5; U11.5; U12.8; TP5.1 |
 | `U3_VCC` | C11.1, R3.1, U3.8 |
 | `PGOOD` | R3.2, D3.1, D8.1, U2.20, U3.1, TP9.1 |
@@ -362,26 +354,26 @@ capped thermal vias, 0.30 mm drill, distributed across the pad, matching the pro
 
 | Net | Required endpoints |
 |---|---|
-| `ESP_EN` | U2.3, R11.2, C19.1, SW1.1, Q4.3 |
-| `ESP_BOOT` | U2.15, R12.2, SW2.1, Q4.6 |
+| `ESP_EN` | U2.3, R11.2, C19.1, SW1.1 |
+| `ESP_BOOT` | U2.15, R12.2, SW2.1 |
 | `ESP_GPIO8` | U2.10, R13.2 |
 | `TEMP_SDA` | U2.6, R19.2, U12.1, TP30.1 |
 | `TEMP_SCL` | U2.12, R20.2, U12.2, TP31.1 |
 | `HALL_TACH` | U2.7, J3.2, Q3.1, R43.1, TP21.1 |
-| `UART_TX` | U2.25, J5.2 |
-| `UART_RX_CONN` | J5.3, R57.1 |
-| `UART_RX` | R57.2, U2.24 |
-| `RTS_N` | J5.4, Q4.4, R56.1 |
-| `DTR_N` | J5.5, Q4.1, R55.1 |
-| `AUTO_EN_B` | R55.2, Q4.5 |
-| `AUTO_BOOT_B` | R56.2, Q4.2 |
+| `USB_DP` | J4.A6,J4.B6,U13.1,R58.2 |
+| `USB_DN` | J4.A7,J4.B7,U13.2,R59.2 |
+| `USB_D_MCU_P` | R58.1,C44.1,U2.14 |
+| `USB_D_MCU_N` | R59.1,C45.1,U2.13 |
+| `USB_CC1` | J4.A5,U14.1,R60.1 |
+| `USB_CC2` | J4.B5,U14.2,R61.1 |
+| `USB_VBUS` | J4.A4,J4.A9,J4.B4,J4.B9; connector-local only |
 | `ARM_PULSE` | U2.16, R24.1 |
 | `WD_HEARTBEAT` | U2.17, R36.1, R38.1, TP13.1 |
 | `MCU_CLEAR_N` | U2.23, R18.2, D6.1 |
 | `WDO` | U2.21, U7.7, R37.2, D4.1, TP14.1 |
 
-U2 pads 4,5,13,14,22 and U12 pin 3 are no-connects. No copper, vias, components, or test points
-may enter the official antenna keepout except allowed module pads.
+U2 pads 4,5,22,24,25; U12 pin 3; and J4 pads A8/B8 are no-connects. No copper, vias, components, or
+test points may enter the official antenna keepout except allowed module pads.
 
 ### Permission and watchdog
 
@@ -452,12 +444,15 @@ full net names. Group by subsystem; exact edge and order follow routing.
 | 26 | ALARM | 27 | WD_MR | 28 | U7_WDI |
 | 29 | WD_EN | 30 | TEMP_SDA | 31 | TEMP_SCL |
 
-J5 supplies UART access and SW1/SW2 direct EN/BOOT. Do not add phase pads or use an earth-grounded
-scope on a phase. Use a rated differential probe at J2.
+J4 supplies native USB access and SW1/SW2 directly control EN/BOOT. Do not add phase pads or use an
+earth-grounded scope on a phase. Use a rated differential probe at J2.
 
 ## Board technology and rules
 
-- Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C.
+- Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C. Use JLC's impedance-controlled
+  `JLC04161H-7628` construction or an approved equivalent: 0.070 mm F.Cu, 0.2104 mm 7628 prepreg
+  (Er 4.4), 0.035 mm In1, 0.9392 mm FR-4 core (Er 4.6), 0.035 mm In2, 0.2104 mm 7628 prepreg,
+  0.070 mm B.Cu, and 0.015 mm solder mask each side (Er 3.8).
 - F.Cu/B.Cu 2 oz, In1/In2 1 oz; ENIG, green mask, white silk, plated through vias.
 - Minimum copper-to-edge 0.25 mm except intentional connector body overhang. Minimum signal track
   0.20 mm and every via, including filled-and-capped thermal via-in-pad, uses at least 0.30 mm drill.
@@ -465,7 +460,8 @@ scope on a phase. Use a rated differential probe at J2.
 - Minimum plated-hole edge to track/copper clearance is 0.30 mm on every layer. The 0.20/0.25 mm
   class clearances below apply only where no plated hole is involved and the chosen fab permits them.
 - Put every component on the front. All SMD parts use front-side assembly only; the named hand parts
-  C1, C2, J1-J3, and J5 retain their through-hole footprints. B.Cu carries no components.
+  C1, C2, J1-J3, and U8 retain their through-hole or hand-soldered status. J4 is machine assembled.
+  B.Cu carries no components.
 - Filled-and-capped via-in-pad is required under U1 EP and U4 EP if used there. Confirm JLC POFV.
 - Record actual copper weights in KiCad instead of the V1 generic 0.035 mm on all layers.
 
@@ -480,6 +476,7 @@ fast or sensitive signal.
 | RAIL3V3 | 3V3 | 0.50 mm | 0.60/0.30 mm | 0.20 mm | neck only at pads |
 | TACH12V | TACH_LDO_IN, +12V_TACH | 0.40 mm | 0.60/0.30 mm | 0.20 mm | away from RF and phases |
 | ANALOG | Hall/LM2907/VTACH/VREF | 0.25 mm | 0.60/0.30 mm | 0.20 mm | uninterrupted AGND return |
+| USB | USB_DP/DN and USB_DP/DN_MCU | 0.20 mm differential pair | none | 0.20 mm | 0.20 mm gap, 90 ohm differential target, max 0.50 mm skew |
 | CONTROL | remaining logic/service | 0.20 mm | 0.60/0.30 mm | 0.20 mm | ARM and heartbeat separated |
 
 DRC must reject high-current neckdowns, antenna-keepout copper, domain bypass around NT1, unfilled
@@ -516,12 +513,15 @@ routing and any later placement adjustment.
    over AGND with R19/R20 nearby,
    and avoid broad power copper beneath or immediately around U12 that would conduct local heat into
    the sensor. Do not split the AGND return plane to thermally isolate it.
-8. Group J5, SW1, SW2, Q4, and R55-R57 at an accessible edge. Put SW3 where it is deliberate but not
-   accidentally pressed while probing.
-   Reserve at least 18 mm normal to the board above J5 for the mated PHR-5 housing and contacts, plus
-   a 12 mm lateral cable-bend corridor in the chosen exit direction. Keep that volume clear of the
-   enclosure, screws, buttons, probe approach, and other cable bundles inside the V2
-   120 x 90 x 30 mm controller service envelope.
+8. Put J4 centered on the north edge with its manufacturer PCB-edge datum exactly on Edge.Cuts and
+   its mating face unobstructed. Place U13 directly behind
+   the connector, R58/R59 directly in the straight GPIO13/GPIO12 lanes nearest U2, R60 on the CC1
+   side, R61 on the CC2 side, U14 between the CC contacts and pull-downs, and C44/C45 as short side branches. The connector's alternating
+   reversible D+/D- contacts use a deliberate via-free fanout: one duplicate net joins north under
+   the connector body and the other joins south before U13. Route the pair continuously over In1
+   AGND with no layer change, no unrelated track or via in its corridor, and AGND stitching vias
+   immediately beside U13.3 and U14.3. Put SW1/SW2 within reach with a cable inserted. Silkscreen `USB-C DATA`
+   and `24V REQD`. Put SW3 where it is deliberate but not accidentally pressed while probing.
 9. Group TP1-TP31 along accessible edges. A point may use the nearest edge rather than a long route.
    Sensitive analog test stubs must be minimal.
 10. Put H1-H4 near final corners with screw, washer, standoff, and tool keepouts. Coordinates follow
@@ -540,15 +540,12 @@ trip-decrease direction, TP nets, W/V/U, power polarity, board name/revision, an
 - Keep one 2 Hz logical heartbeat to U7 and MCF through separate resistors. Keep GPIO18 ARM and
   GPIO19 heartbeat distinct.
 - Keep GPIO15 MCU_CLEAR_N open-drain and safe through power-up/reset/panic/unconfigured states.
-- UART0 GPIO16/17 becomes the only flash/recovery/runtime-console transport. Remove native-USB
-  firmware after J5 qualification.
-- Support J5 auto-download truth table and manual RESET/BOOT.
-- Update `enter_uart_bootloader.py` and the runtime serial link to drive both RTS_N and DTR_N
-  explicitly. Define port-open, port-close, error, interrupted-flash, and process-exit cleanup so both
-  lines return to the released state. Qualify all four truth-table states and repeated runtime reopen.
-- Add exact `0403:6015` FT231X discovery and selection tests in both the bootloader helper and runtime
-  link. Retaining `0403:6001` support for V1 is allowed, but V2 selection must not silently choose an
-  unrelated FTDI device when more than one is present.
+- Reserve GPIO12/13 exclusively for the ESP32-C6 native USB Serial/JTAG peripheral. GPIO16/17 are
+  no-connects. Do not burn `DIS_USB_SERIAL_JTAG`, remap the USB pins, disable the peripheral, or put
+  U2 into a sleep mode that makes the wired recovery/console path unavailable.
+- Use USB Serial/JTAG unconditionally for flashing and the runtime console. Support ordinary reset
+  and the manual BOOT-hold, RESET-tap ROM-download sequence. No FTDI VID/PID, RTS/DTR, UART header,
+  or adapter-specific host behavior is part of V2.
 - Update the app board wiring, controls pin table/comments, and ALARM-path tests for GPIO10 before V2
   firmware qualification. The existing GPIO14 implementation is V1-only.
 - Keep the current MCF-owned `SoftI2c` dedicated to GPIO0/GPIO1, preserving its full target discovery,
@@ -575,8 +572,9 @@ trip-decrease direction, TP nets, W/V/U, power polarity, board name/revision, an
 ## Assembly and sourcing
 
 - JLC assembles all top-side SMD except U8. U8 is always supplied from the in-hand stock and hand
-  soldered. The complete hand-part set is C1, C2, J1-J3, J5, and U8.
-- C34 is machine assembled. There are no bridges, jumper-shaped fuses, or DNP option parts.
+  soldered. The complete hand-part set is C1, C2, J1-J3, and U8. J4 is machine assembled.
+- C34 is machine assembled. There are no bridges or jumper-shaped fuses. C44/C45 are the only DNP
+  option parts.
 - NT1 is copper, not a purchase item. Keep it in connectivity checks and exclude it from purchase/PnP.
 - Fab BOM includes exact MPN and LCSC fields. PnP includes every JLC ref and no hand refs. The hand
   manifest names every excluded populated ref.
@@ -611,13 +609,15 @@ These validate the specified design and do not invite unrelated safety expansion
 
 ### Capture and layout
 
-- Check every IC symbol against current manufacturer data, especially U1,U2,U4,U5/U6,U7,Q4,U8,
-  U12. Confirm the DGK top-view pin order, address straps, `0x48` address, and ALERT no-connect.
+- Check every IC symbol against current manufacturer data, especially U1,U2,U4,U5/U6,U7,U8,U12,
+  U13, and U14. Confirm the DGK top-view pin order, address straps, `0x48` address, ALERT
+  no-connect, both TPD2EUSB30 pin orders, and USB D+/D- polarity end to end.
 - Machine-compare the KiCad exported netlist with this ratsnest. Confirm every scheduled ref appears
   exactly once and every schematic ref is scheduled.
-- Confirm J1/J2/J3 footprint numbering against existing cables and Q4 symbol/footprint/truth table.
-- Ready-to-route gate: ERC has zero violations; DRC has only the 315 expected unrouted connections
-  and two expected isolated In2 3V3-fill warnings. Final release gate after routing and zone refill:
+- Confirm J1/J2/J3 footprint numbering against existing cables and J4's official GCT footprint,
+  shell pads, locating pegs, and manufacturer PCB-edge datum.
+- Ready-to-route gate: ERC has zero violations; DRC has only the 328 expected unrouted connections
+  and one expected isolated In2 3V3-fill warning. Final release gate after routing and zone refill:
   zero unconnected items and zero unexplained violations, including no isolated-fill warnings.
 - Verify actual stackup, through-via-only rule, high-current neck checks, POFV, all-layer antenna
   keepout, and the single NT1 crossing.
@@ -638,8 +638,10 @@ These validate the specified design and do not invite unrelated safety expansion
 
 1. No motor/Hall: resistance, polarity, reverse PMOS, VM24, 3V3, +12V_TACH, AVDD, DVDD, PGOOD,
    DRVOFF, and both ground domains.
-2. J5 with adapter VCC absent: no back-power, auto ROM entry, erase, flash, reset, runtime UART,
-   watchdog reconnect, manual fallback, and interrupted-flash cleanup.
+2. J4 with normal board power: enumerate the application and ROM loader using two known-good USB
+   data cables; verify D+/D- polarity, CC pull-downs, ESD returns, manual BOOT/RESET entry, erase,
+   flash, reset, runtime console, watchdog reconnect, and interrupted-flash recovery. Confirm USB
+   VBUS never powers the board.
 3. Force each U5 clear source separately: PGOOD, WDO, OS_LOCK_OK, MCU_CLEAR_N, SW3. Verify no source
    is masked by a high source and nFAULT remains diagnostic only.
 4. Verify U6 power-up delay, low-voltage-only reset, comparator trip, tach-supply PG trip, and fast
@@ -714,6 +716,34 @@ board artifacts, not this specification. Every useful finding was applied before
 | 5 | Electrical convergence; DFM convergence; visual/service | Electrical and DFM lenses found no useful defect. Added adjacent RV1 calibration/direction marking and connector identity labels. |
 | 6 | Recovered-board electrical; DFM/package; final visual | Hardened the board-extraction tool after a review-output path error, recovered and machine-proved the exact board state, folded `J5/UART` into its adjacent pinout line, and reran every current-board check. All three lenses returned no useful feedback. |
 
-The resulting board has 162 top-side footprints, 19 zones/rule areas, zero tracks and routing vias,
-78 named nets, and 395 pad endpoints. ERC is clean. Before routing, DRC contains only 315 expected
-unconnected items and two expected isolated-fill warnings from the unconnected In2 3V3 region.
+That review established the pre-USB-redesign baseline: 162 top-side footprints, 19 zones/rule
+areas, 78 named nets, and 395 pad endpoints.
+
+### Native USB redesign and holistic board review, 2026-08-30
+
+The review target in every round was the newly saved KiCad board, exported netlist, DRC report,
+and fresh two-dimensional and three-dimensional renders. Findings were applied before the next
+round.
+
+Native USB review:
+
+| Round | Lenses | Useful findings and disposition |
+|---:|---|---|
+| 1 | Electrical/pinout; routing; physical/DFM | Corrected U13 data ordering, CC ordering, J4 edge datum, connector duplicate-pad topology, LCSC metadata, CC ESD, corridor placement, and USB silkscreen. |
+| 2 | Electrical; route geometry; assembled visual | Moved U13/U14 into separate data and CC cells, added adjacent 0.80/0.40 mm AGND ESD vias, and clarified that J1 power is required. |
+| 3 | End-to-end polarity and routing | Swapped R60/R61 physical order so CC1 and CC2 remain locally ordered without crossing. |
+| 4 | Electrical; routing; visual | No useful improvement remained. Both data segments now use KiCad P/N suffixes and the encoded USB pair rules. |
+
+Whole-board review:
+
+| Round | Lenses | Useful findings and disposition |
+|---:|---|---|
+| 1 | Electrical/safety; routing flows; assembled visual | Compacted C13 and the U4 tach-supply loop, trimmed B.Cu AGND out of the power/motor region, made J1 polarity visible, and compacted the top-edge test labels. VBUS sense, safety-chain expansion, and shifting the antenna were rejected for the documented board-specific reasons. |
+| 2 | Electrical; routing flows; assembled visual | Opened the VM24 feed corridor by moving C28, renamed the MCU-side USB pair, and made the J2 phase order and J3 pin 1 visible after connector installation. |
+| 3 | Electrical; routing flows; assembled visual | Extended the In1 PGND island and its all-layer routing boundary through the full U1-to-J2 phase corridor so AGND cannot refill beneath the phase routes. |
+| 4 | Electrical; routing flows; assembled visual | No useful improvement remained. Ground-domain separation, NT1 single-point connection, major route flows, mechanics, labels, and assembly access converged. |
+
+The current board has 166 top-side footprints, 20 zones/rule areas, zero tracks, two intentional
+USB-ESD AGND vias, 78 named schematic nets, and 411 pad endpoints. ERC and schematic parity pass.
+Before routing, DRC contains only 328 expected unconnected items and one expected isolated-fill
+warning from the wholly unrouted In2 3V3 region.
