@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-08-29** (PCB-01 V2 KiCad capture and placement completed and board-review converged.)
+Last updated: **2026-08-29** (V2 J5 powered-off isolation review opened after the replacement V1 UART failure.)
 
 ## Now
 
@@ -14,6 +14,13 @@ Last updated: **2026-08-29** (PCB-01 V2 KiCad capture and placement completed an
   unconnected items and two expected isolated In2 3V3-fill warnings. Six sequential implemented-board
   review rounds converged with no useful electrical, DFM, visual, mechanical, or routing feedback.
   The board handoff and routing checklist are in [pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md).
+
+- **PCB-01 V2's J5 service cluster is blocked on a powered-off isolation review.** The specified
+  `UMFT231XA-01` and Espressif RTS/DTR auto-reset topology are otherwise correct, and the implemented
+  KiCad netlist matches the spec. However, the USB-powered adapter drives 3.3 V I/O into a target
+  whose 3V3 rail may be off; R57 and Q4 limit or transform those paths but do not establish no
+  back-powering by construction. Do not route J5/Q4/R55-R57 or order V2 until
+  [pcb-01-v2-service-interface-review.md](pcb-01-v2-service-interface-review.md) is resolved.
 
 - **The installed fan retains its provisional 50--170 RPM loaded release.** The complete ceiling
   assembly, persistent golden MCF image, Apple Home control, cold-power recovery, nine 50 RPM
@@ -27,11 +34,13 @@ Last updated: **2026-08-29** (PCB-01 V2 KiCad capture and placement completed an
   [final-loaded-tuning-goal.md](../testing/final-loaded-tuning-goal.md), adapting execution details
   only to verified hardware and tools. Tune the exposed assembly first; the decided motor and
   upper-housing damping follow as passive treatment with the fixed close microphone retained.
-- **The replacement PCB-01 passed hand-population continuity and initial 18 V checks, but native
-  USB remains unavailable.** C34/U8 checks passed; input settled near 0.023 A, TP5 was 3.328 V,
-  TP25 was 2.480 V, and ESP_EN was about 3.3 V. Known cables, forced ROM boot, host restart, and J6
-  reflow produced no enumeration. AVDD, DVDD, UART operation, MCF communication, and an unloaded
-  start remain open in `PCB-01B` of [test-matrix.csv](../testing/test-matrix.csv).
+- **The replacement PCB-01 is unavailable after both native USB and J7 UART failed.** C34/U8 and
+  initial 18 V checks passed, and the switched J7 adapter test drew the nominal 0.022 A. USB-only
+  J7 testing exposed 1.3 V back-power through the signal harness. RTS polarity worked, but two ROM
+  entry sequences, `espflash`, `esptool`, and a raw reset capture produced no UART response. The
+  evidence cannot distinguish a board ESP/reset/UART fault from a harness signal fault; Michael
+  ended probing and rejected the board. Details are in `PCB-01B` of
+  [test-matrix.csv](../testing/test-matrix.csv) and the V2 review handoff linked above.
 - **The replacement service harness is fully specified and printed.** J7 pins 2--6 get five
   lettered leads; TX/RX/AGND reach the SH-U09C2 adapter, BOOT branches to a normally-open manual
   switch and removable RTS connection, and EN gets a normally-open reset switch. J7.1 and adapter
@@ -53,7 +62,9 @@ Last updated: **2026-08-29** (PCB-01 V2 KiCad capture and placement completed an
 
 ## Next
 
-Route PCB-01 V2 in the order and widths in the interactive checklist linked from
+Resolve [the PCB-01 V2 service-interface review](pcb-01-v2-service-interface-review.md), update the
+spec and KiCad if required, and physically qualify the exact adapter path on an engineering target.
+Then route PCB-01 V2 in the order and widths in the interactive checklist linked from
 [pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md). Preserve the encoded keepouts and named local
 escape areas, refill all zones, and finish with zero unconnected items and zero DRC violations.
 Then run `python3 pcb/tools/jlc_fab.py pcb-01-v2`, inspect the generated Gerbers, drill map, BOM,
@@ -79,6 +90,8 @@ notes. The export command now refuses to create orderable Gerbers until the fina
 - Complete PCB-01 V2 schematic/layout handoff, exact BOM and ratsnest, evidence-based simplifications,
   digital chamber-temperature telemetry, implementation gates, and review record:
   [pcb-01-v2.md](pcb-01-v2.md).
+- Open V2 service-interface isolation question, V1 failure evidence, source references, and exact
+  review contract: [pcb-01-v2-service-interface-review.md](pcb-01-v2-service-interface-review.md).
 - Switched J7 construction, monochrome wire patterns, automated RTS connection, and manual
   fallback: [pcb-01-j7-usb-uart.pdf](../output/pdf/pcb-01-j7-usb-uart.pdf) and
   [build.md](build.md#replacement-pcb-01-service-path-2026-08-28).
