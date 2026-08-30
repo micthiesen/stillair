@@ -229,9 +229,11 @@ so Michael can watch the block appear instead of reviewing it at the end.
 - **`kicad-cli pcb drc` does not refill zones** — it checks against the fill saved in the
   file. A via added after the last `B` shows as a 0.000 mm clearance + hole_clearance pair
   against the zone it pierces. Refill (`B`) + save in KiCad, then re-run. Routing-session
-  loop that works: Michael saves, Claude runs
-  `kicad-cli pcb drc --format json --severity-all` and diffs the type counts against the
-  documented baseline in `placement/waivers.md`.
+  loop that works: Michael saves, Claude runs the project's headless checker. For PCB-01 V2
+  use `python3 pcb/tools/check_drc.py`; it applies only the reviewed U1 PGND escape-via
+  exceptions and fails on every other violation or unconnected item. Older boards without a
+  wrapper use `kicad-cli pcb drc --format json --severity-all` and the documented baseline in
+  `placement/waivers.md`.
 - **Net-tie footprints need a via per pad before the tie exists.** NetTie pads are F.Cu-only;
   if the tied nets live on inner planes, the tie is vapor until each pad gets a via into its
   plane. No DRC *violation* fires for this — it appears only as unconnected-items ratsnest,

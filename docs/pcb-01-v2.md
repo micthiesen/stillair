@@ -493,6 +493,12 @@ U1 VM24 and PGND pads use the same 0.25 mm maximum-1.0-mm escape geometry. Join 
 pads immediately and widen the combined path to 2.0 mm as soon as it leaves the scoped U1 power
 escape area. The short same-net pad-to-pad links may be wider where clearance permits.
 
+U1 PGND pads 12, 15, and 18 each use one 0.60/0.30 mm through-via in the pad escape. The ordinary
+1.00/0.50 mm POWER24 via cannot fit at the 0.50 mm pin pitch while preserving the phase clearances.
+This reviewed exception is limited to those three exact vias; the 1.5 A motor limit is shared across
+the three PGND returns. `pcb/tools/check_drc.py` applies only their diameter and drill waivers and
+must remain the headless DRC and fabrication-gate authority.
+
 ## Placement and routing organization
 
 The implemented coordinates are in the KiCad board. These relationships remain mandatory during

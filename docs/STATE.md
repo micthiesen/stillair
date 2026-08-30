@@ -30,7 +30,8 @@ Last updated: **2026-08-30** (PCB-01 V2 handed off for manual routing.)
 
 Michael routes PCB-01 V2 in the order and widths in the interactive checklist. Preserve the
 encoded rule areas and keepouts. After routing, refill zones and require zero unconnected items
-and zero unexplained DRC violations, then run `python3 pcb/tools/jlc_fab.py pcb-01-v2` and inspect
+and zero unexplained DRC violations using `python3 pcb/tools/check_drc.py`, then run
+`python3 pcb/tools/jlc_fab.py pcb-01-v2` and inspect
 the Gerbers, drill map, BOM, CPL, POFV notes, and assembly locator before ordering.
 
 This is the shortest path to a fabrication-ready controller, and the exporter refuses to create

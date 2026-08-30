@@ -27,6 +27,9 @@ Use the deliberately small routing vocabulary encoded in `pcb-01-v2.kicad_dru`:
 
 The only narrower power exceptions are the named, tightly bounded U1 and U3 pad-escape areas. The
 rules require the complete track item to remain inside the area. Widen immediately after the pad.
+U1's three PGND returns use reviewed 0.60/0.30 mm escape vias because its 0.50 mm pin pitch cannot
+fit the ordinary 1.00/0.50 mm power via while preserving phase clearance. The headless DRC wrapper
+waives only the diameter and drill findings for those three exact via UUIDs.
 Do not weaken or delete the PGND routing boundary, antenna keepout, 0.80 mm noisy-to-sensitive
 clearance, mounting-hole keepouts, or fiducial keepouts to complete routing.
 
@@ -52,7 +55,7 @@ Useful checks from the repository root:
 
 ```bash
 kicad-cli sch erc pcb/pcb-01-v2/pcb-01-v2.kicad_sch
-kicad-cli pcb drc pcb/pcb-01-v2/pcb-01-v2.kicad_pcb
+python3 pcb/tools/check_drc.py
 kicad-cli sch export netlist --output /tmp/pcb-01-v2.net pcb/pcb-01-v2/pcb-01-v2.kicad_sch
 python3 pcb/tools/check_v2_capture.py /tmp/pcb-01-v2.net
 python3 pcb/tools/probe_guide.py --map pcb/pcb-01-v2/probe-map.json \

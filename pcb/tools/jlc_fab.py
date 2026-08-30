@@ -29,6 +29,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from check_drc import partition_violations
+
 KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
 KICAD_PYTHON = "/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/bin/python3"
 KICAD_PYTHONPATH = "/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages"
@@ -147,7 +149,7 @@ def assert_v2_release_ready() -> None:
             str(BOARD),
         )
         report = json.loads(report_path.read_text())
-    violations = report.get("violations", [])
+    violations, approved = partition_violations(report.get("violations", []))
     unconnected = report.get("unconnected_items", [])
     if violations or unconnected:
         kinds = Counter(item.get("type", "unknown") for item in violations)
@@ -158,6 +160,8 @@ def assert_v2_release_ready() -> None:
             "resolve every DRC item, then rerun without --assembly-only. No Gerbers "
             "were exported."
         )
+    if approved:
+        print(f"Accepted {len(approved)} reviewed DRC exceptions for PCB-01 V2.")
 
 
 def excluded(ref: str) -> bool:
