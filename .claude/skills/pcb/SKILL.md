@@ -186,6 +186,9 @@ and only reading the actual datasheet page corrected it.
    JLCPCB constraints and safety-critical routing rules.
 3. **Load only the toolsets you need** (`load_toolset`), and `unload_toolset` when switching
    tasks. Only `project` and `config` are loaded at startup; the other 16 are on demand.
+   If a toolset reports loaded but its tools do not appear in the harness inventory, call the
+   configured Konnect server over its stdio MCP transport. Retrying load/unload does not expose
+   tools the harness omitted; all protected KiCad writes must still go through Konnect.
 4. **For any PCB (not schematic) operation, KiCad must be running** with the board open and
    the IPC API enabled — see the quirks below. Launch it through the project-manager workflow
    below when host GUI permissions are available; ask Michael only when automation is blocked.
@@ -293,6 +296,9 @@ so Michael can watch the block appear instead of reviewing it at the end.
   gitignored; leave it alone.
 - **`kicad-cli` on PATH is Homebrew's** (`/opt/homebrew/bin/kicad-cli`) and may not match the
   app. Konnect is configured to use the bundle's.
+- **Run repo scripts that import `pcbnew` through `pcb/tools/kicad_python.sh`.** System Python
+  cannot load KiCad's app-private module with `PYTHONPATH` alone; the wrapper supplies KiCad's
+  bundled interpreter, site-packages, and framework paths.
 - **Custom symbol libraries: placement only resolves the installed-symbols dir.**
   `register_symbol_library` (project or global scope) makes `search_symbols` work, but
   `add_schematic_component` still errors "library not found" — it only reads
