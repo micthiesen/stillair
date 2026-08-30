@@ -163,6 +163,10 @@ and only reading the actual datasheet page corrected it.
   triage, and verification. Dispatch routine documentation and routing-artifact maintenance
   fire-and-forget to background agents with precise briefs so Michael can keep routing; surface
   their results only when they change what he needs to do.
+- **Checkpoint reviews audit every ignored DRC item from first principles.** An ignore is neither
+  acceptance nor proof of a defect. For width, drill, and via-size findings, inspect the physical
+  escape geometry and decide from actual current, length, clearance, temperature, and fab limits;
+  retain only narrowly identified exceptions with a recorded rationale.
 - **Placement review/fine-tune** on Claude's first pass, especially the MCF switching loops
   vs TI's reference layout and anything housing-related.
 - **Starting and exporting the project**, plus anything that means clicking through a KiCad

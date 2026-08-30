@@ -15,8 +15,12 @@ Last updated: **2026-08-30** (PCB-01 V2 handed off for manual routing.)
   [pcb-01-v2.md](pcb-01-v2.md) and [pcb-01-v2/README.md](../pcb/pcb-01-v2/README.md).
 - **Michael is routing PCB-01 V2 now.** The concise order, widths, vias, and completion checks are
   in the [interactive routing checklist](https://mcp.syas.ca/boris/artifacts/art_eon2bpkmslvmtf6wfpa).
-  The assistant should answer routing questions against the saved KiCad project and its design
-  rules, not reconstruct intent from memory.
+  Michael is now routing by board context rather than following that artifact; do not update it.
+  The assistant should answer specific routing questions against the saved KiCad project and its
+  design rules, not reconstruct intent from memory. Do not start a checkpoint review until asked.
+  At that review, inspect every ignored DRC item individually, including size findings: judge what
+  physically fits and the actual electrical, clearance, and manufacturing requirement rather than
+  accepting the ignore or enforcing the nominal class mechanically.
 - **V2 commissioning uses native USB only.** GPIO12/13 carry D-/D+ through J4; GPIO16/17 are
   unconnected. BOOT plus RESET provides deterministic ROM recovery. The assembled first article
   still requires USB enumeration, ROM-download, flash, reboot, and runtime CLI qualification. See
