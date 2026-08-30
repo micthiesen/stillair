@@ -52,11 +52,11 @@
 
 (rule "U1 phase pad escape"
   (condition "(A.NetName == 'PHASE_U' || A.NetName == 'PHASE_V' || A.NetName == 'PHASE_W') && A.enclosedByArea('U1 phase escape')")
-  (constraint track_width (min 0.30mm) (opt 2.00mm)))
+  (constraint track_width (min 0.25mm) (opt 2.00mm)))
 
 (rule "U1 power pad escape"
   (condition "(A.NetName == 'VM24' || A.NetName == 'PGND') && A.enclosedByArea('U1 power escape')")
-  (constraint track_width (min 0.30mm) (opt 2.00mm)))
+  (constraint track_width (min 0.25mm) (opt 2.00mm)))
 
 (rule "U3 VM24 pad escape"
   (condition "A.NetName == 'VM24' && A.enclosedByArea('U3 VM24 escape')")

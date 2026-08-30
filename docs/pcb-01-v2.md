@@ -482,10 +482,16 @@ fast or sensitive signal.
 DRC must reject high-current neckdowns, antenna-keepout copper, domain bypass around NT1, unfilled
 zones, and unconnected items. V1 waiver counts do not transfer.
 
-Each U1 phase pad may use a 0.30 mm F.Cu neck for at most 1.0 mm measured from the pad edge. Merge
-the two same-phase pad necks immediately into a 2.0 mm or wider trunk/pour. The escape may not use a
-via; after the merge there are no neckdowns or layer changes to J2. This is the only PHASE width
-exception and must be encoded as a scoped rule area rather than weakening the net class.
+Each U1 phase pad may use a 0.25 mm F.Cu neck for at most 1.0 mm measured from the pad edge. This
+matches the 0.25 mm pad width and is the largest escape that preserves 0.25 mm clearance at the
+0.50 mm pad pitch. Merge the two same-phase pad necks immediately into a 2.0 mm or wider trunk/pour.
+The escape may not use a via; after the merge there are no neckdowns or layer changes to J2. This is
+the only PHASE width exception and must be encoded as a scoped rule area rather than weakening the
+net class.
+
+U1 VM24 and PGND pads use the same 0.25 mm maximum-1.0-mm escape geometry. Join adjacent same-net
+pads immediately and widen the combined path to 2.0 mm as soon as it leaves the scoped U1 power
+escape area. The short same-net pad-to-pad links may be wider where clearance permits.
 
 ## Placement and routing organization
 
