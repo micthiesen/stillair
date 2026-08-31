@@ -136,6 +136,10 @@ If the V1 builds consumed their planned parts, expect to buy all four capacitors
 connectors, plus one LM2907 if the recorded single loose spare is still present. Physical count is
 the authority.
 
+The complete no-stock-assumption set was ordered from DigiKey on 2026-08-31 as **101316601**:
+4 x `EEU-FR1H471`, and 2 x each `43045-0200`, `43650-0300`, `B3B-PH-K-S(LF)(SN)`, and
+`LM2907M/NOPB`. Receipt of that order supersedes the loose-bin count as the board-completion gate.
+
 Install U8 before the tall through-hole parts. Align its pin 1 with the front silkscreen dot and the
 back `U8 PIN 1` cue. Install C1/C2 with their positive leads at the front `+` marks. Confirm J1, J2,
 and J3 pin numbering against the printed pinouts before soldering.

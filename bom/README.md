@@ -112,6 +112,14 @@ tach-chain 0.1% spares, the C2 DNP calibration ladder, and bench spares) was pla
 2026-07-30 and cancelled before fulfillment; its required and useful-stock lines were
 reconciled into order 100888768 above.
 
+PCB-01 V2 was ordered from JLCPCB on 2026-08-31 as **W2026083117295494**: five
+88 x 64 mm boards with two top-side Standard PCBAs. Production approval remains gated on the
+twelve U1 POFV holes, U3 pads 4/5 solder-mask-defined apertures, 97 ohm USB requirement, and
+critical placement orientations in `pcb/pcb-01-v2/fab/ORDERING.md`. The complete hand-population
+set for both assembled boards was ordered from DigiKey the same day as **101316601**: four
+`EEU-FR1H471` and two each of `43045-0200`, `43650-0300`, `B3B-PH-K-S(LF)(SN)`, and
+`LM2907M/NOPB`. This order deliberately does not depend on uncertain loose stock from V1.
+
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
 packing slip). Arrivals 2026-08-14: DigiKey 100888768, PCB-01, PCB-02, all JLCCNC parts
@@ -126,8 +134,11 @@ cables, intact series resistors, and no USB-line short. A PCBA quality complaint
 replacement was submitted 2026-08-28 at 19:39:21 against SMT job
 **SMT026073063521-12177845A**, with four board photos and `IMG_3587.mov`. The reloaded JLCPCB
 result page showed **Submitted / Processing** and promised a response within 24 hours; it exposed
-no separate case number. Electrical findings and the UART0 fallback are retained in
-`docs/STATE.md`.
+no separate case number. The other assembled board from the same design has working native USB,
+which isolates the failure to the affected board rather than the schematic or PCB design. Support
+asked for short/solder checks, removal of U2, and the schematic; Michael replied with the completed
+electrical checks and schematic package and declined destructive removal because U2 has hidden LGA
+pads. The likely fault remains a hidden U2 USB-pad joint or U2 itself.
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),
