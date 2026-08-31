@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="148mm" viewBox="0 0 210 148">
+<rect width="210" height="148" fill="white"/>
+<text x="12" y="14" font-family="sans-serif" font-size="6" font-weight="700">PCB-01 V2 U1 pad 41 POFV map</text>
+<text x="12" y="23" font-family="sans-serif" font-size="3.5">Component-side (top) view. Fill and copper-cap only these twelve 0.30 mm plated holes.</text>
+<text x="12" y="29" font-family="sans-serif" font-size="3.1">Diagram labels use KiCad board coordinates. Excellon T2 uses the same X and negative Y.</text>
+<rect x="55" y="35" width="100" height="84" rx="3" fill="#f4f4f4" stroke="#222" stroke-width="0.8"/>
+<text x="105" y="126" text-anchor="middle" font-family="sans-serif" font-size="3.5">U1 exposed pad 41, top solder-mask aperture remains open</text>
+<rect x="166" y="35" width="33" height="24" fill="#f8f8f8" stroke="#222" stroke-width="0.6"/>
+<circle cx="178.75" cy="51.50" r="2.2" fill="#d33" stroke="#711" stroke-width="0.5"/>
+<text x="178.75" y="57" text-anchor="middle" font-family="sans-serif" font-size="3.0" font-weight="700">U1 on 88 x 64 board</text>
+<text x="65.90" y="32" text-anchor="middle" font-family="monospace" font-size="3.3">KiCad X 82.85</text>
+<text x="105.00" y="32" text-anchor="middle" font-family="monospace" font-size="3.3">KiCad X 84.00</text>
+<text x="144.10" y="32" text-anchor="middle" font-family="monospace" font-size="3.3">KiCad X 85.15</text>
+<text x="51" y="43.10" text-anchor="end" font-family="monospace" font-size="3.3">Y 92.05</text>
+<text x="51" y="66.50" text-anchor="end" font-family="monospace" font-size="3.3">Y 93.35</text>
+<text x="51" y="89.90" text-anchor="end" font-family="monospace" font-size="3.3">Y 94.65</text>
+<text x="51" y="113.30" text-anchor="end" font-family="monospace" font-size="3.3">Y 95.95</text>
+<circle cx="65.90" cy="41.90" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="65.90" y="43.10" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="65.90" cy="65.30" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="65.90" y="66.50" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="65.90" cy="88.70" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="65.90" y="89.90" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="65.90" cy="112.10" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="65.90" y="113.30" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="105.00" cy="41.90" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="105.00" y="43.10" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="105.00" cy="65.30" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="105.00" y="66.50" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="105.00" cy="88.70" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="105.00" y="89.90" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="105.00" cy="112.10" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="105.00" y="113.30" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="144.10" cy="41.90" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="144.10" y="43.10" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="144.10" cy="65.30" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="144.10" y="66.50" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="144.10" cy="88.70" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="144.10" y="89.90" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<circle cx="144.10" cy="112.10" r="4.2" fill="#d33" stroke="#711" stroke-width="0.7"/>
+<text x="144.10" y="113.30" text-anchor="middle" font-family="sans-serif" font-size="3.1" font-weight="700" fill="white">0.30</text>
+<text x="12" y="136" font-family="sans-serif" font-size="3.0">Submitted drill identifiers: T2 ComponentDrill, X 82.85/84.00/85.15, Y -92.05/-93.35/-94.65/-95.95.</text>
+<text x="12" y="142" font-family="sans-serif" font-size="3.0">No separate bottom solder-mask openings. Require CAM confirmation before release.</text>
+</svg>

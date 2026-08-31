@@ -1,9 +1,10 @@
 # PCB-01 V2 design specification
 
-Status: **captured and placed, ready for trace routing**. This document replaces the former
+Status: **routed and provisionally ready for JLCPCB submission**. This document replaces the former
 contingency brief and remains the controlling electrical and PCB handoff for PCB-01 V2. Exact
 footprints, the 88 x 64 mm outline, mounting coordinates, placement, keepouts, zones, and routing
-rules are implemented in `pcb/pcb-01-v2/`. Everything except trace routing is frozen here.
+rules are implemented in `pcb/pcb-01-v2/`. The generated JLCPCB package and operator checklist live
+in `pcb/pcb-01-v2/fab/`.
 
 V2 is a one-off controller redesign, not a productionization exercise. It preserves the V1 motor,
 power, Hall-cable, drive-permission, watchdog, and independent overspeed behavior. It uses the
@@ -207,7 +208,8 @@ low-voltage rails, confirm U6 re-arms, and only then begin the next trim trial.
 
 ## Exact component schedule
 
-All components are populated unless marked hand or mechanical. There are no DNP option footprints.
+All components are populated unless marked hand, mechanical, or DNP. C44/C45 are the only DNP
+option footprints and remain unfitted unless USB signal-integrity measurements justify them.
 LCSC identifiers freeze the intended item. Substitution requires review and a spec update first.
 
 ### Capacitors
@@ -248,7 +250,7 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | R14,R15,R24,R36,R38,R45 | 6 | 100 ohm | 0402 | `C25076` |
 | R16,R17 | 2 | 0 ohm I2C isolation links | 0402 | `C17168` |
 | R26 | 1 | 1 k | 0402 | `C11702` |
-| R39 | 1 | 47 ohm, 1 W, 1% | 2512 | `RC2512FK-0747RL`, `C723713` |
+| R39 | 1 | 47 ohm, 1 W, 1% | 2512 | `FRC2512F47R0TS`, `C3000771`; live JLC substitute approved 2026-08-31 for the out-of-stock `RC2512FK-0747RL` / `C723713`, with the same 47 ohm, 1%, 1 W, 200 V, 2512 specification |
 | R40 | 1 | 910 k, 0.1% | 0402 | `RE0402BRE07910KL`, `C3921007` |
 | R41 | 1 | 100 k, 0.1% | 0402 | `RT0402BRD07100KL`, `C852472` |
 | R48 | 1 | 562 k, 1% | 0402 | Vishay `CRCW0402562KFKED`, `C4323390` |
@@ -277,7 +279,7 @@ Unqualified 0402 resistors are 1%, at least 1/16 W.
 | U4 | TI `TPS7A1601ADGNR` | MSOP-8 EP | `C6886485` |
 | U5,U6 | TI `SN74LVC1G74DCTR` | DCT-8 | `C840104` |
 | U7 | TI `TPS3435CAKAGDDFR` | SOT-23-8 | `C6339182` |
-| U8 | TI `LM2907M-14/NOPB` | SOIC-14 | in hand, hand solder |
+| U8 | TI `LM2907M/NOPB` | SOIC-14 | in hand, hand solder |
 | U9 | TI `TLV1701AIDBVR` | SOT-23-5 | `C130035` |
 | U10,U11 | TI `SN74LVC1G17DCKR` | SC-70-5 | `C10425` |
 | U12 | TI `TMP1075DGKR` | `Package_SO:VSSOP-8_3x3mm_P0.65mm` (DGK) | `C2864807`; JLCPCB assembled |
@@ -449,11 +451,21 @@ earth-grounded scope on a phase. Use a rated differential probe at J2.
 
 ## Board technology and rules
 
-- Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C. Use JLC's impedance-controlled
-  `JLC04161H-7628` construction or an approved equivalent: 0.070 mm F.Cu, 0.2104 mm 7628 prepreg
-  (Er 4.4), 0.035 mm In1, 0.9392 mm FR-4 core (Er 4.6), 0.035 mm In2, 0.2104 mm 7628 prepreg,
-  0.070 mm B.Cu, and 0.015 mm solder mask each side (Er 3.8).
+- Rectangular FR-4, 1.6 mm nominal, Tg at least 150 C. Use JLC's current impedance-controlled
+  `JLC041621-7628` construction or an approved equivalent: 0.070 mm F.Cu, 0.203 mm 7628 prepreg
+  (Er 4.4), 0.030 mm In1, 1.030 mm FR-4 core, 0.030 mm In2, 0.203 mm 7628 prepreg, and
+  0.070 mm B.Cu. These are JLC's live 4-layer, 1.6 mm, 2 oz outer, 1 oz inner values as audited
+  2026-08-31.
+- Accepted source-metadata exception: the KiCad board retains the earlier 0.2104 / 0.035 / 0.9392 /
+  0.035 / 0.2104 mm design-time stack because the current automation interface cannot safely edit
+  physical stackup fields. `pcb/tools/jlc_fab.py` replaces the submitted Gerber-job stack with the
+  live values above and release-hashes that output. Do not use the KiCad source stack for impedance
+  calculations; the routed USB geometry was independently checked against JLC's live calculator.
 - F.Cu/B.Cu 2 oz, In1/In2 1 oz; ENIG, green mask, white silk, plated through vias.
+- Route native USB as a via-free 0.20 mm width / 0.20 mm gap differential pair. JLC's coated,
+  non-coplanar calculator gives 96.85 ohm on the specified stack, inside USB 2.0's 90 ohm
+  +/-15% range; use a 97 ohm manufacturing target rather than requesting an impossible 90 ohm
+  CAM correction without changing the artwork.
 - Minimum copper-to-edge 0.25 mm except intentional connector body overhang. Minimum signal track
   0.20 mm and every via, including filled-and-capped thermal via-in-pad, uses at least 0.30 mm drill.
   The standard via is 0.60/0.30 mm. No blind, buried, stacked, or microvias.
@@ -476,7 +488,7 @@ fast or sensitive signal.
 | RAIL3V3 | 3V3 | 0.50 mm | 0.60/0.30 mm | 0.20 mm | neck only at pads |
 | TACH12V | TACH_LDO_IN, +12V_TACH | 0.40 mm | 0.60/0.30 mm | 0.20 mm | away from RF and phases |
 | ANALOG | Hall/LM2907/VTACH/VREF | 0.25 mm | 0.60/0.30 mm | 0.20 mm | uninterrupted AGND return |
-| USB | USB_DP/DN and USB_DP/DN_MCU | 0.20 mm differential pair | none | 0.20 mm | 0.20 mm gap, 90 ohm differential target, max 0.50 mm skew |
+| USB | USB_DP/DN and USB_D_MCU_P/N | 0.20 mm differential pair | none | 0.20 mm | 0.20 mm gap, 97 ohm manufacturing target, measured worst plug-orientation skew 1.80 mm |
 | CONTROL | remaining logic/service | 0.20 mm | 0.60/0.30 mm | 0.20 mm | ARM and heartbeat separated |
 
 DRC must reject high-current neckdowns, antenna-keepout copper, domain bypass around NT1, unfilled
@@ -628,9 +640,9 @@ These validate the specified design and do not invite unrelated safety expansion
   exactly once and every schematic ref is scheduled.
 - Confirm J1/J2/J3 footprint numbering against existing cables and J4's official GCT footprint,
   shell pads, locating pegs, and manufacturer PCB-edge datum.
-- Ready-to-route gate: ERC has zero violations; DRC has only the 328 expected unrouted connections
-  and one expected isolated In2 3V3-fill warning. Final release gate after routing and zone refill:
-  zero unconnected items and zero unexplained violations, including no isolated-fill warnings.
+- Release gate: ERC and schematic parity pass; zones are filled; DRC has zero unconnected items and
+  zero active violations. The exact reviewed size exceptions are UUID-bound in
+  `pcb/tools/check_drc.py`, so a replacement or newly narrowed item is not silently accepted.
 - Verify actual stackup, through-via-only rule, high-current neck checks, POFV, all-layer antenna
   keepout, and the single NT1 crossing.
 - Before capture/layout validation, set the V2 Konnect project's accessible-test-point rule to the
@@ -755,7 +767,9 @@ Whole-board review:
 | 3 | Electrical; routing flows; assembled visual | Extended the In1 PGND island and its all-layer routing boundary through the full U1-to-J2 phase corridor so AGND cannot refill beneath the phase routes. |
 | 4 | Electrical; routing flows; assembled visual | No useful improvement remained. Ground-domain separation, NT1 single-point connection, major route flows, mechanics, labels, and assembly access converged. |
 
-The current board has 166 top-side footprints, 20 zones/rule areas, zero tracks, two intentional
-USB-ESD AGND vias, 78 named schematic nets, and 411 pad endpoints. ERC and schematic parity pass.
-Before routing, DRC contains only 328 expected unconnected items and one expected isolated-fill
-warning from the wholly unrouted In2 3V3 region.
+The current board has 166 top-side footprints, completed routing and filled zones, 78 named
+schematic nets, and 411 pad endpoints. ERC, schematic parity, and the 31-test-point/four-connector
+probe map pass. The reviewed headless DRC has zero active violations and zero unconnected items,
+with 21 exact bounded exceptions. The generated package contains the 14 fabrication files,
+55 machine BOM groups, 119 top-side CPL references, six hand-solder references, and twelve exact
+U1 pad-41 POFV holes.

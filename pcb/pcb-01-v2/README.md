@@ -3,14 +3,15 @@
 Production-intent KiCad 10 project for the 88 x 64 mm PCB-01 V2 controller. The schematic,
 footprints, exact ratsnest, four-layer board setup, placement, rule areas, copper zones, keepouts,
 fiducials, silkscreen, and assembly metadata are complete. All 166 footprints are on the component
-side. Tracks are intentionally absent. The only two vias are the adjacent AGND returns for the USB
-ESD arrays, so the next operation is manual routing.
+side. Routing and zone fill are complete. The reviewed headless DRC has zero active violations and
+zero unconnected items; its 21 exact UUID-bound exceptions are documented in
+`../tools/check_drc.py`.
 
 The frozen circuit and layout authority is
 [`docs/pcb-01-v2.md`](../../docs/pcb-01-v2.md). Do not import V1 routing, placement, zones, probe
 coordinates, or DRC waivers.
 
-## Open and route
+## Routing rules retained for review
 
 Open `pcb-01-v2.kicad_pro` and route in the PCB Editor. The concise interactive routing checklist is
 <https://mcp.syas.ca/boris/artifacts/art_eon2bpkmslvmtf6wfpa>.
@@ -41,15 +42,14 @@ clearance is 0.20 mm; 24 V and motor-phase clearance is 0.25 mm; copper-to-edge 
 
 - ERC: zero violations.
 - Schematic parity: 159 refs, 78 named nets, and 411 endpoints match the frozen schedule.
-- Board: 166 top-side footprints, zero tracks, and two intentional USB-ESD AGND vias.
-- Pre-route DRC: 328 expected unconnected items and one expected `isolated_copper` warning from the
-  wholly unrouted In2 3V3 region; no other violation.
+- Board: 166 top-side footprints, completed routing, filled zones, and no unconnected items.
+- DRC: zero active violations and zero unconnected items, with 21 exact reviewed exceptions for
+  bounded pad escapes and three U1 PGND escape vias.
 - Probe map: 31 test points and four pin-mapped connectors match the board.
 - Assembly export: 55 machine BOM lines, 119 top-side CPL placements, and six hand refs.
 
-After routing, refill all zones and require zero unconnected items and zero unexplained DRC
-violations. The current isolated-copper warning must also disappear when its connections are
-routed.
+After any board edit, refill all zones and rerun the complete release generator. It refuses to emit
+orderable Gerbers if ERC, schematic parity, DRC, or probe-map parity fails.
 
 Useful checks from the repository root:
 
@@ -60,18 +60,18 @@ kicad-cli sch export netlist --output /tmp/pcb-01-v2.net pcb/pcb-01-v2/pcb-01-v2
 python3 pcb/tools/check_v2_capture.py /tmp/pcb-01-v2.net
 python3 pcb/tools/probe_guide.py --map pcb/pcb-01-v2/probe-map.json \
   --board pcb/pcb-01-v2/pcb-01-v2.kicad_pcb --verify-board
-python3 pcb/tools/jlc_fab.py pcb-01-v2 --assembly-only
+python3 pcb/tools/jlc_fab.py pcb-01-v2
 ```
 
 ## Fabrication handoff
 
 The tracked `fab/` directory contains the exact LCSC map, assembly/hand manifests, machine BOM,
 CPL, POFV coordinates, fabrication notes, and a generated four-page assembly locator. U1's twelve
-0.30 mm pad-41 holes require filled-and-capped POFV and outer-mask tenting; the coordinates are
-derived and validated from the current board each time the generator runs. U3 pads 4 and 5 are
+0.30 mm pad-41 holes require epoxy fill and copper capping. U1 pad 41 retains its submitted top
+solder-mask aperture for soldering, with no separate bottom aperture. The Excellon and KiCad
+coordinate conventions are identified in the generated POFV attachments. U3 pads 4 and 5 are
 mask-defined and require JLC engineering confirmation.
 
-Do not run a release export or order this unrouted board. After routing and the zero-unconnected DRC
-gate, run `python3 pcb/tools/jlc_fab.py pcb-01-v2`, inspect the generated Gerbers, drill map, BOM,
-CPL, POFV notes, and assembly locator, then apply the order requirements in
-`fab/fabrication-notes.md`.
+Run `python3 pcb/tools/jlc_fab.py pcb-01-v2` immediately before upload, verify
+`fab/release-manifest.sha256`, inspect the generated Gerbers, drill map, BOM, CPL, POFV attachments,
+and assembly orientation guide, then follow `fab/ORDERING.md` and `fab/fabrication-notes.md`.

@@ -11,8 +11,9 @@ of that doc.
 - `pcb-01/` — the controller board (**PCB-01**). Captured, routed, and ordered from JLCPCB
   2026-07-30 (order W2026073105230212).
 - `pcb-01-v2/` — the fresh **PCB-01 V2** controller project. It is intentionally not cloned from
-  V1. The unpopulated project and V2-specific Konnect rules are initialized; capture and placement
-  follow [`docs/pcb-01-v2.md`](../docs/pcb-01-v2.md).
+  V1. Capture, placement, routing, silkscreen, and the submission package are complete; its exact
+  authority is [`docs/pcb-01-v2.md`](../docs/pcb-01-v2.md) and its order procedure is
+  [`pcb-01-v2/fab/ORDERING.md`](pcb-01-v2/fab/ORDERING.md).
 - `pcb-02/` — the 24 × 8 mm DRV5033 Hall daughterboard (**PCB-02**). Created 2026-07-30:
   schematic captured (ERC clean), 2-layer board set up (outline, M2 hole pair as the BR-100
   datum, JLCPCB rules). Ships as its own small order — PCB-01 already went out separately.
@@ -41,10 +42,14 @@ Use `pcb/tools/probe_guide.py TP7`, `pcb/tools/probe_guide.py J8`, or
 `pcb/tools/probe_guide.py --verify-board` after any layout revision so the retained map cannot silently
 drift from the board.
 
-## JLCPCB order config (researched 2026-07)
+## JLCPCB order config
+
+The bullets below are the historical V1 research record. They do not control PCB-01 V2. V2 uses
+the impedance-controlled JLC041621-7628 build, exact POFV attachments, and assembly split in
+[`pcb-01-v2/fab/ORDERING.md`](pcb-01-v2/fab/ORDERING.md).
 
 - Standard 4-layer 1.6 mm with the order-form copper dropdown set to **2 oz outer / 1 oz
-  inner** (no canned JLC04161H stackup covers this combo — sanity-check the resulting
+  inner** (the V1 order did not use a canned JLC04161H stackup; sanity-check the resulting
   dielectric build in the quote tool). ENIG and the Ø3.2 NPTH holes are unrestricted.
 - **2 oz raises min trace/space to 0.15–0.16 mm** — check routing under the ESP module
   fits. The common fallback for a ~2 A board is 1 oz outer with ≥1.5–2 mm pours, avoiding

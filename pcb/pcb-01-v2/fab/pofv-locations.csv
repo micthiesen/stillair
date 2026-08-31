@@ -1,13 +1,13 @@
-Reference,Pad,X mm,Y mm,Finished hole mm,Process
-U1,41,82.85,92.05,0.30,filled+copper-capped POFV
-U1,41,82.85,93.35,0.30,filled+copper-capped POFV
-U1,41,82.85,94.65,0.30,filled+copper-capped POFV
-U1,41,82.85,95.95,0.30,filled+copper-capped POFV
-U1,41,84.00,92.05,0.30,filled+copper-capped POFV
-U1,41,84.00,93.35,0.30,filled+copper-capped POFV
-U1,41,84.00,94.65,0.30,filled+copper-capped POFV
-U1,41,84.00,95.95,0.30,filled+copper-capped POFV
-U1,41,85.15,92.05,0.30,filled+copper-capped POFV
-U1,41,85.15,93.35,0.30,filled+copper-capped POFV
-U1,41,85.15,94.65,0.30,filled+copper-capped POFV
-U1,41,85.15,95.95,0.30,filled+copper-capped POFV
+Reference,Pad,KiCad X mm,KiCad Y mm,Excellon tool,Excellon X mm,Excellon Y mm,Finished hole mm,Process
+U1,41,82.85,92.05,T2 ComponentDrill,82.85,-92.05,0.30,epoxy-filled+copper-capped POFV
+U1,41,82.85,93.35,T2 ComponentDrill,82.85,-93.35,0.30,epoxy-filled+copper-capped POFV
+U1,41,82.85,94.65,T2 ComponentDrill,82.85,-94.65,0.30,epoxy-filled+copper-capped POFV
+U1,41,82.85,95.95,T2 ComponentDrill,82.85,-95.95,0.30,epoxy-filled+copper-capped POFV
+U1,41,84.00,92.05,T2 ComponentDrill,84.00,-92.05,0.30,epoxy-filled+copper-capped POFV
+U1,41,84.00,93.35,T2 ComponentDrill,84.00,-93.35,0.30,epoxy-filled+copper-capped POFV
+U1,41,84.00,94.65,T2 ComponentDrill,84.00,-94.65,0.30,epoxy-filled+copper-capped POFV
+U1,41,84.00,95.95,T2 ComponentDrill,84.00,-95.95,0.30,epoxy-filled+copper-capped POFV
+U1,41,85.15,92.05,T2 ComponentDrill,85.15,-92.05,0.30,epoxy-filled+copper-capped POFV
+U1,41,85.15,93.35,T2 ComponentDrill,85.15,-93.35,0.30,epoxy-filled+copper-capped POFV
+U1,41,85.15,94.65,T2 ComponentDrill,85.15,-94.65,0.30,epoxy-filled+copper-capped POFV
+U1,41,85.15,95.95,T2 ComponentDrill,85.15,-95.95,0.30,epoxy-filled+copper-capped POFV

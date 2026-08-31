@@ -1,6 +1,8 @@
 target/
 tmp/
 .DS_Store
+__pycache__/
+*.pyc
 
 # KiCad
 # .kicad_prl is per-user editor state; .history/ is KiCad 10's local-history

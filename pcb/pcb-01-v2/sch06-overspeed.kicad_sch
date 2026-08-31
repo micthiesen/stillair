@@ -4683,7 +4683,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "LM2907M-14/NOPB"
+		(property "Value" "LM2907M/NOPB"
 			(at 206.6133 212.09 0)
 			(show_name no)
 			(do_not_autoplace no)

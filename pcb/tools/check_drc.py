@@ -36,9 +36,82 @@ U1_PGND_REASON = (
     "the 1.5 A motor limit is shared across three PGND returns"
 )
 
+# Exact track-width exceptions reviewed against the final routed geometry on
+# 2026-08-30.  Keying by UUID keeps this list narrow: a replacement or newly
+# narrowed track is not silently accepted even when it occupies the same area.
+APPROVED_TRACK_WIDTHS = {
+    # U1 PGND pad escapes.  Each neck is no wider than U1's 0.25 mm land and
+    # is at most 0.211 mm long before reaching a dedicated PGND escape via.
+    "6c310186-ce07-49d0-a796-fc1d41827ef1": (
+        "PGND", "0.2500 mm", "U1 PGND pad-width neck to dedicated escape via"
+    ),
+    "6f30cc55-1880-41cb-9fd2-4ab279c0026b": (
+        "PGND", "0.2500 mm", "U1 PGND pad-width neck to dedicated escape via"
+    ),
+    "fdde0ddb-03b2-4c73-8c31-3a32e7f1bf8e": (
+        "PGND", "0.2500 mm", "U1 PGND pad-width neck to dedicated escape via"
+    ),
+    # NT1 carries only the analog/control return across the deliberate
+    # AGND/PGND single-point bridge, not motor phase or bulk-return current.
+    "8998e197-ff38-4e28-8de0-94dd3cd115b7": (
+        "PGND", "1.5000 mm", "NT1 single-point ground-bridge connection"
+    ),
+    # Local 3V3 land escapes.  These are bounded by the receiving IC/passive
+    # lands and widen immediately; none is a distribution-rail segment.
+    "0628982a-c644-4c43-bce3-643d6338f13b": (
+        "3V3", "0.2000 mm", "local 3V3 pad escape"
+    ),
+    "1cbc401b-adab-47c5-b99a-32f11e36808f": (
+        "3V3", "0.2500 mm", "local 3V3 pad escape"
+    ),
+    "30882b3b-d354-4077-92cf-3263c1283d80": (
+        "3V3", "0.3000 mm", "local 3V3 pad escape"
+    ),
+    "35e2d750-3883-40ae-b9c1-73e50b9ffe95": (
+        "3V3", "0.3000 mm", "local 3V3 pad escape"
+    ),
+    "5bdbada6-447b-4356-a8a5-6ecdca8f0e8a": (
+        "3V3", "0.3000 mm", "local 3V3 pad escape"
+    ),
+    "690275af-d416-42dc-9790-7f56bec37253": (
+        "3V3", "0.2500 mm", "local 3V3 pad escape"
+    ),
+    "69183a7d-8b13-4dfb-bfc3-e7591c088ef9": (
+        "3V3", "0.2500 mm", "local 3V3 pad escape"
+    ),
+    "d4cdf896-23d7-43a1-b128-e8387cfd08ad": (
+        "3V3", "0.3000 mm", "local 3V3 pad escape"
+    ),
+    "fe38e5d0-4c37-4e9c-ac88-5a999469d008": (
+        "3V3", "0.3000 mm", "local 3V3 pad escape"
+    ),
+    # C3's two short spokes terminate directly in 1.00/0.50 mm PGND vias.
+    "24d16590-2554-42c5-ae7c-9972b35989a9": (
+        "PGND", "0.5000 mm", "C3 local PGND capacitor-to-via spoke"
+    ),
+    "2a4932e8-32aa-4e09-bfe6-558f284e5f9c": (
+        "PGND", "0.5000 mm", "C3 local PGND capacitor-to-via spoke"
+    ),
+}
+
 
 def approved_exception(violation: dict[str, Any]) -> str | None:
     """Return the waiver rationale only for one exact approved finding."""
+    if violation.get("type") == "track_width":
+        items = violation.get("items", [])
+        if len(items) != 1:
+            return None
+        item = items[0]
+        approved = APPROVED_TRACK_WIDTHS.get(item.get("uuid"))
+        if approved is None:
+            return None
+        net, actual_width, reason = approved
+        if not item.get("description", "").startswith(f"Track [{net}] "):
+            return None
+        if f"actual {actual_width}" not in violation.get("description", ""):
+            return None
+        return reason
+
     expected_measurement = APPROVED_VIA_FINDINGS.get(violation.get("type"))
     items = violation.get("items", [])
     if expected_measurement is None or len(items) != 1:
