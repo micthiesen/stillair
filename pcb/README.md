@@ -1,8 +1,8 @@
 # PCB
 
-KiCad project for the 78 × 58 mm V1/V2 controller board (schematic capture, layout, fab
-outputs). The complete circuit-level handoff (outline, schematic blocks, starting values,
-pinouts, placement zones, layer plan, test points) is
+KiCad projects for the 78 × 58 mm V1 and 88 × 64 mm V2 controller boards (schematic
+capture, layout, fab outputs). The complete circuit-level handoff (outline, schematic blocks,
+starting values, pinouts, placement zones, layer plan, test points) is
 [../docs/electrical.md](../docs/electrical.md), and the V1-to-V2 gate list is at the bottom
 of that doc.
 
