@@ -11,7 +11,12 @@ Last updated: **2026-08-31** (PCB-01 V2 and hand-population parts ordered.)
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
   three complete adversarial reviews were clean before submission.
-- **Production approval is still gated on JLCPCB's returned files.** Do not approve until CAM and
+- **JLCPCB engineering is reviewing the mandatory CAM requirements.** Both the order-message team
+  and Paul separately confirmed that the PCB Remark and attachments reached engineering. The DFM
+  currently visible is system-generated and preliminary; no action is due until JLCPCB activates
+  Confirm for the regenerated final DFM. This acknowledgment is not confirmation of U1 POFV, U3
+  pads 4/5 mask definition, or 97 ohm USB.
+- **Production approval remains gated on JLCPCB's returned files.** Do not approve until CAM and
   placement output explicitly preserves all twelve U1 epoxy-filled and copper-capped POFV holes,
   U3 pads 4/5 solder-mask-defined apertures, the 97 ohm USB requirement, finished 88 x 64 mm
   outline, and every critical orientation listed in
@@ -29,9 +34,11 @@ Last updated: **2026-08-31** (PCB-01 V2 and hand-population parts ordered.)
 
 ## Next
 
-Review every JLCPCB CAM, DFM, parts-placement, or support response against the exact approval gates
-in [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when those outputs are
-correct, then wait for JLCPCB order `W2026083117295494` and DigiKey order `101316601` to arrive.
+Wait for JLCPCB to activate Confirm for the regenerated final engineering DFM. Review that DFM and
+the later parts-placement output against the exact approval gates in
+[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when those outputs and any
+required written confirmations are correct, then wait for JLCPCB order `W2026083117295494` and
+DigiKey order `101316601` to arrive.
 
 This is the only remaining pre-delivery action because the design, submission package, assembly
 part set, and orders are complete.

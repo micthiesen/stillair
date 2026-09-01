@@ -23,6 +23,19 @@ shasum -a 256 -c fab/release-manifest.sha256
   `assembly-orientation-u13-u14.pdf`, `assembly-preview-3d.png`, `assembly-locator.pdf`, and this
   checklist open while reviewing the detected board and placement previews.
 
+## Live order status
+
+- JLCPCB order: `W2026083117295494`; assembly job referenced by support: `SMT026083161536`.
+- On 2026-08-31, both the order-message team and Paul in separate support email confirmed that the
+  PCB Remark and attached mandatory CAM requirements reached the relevant engineering team.
+- The DFM currently visible on the order page is system-generated and preliminary. JLCPCB is
+  regenerating the final engineering DFM; its **Confirm** button will activate when it is ready.
+- These messages acknowledge engineering review but do not confirm U1 POFV, U3 mask-defined pads,
+  or 97 ohm USB. Take no action until the final DFM is available. Do not approve a visual DFM alone
+  if epoxy filling or impedance is not explicit; request written engineering confirmation in the
+  DFM message thread first.
+- Confirm Parts Placement remains a separate later PCBA approval gate.
+
 ## Recommended order
 
 - PCB quantity: 5

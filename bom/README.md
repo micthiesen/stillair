@@ -119,6 +119,11 @@ critical placement orientations in `pcb/pcb-01-v2/fab/ORDERING.md`. The complete
 set for both assembled boards was ordered from DigiKey the same day as **101316601**: four
 `EEU-FR1H471` and two each of `43045-0200`, `43650-0300`, `B3B-PH-K-S(LF)(SN)`, and
 `LM2907M/NOPB`. This order deliberately does not depend on uncertain loose stock from V1.
+JLCPCB's order-message team and Paul separately confirmed on 2026-08-31 that the PCB Remark and
+mandatory CAM attachments reached engineering. The DFM initially visible on the order page is an
+automated preliminary version; engineering is regenerating the final DFM, and no approval is due
+until its Confirm button activates. Their acknowledgment is not acceptance of the three technical
+requirements, so explicit final confirmation remains mandatory.
 
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
