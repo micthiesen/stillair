@@ -1,7 +1,7 @@
 # PCB-03 JLCPCB bare-board and stencil order
 
 Live order: `W2026090305011104`, five bare boards plus a top-side stencil, $17 shipped, submitted
-2026-09-02.
+2026-09-02. JLCPCB support confirmed they would add the supplied top-side paste layer.
 
 Regenerate immediately before upload:
 
@@ -12,7 +12,8 @@ python3 pcb/tools/jlc_fab.py pcb-03
 `pcb-03-gerbers.zip` is the complete regenerated board package and now includes `F.Paste`. There is
 still no PCB assembly, BOM, or placement file. `pcb-03-stencil-gerbers.zip` contains only `F.Paste`
 and `Edge.Cuts`; send it to JLCPCB as the stencil addendum for the live order because the package
-originally uploaded before ordering the stencil omitted the paste layer.
+originally uploaded before ordering the stencil omitted the paste layer. This addendum has been
+sent and accepted by support.
 
 Verify that the generated package still matches the checked source:
 

@@ -135,7 +135,8 @@ eight 24-30 AWG conductors and 16 stock contacts. It does not use the low-insert
 PCB-03 was ordered as five bare boards with a top-side stencil under JLCPCB order
 `W2026090305011104` for $17 shipped. There is no JLCPCB assembly BOM or CPL. The regenerated main
 Gerber package includes `F.Paste`, and `fab/pcb-03-stencil-gerbers.zip` contains the top paste and
-outline layers as a small stencil addendum for the live order.
+outline layers as a small stencil addendum. JLCPCB support confirmed they would add the supplied
+paste layer to the live order.
 
 ## Firmware contract
 

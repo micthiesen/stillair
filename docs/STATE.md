@@ -12,9 +12,9 @@ Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
   routed with a filled B.Cu AGND plane. The three retained display/bridge checks in
   [pcb-03.md](pcb-03.md) are now first-article validation gates, not order blockers. The main unknown
   is whether the display accepts a 5000-byte RAM write split across SC18IS606 chip-select cycles.
-- **PCB-03 stencil data needs to reach the live order.** The initially uploaded bare-board ZIP did
-  not contain `F.Paste`. Send `pcb/pcb-03/fab/pcb-03-stencil-gerbers.zip` to JLCPCB for order
-  `W2026090305011104` before CAM completion and request a top-side stencil only.
+- **JLCPCB support accepted the PCB-03 paste-layer addition.** The initially uploaded bare-board
+  ZIP did not contain `F.Paste`; support confirmed they would add the supplied top-side paste layer
+  to order `W2026090305011104` for its stencil.
 - **PCB-01 V2 is ordered from JLCPCB as W2026083117295494.** The order is five 88 x 64 mm
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
