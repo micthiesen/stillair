@@ -17,8 +17,8 @@ physically holds the shared I2C lines low is the documented exception for temper
   straight-through PHR-8-to-PHR-8 cable to the Waveshare 1.54-inch black/white 200 x 200 SPI
   e-paper module. The module's included PH-to-loose-socket lead is not used.
 - Existing V2 device: TMP1075 remains at `0x48`. No address conflicts exist.
-- Board: 50 x 30 mm, two layers, 1 oz copper, 1.6 mm FR-4, all components on the top side,
-  with two 2.2 mm NPTH M2 mounting holes on the vertical centerline.
+- Board: 39.75 x 21.00 mm, two layers, 1 oz copper, 1.6 mm FR-4, all components on the top side,
+  with two diagonally placed 2.2 mm NPTH M2 mounting holes.
 
 The bridge avoids a second programmable controller. ESP firmware writes e-paper command and image
 data through U1 and controls the display's sideband pins through U2.
@@ -106,10 +106,11 @@ power. PCB-03's two ICs add at most a few milliamps, leaving ample margin inside
 
 ## Mechanical and placement contract
 
-- Board origin is local `(0, 0)` at the northwest corner; KiCad absolute origin is `(50, 50)` mm.
-- Outline is 50 x 30 mm.
-- H1 and H2 are 2.2 mm NPTH at local `(25,4.5)` and `(25,26.5)` mm. The centerline pair avoids
-  both side-entry connector courtyards and leaves room for cable strain relief at either edge.
+- Board origin is local `(0, 0)` at the northwest corner; KiCad absolute origin is
+  `(50,54.5)` mm.
+- Outline is 39.75 x 21.00 mm.
+- H1 and H2 are 2.2 mm NPTH at local `(11.75,3.25)` and `(24.75,17.50)` mm. The diagonal pair
+  clears both side-entry connector courtyards and the compact routed component field.
 - J1 is centered on the west edge and its mating face points west.
 - J2 is centered on the east edge and its mating face points east.
 - Put U1 near J2 so `EPD_CLK`, `EPD_DIN`, and `EPD_CS_N` are short and direct.
@@ -119,8 +120,9 @@ power. PCB-03's two ICs add at most a few milliamps, leaving ample margin inside
   back silkscreen and label both cable destinations on the front.
 - The installed bracket or enclosure must retain both cable bundles with a short service loop.
   Neither connector's through-hole solder joints are the cable strain relief.
-- This is a hand-routed board. Placement ends with a clean ratsnest; no traces or zones are added
-  before Michael routes it.
+- This is a hand-routed board. Signals use 0.25 mm traces, the 3V3 trunk uses 0.50 mm traces with
+  0.25 mm pad escapes, and all vias are 0.60/0.30 mm. B.Cu carries the AGND plane with 0.25 mm
+  clearance and minimum fill width.
 
 ## Hand assembly and sourcing
 
@@ -130,8 +132,8 @@ uses the standard `SPH-002T-P0.5S` contacts already in stock. New PHR-4 and two 
 inexpensive; the headers and bridge ICs are board-specific purchases. The display harness uses
 eight 24-30 AWG conductors and 16 stock contacts. It does not use the low-insertion-force contact.
 
-PCB-03 is ordered as bare boards only. There is no JLCPCB assembly BOM or CPL. Generate Gerbers,
-drill files, a human-readable BOM, and front/back assembly drawings when routing is complete.
+PCB-03 is ordered as bare boards only. There is no JLCPCB assembly BOM, CPL, or stencil output.
+The release package contains only the Gerber and drill data needed to fabricate the bare PCB.
 
 ## Firmware contract
 
@@ -161,9 +163,9 @@ drill files, a human-readable BOM, and front/back assembly drawings when routing
 
 ## Release gates
 
-The schematic is ERC-clean. The placed, unrouted board has zero DRC violations and 33 expected
-unconnected items. Connector mating faces point outward, all component courtyards are clear, and
-the complete connector pin orders are printed on the back silkscreen.
+The schematic is ERC-clean. The routed board has zero DRC violations and zero unconnected items.
+Connector mating faces point outward, all component courtyards are clear, and the complete
+connector pin orders are printed on the back silkscreen.
 
 Before fabrication release, using the exact display that will be installed:
 
@@ -176,6 +178,5 @@ Before fabrication release, using the exact display that will be installed:
 3. Run a slow-ramp and brownout recovery check on PCA9536 and confirm the documented initialization
    sequence always regains control of both reset lines.
 
-Michael may route the present reviewed placement. Do not order boards until the three bench gates
-above pass. Routing completion then requires zero unrouted items, a reviewed headless DRC result,
-filled-ground verification, final renders, and bare-board fabrication outputs.
+Routing, filled-ground verification, final renders, and bare-board fabrication outputs are
+complete. Do not order boards until the three bench gates above pass.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the JLCPCB fabrication (+ assembly) package for a Stillair board.
 
-Usage: jlc_fab.py [pcb-01|pcb-01-v2|pcb-02] [--assembly-only]
+Usage: jlc_fab.py [pcb-01|pcb-01-v2|pcb-02|pcb-03] [--assembly-only]
                                             (default pcb-01)
 
 Outputs into pcb/<board>/fab/:
@@ -104,6 +104,20 @@ BOARDS = {
         "require_lcsc": False,
         "require_mpn": False,
     },
+    "pcb-03": {
+        # 2-layer display bridge: bare boards only, fully hand assembled.
+        "layers": (
+            "F.Cu,B.Cu,F.Mask,B.Mask,"
+            "F.Silkscreen,B.Silkscreen,Edge.Cuts"
+        ),
+        "assembly": False,
+        "no_part_prefixes": (),
+        "no_part_refs": set(),
+        "dnp_refs": set(),
+        "hand_solder": set(),
+        "require_lcsc": False,
+        "require_mpn": False,
+    },
 }
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -193,6 +207,44 @@ def assert_v2_release_ready() -> None:
     if approved:
         print(f"Accepted {len(approved)} reviewed DRC exceptions for PCB-01 V2.")
     print("Passed V2 ERC, schematic capture parity, and probe-map parity release gates.")
+
+
+def assert_pcb03_release_ready() -> None:
+    """Refuse to emit PCB-03 Gerbers from an unrouted or failing design."""
+    with tempfile.TemporaryDirectory(prefix="stillair-pcb03-release-") as temp_dir:
+        temp = Path(temp_dir)
+        drc_path = temp / "drc.json"
+        erc_path = temp / "erc.json"
+        run(
+            "pcb", "drc",
+            "--severity-all",
+            "--format", "json",
+            "-o", str(drc_path),
+            str(BOARD),
+        )
+        run(
+            "sch", "erc",
+            "--severity-all",
+            "--format", "json",
+            "-o", str(erc_path),
+            str(SCHEMATIC),
+        )
+        drc = json.loads(drc_path.read_text())
+        erc = json.loads(erc_path.read_text())
+    violations = drc.get("violations", [])
+    unconnected = drc.get("unconnected_items", [])
+    erc_violations = erc.get("violations", [])
+    if violations or unconnected or erc_violations:
+        drc_kinds = Counter(item.get("type", "unknown") for item in violations)
+        erc_kinds = Counter(item.get("type", "unknown") for item in erc_violations)
+        raise RuntimeError(
+            "PCB-03 release gate failed: "
+            f"{len(violations)} DRC violations ({dict(sorted(drc_kinds.items()))}), "
+            f"{len(unconnected)} unconnected items, and "
+            f"{len(erc_violations)} ERC violations ({dict(sorted(erc_kinds.items()))}). "
+            "No Gerbers were exported."
+        )
+    print("Passed PCB-03 ERC and DRC release gates.")
 
 
 def excluded(ref: str) -> bool:
@@ -912,10 +964,33 @@ def write_v2_release_manifest() -> None:
     print("wrote fab/release-manifest.sha256")
 
 
+def write_pcb03_release_manifest() -> None:
+    """Bind the bare-board upload ZIP and instructions to the checked sources."""
+    project = ROOT / f"{BOARD_NAME}.kicad_pro"
+    inputs = [
+        BOARD,
+        SCHEMATIC,
+        project,
+        OUT / f"{BOARD_NAME}-gerbers.zip",
+        OUT / "ORDERING.md",
+    ]
+    missing = [str(path) for path in inputs if not path.is_file()]
+    if missing:
+        raise RuntimeError(f"release manifest inputs missing: {missing}")
+    lines = []
+    for path in inputs:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        lines.append(f"{digest}  {path.relative_to(ROOT)}")
+    (OUT / "release-manifest.sha256").write_text("\n".join(lines) + "\n")
+    print("wrote fab/release-manifest.sha256")
+
+
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
     if BOARD_NAME == "pcb-01-v2" and not ARGS.assembly_only:
         assert_v2_release_ready()
+    if BOARD_NAME == "pcb-03" and not ARGS.assembly_only:
+        assert_pcb03_release_ready()
     if BOARD_NAME == "pcb-01-v2":
         write_v2_fabrication_notes()
         write_v2_assembly_locator()
@@ -935,4 +1010,6 @@ if __name__ == "__main__":
             print("assembly-only export invalidated fab/release-manifest.sha256")
         else:
             write_v2_release_manifest()
+    if BOARD_NAME == "pcb-03" and not ARGS.assembly_only:
+        write_pcb03_release_manifest()
     print("done", file=sys.stderr)
