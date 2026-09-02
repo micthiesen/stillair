@@ -12,6 +12,10 @@ Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
   routed with a filled B.Cu AGND plane. The three retained display/bridge checks in
   [pcb-03.md](pcb-03.md) are now first-article validation gates, not order blockers. The main unknown
   is whether the display accepts a 5000-byte RAM write split across SC18IS606 chip-select cycles.
+- **PCB-03 hand-assembly parts are ordered from DigiKey as 101388939.** The exact SC18IS606PWJ is
+  backordered with stock expected 2026-10-02; there is no validated drop-in substitute. The order
+  intentionally excludes the host connector, e-paper display, and PH contacts already in stock.
+  Increased spare quantities are recorded in [bom.csv](../bom/bom.csv).
 - **JLCPCB support accepted the PCB-03 paste-layer addition.** The initially uploaded bare-board
   ZIP did not contain `F.Paste`; support confirmed they would add the supplied top-side paste layer
   to order `W2026090305011104` for its stencil.
