@@ -70,7 +70,7 @@ for ref in sorted(parts, key=sortkey):
     if d.get("dnp"):
         extra.append("DNP")
     out.append(
-        f"{ref} | {d.get('Value','?')} | {p.lib_id} | {' '.join(extra)}"
+        f"{ref} | {d.get('Value','?')} | {p.lib_id} | {' '.join(extra)}".rstrip()
     )
 
 out.append("")

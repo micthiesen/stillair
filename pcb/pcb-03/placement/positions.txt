@@ -1,0 +1,13 @@
+Part positions from pcb-03.kicad_pcb (mm, KiCad frame, Y down).
+C1 78.50 60.50 rot 0
+C2 85.00 59.50 rot 90
+C3 88.00 70.50 rot 0
+H1 75.00 54.50 rot 0
+H2 75.00 76.50 rot 0
+J1 57.50 61.00 rot 270
+J2 92.00 73.00 rot 90
+R1 66.50 60.00 rot 0
+R2 66.50 64.00 rot 0
+R3 66.50 68.00 rot 0
+U1 75.00 65.00 rot 0
+U2 85.00 65.00 rot 0

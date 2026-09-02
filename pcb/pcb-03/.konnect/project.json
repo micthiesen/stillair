@@ -1,0 +1,29 @@
+{
+  "default_passives": {
+    "bulk_cap": "4.7uF X5R 0603",
+    "decoupling_cap": "100nF X7R 0603",
+    "pull_up": "10k 0603"
+  },
+  "design_rules": [
+    "Board is PCB-03, the optional 50 x 30 mm hand-assembled e-paper display bridge specified only by docs/pcb-03.md. It is not part of the fan safety architecture.",
+    "Two-layer 1 oz FR-4, 1.6 mm. All components are top-side. No PCBA outputs are required; every footprint must remain practical for hand soldering.",
+    "J1 is JST S4B-PH-K-S side-entry with pin 1 AGND, pin 2 3V3, pin 3 TEMP_SDA, pin 4 TEMP_SCL. J2 is JST S8B-PH-K-S side-entry with pin order 3V3, AGND, EPD_DIN, EPD_CLK, EPD_CS_N, EPD_DC, EPD_RESET_N, EPD_BUSY. Both mating faces point outward.",
+    "The host harness mapping is TP4 to J1.1, TP5 to J1.2, TP30 to J1.3, and TP31 to J1.4. The installed bracket or enclosure, not the connector solder joints, carries cable strain.",
+    "U1 is NXP SC18IS606PWJ in TSSOP-16 at I2C address 0x28. U2 is TI PCA9536DR in SOIC-8 at fixed I2C address 0x41. The shared V2 TMP1075 remains at 0x48.",
+    "PCB-01 V2 supplies the only TEMP_SDA and TEMP_SCL pull-ups. Do not fit duplicate I2C pull-ups on PCB-03.",
+    "Use 100 nF 0603 at each IC and 4.7 uF 0603 at the display connector. R1 pulls U1 INT_N to 3V3, R2 pulls BRIDGE_RESET_N to 3V3, and R3 pulls the unused U1 CITO/MISO input to AGND; all are 10 kOhm 0603.",
+    "The selected display is the plain monochrome Waveshare 1.54-inch V2 module. Its BUSY signal is active high. Do not use the three-color Module B polarity or driver.",
+    "Two 2.2 mm NPTH M2 mounting holes at local (25,4.5) and (25,26.5) with board origin absolute (50,50). Do not move the outline or holes without asking.",
+    "Placement stops with an unrouted clean ratsnest. Michael routes all traces and pours in KiCad."
+  ],
+  "fab_constraints": {
+    "fab_house": "JLCPCB",
+    "layer_count": 2,
+    "min_clearance_mm": 0.15,
+    "min_trace_width_mm": 0.15,
+    "min_via_drill_mm": 0.3
+  },
+  "naming_conventions": {
+    "net_prefix_ground": "GND"
+  }
+}

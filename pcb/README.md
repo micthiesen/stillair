@@ -17,6 +17,10 @@ of that doc.
 - `pcb-02/` — the 24 × 8 mm DRV5033 Hall daughterboard (**PCB-02**). Created 2026-07-30:
   schematic captured (ERC clean), 2-layer board set up (outline, M2 hole pair as the BR-100
   datum, JLCPCB rules). Ships as its own small order — PCB-01 already went out separately.
+- `pcb-03/` - the optional 50 x 30 mm e-paper display bridge (**PCB-03**). It converts PCB-01
+  V2's four-wire temperature I2C expansion path to the SPI and sideband signals used by a
+  Waveshare 1.54-inch black/white module. Its authority is
+  [`docs/pcb-03.md`](../docs/pcb-03.md); it is a two-layer bare board for hand assembly.
 
 ## Tooling
 
