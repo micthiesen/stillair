@@ -3,14 +3,18 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-09-02** (PCB-03 bare-board package prepared.)
+Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
 
 ## Now
 
-- **PCB-03 routing and bare-board fabrication outputs are complete.** The compact 39.75 x 21.00 mm
-  e-paper bridge is ERC-clean, DRC-clean, and fully routed with a filled B.Cu AGND plane. The
-  JLCPCB package contains Gerber and drill data only; no assembly BOM or CPL is generated. Ordering
-  remains blocked on the three retained display/bridge bench gates in [pcb-03.md](pcb-03.md).
+- **PCB-03 is ordered from JLCPCB as W2026090305011104 for $17 shipped.** The order is five bare
+  39.75 x 21.00 mm boards plus a top-side stencil. The bridge is ERC-clean, DRC-clean, and fully
+  routed with a filled B.Cu AGND plane. The three retained display/bridge checks in
+  [pcb-03.md](pcb-03.md) are now first-article validation gates, not order blockers. The main unknown
+  is whether the display accepts a 5000-byte RAM write split across SC18IS606 chip-select cycles.
+- **PCB-03 stencil data needs to reach the live order.** The initially uploaded bare-board ZIP did
+  not contain `F.Paste`. Send `pcb/pcb-03/fab/pcb-03-stencil-gerbers.zip` to JLCPCB for order
+  `W2026090305011104` before CAM completion and request a top-side stencil only.
 - **PCB-01 V2 is ordered from JLCPCB as W2026083117295494.** The order is five 88 x 64 mm
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
@@ -60,7 +64,7 @@ part set, and orders are complete.
 ## Learned Recently
 
 - PCB-03 architecture, connector pinout, firmware contract, final routed geometry, ordering
-  checklist, and pre-fabrication bench gates: [pcb-03.md](pcb-03.md),
+  checklist, and first-article validation gates: [pcb-03.md](pcb-03.md),
   [pcb-03/placement](../pcb/pcb-03/placement/), and
   [PCB-03 ORDERING.md](../pcb/pcb-03/fab/ORDERING.md).
 - Final V2 order settings, live-part constraints, hand inventory, CAM gates, and placement checks:

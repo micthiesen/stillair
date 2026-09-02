@@ -105,10 +105,11 @@ BOARDS = {
         "require_mpn": False,
     },
     "pcb-03": {
-        # 2-layer display bridge: bare boards only, fully hand assembled.
+        # 2-layer display bridge: bare boards, fully hand assembled. F.Paste is
+        # retained for the separately ordered top-side stencil.
         "layers": (
             "F.Cu,B.Cu,F.Mask,B.Mask,"
-            "F.Silkscreen,B.Silkscreen,Edge.Cuts"
+            "F.Silkscreen,B.Silkscreen,F.Paste,Edge.Cuts"
         ),
         "assembly": False,
         "no_part_prefixes": (),
@@ -307,6 +308,19 @@ def export_gerbers() -> None:
         for f in sorted(gdir.iterdir()):
             z.write(f, f.name)
     print(f"wrote {zip_path.relative_to(ROOT)} ({len(list(gdir.iterdir()))} files)")
+    if BOARD_NAME == "pcb-03":
+        stencil_files = [
+            gdir / f"{BOARD_NAME}-F_Paste.gtp",
+            gdir / f"{BOARD_NAME}-Edge_Cuts.gm1",
+        ]
+        missing = [str(path) for path in stencil_files if not path.is_file()]
+        if missing:
+            raise RuntimeError(f"PCB-03 stencil files missing: {missing}")
+        stencil_zip = OUT / f"{BOARD_NAME}-stencil-gerbers.zip"
+        with zipfile.ZipFile(stencil_zip, "w", zipfile.ZIP_DEFLATED) as z:
+            for path in stencil_files:
+                z.write(path, path.name)
+        print(f"wrote {stencil_zip.relative_to(ROOT)} ({len(stencil_files)} files)")
 
 
 def refs_from_rows(rows: list[dict[str, str]], field: str) -> list[str]:
@@ -972,6 +986,7 @@ def write_pcb03_release_manifest() -> None:
         SCHEMATIC,
         project,
         OUT / f"{BOARD_NAME}-gerbers.zip",
+        OUT / f"{BOARD_NAME}-stencil-gerbers.zip",
         OUT / "ORDERING.md",
     ]
     missing = [str(path) for path in inputs if not path.is_file()]

@@ -132,8 +132,10 @@ uses the standard `SPH-002T-P0.5S` contacts already in stock. New PHR-4 and two 
 inexpensive; the headers and bridge ICs are board-specific purchases. The display harness uses
 eight 24-30 AWG conductors and 16 stock contacts. It does not use the low-insertion-force contact.
 
-PCB-03 is ordered as bare boards only. There is no JLCPCB assembly BOM, CPL, or stencil output.
-The release package contains only the Gerber and drill data needed to fabricate the bare PCB.
+PCB-03 was ordered as five bare boards with a top-side stencil under JLCPCB order
+`W2026090305011104` for $17 shipped. There is no JLCPCB assembly BOM or CPL. The regenerated main
+Gerber package includes `F.Paste`, and `fab/pcb-03-stencil-gerbers.zip` contains the top paste and
+outline layers as a small stencil addendum for the live order.
 
 ## Firmware contract
 
@@ -161,13 +163,14 @@ The release package contains only the Gerber and drill data needed to fabricate 
   supervisor state, and the highest-priority active fault. Exact typography is firmware work, not
   a PCB release gate.
 
-## Release gates
+## Post-arrival validation gates
 
 The schematic is ERC-clean. The routed board has zero DRC violations and zero unconnected items.
 Connector mating faces point outward, all component courtyards are clear, and the complete
 connector pin orders are printed on the back silkscreen.
 
-Before fabrication release, using the exact display that will be installed:
+Before relying on PCB-03 or populating more than one first article, using the exact display that
+will be installed:
 
 1. Freeze the label part number and hardware revision for the plain monochrome Waveshare 1.54-inch
    V2 module, currently identified by Waveshare as HINK-E0154A05 / WFC0000CZ07, and prove it operates
@@ -179,4 +182,6 @@ Before fabrication release, using the exact display that will be installed:
    sequence always regains control of both reset lines.
 
 Routing, filled-ground verification, final renders, and bare-board fabrication outputs are
-complete. Do not order boards until the three bench gates above pass.
+complete. The prototype order was intentionally placed before these interoperability checks. A
+failure does not affect the controller's motor-safety architecture, but gate 2 can require replacing
+the SC18IS606 approach with direct ESP SPI or a local controller.
