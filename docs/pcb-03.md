@@ -66,6 +66,10 @@ A 200 x 200 monochrome frame is 5,000 bytes and requires four 1024-byte payload 
 must wait briefly, poll address `0x28` for ACK, impose a bounded timeout, and support normal clock
 stretching. `BRIDGE_INT_N` is not routed back to the ESP.
 
+There is no validated drop-in substitute for U1. DigiKey's suggested `SC18IS604PWJ` is the reverse
+bridge direction (SPI to I2C), so it cannot work here despite sharing TSSOP-16. The obsolete
+`SC18IS602B` has a different pinout and only a 200-byte buffer. Do not fit either part to PCB-03.
+
 ### U2 PCA9536DR
 
 | Pin | Signal | Connection and boot state |
