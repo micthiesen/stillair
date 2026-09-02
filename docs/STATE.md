@@ -16,6 +16,9 @@ Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
   backordered with stock expected 2026-10-02; there is no validated drop-in substitute. The order
   intentionally excludes the host connector, e-paper display, and PH contacts already in stock.
   Increased spare quantities are recorded in [bom.csv](../bom/bom.csv).
+- **The PCB-03 display is ordered from AliExpress as 8213753300045333.** Verify on arrival that it
+  is the black/white Waveshare 1.54-inch 200 x 200 V2 module, identified as HINK-E0154A05 /
+  WFC0000CZ07, before running the first-article gates.
 - **JLCPCB support accepted the PCB-03 paste-layer addition.** The initially uploaded bare-board
   ZIP did not contain `F.Paste`; support confirmed they would add the supplied top-side paste layer
   to order `W2026090305011104` for its stencil.
