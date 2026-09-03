@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
+Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification required.)
 
 ## Now
 
@@ -26,11 +26,12 @@ Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
   three complete adversarial reviews were clean before submission.
-- **JLCPCB engineering is reviewing the mandatory CAM requirements.** Both the order-message team
-  and Paul separately confirmed that the PCB Remark and attachments reached engineering. The DFM
-  currently visible is system-generated and preliminary; no action is due until JLCPCB activates
-  Confirm for the regenerated final DFM. This acknowledgment is not confirmation of U1 POFV, U3
-  pads 4/5 mask definition, or 97 ohm USB.
+- **JLCPCB's returned USB impedance proposal is not ready to approve.** Its trace map identifies
+  the correct nets, and its two proposed geometries calculate to 97.31 ohm and 97.17 ohm. It omits
+  a production geometry and calculation for the 1.50 mm-center J4-to-U13 parallel run. The drawing
+  uses the required 0.070 mm outer copper, but the impedance table calls it 1 oz; its recommended
+  reference-layer field also appears to say L4 while the calculation and design require adjacent
+  plane L2. Ask Eira to resolve all three discrepancies before approval.
 - **Production approval remains gated on JLCPCB's returned files.** Do not approve until CAM and
   placement output explicitly preserves all twelve U1 epoxy-filled and copper-capped POFV holes,
   U3 pads 4/5 solder-mask-defined apertures, the 97 ohm USB requirement, finished 88 x 64 mm
@@ -49,14 +50,11 @@ Last updated: **2026-09-02** (PCB-03 prototype boards and stencil ordered.)
 
 ## Next
 
-Wait for JLCPCB to activate Confirm for the regenerated final engineering DFM. Review that DFM and
-the later parts-placement output against the exact approval gates in
-[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when those outputs and any
-required written confirmations are correct, then wait for JLCPCB order `W2026083117295494` and
-DigiKey order `101316601` to arrive.
-
-This is the only remaining pre-delivery action because the design, submission package, assembly
-part set, and orders are complete.
+Reply to Eira requesting the missing J4-to-U13 production geometry and Si9000e result, explicit L2
+reference-plane selection, and written confirmation of 0.070 mm (2 oz finished) outer copper. Then
+review the final engineering DFM and later parts-placement output against every gate in
+[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when the returned outputs
+and written confirmations are complete.
 
 ## Candidates Not Chosen
 

@@ -34,6 +34,16 @@ shasum -a 256 -c fab/release-manifest.sha256
   or 97 ohm USB. Take no action until the final DFM is available. Do not approve a visual DFM alone
   if epoxy filling or impedance is not explicit; request written engineering confirmation in the
   DFM message thread first.
+- On 2026-09-03, Eira returned the impedance trace map and two Si9000e calculations. The highlighted
+  nets are correct, and the proposed `10.77 mil / 14.82 mil` and `12.87 mil / 38.30 mil`
+  width/edge-gap geometries calculate to `97.31 ohm` and `97.17 ohm`. Do not approve yet: the table
+  does not cover the approximately 3.17 mm parallel J4-to-U13 run whose submitted geometry is
+  0.20 mm width, 1.30 mm edge gap, and 1.50 mm center spacing. Require its production geometry and
+  Si9000e result. The recommended table also appears to name L4 as the bottom reference even though
+  these F.Cu traces require adjacent plane L2 and the Si9000e model uses the L1-to-L2 7.99 mil
+  dielectric. Require L2 explicitly. Also require written confirmation that the production outer
+  copper is 0.070 mm (2 oz finished); the stack drawing shows 0.070 mm but the impedance rows say
+  1 oz.
 - Confirm Parts Placement remains a separate later PCBA approval gate.
 
 ## Recommended order
