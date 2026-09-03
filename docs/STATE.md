@@ -31,7 +31,8 @@ Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification 
   a production geometry and calculation for the 1.50 mm-center J4-to-U13 parallel run. The drawing
   uses the required 0.070 mm outer copper, but the impedance table calls it 1 oz; its recommended
   reference-layer field also appears to say L4 while the calculation and design require adjacent
-  plane L2. Ask Eira to resolve all three discrepancies before approval.
+  plane L2. Michael sent all three clarification requests to Eira on 2026-09-03; wait for her
+  written response before approval.
 - **Production approval remains gated on JLCPCB's returned files.** Do not approve until CAM and
   placement output explicitly preserves all twelve U1 epoxy-filled and copper-capped POFV holes,
   U3 pads 4/5 solder-mask-defined apertures, the 97 ohm USB requirement, finished 88 x 64 mm
@@ -50,9 +51,9 @@ Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification 
 
 ## Next
 
-Reply to Eira requesting the missing J4-to-U13 production geometry and Si9000e result, explicit L2
-reference-plane selection, and written confirmation of 0.070 mm (2 oz finished) outer copper. Then
-review the final engineering DFM and later parts-placement output against every gate in
+Wait for Eira to answer the missing J4-to-U13 geometry, L2 reference-plane, and 0.070 mm outer-copper
+questions. Then review the revised calculation, final engineering DFM, and later parts-placement
+output against every gate in
 [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when the returned outputs
 and written confirmations are complete.
 

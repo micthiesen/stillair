@@ -44,6 +44,8 @@ shasum -a 256 -c fab/release-manifest.sha256
   dielectric. Require L2 explicitly. Also require written confirmation that the production outer
   copper is 0.070 mm (2 oz finished); the stack drawing shows 0.070 mm but the impedance rows say
   1 oz.
+- Michael sent those three clarification requests to Eira on 2026-09-03. Wait for her written
+  response and revised calculation before authorizing production.
 - Confirm Parts Placement remains a separate later PCBA approval gate.
 
 ## Recommended order
