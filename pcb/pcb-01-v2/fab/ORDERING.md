@@ -46,6 +46,14 @@ shasum -a 256 -c fab/release-manifest.sha256
   1 oz.
 - Michael sent those three clarification requests to Eira on 2026-09-03. Wait for her written
   response and revised calculation before authorizing production.
+- On 2026-09-04, Eira confirmed that the simulation uses L2 as the reference plane and is based on
+  2 oz outer / 1 oz inner copper, clearing those two questions. Engineering could not locate the
+  J4-to-U13 section and requested a marked image. A board-truth recheck confirmed that the released
+  board and matching Gerbers contain two 0.200 mm F.Cu vertical segments: `USB_DP` from
+  `(111.250, 57.355)` to `(111.250, 60.525)` and `USB_DN` from `(112.750, 57.355)` to
+  `(112.750, 60.525)`. They are each 3.170 mm long with 1.500 mm center spacing and 1.300 mm
+  copper-edge gap. Send the marked crop and require its production geometry and Si9000e result
+  before approval.
 - Confirm Parts Placement remains a separate later PCBA approval gate.
 
 ## Recommended order

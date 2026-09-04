@@ -26,13 +26,12 @@ Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification 
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
   three complete adversarial reviews were clean before submission.
-- **JLCPCB's returned USB impedance proposal is not ready to approve.** Its trace map identifies
-  the correct nets, and its two proposed geometries calculate to 97.31 ohm and 97.17 ohm. It omits
-  a production geometry and calculation for the 1.50 mm-center J4-to-U13 parallel run. The drawing
-  uses the required 0.070 mm outer copper, but the impedance table calls it 1 oz; its recommended
-  reference-layer field also appears to say L4 while the calculation and design require adjacent
-  plane L2. Michael sent all three clarification requests to Eira on 2026-09-03; wait for her
-  written response before approval.
+- **JLCPCB's returned USB impedance proposal is not ready to approve.** Eira confirmed on
+  2026-09-04 that the simulation uses adjacent plane L2 and 2 oz outer / 1 oz inner copper, clearing
+  those questions. Engineering could not locate the third J4-to-U13 geometry. A fresh read of the
+  released board and matching Gerbers confirms the two 3.170 mm, 0.200 mm F.Cu runs exist at
+  x=111.250 and x=112.750 mm, giving 1.500 mm center spacing and 1.300 mm copper-edge gap. Send the
+  marked crop and require its production geometry and Si9000e result before approval.
 - **Production approval remains gated on JLCPCB's returned files.** Do not approve until CAM and
   placement output explicitly preserves all twelve U1 epoxy-filled and copper-capped POFV holes,
   U3 pads 4/5 solder-mask-defined apertures, the 97 ohm USB requirement, finished 88 x 64 mm
@@ -51,9 +50,9 @@ Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification 
 
 ## Next
 
-Wait for Eira to answer the missing J4-to-U13 geometry, L2 reference-plane, and 0.070 mm outer-copper
-questions. Then review the revised calculation, final engineering DFM, and later parts-placement
-output against every gate in
+Send Eira the marked J4-to-U13 crop and request its production geometry and Si9000e result. Then
+review the revised calculation, final engineering DFM, and later parts-placement output against
+every gate in
 [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when the returned outputs
 and written confirmations are complete.
 
