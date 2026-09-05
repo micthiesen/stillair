@@ -113,8 +113,8 @@ Konnect *can* place and route; we still don't let it.
   number where one exists, and a matching BOM line.
 - Board setup from spec: stackup, layer names, net classes, design rules, board outline,
   mounting holes, keepouts.
-- All validation: ERC, DRC, `run_design_review`, `audit_decoupling`, `audit_power_rails`,
-  `audit_connections`, `check_bom_health`, `validate_for_manufacturing`.
+- All validation: schematic ERC and supported design audits, plus headless board DRC against the
+  waiver baseline and `/kicad-manufacture` pre-flight. Never use Konnect's manufacturing verdict.
 - Reading the board back and answering questions about it (what's on this net, what's the
   clearance here, is this rail decoupled).
 - JLCPCB part search and stocked-alternative suggestions.

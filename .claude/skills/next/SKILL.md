@@ -13,8 +13,9 @@ user_invocable: true
 # Next (Decide The Next Step)
 
 Turn "what should we do now?" from an open-ended re-derivation into a short, recorded decision.
-The output is always two things: a **recommendation with its why**, and an **updated
-`docs/STATE.md`** so the decision survives this session.
+The output is a **recommendation with its why** and an updated `docs/STATE.md`. When `/next` is part
+of an active request to continue the project, start the chosen repository work after recording it.
+Pause only at a physical gate or a consequential choice the repo cannot resolve.
 
 ## 1. Gather Ground Truth (Cheap, Parallel)
 

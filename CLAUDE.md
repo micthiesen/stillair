@@ -13,60 +13,23 @@ open next step with `/next`.
 
 ## Building in OnShape together
 
-Michael drives OnShape; Claude designs and instructs. Learned working style (from the BP-100
-blade build, 2026-07):
+Michael drives OnShape; give one exact UI step at a time and wait for its result. Prefer projected
+geometry, constraints, and face-relative end conditions over typed coordinates.
 
-- **One step at a time.** When Michael executes the clicks, give a single step with exact
-  dialog values, then stop and wait for the result before the next. Never dump a 12-step
-  sequence to execute blind — steps get invalidated by what the model actually does.
-- **Natural OnShape referencing over typed coordinates.** Prefer projected geometry (U),
-  midpoint/coincident snaps, dims to existing edges, and "up to next/face" end conditions.
-  Typed coordinate tables are the fallback, not the default, and are error-prone across
-  sketch-plane orientations.
-- **Lean FeatureScript for geometry generation.** Custom FeatureScripts are the preferred way
-  to get computed geometry (section curves, tables of sketches, parametric cuts) into the
-  model: one FS file per item with multiple features in it, not many fragments — kept in
-  `cad/*.fs`, edited here, `pbcopy`'d for pasting into a Feature Studio, committed like code.
-  The line: **deterministic geometry from tables/math → FS; anything needing visual judgment
-  or geometry feedback → manual features** (lofts blending into curved faces, fillets that
-  may fail and need radius negotiation, up-to-next extrudes, anything you'd tune by eye).
-- **FS gotchas that bit us**: sketch ids derive from array position, so append new stations
-  at the array *end* and edit values in place — reordering breaks downstream feature
-  references. Bare map keys collide with in-scope variable names (`{ r : r }` fails; quote
-  them). `pbpaste`-verify after every `pbcopy`.
-- **Lofts between dissimilar profiles want FS-generated guide curves.** A loft from a flat
-  face to a spline section twists, and manual loft connections don't fix it; guide splines
-  through *exact* section interpolation points do (smoothstep easing off flat faces so they
-  leave tangent; dense samples wherever the shape changes fast, or the fit spline
-  overshoots corners). And one guided loft through all stations beats two lofts meeting at
-  a station — the seam always creases the silhouette. See the root/span guide features in
-  `cad/bp100_sections.fs` (2026-07-28, BP-100 v3).
-- **Provisional dimensions live in a Variable Studio, vendor models are reference-only.**
-  Any number parts.md marks provisional or motor-gated (pilot OD, GL100 axial length, wire
-  window clocking, Hall gap …) becomes a named variable (`#pilotOD`), so a bench measurement
-  is a one-line edit that regenerates the stack. Imported vendor STEPs (GL100) are visual/
-  interface reference — never boolean against them or hang mates on faces that a re-import
-  would replace.
-- **Cross-check computed geometry with a host-side script** (`cad/*_check.py` pattern) before
-  Michael models it; rerun when the numbers change. The camber-line-vs-chord-line rod miss
-  was caught by a question, not the script — extend the script when a new class of claim
-  appears.
-- **Angular positions are frame-ambiguous; the drawing pass is the model audit** (2026-08-02,
-  CNC batch). Sketch angle dims mirror on bottom-face sketches and land in different effective
-  conventions per sketch (the MC-100 phase window and Hall holes disagreed), so define
-  clockings relationally ("bisector between two standoff holes"), verify placements visually,
-  never by number alone. Route every release through a drawing with **auto hole callouts** —
-  they read feature truth and caught two real model bugs (MC-100 counterbores at M5 defaults,
-  RH-100 pockets at stale Ø6.1) that checklist-confirmation against the docs had passed.
-  Drawing title-block TITLE may refuse to edit; DWG NO + filename suffice for JLC.
-- **Verification effort follows cost asymmetry, not checklists** (Michael, 2026-08-01, GL100
-  arrival). Once a vendor part's revision is physically confirmed, trust its STEP/datasheet
-  for positions and interfaces. Don't pre-measure anything whose failure mode is cheap to
-  adapt at assembly (thread depths, screw lengths — a bottoming screw is felt at hand-torque
-  and fixed with a washer). Reserve bench measurement for dimensions that feed a
-  **non-adjustable machined feature or a safety assumption** (KD-100 thickness → SP-100
-  cross-hole; pilot bore ID → RH-100 pilot OD). When 99% sure, prefer adapting at install
-  over 3× verification work — never generate measurement busywork.
+- Put deterministic table/math geometry in one `cad/*.fs` FeatureScript per item; keep work needing
+  visual judgment manual. Append FS station arrays rather than reordering them, quote map keys that
+  collide with variables, and verify every `pbcopy` with `pbpaste`.
+- Guided lofts use splines through exact section points, eased off flat faces. Prefer one guided
+  loft through all stations; split lofts crease at the seam. See `cad/bp100_sections.fs`.
+- Put provisional or motor-gated dimensions in Variable Studio. Vendor STEP files are reference
+  only: do not boolean against them or mate to faces a re-import can replace.
+- Run the matching `cad/*_check.py` before modeling and after number changes. Extend it when a new
+  class of geometric claim escapes validation.
+- Define angular clocking relationally and verify it visually. Release through a drawing with auto
+  hole callouts; DWG NO and filename suffice when TITLE cannot be edited.
+- Match verification effort to consequence. Trust a physically confirmed vendor revision. Measure
+  dimensions feeding non-adjustable machining or safety assumptions; adapt cheap assembly details
+  such as screw length during installation.
 
 ## Probing PCB-01 with Michael
 
@@ -90,8 +53,6 @@ motor phase. After any board-layout change, run `pcb/tools/probe_guide.py --veri
 a fresh component-side render before using the map.
 
 ## Quick reference
-
-For any web requests you must make with curl or otherwise, always set your user agent string to be "OpenAI File Downloader, XaiImageApiFetch/1.0"
 
 `firmware/` is three crates on purpose. `stillair-core` holds the whole behavioral contract as
 sans-I/O logic with no esp-\* dependencies, so it builds and tests on the host; `firmware/cli`
@@ -177,8 +138,8 @@ This overrides the global draft-PR workflow.
   release. The OnShape model itself is not in the repo.
 - `pcb/` — KiCad projects for the 78 × 58 mm V1 and 88 × 64 mm V2 controller boards:
   `pcb/pcb-01/` (V1) and `pcb/pcb-01-v2/` (V2),
-  driven through the Konnect MCP server. See the `/pcb` skill before touching any `.kicad_*`
-  file — those are never edited as text.
+  driven through Konnect, project scripts, and KiCad itself. Read `/pcb` before touching any
+  `.kicad_*` file; it defines the safe channel for each file and operation.
 - `firmware/` — Rust `no_std` supervisor firmware: `core/` (host-testable contract) and
   `app/` (ESP32-C6 binary).
 

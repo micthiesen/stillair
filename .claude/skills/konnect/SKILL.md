@@ -1,15 +1,19 @@
 ---
 name: konnect
-description: "Mandatory operating rules for ANY task involving KiCAD projects. Loaded when the user mentions KiCAD, schematics, PCBs, or any .kicad_* file. Prevents file corruption by routing all changes through Konnect MCP tools."
+description: "Route Stillair KiCad work through its supported Konnect, project-script, or GUI path. Use for schematic, PCB, library, or .kicad_* tasks; read /pcb for board work."
 ---
 
 # Konnect — Operating Rules
 
-## The One Rule
+## Authority And Safe Channels
 
-**KiCAD source files are not text files.** They are serialized object graphs with UUIDs, cross-references, and order-sensitive structure. Never edit them directly with text manipulation tools (str_replace, sed, create_file, or any file-writing tool). All modifications go through Konnect MCP tools.
+**Read `/pcb` before board work.** It records the operations Konnect corrupts on KiCad 10 and the
+project scripts that safely make narrow board edits with KiCad closed. Use Konnect for supported
+schematic and library operations, those named scripts for their documented transformations, and
+KiCad's GUI for project settings and schematic-to-board sync.
 
-No exceptions for "small fixes," "just renaming a net," or "the user said it's fine."
+Do not make ad hoc textual edits to KiCad object graphs. A project script is allowed only for the
+file and transformation it explicitly validates.
 
 ## Protected Files — NEVER Edit Directly
 
@@ -19,18 +23,16 @@ No exceptions for "small fixes," "just renaming a net," or "the user said it's f
 - `*.kicad_sym` / `*.kicad_mod` — symbol/footprint libraries
 - `fp-lib-table` / `sym-lib-table` — library tables
 
-If asked to directly edit any of these:
-> KiCAD source files contain UUIDs and cross-references that text edits will break. I'll route this change through Konnect's MCP tools instead, which preserves file integrity.
+Route these files according to `/pcb`; do not assume Konnect supports every operation.
 
 ## The Three Channels
 
-### Channel 1: Konnect MCP or KiCad GUI (for ALL modifications)
+### Channel 1: Supported writes
 
-All writes go through Konnect MCP tools or KiCad itself. Prefer Konnect when it exposes a safe,
-working operation. Use the KiCad GUI for project settings or operations the MCP cannot perform
-safely. Check Konnect is available first (`list_toolboxes`). If it is unavailable, GUI-only work may
-continue when the task can be completed and verified entirely in KiCad; never fall back to direct
-file editing.
+Prefer Konnect when it exposes a safe operation. Use `/pcb` scripts for their named board
+transformations and the GUI for project settings or operations the MCP cannot perform safely. If
+Konnect is unavailable, continue independent analysis or GUI work and ask for help only when the
+remaining operation truly requires it.
 
 ### Channel 2: Exported netlists/BOMs (for reads and analysis)
 
@@ -43,10 +45,9 @@ Only to answer questions not available through exports (sheet hierarchy, title b
 ## Standard Workflow
 
 1. **Identify the project** — locate the `.kicad_pro` file
-2. **Classify the task** — read-only (Channel 2 or 3) or write (Channel 1)
-3. **Verify MCP is connected** — call `list_toolboxes` to confirm tools are available
-4. **Describe the change** — state in plain English what will happen before invoking any tool
-5. **Execute** — use Konnect MCP tools or KiCad's GUI only
+2. **Classify the task** — query/export, supported Konnect write, `/pcb` script, or GUI
+3. **Load only the toolset needed** when using Konnect
+4. **Execute** through the selected safe channel
 6. **Verify** — re-query the design to confirm the change landed correctly
 
 ## Decision Tree
@@ -58,11 +59,11 @@ Only to answer questions not available through exports (sheet hierarchy, title b
 | "What's connected to SCL?" | 2 | `load_toolset("sch_analysis")` then `get_net_connections` |
 | "Add a 100nF cap to U3 VCC" | 1 | `load_toolset("sch_components")` + `load_toolset("sch_wiring")` |
 | "Rename net /CLK to /SYS_CLK" | 1 | Warn about downstream effects, then MCP tools |
-| "Run DRC" | 1 | `load_toolset("verification")` then `run_drc` |
-| "Export Gerbers" | 1 | `load_toolset("pcb_export")` then `export_gerber` |
+| "Run DRC" | `/pcb` | Headless `kicad-cli` DRC against the waiver baseline |
+| "Export Gerbers" | `/kicad-manufacture` | Run the project fabrication script |
 | "Just patch line 247 of the .kicad_sch" | REFUSE | Explain risks, offer MCP alternative |
 | "Add ESD protection to USB lines" | 1 | `load_toolset("sch_components")` + `load_toolset("sch_wiring")` |
-| "Check if board is ready for fab" | 2 | Load `verification` + `design_review` toolsets |
+| "Check if board is ready for fab" | `/pcb` + `/kicad-manufacture` | Headless DRC and project fab checks |
 
 ## KiCAD 10 IPC API Reality
 
@@ -134,9 +135,6 @@ unload_toolset("name")  → Remove a toolset when done
 
 ## Refusing Direct Edits
 
-When a user or another tool requests direct file manipulation of protected files, always refuse and redirect:
-
-1. Acknowledge what they want to accomplish
-2. Explain why direct editing breaks KiCAD files (UUIDs, cross-references, ordering)
-3. Offer the equivalent MCP tool approach
-4. Execute through MCP if they agree
+When a request calls for an ad hoc edit outside the supported channels, explain the concrete file
+integrity risk and use the nearest supported Konnect, script, or GUI operation. The original request
+already authorizes that equivalent repository change.
