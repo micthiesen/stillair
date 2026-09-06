@@ -1,8 +1,8 @@
 # KiCad GUI automation on this Mac
 
-Read this reference when a KiCad task needs project launch, Board Setup, Update PCB from
-Schematic, or window cleanup. It records the reliable Codex-hosted automation path and the
-fresh-project scaffold procedure. It does not authorize direct edits to protected KiCad files.
+Read this reference when downstream KiCad work needs project launch, Board Setup, ECO application,
+or window cleanup. It records the reliable automation path after a tscircuit handoff. It does not
+authorize direct edits to protected KiCad files.
 
 ## Open the project without stray editors
 
@@ -45,38 +45,32 @@ reuse coordinates across a moved or resized window.
 If macOS presents a permission alert, inspect the actual alert and approve only the access needed
 for the current KiCad operation. Do not dismiss or guess through an unseen prompt.
 
-## Fresh project scaffold
+## Initial handoff setup
 
-Before applying any circuit or layout specification, create the reusable shell in KiCad:
+The tscircuit handoff tool creates the initial project, schematic/netlist, outline, holes, and
+placement in a staging directory. Validate and adopt that seed once. Do not manually recreate those
+source-owned domains in KiCad.
 
-- project metadata: title, revision, company, and comments;
-- four copper layers and the specified finished thickness;
-- outer and inner copper weights, with inner layers classified as power planes when required;
-- board minimum clearance, track, via, copper-to-hole, and copper-to-edge constraints;
-- default net class widths and clearances;
-- schematic fields `MPN`, `LCSC`, `Note`, and `DNP`;
-- empty project-local symbol and footprint libraries, registered through Konnect's library tools.
+Use KiCad's Board Setup and Schematic Setup dialogs only for items declared in
+`design/kicad-augment.json`, such as project metadata, stackup/copper weights, impedance settings,
+net classes, custom rules, and fabrication constraints unsupported by the exporter. Do not use
+Konnect's `add_layer`, `set_design_rules`, `create_netclass`, or `assign_net_to_class` on KiCad 10.
+Do not edit `.kicad_pro` directly.
 
-Use KiCad's Board Setup and Schematic Setup dialogs for project settings. Do not use Konnect's
-`add_layer`, `set_design_rules`, `create_netclass`, or `assign_net_to_class` on KiCad 10. Do not
-edit `.kicad_pro` directly. When adding empty local libraries, use Konnect's library toolset and
-verify both registrations from the project.
-
-Do not add an outline, holes, components, nets, placement, zones, or routes during scaffolding.
-Avoid predefined-size `+` rows unless the design needs real alternate sizes. Empty additions are
-serialized as zero-valued sentinel entries and provide no useful default. The default net class is
-the operative default.
+After routes exist, use the handoff ECO plan rather than Update PCB from Schematic as a blind full
+sync. Snapshot route, via, zone, graphic, rule, and UUID state before applying an ECO, then prove
+unrelated KiCad-owned state is preserved.
 
 Board Setup fields can share a vertical coordinate. When UI automation must target a field, match
 both x and y position or another unique Accessibility property. A y-only match can update a second
 field such as maximum error deviation.
 
-## Verify before capture
+## Verify after setup or ECO
 
 - Save both editors.
-- Run ERC. An empty scaffold should report no violations.
-- Run headless DRC. Before an outline exists, `invalid_outline` is expected; no other violation or
-  unconnected item should appear.
+- Run ERC and headless DRC. For an initial unrouted seed, unconnected findings are expected; parse,
+  outline, courtyard, or footprint errors are not.
 - Reopen Board Setup and confirm the visible values, especially layer count, stackup thickness,
   copper weights, minimums, and default net class.
+- Run source-to-KiCad parity and verify all applied augmentation items.
 - Run the window audit and leave the project manager minimized.

@@ -1,8 +1,9 @@
 # Stillair
 
 Custom 44-inch direct-drive ceiling fan: planning docs, BOM, commissioning tests, firmware,
-and (eventually) CAD outputs and the KiCad PCB. The full 3D model lives in OnShape; everything
-else lives here. This repo is the canonical source; the old ChatGPT design site is dead.
+CAD outputs, tscircuit PCB source, and downstream KiCad production boards. The full 3D model lives
+in OnShape; everything else lives here. This repo is the canonical source; the old ChatGPT design
+site is dead.
 
 > This is a living document. Update it when you learn new preferences, patterns, or project
 > conventions. Don't ask — just update it if something is missing or outdated.
@@ -136,10 +137,11 @@ This overrides the global draft-PR workflow.
 - `testing/` — `test-matrix.csv`, the pass/fail commissioning matrix with sign-off fields.
 - `cad/` — fabrication outputs (DXF/STEP/print files) exported from OnShape when parts near
   release. The OnShape model itself is not in the repo.
-- `pcb/` — KiCad projects for the 78 × 58 mm V1 and 88 × 64 mm V2 controller boards:
-  `pcb/pcb-01/` (V1) and `pcb/pcb-01-v2/` (V2),
-  driven through Konnect, project scripts, and KiCad itself. Read `/pcb` before touching any
-  `.kicad_*` file; it defines the safe channel for each file and operation.
+- `pcb/`: tscircuit source is authoritative for every new board through schematic, board
+  specification, and component placement. KiCad owns downstream routing and unsupported
+  fabrication detail. PCB-01, PCB-01 V2, PCB-02, and released PCB-03 remain legacy
+  KiCad-authoritative boards. See the `/pcb` skill before PCB work; `.kicad_*` files are never
+  edited as text.
 - `firmware/` — Rust `no_std` supervisor firmware: `core/` (host-testable contract) and
   `app/` (ESP32-C6 binary).
 
@@ -209,7 +211,8 @@ patterns, `unseamless-coop` for the session-continuity system). Shared AI toolin
 
 ## On-demand procedures live in skills
 
-- **/pcb** — KiCad + Konnect: capture, board setup, validation, and the agent/human split.
+- **/pcb**: tscircuit authoring, validation, review, guarded KiCad handoff/ECOs, and downstream
+  production work.
 - **/next** — decide the next step: candidates, gating analysis, recorded in STATE.md.
 - **/wrap** — conclude a session: sweep learnings into their homes, rewrite STATE.md, commit,
   push.

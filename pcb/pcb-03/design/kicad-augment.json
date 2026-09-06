@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "board_id": "pcb03.board.main",
+  "operations": [
+    {
+      "id": "pcb03.augment.coordinate-transform",
+      "kind": "coordinate_transform",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "tscircuit_center_mm": [0, 0],
+        "kicad_center_mm": [69.875, 65],
+        "x_axis": "same",
+        "y_axis": "invert"
+      }
+    },
+    {
+      "id": "pcb03.augment.net-alias-3v3",
+      "kind": "net_alias",
+      "owner": "kicad",
+      "target": { "net_stable_id": "pcb03.net.3v3" },
+      "params": { "source_name": "V3V3", "kicad_name": "3V3" }
+    },
+    {
+      "id": "pcb03.augment.stackup",
+      "kind": "stackup",
+      "owner": "kicad",
+      "target": {},
+      "params": { "layer_count": 2, "copper_weight_oz": 1, "thickness_mm": 1.6 }
+    },
+    {
+      "id": "pcb03.augment.design-minimums",
+      "kind": "custom_rule",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "name": "PCB-03 fabrication minimums",
+        "minimum_clearance_mm": 0.15,
+        "minimum_trace_width_mm": 0.15,
+        "minimum_via_drill_mm": 0.3,
+        "minimum_via_pad_mm": 0.6,
+        "signal_trace_width_mm": 0.25,
+        "power_trunk_width_mm": 0.5,
+        "power_escape_width_mm": 0.25
+      }
+    },
+    {
+      "id": "pcb03.augment.agnd-bottom-zone",
+      "kind": "zone",
+      "owner": "kicad",
+      "target": { "net_stable_id": "pcb03.net.agnd" },
+      "params": { "layer": "B.Cu", "clearance_mm": 0.25, "minimum_fill_width_mm": 0.25 }
+    },
+    {
+      "id": "pcb03.augment.surface-finish",
+      "kind": "fabrication_note",
+      "owner": "kicad",
+      "target": {},
+      "params": { "text": "Lead-free HASL; green solder mask; white silkscreen; top-side assembly." }
+    },
+    {
+      "id": "pcb03.augment.production-routing",
+      "kind": "fabrication_note",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "category": "routing",
+        "allowed_initial_drc_ignored_checks": [
+          "footprint_filters_mismatch",
+          "footprint_type_mismatch",
+          "missing_courtyard",
+          "track_not_centered_on_via",
+          "tuning_profile_track_geometries"
+        ],
+        "text": "KiCad owns all production tracks and vias. Route with the declared 0.25 mm signal, 0.5 mm power-trunk, 0.25 mm power-escape, and 0.6/0.3 mm via rules; verify with KiCad DRC."
+      }
+    },
+    {
+      "id": "pcb03.augment.final-silkscreen",
+      "kind": "silkscreen",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "scope": "production",
+        "text": "Preserve the source HOST, E-PAPER, J1, and J2 labels; add or move reference/value and pin-1 marks only for final legibility after routing.",
+        "verification": "Inspect front and back KiCad renders and require no silkscreen over pads or board edges."
+      }
+    },
+    {
+      "id": "pcb03.augment.schematic-cleanup",
+      "kind": "schematic_cleanup",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "allowed_initial_erc_types": [
+          "endpoint_off_grid",
+          "label_dangling",
+          "lib_symbol_issues",
+          "pin_not_connected"
+        ],
+        "allowed_initial_erc_ignored_checks": [
+          "footprint_filter",
+          "four_way_junction",
+          "simulation_model_issue",
+          "single_global_label"
+        ],
+        "allowed_initial_semantic_differences": [
+          "datasheet",
+          "manufacturer_part_number",
+          "symbol_id",
+          "value_format"
+        ],
+        "requirements": [
+          "Snap all symbol pins, wire ends, and labels to KiCad's connection grid without changing the validated netlist.",
+          "Replace exporter-local symbols with the manifest's official KiCad symbol intent while preserving exact pin numbers.",
+          "Set every electrical symbol's Footprint, manufacturer part number, and Datasheet properties from the authoritative manifest.",
+          "Add explicit no-connect flags to U1 pins 8 and 16."
+        ],
+        "verification": "Before routing, resolve every declared ERC category and require a clean KiCad ERC report."
+      }
+    },
+    {
+      "id": "pcb03.augment.fabrication-export-check",
+      "kind": "fabrication_note",
+      "owner": "kicad",
+      "target": {},
+      "params": {
+        "category": "fabrication_export",
+        "text": "Export Gerbers, drill, BOM, and CPL from the augmented KiCad project with pcb/tools/jlc_fab.py; verify KiCad ERC/DRC, zero unconnected items, current zone fills, and fabrication renders before release."
+      }
+    },
+    {
+      "id": "pcb03.augment.footprint-c1",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.c1" },
+      "params": { "kicad_footprint": "Capacitor_SMD:C_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-c2",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.c2" },
+      "params": { "kicad_footprint": "Capacitor_SMD:C_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-c3",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.c3" },
+      "params": { "kicad_footprint": "Capacitor_SMD:C_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-h1",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.h1" },
+      "params": { "kicad_footprint": "MountingHole:MountingHole_2.2mm_M2", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-h2",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.h2" },
+      "params": { "kicad_footprint": "MountingHole:MountingHole_2.2mm_M2", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-j1",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.j1" },
+      "params": { "kicad_footprint": "Connector_JST:JST_PH_S4B-PH-K_1x04_P2.00mm_Horizontal", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-j2",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.j2" },
+      "params": { "kicad_footprint": "Connector_JST:JST_PH_S8B-PH-K_1x08_P2.00mm_Horizontal", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-r1",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.r1" },
+      "params": { "kicad_footprint": "Resistor_SMD:R_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-r2",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.r2" },
+      "params": { "kicad_footprint": "Resistor_SMD:R_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-r3",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.r3" },
+      "params": { "kicad_footprint": "Resistor_SMD:R_0603_1608Metric", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-u1",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.u1" },
+      "params": { "kicad_footprint": "Package_SO:TSSOP-16_4.4x5mm_P0.65mm", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    },
+    {
+      "id": "pcb03.augment.footprint-u2",
+      "kind": "footprint_override",
+      "owner": "kicad",
+      "target": { "component_stable_id": "pcb03.component.u2" },
+      "params": { "kicad_footprint": "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", "reason": "Replace exporter-local footprint geometry with the official KiCad library footprint." }
+    }
+  ]
+}

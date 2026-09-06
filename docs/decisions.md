@@ -15,6 +15,7 @@ The design to take into CAD. All items below are **selected**.
 | Drive | CubeMars GL100 KV10 with TI MCF8316D sensorless FOC | The low-KV motor is naturally matched to slow direct drive. A custom four-layer V1 board replaces the evaluation module. |
 | Power | Mean Well GST60A24-P1J, 24 V / 60 W, 3 A source fuse | Only low voltage crosses the ceiling; a physical switch opens the positive conductor. |
 | Control | ESP32-C6, local Matter over Wi-Fi (rs-matter, pure Rust), continuous speed and reverse, used from Apple Home | Replaces the original HomeKit/HAP plan (no maintained no_std HAP exists). Network loss preserves operation; ESP failure disables the bridge; power restoration remains off. |
+| PCB source | Tscircuit authoritative through schematic, board specification, and component placement; KiCad downstream for routing and unsupported production detail | Selected 2026-09-06. Existing released boards remain KiCad-authoritative. Routed boards receive explicit ECOs and are never overwritten by regeneration. See [pcb-workflow.md](pcb-workflow.md). |
 | Duty | 35–170 RPM target range, 180 RPM driver limit, 200 RPM analog trip | Release the actual minimum after representative startup testing. The analog path is an independent runaway backstop, not precision regulation. |
 | Appearance | Minimal light wood or white blades with consistent stainless hardware | No light; the white printed surface conduit is outside the fan design. |
 
@@ -82,8 +83,10 @@ Constraints that cannot all be optimized.
 ## Deliverable boundaries
 
 The docs define dimensioned mechanical views, part interfaces, materials, loads, exact
-standard components, a circuit-level PCB handoff, placement zones, controller behavior,
-sources, and acceptance tests. Michael creates the final OnShape models, captures and reviews
-the KiCad schematic/layout in `pcb/`, and implements firmware in `firmware/`. Michael performs
+standard components, PCB requirements and placement zones, controller behavior, sources, and
+acceptance tests. For new boards, tscircuit source is authoritative for component definitions,
+schematic connectivity, board specification, and placement. KiCad owns routing and features that
+the pinned tscircuit toolchain cannot represent or export reliably. Michael creates the final
+OnShape models and implements firmware in `firmware/`. Michael performs
 the physical installation with project guidance. Completed tether/catcher/slab work and local
 approval decisions remain owner-managed and outside the active project plan.

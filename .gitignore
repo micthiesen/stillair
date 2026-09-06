@@ -1,5 +1,9 @@
 target/
 tmp/
+node_modules/
+pcb/dist/
+pcb/**/dist/
+.tscircuit/
 .DS_Store
 __pycache__/
 *.pyc

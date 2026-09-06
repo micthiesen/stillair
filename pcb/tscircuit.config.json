@@ -1,0 +1,16 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@tscircuit/cli/types/tscircuit.config.schema.json",
+  "mainEntrypoint": "pcb-03/design/pcb-03.circuit.tsx",
+  "previewComponentPath": "pcb-03/design/pcb-03.circuit.tsx",
+  "kicadProjectEntrypointPath": "pcb-03/design/pcb-03.circuit.tsx",
+  "includeBoardFiles": ["pcb-*/design/*.circuit.tsx"],
+  "ignoredFiles": ["dist", "**/handoff/**"],
+  "build": {
+    "circuitJson": true,
+    "kicadProject": false,
+    "previewImages": false
+  },
+  "pcbSnapshotSettings": {
+    "showCourtyards": true
+  }
+}

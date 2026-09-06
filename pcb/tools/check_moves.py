@@ -2,7 +2,8 @@
 """Check proposed footprint moves against every current board courtyard.
 
 Proposal JSON maps each reference to ``[x_mm, y_mm, rotation_deg]``. This is
-read-only and is intended as the final geometry gate before apply_positions.py.
+read-only and is retained only for legacy PCB-01 placement analysis. It is not a tscircuit-first
+placement or update path.
 """
 
 import argparse

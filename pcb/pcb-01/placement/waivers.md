@@ -19,7 +19,7 @@
 > also fired between vias and H1–H4's silkscreen *reference text* (4 noise pairs plus one
 > false hit on a legal stitch via).
 
-> **SILK SWEEP DONE 2026-07-30** (`pcb/tools/silk_sweep.py` + hand fixes from renders).
+> **SILK SWEEP DONE 2026-07-30** (retired `silk_sweep.py`, retained in git history, plus hand fixes from renders).
 > Final silk residuals — all verified non-functional, waived:
 > **silk_over_copper 40**: footprint outline artwork over the footprint's own pads
 > (U1's QFN rectangle and similar); fab clips silk at mask openings.

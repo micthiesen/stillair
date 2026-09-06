@@ -13,8 +13,8 @@ This repo is the canonical source for everything except the OnShape 3D model:
 - [`testing/`](testing/README.md) — commissioning matrix with sign-off fields
 - [`firmware/`](firmware/) — Rust `no_std` ESP32-C6 supervisor (stub; contract in
   [docs/controls.md](docs/controls.md))
-- [`pcb/`](pcb/README.md) — KiCad controller board (handoff in
-  [docs/electrical.md](docs/electrical.md))
+- [`pcb/`](pcb/README.md): authoritative tscircuit source for new boards plus downstream KiCad
+  routing and production outputs (requirements in [docs/electrical.md](docs/electrical.md))
 - [`cad/`](cad/README.md) — fabrication outputs (specs in [docs/parts.md](docs/parts.md))
 
 Firmware: `cd firmware && cargo build` (stable Rust; flashing via `cargo run` uses espflash).

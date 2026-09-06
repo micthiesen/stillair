@@ -1,10 +1,10 @@
 # PCB
 
-KiCad projects for the 78 × 58 mm V1 and 88 × 64 mm V2 controller boards (schematic
-capture, layout, fab outputs). The complete circuit-level handoff (outline, schematic blocks,
-starting values, pinouts, placement zones, layer plan, test points) is
-[../docs/electrical.md](../docs/electrical.md), and the V1-to-V2 gate list is at the bottom
-of that doc.
+PCB design source and production projects. For new boards, committed tscircuit code owns component
+definitions, schematic connectivity, board specifications, and placement. KiCad owns downstream
+routing, unsupported fabrication detail, checks, and outputs. The complete electrical requirements
+are [../docs/electrical.md](../docs/electrical.md), and the V1-to-V2 gate list is at the bottom of
+that doc.
 
 ## Projects
 
@@ -23,14 +23,23 @@ of that doc.
   [`docs/pcb-03.md`](../docs/pcb-03.md); it is a two-layer bare board for hand assembly. Upload
   and quote settings are in [`pcb-03/fab/ORDERING.md`](pcb-03/fab/ORDERING.md).
 
-## Tooling
+## Tooling and authority
 
-KiCad 10 plus the [Konnect](https://github.com/mixelpixx/Konnect) MCP server, wired up in
-`.mcp.json` (Claude Code) and `.codex/config.toml` (Codex), both project-scoped. The operating manual — who
-drives what, session startup, and the quirks — is the **`/pcb` skill** at
-[`.claude/skills/pcb/SKILL.md`](../.claude/skills/pcb/SKILL.md). Board constraints and the
-safety-critical routing rules are committed as Konnect project config in
-`pcb-01/.konnect/project.json`, so the agent reads them without being told.
+The pinned local tscircuit toolchain lives in this directory. Run its viewer locally so code and
+reviewed placement edits remain in the checkout. The **`/pcb` skill** at
+[`.claude/skills/pcb/SKILL.md`](../.claude/skills/pcb/SKILL.md) defines authoring, review, initial
+handoff, and later ECOs. KiCad 10 and the project-scoped Konnect server remain available only for
+the downstream phase.
+
+An initial handoff exports a new KiCad seed into staging. Once routing starts, a new export must
+never overwrite the production board. Later tscircuit changes become an explicit stable-identity
+ECO, applied through KiCad/Konnect/native APIs and checked to preserve unrelated routes, vias,
+zones, rules, and UUID-bound waivers. Each board declares unsupported downstream work in
+`design/kicad-augment.json`.
+
+PCB-01, PCB-01 V2, PCB-02, and the already released PCB-03 remain legacy KiCad-authoritative
+projects. PCB-03's new `design/` source recreates it only as a workflow validation fixture through
+the KiCad handoff boundary.
 
 Fabrication is planned through JLCPCB; JLCPCB assembly vs hand-population is TBD (prefer
 footprints/parts in the LCSC catalog where it doesn't compromise the design, so the PCBA

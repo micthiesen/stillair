@@ -722,7 +722,8 @@ Decisions made while laying copper; the board file is the authority, these are t
   Verified-benign leftovers, for the record: phase B.Cu tails into J2 are 1.0 mm (not
   the 2.0 class default) — fine at fan phase currents; J8's VM24/PGND debug legs thread
   the tach block at 0.25 but dead-end at a DNP header, so they carry no current.
-- **Silkscreen sweep done (2026-07-30)** via `pcb/tools/silk_sweep.py` (KiCad closed,
+- **Silkscreen sweep done (2026-07-30)** via the now-retired `silk_sweep.py` script (retained in
+  git history; KiCad closed,
   headless DRC loop) + hand placement from layer renders for the stubborn corners.
   **TP21, TP24, and R42 have no silk label** (no legal spot at the 0.8 mm minimum text
   size) — when probing, TP21 is the only ring in the SE tach corner beside R43/Q3, and

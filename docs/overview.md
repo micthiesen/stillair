@@ -3,8 +3,9 @@
 A quiet, low-profile 44-inch direct-drive ceiling fan for gentle overnight air mixing, with
 local-only Apple Home control (Matter over Wi-Fi) and a minimal wood-and-white ceiling
 presence. This repo is the
-canonical source for the whole project: planning docs, BOM, firmware, and (eventually) CAD
-drawings and the KiCad PCB. The full 3D model lives in OnShape; everything else lives here.
+canonical source for the whole project: planning docs, BOM, firmware, CAD drawings,
+authoritative tscircuit PCB source, and downstream KiCad boards. The full 3D model lives in
+OnShape; everything else lives here.
 
 ## Key numbers
 
@@ -61,7 +62,8 @@ placement zones, controller behavior, sources, and acceptance tests. What gets c
 it:
 
 - Final 3D models in **OnShape** (not in this repo).
-- KiCad schematic and layout in [`pcb/`](../pcb/).
+- Tscircuit schematic, board specification, and placement source in [`pcb/`](../pcb/), with KiCad
+  owning downstream routing and production-only features.
 - Firmware in [`firmware/`](../firmware/) (Rust, `no_std`, ESP32-C6).
 - CNC/laser files for fabricated parts in [`cad/`](../cad/).
 
@@ -73,6 +75,7 @@ Slab verification and the local installation-approval path are site-specific exe
 - [mechanical.md](mechanical.md) — envelope, vertical stack, rotor geometry, retention
 - [parts.md](parts.md) — dimensioned per-part specifications (the CAD handoff)
 - [electrical.md](electrical.md) — PCB V1/V2 circuit and layout handoff
+- [pcb-workflow.md](pcb-workflow.md): tscircuit source authority, KiCad handoff, and ECO rules
 - [controls.md](controls.md) — motor-control contract and required state behavior
 - [home-automation.md](home-automation.md) — provisional presence, comfort, and vacation behavior
 - [observability.md](observability.md) — measurement authority, J8/scope hookups, synchronized evidence

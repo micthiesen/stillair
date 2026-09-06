@@ -3,10 +3,19 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-09-03** (JLCPCB impedance proposal received; clarification required.)
+Last updated: **2026-09-06** (tscircuit-first PCB workflow validated; JLCPCB clarification still required.)
 
 ## Now
 
+- **New PCB designs now use tscircuit as the authority through schematic and placement.** The
+  pinned local viewer, source checks, normalized manifest, guarded KiCad staging handoff, semantic
+  parity, ECO planning, and CI fixture are in place. PCB-03 was recreated as a validation fixture;
+  its staged seed matches the released board's 39.75 x 21.00 mm outline, holes, 12 component
+  placements, footprints, pad nets, and connector orientations. The released PCB-03 remains
+  KiCad-authoritative and was not overwritten. The validated seed still declares KiCad cleanup for
+  schematic grid/library/metadata/no-connect findings, production silkscreen, and unrouted nets;
+  those are downstream work, not clean production evidence. See
+  [pcb-workflow.md](pcb-workflow.md).
 - **PCB-03 is ordered from JLCPCB as W2026090305011104 for $17 shipped.** The order is five bare
   39.75 x 21.00 mm boards plus a top-side stencil. The bridge is ERC-clean, DRC-clean, and fully
   routed with a filled B.Cu AGND plane. The three retained display/bridge checks in
@@ -68,6 +77,9 @@ and written confirmations are complete.
 
 ## Learned Recently
 
+- Tscircuit/KiCad authority boundary, initial handoff, routed-board ECO guards, and pinned-toolchain
+  update policy: [pcb-workflow.md](pcb-workflow.md) and
+  [pcb-03/design](../pcb/pcb-03/design/).
 - PCB-03 architecture, connector pinout, firmware contract, final routed geometry, ordering
   checklist, and first-article validation gates: [pcb-03.md](pcb-03.md),
   [pcb-03/placement](../pcb/pcb-03/placement/), and

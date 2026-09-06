@@ -2,7 +2,8 @@
 a netlist markdown (components + per-net pin lists) and a positions dump.
 
 Usage: extract_netlist.py [--board board.kicad_pcb] <out-netlist.md> [out-positions.txt]
-Used by the board-truth review loop (see the /pcb skill)."""
+Used only for post-handoff or legacy KiCad board review. New-board source review uses the
+normalized tscircuit manifest (see the /pcb skill)."""
 import argparse
 import os
 import re
