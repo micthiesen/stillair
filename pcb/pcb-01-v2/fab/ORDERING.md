@@ -54,6 +54,22 @@ shasum -a 256 -c fab/release-manifest.sha256
   `(112.750, 60.525)`. They are each 3.170 mm long with 1.500 mm center spacing and 1.300 mm
   copper-edge gap. Send the marked crop and require its production geometry and Si9000e result
   before approval.
+- On 2026-09-07, Eira returned a revised trace map and three calculations. The highlighted map now
+  covers the complete USB route, including the missing 3.170 mm J4-to-U13 section. JLCPCB's
+  production width/edge-gap proposals and Si9000e results are:
+
+  | Section geometry | Production width | Production edge gap | Calculated Zdiff |
+  | --- | ---: | ---: | ---: |
+  | submitted 7.87/17.72 mil | 10.77 mil | 14.82 mil | 97.31 ohm |
+  | submitted 7.87/43.30 mil | 12.87 mil | 38.30 mil | 97.17 ohm |
+  | J4-to-U13, submitted 7.87/51.18 mil | 12.87 mil | 46.18 mil | 97.83 ohm |
+
+  Each adjustment preserves the submitted pair center spacing. All three are on L1 with L2 as the
+  bottom reference. The third row's summary table displays 1 oz, but its Si9000e model uses
+  `T1=2.85 mil`, consistent with the 2 oz outer copper in the returned stack drawing and Eira's
+  written 2026-09-04 confirmation. The impedance gate is clear. Confirm these changes on the stated
+  2 oz L1 / L2-reference basis without approving the still-pending POFV, solder-mask, final DFM, or
+  parts-placement gates.
 - Confirm Parts Placement remains a separate later PCBA approval gate.
 
 ## Recommended order

@@ -3,7 +3,7 @@
 Fast-moving work state and chosen next step. Durable findings live in the linked design,
 commissioning, BOM, and test documents.
 
-Last updated: **2026-09-06** (tscircuit-first PCB workflow validated; JLCPCB clarification still required.)
+Last updated: **2026-09-07** (PCB-01 V2 impedance proposal validated; production gates remain.)
 
 ## Now
 
@@ -35,12 +35,13 @@ Last updated: **2026-09-06** (tscircuit-first PCB workflow validated; JLCPCB cla
   boards with two top-side Standard PCBAs. The release package remains in
   `pcb/pcb-01-v2/fab/`; routing, ERC, DRC, production silkscreen, BOM/CPL, and four rounds of
   three complete adversarial reviews were clean before submission.
-- **JLCPCB's returned USB impedance proposal is not ready to approve.** Eira confirmed on
-  2026-09-04 that the simulation uses adjacent plane L2 and 2 oz outer / 1 oz inner copper, clearing
-  those questions. Engineering could not locate the third J4-to-U13 geometry. A fresh read of the
-  released board and matching Gerbers confirms the two 3.170 mm, 0.200 mm F.Cu runs exist at
-  x=111.250 and x=112.750 mm, giving 1.500 mm center spacing and 1.300 mm copper-edge gap. Send the
-  marked crop and require its production geometry and Si9000e result before approval.
+- **JLCPCB's USB impedance proposal is validated and may be approved.** The 2026-09-07 revision
+  identifies all three F.Cu USB geometries, including the 3.170 mm J4-to-U13 section. With L2 as
+  reference and the confirmed 2 oz outer / 1 oz inner stack, JLCPCB proposes width/edge-gap values
+  of `10.77/14.82 mil`, `12.87/38.30 mil`, and `12.87/46.18 mil`; Si9000e returns `97.31`, `97.17`,
+  and `97.83 ohm`. The third geometry preserves its submitted 1.500 mm center spacing. Its table row
+  displays 1 oz, but the actual model uses `T1=2.85 mil`, consistent with 2 oz outer copper and
+  Eira's written confirmation.
 - **Production approval remains gated on JLCPCB's returned files.** Do not approve until CAM and
   placement output explicitly preserves all twelve U1 epoxy-filled and copper-capped POFV holes,
   U3 pads 4/5 solder-mask-defined apertures, the 97 ohm USB requirement, finished 88 x 64 mm
@@ -59,11 +60,10 @@ Last updated: **2026-09-06** (tscircuit-first PCB workflow validated; JLCPCB cla
 
 ## Next
 
-Send Eira the marked J4-to-U13 crop and request its production geometry and Si9000e result. Then
-review the revised calculation, final engineering DFM, and later parts-placement output against
-every gate in
-[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve production only when the returned outputs
-and written confirmations are complete.
+Confirm the three revised impedance geometries to Eira, explicitly restating that all three use
+2 oz L1 copper and L2 as reference. Then review the final engineering DFM and later parts-placement
+output against every remaining gate in [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). Approve
+production only when the returned outputs and written confirmations are complete.
 
 ## Candidates Not Chosen
 
