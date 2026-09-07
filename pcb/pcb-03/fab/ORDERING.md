@@ -3,6 +3,9 @@
 Live order: `W2026090305011104`, five bare boards plus a top-side stencil, $17 shipped, submitted
 2026-09-02. JLCPCB support confirmed they would add the supplied top-side paste layer.
 
+On 2026-09-07, the authenticated order page showed this board/stencil order as **Shipped** by
+Global Standard Direct Line. Delivery and first-article testing remain pending.
+
 Regenerate immediately before upload:
 
 ```bash

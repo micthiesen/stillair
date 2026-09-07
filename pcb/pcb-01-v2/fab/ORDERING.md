@@ -28,12 +28,9 @@ shasum -a 256 -c fab/release-manifest.sha256
 - JLCPCB order: `W2026083117295494`; assembly job referenced by support: `SMT026083161536`.
 - On 2026-08-31, both the order-message team and Paul in separate support email confirmed that the
   PCB Remark and attached mandatory CAM requirements reached the relevant engineering team.
-- The DFM currently visible on the order page is system-generated and preliminary. JLCPCB is
-  regenerating the final engineering DFM; its **Confirm** button will activate when it is ready.
-- These messages acknowledge engineering review but do not confirm U1 POFV, U3 mask-defined pads,
-  or 97 ohm USB. Take no action until the final DFM is available. Do not approve a visual DFM alone
-  if epoxy filling or impedance is not explicit; request written engineering confirmation in the
-  DFM message thread first.
+- The initial DFM was preliminary. On 2026-09-07 the **Confirm Production file** review form and
+  CAM download became available. Returned evidence and targeted checks are retained in
+  [production-review/README.md](production-review/README.md).
 - On 2026-09-03, Eira returned the impedance trace map and two Si9000e calculations. The highlighted
   nets are correct, and the proposed `10.77 mil / 14.82 mil` and `12.87 mil / 38.30 mil`
   width/edge-gap geometries calculate to `97.31 ohm` and `97.17 ohm`. Do not approve yet: the table
@@ -71,6 +68,12 @@ shasum -a 256 -c fab/release-manifest.sha256
   2 oz L1 / L2-reference basis without approving the still-pending POFV, solder-mask, final DFM, or
   parts-placement gates.
 - Confirm Parts Placement remains a separate later PCBA approval gate.
+- On 2026-09-07, CAM checks verified the finished outline, rails, three impedance settings, U3 pads
+  4/5 mask apertures, and all twelve U1 hole locations. Fill/cap treatment remains unproven by the
+  inspected files. Michael submitted the confirmation/modification request specifically asking for
+  written confirmation of epoxy-filled and copper-capped U1 holes, preserving the top aperture and
+  adding no bottom mask openings. Await that response; production approval remains pending. The
+  support PDF/CSV ZIP was supplied on the NAS for upload.
 
 ## Recommended order
 
