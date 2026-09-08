@@ -5,9 +5,8 @@ description: >
   docs/decisions.md, the build sequence in docs/build.md, and recent git history, enumerates 2-4
   candidate next steps with a gating analysis (what each unblocks, size, risk), recommends one, and
   records the decision + runners-up in docs/STATE.md. Use when unsure what to work on next, when
-  the previous Next step completed, or from /wrap when concluding a session. TRIGGER on "what's
-  next", "what should we do next", "pick the next step", "/next".
-user_invocable: true
+  the previous Next step completed, or from $wrap when concluding a session. TRIGGER on "what's
+  next", "what should we do next", "pick the next step", "$next".
 ---
 
 # Next (Decide The Next Step)
@@ -58,7 +57,7 @@ Pick with these biases, in order:
    background" — candidates aren't mutually exclusive.
 
 State the recommendation in two sentences: what, and why it beats the runner-up. For a genuinely
-contentious or expensive direction (a pivot, a multi-week bet), escalate to `/devils-advocate`
+contentious or expensive direction (a pivot, a multi-week bet), get an independent design review
 before recording it.
 
 ## 4. Record It

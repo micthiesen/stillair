@@ -2,11 +2,10 @@
 name: wrap
 description: >
   Conclude the current session so a fresh one can continue seamlessly: sweep un-encoded learnings
-  into the right repo docs, decide or confirm the next step (via /next when open), rewrite
+  into the right repo docs, decide or confirm the next step (via $next when open), rewrite
   docs/STATE.md so it reflects the current work, commit, and push. Use when ending a session,
   before killing a long-context session, or on "wrap up", "conclude the session", "save state",
-  "/wrap".
-user_invocable: true
+  "$wrap".
 ---
 
 # Wrap (Conclude The Session)
