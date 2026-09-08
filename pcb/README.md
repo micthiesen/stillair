@@ -27,7 +27,7 @@ that doc.
 
 The pinned local tscircuit toolchain lives in this directory. Run its viewer locally so code and
 reviewed placement edits remain in the checkout. The **`/pcb` skill** at
-[`.claude/skills/pcb/SKILL.md`](../.claude/skills/pcb/SKILL.md) defines authoring, review, initial
+[`.agents/skills/pcb/SKILL.md`](../.agents/skills/pcb/SKILL.md) defines authoring, review, initial
 handoff, and later ECOs. KiCad 10 and the project-scoped Konnect server remain available only for
 the downstream phase.
 

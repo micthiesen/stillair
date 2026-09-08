@@ -5,7 +5,7 @@ description: "Generate and validate downstream KiCad fabrication outputs for a S
 
 # KiCad fabrication
 
-Fabrication begins only after the `/pcb` routed-KiCad review passes. For a tscircuit-first board,
+Fabrication begins only after the `$pcb` routed-KiCad review passes. For a tscircuit-first board,
 also require current source-to-KiCad parity and every required `design/kicad-augment.json` item to
 be implemented and verified.
 

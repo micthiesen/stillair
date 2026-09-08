@@ -6,15 +6,15 @@ on:
     paths:
       - "firmware/**"
       - "pcb/**"
-      - ".claude/skills/pcb/**"
-      - ".claude/skills/konnect/**"
+      - ".agents/skills/pcb/**"
+      - ".agents/skills/konnect/**"
       - ".github/workflows/ci.yml"
   pull_request:
     paths:
       - "firmware/**"
       - "pcb/**"
-      - ".claude/skills/pcb/**"
-      - ".claude/skills/konnect/**"
+      - ".agents/skills/pcb/**"
+      - ".agents/skills/konnect/**"
       - ".github/workflows/ci.yml"
 
 jobs:

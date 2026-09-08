@@ -13,7 +13,7 @@ user_invocable: true
 # Next (Decide The Next Step)
 
 Turn "what should we do now?" from an open-ended re-derivation into a short, recorded decision.
-The output is a **recommendation with its why** and an updated `docs/STATE.md`. When `/next` is part
+The output is a **recommendation with its why** and an updated `docs/STATE.md`. When `$next` is part
 of an active request to continue the project, start the chosen repository work after recording it.
 Pause only at a physical gate or a consequential choice the repo cannot resolve.
 
@@ -69,4 +69,4 @@ Rewrite `docs/STATE.md`:
 - **Candidates Not Chosen** — the runners-up and the one-line reason each waits. This is what
   makes the *next* run of this skill cheap.
 
-Commit if mid-session; leave it for `/wrap` if wrapping anyway.
+Commit if mid-session; leave it for `$wrap` if wrapping anyway.

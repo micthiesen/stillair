@@ -13,13 +13,13 @@ user_invocable: true
 
 The conclude-and-handoff ritual. After a wrap, this session is disposable: everything it learned
 is in the repo, the next step is recorded with its why, and a fresh session boots straight into
-continuing (per CLAUDE.md it reads `docs/STATE.md` first). Never let a session's value live only
+continuing (per AGENTS.md it reads `docs/STATE.md` first). Never let a session's value live only
 in its context window.
 
 ## 1. Sweep Learnings Into Their Homes
 
 Review the whole session for anything durable that isn't yet written down, and write each piece
-to its proper home (per CLAUDE.md > "Project knowledge lives in the repo"):
+to its proper home (per AGENTS.md > "Project knowledge lives in the repo"):
 
 | Kind of learning | Home |
 |---|---|
@@ -28,8 +28,8 @@ to its proper home (per CLAUDE.md > "Project knowledge lives in the repo"):
 | Test results and sign-offs | `testing/test-matrix.csv` |
 | Measured motor/bench data (R, L, BEMF, thread depths, bore diameters) | the doc that holds the provisional value, replacing or annotating it |
 | Firmware behavior, register findings, toolchain gotchas | code comments in `firmware/` or `docs/controls.md` |
-| A repeatable procedure | the matching `.claude/skills/` skill |
-| Cross-cutting rules, preferences | `CLAUDE.md` |
+| A repeatable procedure | the matching `.agents/skills/` skill |
+| Cross-cutting rules, preferences | `AGENTS.md` |
 
 Write the **content** there — STATE.md gets only pointers. A dead end is a finding too: recording
 why something was ruled out is what stops the next session from re-treading it.
@@ -38,8 +38,8 @@ why something was ruled out is what stops the next session from re-treading it.
 
 - Previous Next still the plan (done partially, or untouched)? Carry it forward, updated to reflect
   progress; verify this from the work and repo state rather than asking.
-- Previous Next completed, or the session changed the picture? Run **`/next`** to decide and
-  record properly. Don't freehand a big direction change here; use `/next`'s candidate analysis.
+- Previous Next completed, or the session changed the picture? Run **`$next`** to decide and
+  record properly. Don't freehand a big direction change here; use `$next`'s candidate analysis.
 
 ## 3. Rewrite STATE.md To Reflect The Work
 

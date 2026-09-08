@@ -23,6 +23,14 @@ is historical migration code, not an allowed channel.
 Prefer `kicad-cli` exports or semantic snapshots for reads. Read source files directly only when an
 export cannot answer the question, and never write them.
 
+Before each Konnect PCB mutation (placing, moving, or rotating components; routing
+traces, differential pairs, or pad-to-pad connections; adding vias; or refilling
+zones), run the installed guard and stop if it fails:
+
+```bash
+~/Documents/KiCad/10.0/3rdparty/plugins/com_github_mixelpixx_konnect/bin/konnect skill pre-pcb-ipc
+```
+
 For each write:
 
 1. identify the exact project and confirm the source handoff/ECO plan;

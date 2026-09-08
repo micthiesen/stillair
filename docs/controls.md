@@ -485,7 +485,7 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   esp-hal ~1.1, esp-rtos 0.3, esp-radio 0.18, esp-alloc 0.10, esp-println 0.17,
   esp-backtrace 0.19, esp-bootloader-esp-idf 0.5, embassy-executor 0.10, embassy-time 0.5,
   embassy-sync 0.8. No version skew to fight; the cost is the `[patch.crates-io]` pin table
-  (see CLAUDE.md > "Firmware conventions"), which moves every esp-\* crate to an unreleased
+  (see AGENTS.md > "Firmware conventions"), which moves every esp-\* crate to an unreleased
   esp-hal git rev.
 - Adopting that rev needed exactly one change in our own code: `usb_serial_jtag` moved under
   `esp_hal::usb`.
