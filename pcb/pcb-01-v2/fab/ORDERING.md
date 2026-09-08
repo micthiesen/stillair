@@ -74,6 +74,12 @@ shasum -a 256 -c fab/release-manifest.sha256
   written confirmation of epoxy-filled and copper-capped U1 holes, preserving the top aperture and
   adding no bottom mask openings. Await that response; production approval remains pending. The
   support PDF/CSV ZIP was supplied on the NAS for upload.
+- Chian subsequently explicitly confirmed non-conductive epoxy filling and copper capping for all
+  twelve 0.30 mm U1 pad 41 holes, with the top aperture open and no added bottom openings. The
+  treatment was already included in the current file. The POFV question is cleared; Michael may
+  approve the reviewed PCB production file. See the retained confirmation image and statement in
+  [production-review/README.md](production-review/README.md). Actual approval is not yet reported;
+  assembly placement remains a separate later gate.
 
 ## Recommended order
 

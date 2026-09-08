@@ -56,3 +56,16 @@ download succeeded. **Confirm Production file** opens the review form; approval 
 choice and Submit. Read the Download Production file anchor's actual href and fetch its bytes in
 the authenticated page. Browser-control exposes `fs` and `Buffer` directly; `require` is unavailable.
 Verify ZIP integrity before treating a download as production evidence.
+
+## Factory confirmation received
+
+Chian subsequently confirmed in writing that all twelve 0.30 mm via-in-pad holes inside U1
+exposed pad 41 are filled with non-conductive epoxy and copper-capped; the top pad aperture remains
+open and no bottom mask openings were added. Chian explicitly states that the treatment was
+already included in the current production file. This clears the POFV process question; the
+earlier review had not established the treatment, rather than proving it absent.
+
+The accompanying [image](pofv-confirmation.png) identifies U1 and the correct 3 x 4 hole array,
+with an arrow to the CAM `sk` layer. The written statement, not the screenshot alone, confirms
+the fill/cap process. Michael may approve the reviewed PCB production file on this basis.
+Actual approval has not yet been reported; assembly placement remains a separate later check.
