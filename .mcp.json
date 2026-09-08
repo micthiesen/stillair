@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "konnect": {
-      "command": "/Users/michael/Documents/KiCad/10.0/3rdparty/plugins/com_github_mixelpixx_konnect/bin/konnect",
-      "args": [],
-      "env": {}
-    }
-  }
-}
