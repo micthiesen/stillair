@@ -1,16 +1,16 @@
 # State
 
-Last updated: **2026-09-07** (U1 POFV confirmed; reviewed PCB production file may be approved).
+Last updated: **2026-09-07** (PCB file confirmed; PCBA placement/polarity review passes).
 
 ## Now
 
-- **PCB-01 V2's outstanding U1 POFV question is cleared.** Chian explicitly confirmed epoxy
-  filling/copper capping, the top aperture open, and no bottom openings, already included in the
-  current production file. Michael intends to approve; actual approval is not yet reported.
-  The CAM archive, factory confirmation, and targeted checks are retained in
-  [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md). Outline, rails,
-  impedance metadata, protected U3 mask apertures, and twelve U1 hole locations passed.
-  Assembly placement is a separate later review.
+- **PCB-01 V2's PCB file is confirmed; the assembly DFM passes review.** The live order page
+  confirms PCB approval. All 119 factory parts match the release, and IC pin 1, diode bands,
+  transistor orientation, connector direction, and placement pass. Library-origin differences
+  for U2/U3/J4 were resolved geometrically. Michael may confirm assembly; that approval is not
+  yet reported. See [placement-review/README.md](../pcb/pcb-01-v2/fab/placement-review/README.md).
+  Chian's explicit U1 POFV confirmation and CAM checks remain in
+  [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md).
 - **PCB-01 V2 and hand-population parts are ordered.** Five boards and two top-side Standard PCBAs
   are on JLCPCB W2026083117295494; hand parts are on DigiKey 101316601. Release and approval
   requirements remain in [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
@@ -29,11 +29,13 @@ Last updated: **2026-09-07** (U1 POFV confirmed; reviewed PCB production file ma
 
 ## Next
 
-Michael may approve the reviewed PCB production file. Review the later parts-placement output
-using [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
+Michael may reply to JLCPCB confirming the reviewed polarity/placement DFM for
+`SMT026083161536_Y8`. Then await production/delivery and perform hand population and first-article
+qualification under [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
 
-The factory's explicit written confirmation now establishes the requested fill/cap process.
-Preserve completed checks and assess any subsequently revised files against the retained archive.
+Both the factory's POFV process confirmation and intended assembly placement now have retained
+evidence. Recheck only if a later revision changes the reviewed data; hardware qualification still
+requires the delivered boards.
 
 ## Candidates Not Chosen
 

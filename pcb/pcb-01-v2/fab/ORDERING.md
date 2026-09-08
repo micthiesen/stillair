@@ -80,6 +80,12 @@ shasum -a 256 -c fab/release-manifest.sha256
   approve the reviewed PCB production file. See the retained confirmation image and statement in
   [production-review/README.md](production-review/README.md). Actual approval is not yet reported;
   assembly placement remains a separate later gate.
+- On 2026-09-07, the live order page showed the PCB production file as Confirmed. The subsequent
+  PCBA polarity/placement DFM for `SMT026083161536_Y8` was reviewed against native KiCad geometry,
+  orientation drawings, all 119 live part entries, and actual factory library coordinates.
+  The shown placement passes; no correction is required. Evidence and package-origin differences
+  are documented in [placement-review/README.md](placement-review/README.md). Michael may confirm
+  assembly to JLCPCB; no assembly approval has been submitted by the agent or reported by Michael.
 
 ## Recommended order
 
