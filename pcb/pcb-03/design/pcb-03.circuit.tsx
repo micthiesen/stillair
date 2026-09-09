@@ -1,14 +1,14 @@
-import manualEdits from "./manual-edits.json"
-import { createElement } from "react"
-import { boardSpec, footprints, netMembers, placements } from "./board-spec"
-import { componentDefinitions } from "./design-manifest"
+import manualEdits from "./manual-edits.json";
+import { createElement } from "react";
+import { boardSpec, footprints, netMembers, placements } from "./board-spec";
+import { componentDefinitions } from "./design-manifest";
 
-const kicadFootprint = (footprintName: string) => ({ footprintName })
+const kicadFootprint = (footprintName: string) => ({ footprintName });
 const kicadSymbol = (ref: keyof typeof componentDefinitions) => ({
   symbolName: componentDefinitions[ref].symbol,
-})
+});
 const sourceFootprint = (footprintName: string) =>
-  `kicad:${footprintName.replace(":", "/")}`
+  `kicad:${footprintName.replace(":", "/")}`;
 
 const U1_PIN_LABELS = {
   pin1: "SDA",
@@ -27,7 +27,7 @@ const U1_PIN_LABELS = {
   pin14: "CITO_MISO",
   pin15: "VREFP",
   pin16: "CS1_GPIO1",
-} as const
+} as const;
 
 const U2_PIN_LABELS = {
   pin1: "IO0",
@@ -38,14 +38,14 @@ const U2_PIN_LABELS = {
   pin6: "SCL",
   pin7: "SDA",
   pin8: "VDD",
-} as const
+} as const;
 
 const J1_PIN_LABELS = {
   pin1: "AGND",
   pin2: "V3V3",
   pin3: "TEMP_SDA",
   pin4: "TEMP_SCL",
-} as const
+} as const;
 
 const J2_PIN_LABELS = {
   pin1: "V3V3",
@@ -56,7 +56,7 @@ const J2_PIN_LABELS = {
   pin6: "EPD_DC",
   pin7: "EPD_RESET_N",
   pin8: "EPD_BUSY",
-} as const
+} as const;
 
 const mountingHole = (name: "H1" | "H2") => (
   <chip
@@ -67,7 +67,7 @@ const mountingHole = (name: "H1" | "H2") => (
     noSchematicRepresentation
     pcbRotation={placements[name].rotation}
   />
-)
+);
 
 const hostConnector = (
   <chip
@@ -97,7 +97,7 @@ const hostConnector = (
     pcbY={placements.J1.y}
     pcbRotation={placements.J1.rotation}
   />
-)
+);
 
 const displayConnector = (
   <chip
@@ -135,7 +135,7 @@ const displayConnector = (
     pcbY={placements.J2.y}
     pcbRotation={placements.J2.rotation}
   />
-)
+);
 
 const spiBridge = (
   <chip
@@ -159,9 +159,17 @@ const spiBridge = (
       CS0_GPIO0: { mustBeConnected: true, capabilities: ["spi_cs"] },
       MOSI: { mustBeConnected: true, capabilities: ["spi_mosi"] },
       SPICLK: { mustBeConnected: true, capabilities: ["spi_sck"] },
-      VDD: { requiresPower: true, shouldHaveDecouplingCapacitor: true, recommendedDecouplingCapacitorCapacitance: "100nF" },
+      VDD: {
+        requiresPower: true,
+        shouldHaveDecouplingCapacitor: true,
+        recommendedDecouplingCapacitorCapacitance: "100nF",
+      },
       VSS: { requiresGround: true },
-      CITO_MISO: { mustBeConnected: true, capabilities: ["spi_miso"], needsExternalPulldown: true },
+      CITO_MISO: {
+        mustBeConnected: true,
+        capabilities: ["spi_miso"],
+        needsExternalPulldown: true,
+      },
       VREFP: { requiresPower: true },
       CS1_GPIO1: { doNotConnect: true },
     }}
@@ -186,7 +194,7 @@ const spiBridge = (
     schY={0}
     pcbRotation={placements.U1.rotation}
   />
-)
+);
 
 const gpioExpander = (
   <chip
@@ -205,7 +213,11 @@ const gpioExpander = (
       IO3: { mustBeConnected: true, isGpio: true },
       SCL: { mustBeConnected: true, capabilities: ["i2c_scl"] },
       SDA: { mustBeConnected: true, capabilities: ["i2c_sda"] },
-      VDD: { requiresPower: true, shouldHaveDecouplingCapacitor: true, recommendedDecouplingCapacitorCapacitance: "100nF" },
+      VDD: {
+        requiresPower: true,
+        shouldHaveDecouplingCapacitor: true,
+        recommendedDecouplingCapacitorCapacitance: "100nF",
+      },
     }}
     connections={{
       IO0: "net.EPD_DC",
@@ -222,7 +234,7 @@ const gpioExpander = (
     schY={0}
     pcbRotation={placements.U2.rotation}
   />
-)
+);
 
 export default () => (
   <board
@@ -265,25 +277,116 @@ export default () => (
     {spiBridge}
     {gpioExpander}
 
-    <resistor name="R1" resistance="10k" manufacturerPartNumber="PTN0603Y1002BST1" footprint={sourceFootprint(footprints.R1)} kicadFootprintMetadata={kicadFootprint(footprints.R1)} kicadSymbolMetadata={kicadSymbol("R1")} connections={{ pin1: "net.V3V3", pin2: "net.BRIDGE_INT_N" }} schSheetName="Main" schX={-3} schY={-7} pcbRotation={placements.R1.rotation} />
-    <resistor name="R2" resistance="10k" manufacturerPartNumber="PTN0603Y1002BST1" footprint={sourceFootprint(footprints.R2)} kicadFootprintMetadata={kicadFootprint(footprints.R2)} kicadSymbolMetadata={kicadSymbol("R2")} connections={{ pin1: "net.V3V3", pin2: "net.BRIDGE_RESET_N" }} schSheetName="Main" schX={1} schY={-7} pcbRotation={placements.R2.rotation} />
-    <resistor name="R3" resistance="10k" manufacturerPartNumber="PTN0603Y1002BST1" footprint={sourceFootprint(footprints.R3)} kicadFootprintMetadata={kicadFootprint(footprints.R3)} kicadSymbolMetadata={kicadSymbol("R3")} connections={{ pin1: "net.CITO_PD", pin2: "net.AGND" }} schSheetName="Main" schX={-7} schY={-7} pcbRotation={placements.R3.rotation} />
-    <capacitor name="C1" capacitance="100nF" manufacturerPartNumber="C0603C104K5RACTU" footprint={sourceFootprint(footprints.C1)} kicadFootprintMetadata={kicadFootprint(footprints.C1)} kicadSymbolMetadata={kicadSymbol("C1")} connections={{ pin1: "net.V3V3", pin2: "net.AGND" }} schSheetName="Main" schX={-3} schY={7} schOrientation="vertical" pcbRotation={placements.C1.rotation} />
-    <capacitor name="C2" capacitance="100nF" manufacturerPartNumber="C0603C104K5RACTU" footprint={sourceFootprint(footprints.C2)} kicadFootprintMetadata={kicadFootprint(footprints.C2)} kicadSymbolMetadata={kicadSymbol("C2")} connections={{ pin1: "net.V3V3", pin2: "net.AGND" }} schSheetName="Main" schX={5} schY={7} schOrientation="vertical" pcbRotation={placements.C2.rotation} />
-    <capacitor name="C3" capacitance="4.7uF" manufacturerPartNumber="EMK107ABJ475KA-T" footprint={sourceFootprint(footprints.C3)} kicadFootprintMetadata={kicadFootprint(footprints.C3)} kicadSymbolMetadata={kicadSymbol("C3")} connections={{ pin1: "net.V3V3", pin2: "net.AGND" }} schSheetName="Main" schX={10} schY={7} schOrientation="vertical" pcbRotation={placements.C3.rotation} />
+    <resistor
+      name="R1"
+      resistance="10k"
+      manufacturerPartNumber="PTN0603Y1002BST1"
+      footprint={sourceFootprint(footprints.R1)}
+      kicadFootprintMetadata={kicadFootprint(footprints.R1)}
+      kicadSymbolMetadata={kicadSymbol("R1")}
+      connections={{ pin1: "net.V3V3", pin2: "net.BRIDGE_INT_N" }}
+      schSheetName="Main"
+      schX={-3}
+      schY={-7}
+      pcbRotation={placements.R1.rotation}
+    />
+    <resistor
+      name="R2"
+      resistance="10k"
+      manufacturerPartNumber="PTN0603Y1002BST1"
+      footprint={sourceFootprint(footprints.R2)}
+      kicadFootprintMetadata={kicadFootprint(footprints.R2)}
+      kicadSymbolMetadata={kicadSymbol("R2")}
+      connections={{ pin1: "net.V3V3", pin2: "net.BRIDGE_RESET_N" }}
+      schSheetName="Main"
+      schX={1}
+      schY={-7}
+      pcbRotation={placements.R2.rotation}
+    />
+    <resistor
+      name="R3"
+      resistance="10k"
+      manufacturerPartNumber="PTN0603Y1002BST1"
+      footprint={sourceFootprint(footprints.R3)}
+      kicadFootprintMetadata={kicadFootprint(footprints.R3)}
+      kicadSymbolMetadata={kicadSymbol("R3")}
+      connections={{ pin1: "net.CITO_PD", pin2: "net.AGND" }}
+      schSheetName="Main"
+      schX={-7}
+      schY={-7}
+      pcbRotation={placements.R3.rotation}
+    />
+    <capacitor
+      name="C1"
+      capacitance="100nF"
+      manufacturerPartNumber="C0603C104K5RACTU"
+      footprint={sourceFootprint(footprints.C1)}
+      kicadFootprintMetadata={kicadFootprint(footprints.C1)}
+      kicadSymbolMetadata={kicadSymbol("C1")}
+      connections={{ pin1: "net.V3V3", pin2: "net.AGND" }}
+      schSheetName="Main"
+      schX={-3}
+      schY={7}
+      schOrientation="vertical"
+      pcbRotation={placements.C1.rotation}
+    />
+    <capacitor
+      name="C2"
+      capacitance="100nF"
+      manufacturerPartNumber="C0603C104K5RACTU"
+      footprint={sourceFootprint(footprints.C2)}
+      kicadFootprintMetadata={kicadFootprint(footprints.C2)}
+      kicadSymbolMetadata={kicadSymbol("C2")}
+      connections={{ pin1: "net.V3V3", pin2: "net.AGND" }}
+      schSheetName="Main"
+      schX={5}
+      schY={7}
+      schOrientation="vertical"
+      pcbRotation={placements.C2.rotation}
+    />
+    <capacitor
+      name="C3"
+      capacitance="4.7uF"
+      manufacturerPartNumber="EMK107ABJ475KA-T"
+      footprint={sourceFootprint(footprints.C3)}
+      kicadFootprintMetadata={kicadFootprint(footprints.C3)}
+      kicadSymbolMetadata={kicadSymbol("C3")}
+      connections={{ pin1: "net.V3V3", pin2: "net.AGND" }}
+      schSheetName="Main"
+      schX={10}
+      schY={7}
+      schOrientation="vertical"
+      pcbRotation={placements.C3.rotation}
+    />
 
     {mountingHole("H1")}
     {mountingHole("H2")}
 
     {Object.entries(netMembers).flatMap(([net, members]) =>
       members.map((member) =>
-        createElement("netlabel", { key: `${net}-${member}`, net, connection: member } as any),
+        createElement("netlabel", {
+          key: `${net}-${member}`,
+          net,
+          connection: member,
+        } as any),
       ),
     )}
 
     <silkscreentext text="HOST" pcbX={-15} pcbY={8.6} fontSize="1mm" layer="top" />
     <silkscreentext text="E-PAPER" pcbX={14.2} pcbY={8.6} fontSize="1mm" layer="top" />
-    <silkscreentext text="J1: 1 AGND  2 3V3  3 SDA  4 SCL" pcbX={0} pcbY={8.6} fontSize="0.8mm" layer="bottom" />
-    <silkscreentext text="J2: 1 3V3 2 AGND 3 DIN 4 CLK 5 CS 6 DC 7 RST 8 BUSY" pcbX={0} pcbY={-8.6} fontSize="0.7mm" layer="bottom" />
+    <silkscreentext
+      text="J1: 1 AGND  2 3V3  3 SDA  4 SCL"
+      pcbX={0}
+      pcbY={8.6}
+      fontSize="0.8mm"
+      layer="bottom"
+    />
+    <silkscreentext
+      text="J2: 1 3V3 2 AGND 3 DIN 4 CLK 5 CS 6 DC 7 RST 8 BUSY"
+      pcbX={0}
+      pcbY={-8.6}
+      fontSize="0.7mm"
+      layer="bottom"
+    />
   </board>
-)
+);

@@ -217,3 +217,13 @@ patterns, `unseamless-coop` for the session-continuity system). Shared AI toolin
 - **$wrap** — conclude a session: sweep learnings into their homes, rewrite STATE.md, commit,
   push.
 - **$sync** — reconcile shared AI tooling with peer projects.
+
+## PCB TypeScript tooling
+
+From `pcb/`, run `bun run check:write`, `bun run typecheck`, and `bun run check:pcb-03`.
+TypeScript 5.9.3 checks the design source; oxlint and oxfmt check TypeScript design and
+exporter tools. Formatting excludes hardware assets and generated output.
+
+Keep TypeScript 5.9.3 until tscircuit replaces its `@rollup/plugin-typescript`
+compiler API dependency. TypeScript 7 typechecks the source but crashes the tscircuit
+checks because the plugin reads the removed JavaScript `ModuleKind.ES2015` API.

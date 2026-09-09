@@ -12,7 +12,11 @@
     "test:pcb-03": "bun run build:pcb-03 && bun test pcb-03/design tools/export_kicad_schematic.test.ts",
     "manifest:pcb-03": "bun run pcb-03/design/emit-manifest.ts",
     "export:kicad:pcb-03": "sh -uc 'test -n \"$STILLAIR_HANDOFF_STAGE\"; tsci export pcb-03/design/pcb-03.circuit.tsx --format kicad_zip --output \"$STILLAIR_HANDOFF_STAGE/pcb-03.kicad.zip\"; unzip -q \"$STILLAIR_HANDOFF_STAGE/pcb-03.kicad.zip\" -d \"$STILLAIR_HANDOFF_STAGE\"; bun run tools/export_kicad_schematic.ts dist/pcb-03/design/pcb-03/circuit.json pcb-03.circuit.kicad_sch'",
-    "handoff:pcb-03": "bun run manifest:pcb-03 && python3 tools/tscircuit_handoff.py normalize dist/pcb-03/design/design-manifest.json --augmentation pcb-03/design/kicad-augment.json -o dist/pcb-03/design/design-manifest.normalized.json && python3 tools/tscircuit_handoff.py stage dist/pcb-03/design/design-manifest.normalized.json --augmentation pcb-03/design/kicad-augment.json --build-command '[\"bun\",\"run\",\"build:pcb-03\"]' --export-command '[\"bun\",\"run\",\"export:kicad:pcb-03\"]' --production-dir pcb-03 --staging-root dist/pcb-03/handoff"
+    "handoff:pcb-03": "bun run manifest:pcb-03 && python3 tools/tscircuit_handoff.py normalize dist/pcb-03/design/design-manifest.json --augmentation pcb-03/design/kicad-augment.json -o dist/pcb-03/design/design-manifest.normalized.json && python3 tools/tscircuit_handoff.py stage dist/pcb-03/design/design-manifest.normalized.json --augmentation pcb-03/design/kicad-augment.json --build-command '[\"bun\",\"run\",\"build:pcb-03\"]' --export-command '[\"bun\",\"run\",\"export:kicad:pcb-03\"]' --production-dir pcb-03 --staging-root dist/pcb-03/handoff",
+    "lint": "oxlint --report-unused-disable-directives pcb-*/design tools",
+    "format": "oxfmt --check \"pcb-*/design/**/*.ts\" \"pcb-*/design/**/*.tsx\" \"tools/*.ts\"",
+    "check": "bun run lint && bun run format",
+    "check:write": "oxlint --fix --report-unused-disable-directives pcb-*/design tools && oxfmt --write \"pcb-*/design/**/*.ts\" \"pcb-*/design/**/*.tsx\" \"tools/*.ts\""
   },
   "dependencies": {
     "circuit-json-to-kicad": "0.0.205",
@@ -23,6 +27,8 @@
   "devDependencies": {
     "@types/bun": "1.4.1",
     "@types/react": "19.2.18",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "oxlint": "1.80.0",
+    "oxfmt": "0.65.0"
   }
 }

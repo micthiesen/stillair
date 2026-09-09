@@ -35,11 +35,11 @@ export const boardSpec = {
     releasedKicadNorthwestMm: { x: 50, y: 54.5 },
     releasedKicadCenterMm: { x: 69.875, y: 65 },
   },
-} as const
+} as const;
 
 export const netAliases = {
   V3V3: "3V3",
-} as const
+} as const;
 
 export const placements = {
   C1: { x: -3.675, y: -2.25, rotation: 0 },
@@ -54,9 +54,9 @@ export const placements = {
   R3: { x: -9.25, y: 2.775, rotation: 90 },
   U1: { x: -4.125, y: 1.625, rotation: 180 },
   U2: { x: 6.05, y: 1.875, rotation: 180 },
-} as const
+} as const;
 
-export type Ref = keyof typeof placements
+export type Ref = keyof typeof placements;
 
 export const footprints = {
   C1: "Capacitor_SMD:C_0603_1608Metric",
@@ -71,11 +71,34 @@ export const footprints = {
   R3: "Resistor_SMD:R_0603_1608Metric",
   U1: "Package_SO:TSSOP-16_4.4x5mm_P0.65mm",
   U2: "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
-} as const satisfies Record<Ref, string>
+} as const satisfies Record<Ref, string>;
 
 export const netMembers = {
-  V3V3: ["C1.1", "C2.1", "C3.1", "J1.2", "J2.1", "R1.1", "R2.1", "U1.12", "U1.15", "U2.8"],
-  AGND: ["C1.2", "C2.2", "C3.2", "J1.1", "J2.2", "R3.2", "U1.5", "U1.6", "U1.7", "U1.13", "U2.4"],
+  V3V3: [
+    "C1.1",
+    "C2.1",
+    "C3.1",
+    "J1.2",
+    "J2.1",
+    "R1.1",
+    "R2.1",
+    "U1.12",
+    "U1.15",
+    "U2.8",
+  ],
+  AGND: [
+    "C1.2",
+    "C2.2",
+    "C3.2",
+    "J1.1",
+    "J2.2",
+    "R3.2",
+    "U1.5",
+    "U1.6",
+    "U1.7",
+    "U1.13",
+    "U2.4",
+  ],
   BRIDGE_INT_N: ["R1.2", "U1.3"],
   BRIDGE_RESET_N: ["R2.2", "U1.4", "U2.5"],
   CITO_PD: ["R3.1", "U1.14"],
@@ -87,4 +110,4 @@ export const netMembers = {
   EPD_RESET_N: ["J2.7", "U2.2"],
   TEMP_SCL: ["J1.4", "U1.2", "U2.6"],
   TEMP_SDA: ["J1.3", "U1.1", "U2.7"],
-} as const
+} as const;

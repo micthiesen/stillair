@@ -17,15 +17,43 @@
   "resources": [
     {
       "path": ".agents/skills/next/",
-      "peers": ["unseamless-coop", "beastie"],
+      "peers": [
+        "unseamless-coop",
+        "beastie"
+      ],
       "mode": "judgment",
       "notes": "Shared shape only (gather ground truth -> enumerate candidates -> recommend -> record in docs/STATE.md). unseamless-coop's version adds fleet/worker spawning and rig batching; this version is solo and points at docs/decisions.md + docs/build.md instead of ROADMAP.md. Port procedure improvements, never the fleet/rig steps."
     },
     {
       "path": ".agents/skills/wrap/",
-      "peers": ["unseamless-coop", "beastie"],
+      "peers": [
+        "unseamless-coop",
+        "beastie"
+      ],
       "mode": "judgment",
       "notes": "Shared shape only (sweep learnings -> decide next -> rewrite STATE.md wholesale -> commit -> sign off). unseamless-coop's version has fleet/rig teardown rules; this version is solo with its own learning-routing table."
+    },
+    {
+      "path": "pcb/.oxlintrc.json",
+      "peerPath": {
+        "omni-notify": ".oxlintrc.json"
+      },
+      "peers": [
+        "omni-notify"
+      ],
+      "mode": "judgment",
+      "notes": "Shared Oxc lint/format conventions; stillair checks TypeScript sources only and excludes generated hardware assets."
+    },
+    {
+      "path": "pcb/.oxfmtrc.json",
+      "peerPath": {
+        "omni-notify": ".oxfmtrc.json"
+      },
+      "peers": [
+        "omni-notify"
+      ],
+      "mode": "judgment",
+      "notes": "Shared Oxc lint/format conventions; stillair checks TypeScript sources only and excludes generated hardware assets."
     }
   ]
 }
