@@ -593,6 +593,13 @@ class PlanTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    def setUp(self) -> None:
+        # These CLI fixtures use fake native tools. Exercise their validation on
+        # every CI host; the real macOS-only guard has its own explicit test.
+        guard = mock.patch.object(handoff, "require_native_handoff_platform")
+        guard.start()
+        self.addCleanup(guard.stop)
+
     def write_json(self, root: Path, name: str, value: object) -> Path:
         path = root / name
         path.write_text(json.dumps(value))
