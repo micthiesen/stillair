@@ -12,6 +12,10 @@
     "beastie": {
       "path": "../beastie",
       "notes": "Peer for the next/wrap session-continuity shape. Beastie is Codex-only and adapts the workflow to software MVP gates."
+    },
+    "crystal-shim": {
+      "path": "../crystal-shim",
+      "notes": "Three-board aquarium sensor/controller peer; share native PCB skills and generic handoff tooling, not fan-specific designs."
     }
   },
   "resources": [
@@ -54,6 +58,118 @@
       ],
       "mode": "judgment",
       "notes": "Shared Oxc lint/format conventions; stillair checks TypeScript sources only and excludes generated hardware assets."
+    },
+    {
+      "path": ".agents/skills/konnect/",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/.oxlintrc.json",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/.oxfmtrc.json",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": ".codex/config.toml",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/tscircuit_handoff.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_tscircuit_handoff.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/export_kicad_schematic.ts",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/kicad_python.sh",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": ".agents/skills/pcb/",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared tscircuit authority, checked initial handoff, guarded ECO, native KiCad writes and review gates. Crystal Shim has three requirements-only boards and a tooling fixture; Stillair has legacy production boards and PCB-03 workflow commands."
+    },
+    {
+      "path": ".agents/skills/kicad-manufacture/",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared downstream fabrication checks and exclusion of unreliable Konnect manufacturing output. Crystal Shim defers board-specific profiles until a reviewed board exists; Stillair has released profiles."
+    },
+    {
+      "path": ".agents/skills/next/",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared state-driven next-step selection; project hardware gates and local document links differ."
+    },
+    {
+      "path": ".agents/skills/wrap/",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared learning sweep, state rewrite, commit/push and honest handoff; project data and validation gates differ."
+    },
+    {
+      "path": "pcb/tools/export_kicad_schematic.test.ts",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared staged multi-file export contract; Crystal Shim uses its standalone tooling smoke fixture, Stillair uses PCB-03."
+    },
+    {
+      "path": "pcb/package.json",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared pinned Bun/TypeScript/tscircuit/export dependencies and Oxc conventions; package identity and board-specific commands differ."
+    },
+    {
+      "path": "pcb/tsconfig.json",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared strict TSX compiler settings; include paths match each project."
     }
   ]
 }
