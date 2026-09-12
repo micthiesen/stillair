@@ -667,6 +667,32 @@ class ManifestTests(unittest.TestCase):
                 handoff.schematic_netlist_parity_errors(netlist, normalized, augment)
             )
 
+    def test_initial_erc_empty_allowlist_requires_clean_report(self) -> None:
+        normalized = handoff.normalize_manifest(manifest())
+        aug = augmentation()
+        cleanup = {
+            "id": "pcb03.cleanup",
+            "kind": "schematic_cleanup",
+            "owner": "kicad",
+            "target": {},
+            "params": {
+                "allowed_initial_erc_types": [],
+                "verification": "clean",
+            },
+        }
+        aug["operations"].append(cleanup)
+        validated = handoff.validate_augmentation(aug, normalized)
+        handoff.validate_initial_check_report(kicad_report(), validated, True)
+        with self.assertRaisesRegex(handoff.HandoffError, "endpoint_off_grid"):
+            handoff.validate_initial_check_report(
+                kicad_report([{"type": "endpoint_off_grid"}]), validated, True
+            )
+        for invalid in (None, "endpoint_off_grid", [None], [""]):
+            with self.subTest(invalid=invalid):
+                cleanup["params"]["allowed_initial_erc_types"] = invalid
+                with self.assertRaises(handoff.HandoffError):
+                    handoff.validate_augmentation(aug, normalized)
+
     def test_initial_drc_policy_allows_only_declared_categories(self) -> None:
         normalized = handoff.normalize_manifest(manifest())
         augment = handoff.validate_augmentation(augmentation(), normalized)

@@ -463,7 +463,7 @@ def validate_augmentation(raw: Any, manifest: dict[str, Any]) -> dict[str, Any]:
                 params.get("allowed_initial_erc_types"),
                 f"{where}.params.allowed_initial_erc_types",
             )
-            if not categories or not all(isinstance(item, str) and item for item in categories):
+            if not all(isinstance(item, str) and item for item in categories):
                 raise HandoffError(
                     f"{where}.params.allowed_initial_erc_types must contain strings"
                 )
