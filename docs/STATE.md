@@ -1,6 +1,6 @@
 # State
 
-Last updated: **2026-09-12** (shared handoff pad preservation; hardware status unchanged).
+Last updated: **2026-09-12** (shared handoff thickness readback; hardware status unchanged).
 
 ## Now
 
@@ -47,6 +47,11 @@ requires the delivered boards.
 
 ## Learned Recently
 
+- Crystal Shim's native review found that KiCad 10 exposes board thickness on
+  design settings rather than the board object. The shared snapshot now records
+  it and fails closed if unavailable. Both new regressions fail against the old
+  implementation; all 38 handoff tests pass in both projects. Crystal Shim's
+  native readback reports its actual 1.6062 mm stack. No Stillair board changed.
 - Crystal Shim's shared handoff review corrected repeated-pad nets, distinct hole
   identity and native footprint replacement lifetime, and added source-exported
   staged libraries. All 35 handoff tests pass in both projects; actual native

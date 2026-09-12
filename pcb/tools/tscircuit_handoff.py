@@ -1350,11 +1350,14 @@ def extract_kicad_data(
     board_setup: dict[str, Any] = {
         "copper_layer_count": int(board.GetCopperLayerCount()),
     }
-    thickness = _maybe_call(board, ("GetBoardThickness",), None)
-    if thickness is not None:
-        board_setup["thickness_mm"] = normalize_number(
-            pcbnew.ToMM(thickness), "board thickness"
+    thickness = _maybe_call(settings, ("GetBoardThickness",), None)
+    if thickness is None:
+        raise HandoffError(
+            "KiCad board design settings do not expose board thickness"
         )
+    board_setup["thickness_mm"] = normalize_number(
+        pcbnew.ToMM(thickness), "board thickness"
+    )
     for output_key, attribute in (
         ("minimum_clearance_mm", "m_MinClearance"),
         ("minimum_track_width_mm", "m_TrackMinWidth"),

@@ -458,6 +458,97 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(result["kicad_owned"]["tracks"]["sha256"], handoff.digest(raw["tracks"]))
         self.assertTrue(result["routed"])
 
+    def test_native_snapshot_reads_board_thickness_from_design_settings(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="stillair-snapshot-thickness-") as raw_dir:
+            root = Path(raw_dir)
+            board_path = root / "board.kicad_pcb"
+            board_path.write_text("board")
+            rule_path = root / "board.kicad_dru"
+            rule_path.write_text("rules")
+
+            class FakeSettings:
+                def GetBoardThickness(self) -> int:
+                    return 1_600_000
+
+            class FakeBoard:
+                def GetDesignSettings(self) -> FakeSettings:
+                    return FakeSettings()
+
+                def GetCopperLayerCount(self) -> int:
+                    return 4
+
+                def GetFootprints(self) -> list[object]:
+                    return []
+
+                def GetTracks(self) -> list[object]:
+                    return []
+
+                def Zones(self) -> list[object]:
+                    return []
+
+                def GetDrawings(self) -> list[object]:
+                    return []
+
+            class FakePcbnew:
+                PCB_VIA = type("PCB_VIA", (), {})
+
+                @staticmethod
+                def LoadBoard(path: str) -> FakeBoard:
+                    return FakeBoard()
+
+                @staticmethod
+                def ToMM(value: int) -> float:
+                    return value / 1_000_000
+
+            with mock.patch.dict(sys.modules, {"pcbnew": FakePcbnew()}):
+                actual = handoff.extract_kicad_data(board_path, [rule_path])
+            self.assertEqual(
+                actual["rules"][0]["board_setup"]["thickness_mm"], 1.6
+            )
+
+    def test_native_snapshot_fails_closed_without_board_thickness(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="stillair-snapshot-no-thickness-") as raw_dir:
+            root = Path(raw_dir)
+            board_path = root / "board.kicad_pcb"
+            board_path.write_text("board")
+            rule_path = root / "board.kicad_dru"
+            rule_path.write_text("rules")
+
+            class FakeSettings:
+                pass
+
+            class FakeBoard:
+                def GetDesignSettings(self) -> FakeSettings:
+                    return FakeSettings()
+
+                def GetCopperLayerCount(self) -> int:
+                    return 4
+
+                def GetFootprints(self) -> list[object]:
+                    return []
+
+                def GetTracks(self) -> list[object]:
+                    return []
+
+                def Zones(self) -> list[object]:
+                    return []
+
+                def GetDrawings(self) -> list[object]:
+                    return []
+
+            class FakePcbnew:
+                PCB_VIA = type("PCB_VIA", (), {})
+
+                @staticmethod
+                def LoadBoard(path: str) -> FakeBoard:
+                    return FakeBoard()
+
+            with mock.patch.dict(sys.modules, {"pcbnew": FakePcbnew()}):
+                with self.assertRaisesRegex(
+                    handoff.HandoffError, "do not expose board thickness"
+                ):
+                    handoff.extract_kicad_data(board_path, [rule_path])
+
     def test_snapshot_fixture_rejects_unknown_or_missing_refs(self) -> None:
         raw = {
             "components": [], "outline": [], "holes": [], "tracks": [],
