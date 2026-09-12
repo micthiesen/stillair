@@ -47,9 +47,10 @@ requires the delivered boards.
 
 ## Learned Recently
 
-- Crystal Shim's shared handoff review corrected repeated physical-pad net assignment
-  and parity checking. All 30 handoff tests pass, and native USB augmentation preserves
-  all four shell connections. Existing released boards were not changed. See
+- Crystal Shim's shared handoff review corrected repeated-pad nets, distinct hole
+  identity and native footprint replacement lifetime, and added source-exported
+  staged libraries. All 35 handoff tests pass in both projects; actual native
+  round-trip parity passes. Existing released boards were not changed. See
   [pcb-workflow.md](pcb-workflow.md).
 - CAM evidence, checks and their limits, download recovery, and submitted POFV request:
   [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md).

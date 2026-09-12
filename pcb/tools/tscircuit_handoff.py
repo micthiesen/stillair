@@ -314,11 +314,12 @@ def normalize_manifest(raw: Any) -> dict[str, Any]:
             "pad_numbers": sorted(pads),
             "tscircuit": require_string(footprint_raw.get("tscircuit"), f"{where}.footprint.tscircuit"),
         }
-        if "kicad_sha256" in footprint_raw:
-            sha = require_string(footprint_raw["kicad_sha256"], f"{where}.footprint.kicad_sha256")
-            if not re.fullmatch(r"[0-9a-f]{64}", sha):
-                raise HandoffError(f"{where}.footprint.kicad_sha256 must be lowercase SHA-256")
-            footprint["kicad_sha256"] = sha
+        for hash_key in ("kicad_sha256", "source_geometry_sha256", "initial_geometry_sha256"):
+            if hash_key in footprint_raw:
+                sha = require_string(footprint_raw[hash_key], f"{where}.footprint.{hash_key}")
+                if not re.fullmatch(r"[0-9a-f]{64}", sha):
+                    raise HandoffError(f"{where}.footprint.{hash_key} must be lowercase SHA-256")
+                footprint[hash_key] = sha
 
         normalized = {
             "fields": ensure_json_value(component.get("fields", {}), f"{where}.fields"),
@@ -1482,7 +1483,10 @@ def augment_staged_board(
                 f"cannot load official footprint {lib_id} from {library_path}"
             )
         old = footprints_by_ref[component["ref"]]
-        board.Remove(old)
+        # Remove transfers ownership to the Python iterator proxy in KiCad 10.
+        # Collecting detached proxies can break a later LoadBoard in this process.
+        # This initial-stage replacement never reuses old, so delete it natively.
+        board.Delete(old)
         library_id = pcbnew.LIB_ID()
         library_id.SetLibNickname(pcbnew.UTF8(library))
         library_id.SetLibItemName(pcbnew.UTF8(footprint_name))
@@ -1716,6 +1720,32 @@ def executable_fingerprint(path: Path, version_args: list[str]) -> dict[str, Any
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "version": (completed.stdout or completed.stderr).strip(),
     }
+
+
+def resolve_staged_footprint_root(stage: Path, relative: Path) -> Path:
+    """Require the source-exported library below this stage; never use stock fallback."""
+    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+        raise HandoffError("--staged-footprint-root must name a relative directory below staging")
+    stage = stage.resolve()
+    candidate = stage / relative
+    for path in (candidate, *candidate.parents):
+        if path == stage:
+            break
+        if path.is_symlink():
+            raise HandoffError("staged footprint root must not traverse symlinks")
+    root = candidate.resolve()
+    if not root.is_relative_to(stage) or not root.is_dir():
+        raise HandoffError("staged footprint root is missing or escapes staging")
+    # Path.rglob does not descend into directory symlinks. Reject each link
+    # itself, including dangling or internally targeted links, before any native
+    # footprint load can follow it outside the stage's protected-file inventory.
+    for entry in root.rglob("*"):
+        if entry.is_symlink():
+            raise HandoffError("staged footprint tree must not contain symlinks")
+        resolved = entry.resolve()
+        if not resolved.is_relative_to(root) or not resolved.is_relative_to(stage):
+            raise HandoffError("staged footprint entry escapes its source-exported tree")
+    return root
 
 
 def require_native_handoff_platform(platform: str = sys.platform) -> None:
@@ -1997,7 +2027,12 @@ def command_stage(args: argparse.Namespace) -> int:
         "kicad_python",
         (Path(__file__).resolve().parent / "kicad_python.sh",),
     )
-    footprint_root = resolve_footprint_root(args.footprint_root)
+    staged_footprint_root = getattr(args, "staged_footprint_root", None)
+    footprint_root = (
+        resolve_staged_footprint_root(stage, staged_footprint_root)
+        if staged_footprint_root is not None
+        else resolve_footprint_root(args.footprint_root)
+    )
     commands.append(
         run_guarded(
             [
@@ -2457,7 +2492,9 @@ def build_parser() -> argparse.ArgumentParser:
     stage.add_argument("--production-dir", type=Path, required=True, help="tree whose existing KiCad sources must remain byte-identical")
     stage.add_argument("--kicad-cli", type=Path, help="parse-check executable; discovered from PATH by default")
     stage.add_argument("--kicad-python", type=Path, help="Python executable with pcbnew bindings; defaults to tools/kicad_python.sh")
-    stage.add_argument("--footprint-root", type=Path, help="root containing KiCad *.pretty footprint libraries; common paths are discovered")
+    footprint_source = stage.add_mutually_exclusive_group()
+    footprint_source.add_argument("--footprint-root", type=Path, help="root containing KiCad *.pretty footprint libraries; common paths are discovered")
+    footprint_source.add_argument("--staged-footprint-root", type=Path, help="relative directory produced inside this stage by the export command; never falls back to installed libraries")
     stage.add_argument("--source-dir", type=Path, default=Path.cwd())
     stage.add_argument("--staging-root", type=Path)
     stage.set_defaults(function=command_stage)

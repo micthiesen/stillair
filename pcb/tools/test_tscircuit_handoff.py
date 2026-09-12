@@ -244,6 +244,117 @@ def kicad_report(violations: list[dict] | None = None) -> dict:
 
 
 class ManifestTests(unittest.TestCase):
+    def test_source_geometry_hash_preserves_legacy_manifests_and_validates_exact_digest(self) -> None:
+        legacy = handoff.normalize_manifest(manifest())
+        self.assertEqual(legacy["components"][0]["footprint"], {
+            "kicad": "Test:U1", "pad_numbers": ["1", "2", "3"], "tscircuit": "test_u1",
+        })
+        self.assertEqual(handoff.normalize_manifest(legacy), legacy)
+        raw = manifest()
+        raw["components"][0]["footprint"]["kicad_sha256"] = "b" * 64
+        raw["components"][0]["footprint"]["source_geometry_sha256"] = "a" * 64
+        raw["components"][0]["footprint"]["initial_geometry_sha256"] = "c" * 64
+        normalized = handoff.normalize_manifest(raw)
+        footprint = normalized["components"][1]["footprint"]
+        self.assertEqual(footprint["kicad_sha256"], "b" * 64)
+        self.assertEqual(footprint["source_geometry_sha256"], "a" * 64)
+        self.assertEqual(footprint["initial_geometry_sha256"], "c" * 64)
+        self.assertEqual(handoff.normalize_manifest(normalized), normalized)
+        without_hashes = copy.deepcopy(normalized)
+        del without_hashes["components"][1]["footprint"]["kicad_sha256"]
+        del without_hashes["components"][1]["footprint"]["source_geometry_sha256"]
+        del without_hashes["components"][1]["footprint"]["initial_geometry_sha256"]
+        self.assertEqual(without_hashes, legacy)
+        for hash_key in ("source_geometry_sha256", "initial_geometry_sha256"):
+            for invalid in [None, False, 123, "", "a" * 63, "a" * 65, "A" * 64, "g" * 64]:
+                with self.subTest(hash_key=hash_key, invalid=invalid):
+                    broken = copy.deepcopy(raw)
+                    broken["components"][0]["footprint"][hash_key] = invalid
+                    with self.assertRaises(handoff.HandoffError):
+                        handoff.normalize_manifest(broken)
+
+    def test_geometry_change_is_high_risk_and_requires_routed_eco_override(self) -> None:
+        for hash_key in ("source_geometry_sha256", "initial_geometry_sha256"):
+            with self.subTest(hash_key=hash_key):
+                self.assert_geometry_identity_requires_routed_override(hash_key)
+
+    def assert_geometry_identity_requires_routed_override(self, hash_key: str) -> None:
+        before = manifest()
+        before["components"][0]["footprint"][hash_key] = "a" * 64
+        after = copy.deepcopy(before)
+        after["components"][0]["footprint"][hash_key] = "b" * 64
+        old = handoff.normalize_manifest(before)
+        changed = handoff.normalize_manifest(after)
+        changes = handoff.classify_changes(old, changed)
+        self.assertEqual([(item["kind"], item["risk"]) for item in changes], [("footprint", "high")])
+        # Adding or removing the optional identity also changes the footprint;
+        # an old accepted manifest cannot silently drop its new geometry binding.
+        legacy = handoff.normalize_manifest(manifest())
+        for left, right in [(legacy, old), (old, legacy)]:
+            self.assertEqual([(item["kind"], item["risk"]) for item in handoff.classify_changes(left, right)],
+                             [("footprint", "high")])
+        augment = handoff.validate_augmentation(augmentation(), changed)
+        current = handoff.normalize_snapshot(snapshot(routed=True), "pcb-03")
+        lock = lock_for(before, snap=snapshot(routed=True))
+        blocked = handoff.build_plan(changed, augment, lock, current, False, False)
+        self.assertTrue(blocked["blocked"])
+        self.assertEqual(blocked["overall_risk"], "high")
+        self.assertIn("--allow-routed-eco", " ".join(blocked["blockers"]))
+        allowed = handoff.build_plan(changed, augment, lock, current, True, False)
+        self.assertFalse(allowed["blocked"])
+        self.assertEqual(allowed["overall_risk"], "high")
+
+    def test_staged_footprints_require_the_current_export_without_stock_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            stage = base / "stage"
+            library = stage / "footprints"
+            library.mkdir(parents=True)
+            self.assertEqual(handoff.resolve_staged_footprint_root(stage, Path("footprints")), library.resolve())
+            outside = base / "external"
+            outside.mkdir()
+            (stage / "escape").symlink_to(outside, target_is_directory=True)
+            for invalid in [Path("missing"), Path("../external"), outside, Path("escape")]:
+                with self.assertRaises(handoff.HandoffError):
+                    handoff.resolve_staged_footprint_root(stage, invalid)
+
+    def test_staged_footprints_reject_nested_library_and_individual_file_symlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            stage = base / "stage"
+            root = stage / "footprints"
+            root.mkdir(parents=True)
+            outside = base / "external"
+            outside.mkdir()
+            target = outside / "fixture.txt"
+            target.write_text("fixture")
+            nested = root / "Test.pretty"
+            nested.symlink_to(outside, target_is_directory=True)
+            with self.assertRaises(handoff.HandoffError):
+                handoff.resolve_staged_footprint_root(stage, Path("footprints"))
+            nested.unlink()
+            nested.mkdir()
+            linked = nested / "U1.kicad_mod"
+            linked.symlink_to(target)
+            with self.assertRaises(handoff.HandoffError):
+                handoff.resolve_staged_footprint_root(stage, Path("footprints"))
+            linked.unlink()
+            local = root / "local.txt"
+            local.write_text("fixture")
+            linked.symlink_to(local)
+            with self.assertRaises(handoff.HandoffError):
+                handoff.resolve_staged_footprint_root(stage, Path("footprints"))
+            linked.unlink()
+            linked.symlink_to(outside / "missing")
+            with self.assertRaises(handoff.HandoffError):
+                handoff.resolve_staged_footprint_root(stage, Path("footprints"))
+            linked.unlink()
+            self.assertEqual(handoff.resolve_staged_footprint_root(stage, Path("footprints")), root.resolve())
+            (stage / "internal-alias").symlink_to(root, target_is_directory=True)
+            for aliased in [Path("internal-alias"), Path("internal-alias/Test.pretty")]:
+                with self.assertRaises(handoff.HandoffError):
+                    handoff.resolve_staged_footprint_root(stage, aliased)
+
     def test_multiple_locator_holes_share_a_component_ref_but_not_identity(self) -> None:
         raw = manifest()
         first = {"stable_id": "usb.locator.left", "ref": "J4", "x_mm": -2.89,

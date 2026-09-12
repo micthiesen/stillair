@@ -71,6 +71,21 @@ patch to the tscircuit placement, rebuilt, and passed through the same ECO plan.
 
 ## Toolchain updates
 
+The shared initial-stage replacer uses `board.Delete(old)` when replacing a
+footprint it will never reuse. Crystal Shim reproduced a KiCad 10 SWIG lifetime
+failure with detached `board.Remove(old)` proxies and verified the native-delete
+path with augmentation plus same-process readback. Existing boards are untouched.
+The shared `stage --staged-footprint-root footprints` option also permits a native
+library created below the fresh stage by its export command. Missing or escaping
+paths fail, with no installed-library fallback; ordinary `--footprint-root` usage
+remains available. All 35 shared handoff tests pass in both projects.
+The staged-library option rejects every nested symlink too, including `.pretty`
+directory links that recursive file inventory would otherwise miss. Optional
+`source_geometry_sha256` and `initial_geometry_sha256` footprint fields preserve
+compiled physical intent and effective initial geometry in change identity.
+Changing, adding or removing either requires high-risk footprint ECO review;
+legacy manifests without them retain their existing behavior.
+
 Tscircuit and its KiCad exporter are exact-version dependencies in `pcb/package.json` and
 `bun.lock`. Upgrade them together in a dedicated change. Before accepting an upgrade:
 
