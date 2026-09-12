@@ -239,7 +239,7 @@ def normalize_manifest(raw: Any) -> dict[str, Any]:
         ]
     holes = []
     seen_hole_ids: set[str] = set()
-    seen_hole_refs: set[str] = set()
+    seen_hole_positions: set[tuple[str, Union[int, float], Union[int, float]]] = set()
     for index, raw_hole in enumerate(
         require_list(board_raw.get("holes", []), "manifest.board.holes")
     ):
@@ -247,10 +247,15 @@ def normalize_manifest(raw: Any) -> dict[str, Any]:
         hole = require_object(raw_hole, where)
         stable_id = require_string(hole.get("stable_id"), f"{where}.stable_id")
         ref = require_string(hole.get("ref"), f"{where}.ref")
-        if stable_id in seen_hole_ids or ref in seen_hole_refs:
+        x = normalize_number(hole.get("x_mm"), f"{where}.x_mm")
+        y = normalize_number(hole.get("y_mm"), f"{where}.y_mm")
+        # One connector may own several NPTH locators. The stable hole ID and
+        # its location within that footprint distinguish them, not ref alone.
+        position = (ref, x, y)
+        if stable_id in seen_hole_ids or position in seen_hole_positions:
             raise HandoffError(f"duplicate board hole identity at {where}")
         seen_hole_ids.add(stable_id)
-        seen_hole_refs.add(ref)
+        seen_hole_positions.add(position)
         drill = normalize_number(hole.get("drill_mm"), f"{where}.drill_mm")
         if drill <= 0:
             raise HandoffError(f"{where}.drill_mm must be positive")
@@ -259,8 +264,8 @@ def normalize_manifest(raw: Any) -> dict[str, Any]:
                 "drill_mm": drill,
                 "ref": ref,
                 "stable_id": stable_id,
-                "x_mm": normalize_number(hole.get("x_mm"), f"{where}.x_mm"),
-                "y_mm": normalize_number(hole.get("y_mm"), f"{where}.y_mm"),
+                "x_mm": x,
+                "y_mm": y,
             }
         )
     board["holes"] = sorted(holes, key=lambda item: item["stable_id"])

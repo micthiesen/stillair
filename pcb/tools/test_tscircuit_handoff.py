@@ -244,6 +244,25 @@ def kicad_report(violations: list[dict] | None = None) -> dict:
 
 
 class ManifestTests(unittest.TestCase):
+    def test_multiple_locator_holes_share_a_component_ref_but_not_identity(self) -> None:
+        raw = manifest()
+        first = {"stable_id": "usb.locator.left", "ref": "J4", "x_mm": -2.89,
+                 "y_mm": 2.605, "drill_mm": 0.65}
+        second = {**first, "stable_id": "usb.locator.right", "x_mm": 2.89}
+        raw["board"]["holes"] = [second, first]
+        result = handoff.normalize_manifest(raw)
+        self.assertEqual(result["board"]["holes"], [first, second])
+        raw["board"]["holes"].reverse()
+        self.assertEqual(handoff.normalize_manifest(raw), result)
+        for duplicate in [
+            {**second, "stable_id": first["stable_id"]},
+            {**first, "stable_id": "usb.locator.duplicate"},
+            {**first, "stable_id": "usb.locator.different-drill", "drill_mm": 1.0},
+        ]:
+            raw["board"]["holes"] = [first, duplicate]
+            with self.assertRaisesRegex(handoff.HandoffError, "duplicate board hole identity"):
+                handoff.normalize_manifest(raw)
+
     def test_normalization_is_stable_and_sorts_identity_sets(self) -> None:
         raw = manifest()
         first = handoff.normalize_manifest(raw)
