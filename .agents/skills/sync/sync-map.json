@@ -121,7 +121,7 @@
         "crystal-shim"
       ],
       "mode": "judgment",
-      "notes": "Shared tscircuit authority, checked initial handoff, guarded ECO, native KiCad writes and review gates. Crystal Shim has three requirements-only boards and a tooling fixture; Stillair has legacy production boards and PCB-03 workflow commands."
+      "notes": "Shared tscircuit authority, checked initial handoff, guarded ECO, native KiCad writes and review gates. Crystal Shim owns three water-level controller boards and a separate tooling fixture; Stillair has fan-controller boards and PCB-03 workflow commands. Board source, commands and release evidence stay project-specific."
     },
     {
       "path": ".agents/skills/kicad-manufacture/",
