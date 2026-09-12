@@ -943,14 +943,21 @@ class CliTests(unittest.TestCase):
             fake_cli = root / "kicad-cli"
             fake_cli.write_text("#!/bin/sh\nexit 0\n")
             fake_cli.chmod(0o755)
+            def cleanup_report(violations: list[dict] | None = None) -> dict:
+                return {
+                    **kicad_report(violations),
+                    "included_severities": ["error", "warning", "exclusion"],
+                }
+
             generated_xml = schematic_netlist_xml()
-            generated_erc = kicad_report()
+            generated_erc = cleanup_report()
 
             def fake_run(command: list[str], cwd: Path, env: dict[str, str]) -> dict:
                 output = Path(command[command.index("--output") + 1])
                 if "netlist" in command:
                     output.write_text(generated_xml)
                 else:
+                    self.assertIn("--severity-all", command)
                     output.write_text(json.dumps(generated_erc))
                 return {"argv": command, "returncode": 0, "stderr": "", "stdout": ""}
 
@@ -971,15 +978,59 @@ class CliTests(unittest.TestCase):
             generated_xml = schematic_netlist_xml().replace("MPN-U1", "wrong")
             self.assertEqual(run_gate(), 1)
             generated_xml = schematic_netlist_xml()
-            generated_erc = kicad_report([{"type": "endpoint_off_grid"}])
+            generated_erc = cleanup_report([{"type": "endpoint_off_grid"}])
             self.assertEqual(run_gate(), 1)
-            generated_erc = {**kicad_report(), "included_severities": ["error"]}
+            generated_erc = {**cleanup_report(), "included_severities": ["error"]}
             self.assertEqual(run_gate(), 1)
             generated_erc = {
-                **kicad_report(),
+                **cleanup_report(),
                 "ignored_checks": [{"key": "hidden_failure"}],
             }
             self.assertEqual(run_gate(), 1)
+
+            # Initial seed defaults are not permission to disable rules in the
+            # before-routing cleanup gate, even with no reported violations.
+            initial_ignored = [
+                "footprint_filter", "four_way_junction",
+                "simulation_model_issue", "single_global_label",
+            ]
+            declared = augmentation()
+            declared["operations"].append({
+                "id": "pcb03.kicad.schematic-cleanup",
+                "kind": "schematic_cleanup", "owner": "kicad", "target": {},
+                "params": {
+                    "allowed_initial_erc_types": [],
+                    "allowed_initial_erc_ignored_checks": initial_ignored,
+                    "allowed_initial_semantic_differences": [],
+                    "verification": "Enable every rule before routing.",
+                },
+            })
+            self.write_json(root, "augmentation.json", declared)
+            for ignored in [[key] for key in initial_ignored] + [initial_ignored]:
+                generated_erc = {
+                    **cleanup_report(),
+                    "ignored_checks": [{"key": key} for key in ignored],
+                }
+                self.assertTrue(handoff.validate_initial_check_report(
+                    generated_erc, declared, schematic=True
+                )["clean"])
+                self.assertEqual(run_gate(), 1)
+            generated_erc = kicad_report()
+            self.assertEqual(run_gate(), 1)  # No proof excluded items were included.
+            declared["operations"][-1]["params"]["allowed_initial_erc_types"] = [
+                "endpoint_off_grid"
+            ]
+            self.write_json(root, "augmentation.json", declared)
+            generated_erc = {
+                **cleanup_report(),
+                "sheets": [{"violations": [{
+                    "type": "endpoint_off_grid", "severity": "exclusion",
+                    "excluded": True,
+                }]}],
+            }
+            self.assertEqual(run_gate(), 1)
+            generated_erc = cleanup_report()
+            self.assertEqual(run_gate(), 0)
 
     def test_initial_export_is_task_staged_and_production_is_unchanged(self) -> None:
         with tempfile.TemporaryDirectory(prefix="stillair-handoff-test-") as raw_dir:

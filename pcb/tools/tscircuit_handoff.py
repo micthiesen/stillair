@@ -1826,7 +1826,8 @@ def verify_generated_kicad(receipt: dict[str, Any], receipt_path: Path) -> None:
 
 
 def validate_initial_check_report(
-    report: Any, augmentation: dict[str, Any], schematic: bool
+    report: Any, augmentation: dict[str, Any], schematic: bool,
+    *, allow_declared_ignored: bool = True,
 ) -> dict[str, Any]:
     root = require_object(report, "KiCad check report")
     severities = set(
@@ -1860,6 +1861,11 @@ def validate_initial_check_report(
         raise HandoffError(
             "KiCad check contains undeclared ignored checks: "
             + ", ".join(undeclared_ignored)
+        )
+    if ignored and not allow_declared_ignored:
+        raise HandoffError(
+            "Schematic cleanup requires all checks enabled; ignored checks: "
+            + ", ".join(sorted(ignored))
         )
     allowed = set()
     if schematic:
@@ -2432,7 +2438,7 @@ def command_verify_schematic_cleanup(args: argparse.Namespace) -> int:
         commands.append(
             run_staged_command(
                 [
-                    str(cli), "sch", "erc", "--format", "json",
+                    str(cli), "sch", "erc", "--format", "json", "--severity-all",
                     "--output", str(erc_path), str(root_schematic),
                 ],
                 root_schematic.parent,
@@ -2446,7 +2452,11 @@ def command_verify_schematic_cleanup(args: argparse.Namespace) -> int:
             schematic, manifest, augmentation, strict_fields=True
         )
         erc_report = read_json(erc_path)
-        check = validate_initial_check_report(erc_report, augmentation, schematic=True)
+        check = validate_initial_check_report(
+            erc_report, augmentation, schematic=True, allow_declared_ignored=False
+        )
+        if "exclusion" not in erc_report["included_severities"]:
+            errors.append("schematic cleanup ERC omitted excluded findings")
         if not check["clean"]:
             errors.append(
                 "schematic ERC is not clean: "
