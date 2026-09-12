@@ -360,6 +360,98 @@ class ManifestTests(unittest.TestCase):
                 mutate(changed)
                 self.assertTrue(handoff.parity_errors(changed, normalized, augment))
 
+    def test_parity_checks_every_physical_pad_with_a_shared_number(self) -> None:
+        normalized = handoff.normalize_manifest(manifest())
+        augment = handoff.validate_augmentation(augmentation(), normalized)
+        for count in (4, 9):
+            for expected_number, correct_net, incorrect_net in (
+                ("1", "AGND", ""),
+                ("1", "AGND", "AAAA_WRONG"),
+                ("3", "", "unintended-net"),
+            ):
+                with self.subTest(count=count, pad=expected_number, wrong=incorrect_net):
+                    raw = copy.deepcopy(snapshot()["source_owned"])
+                    pads = raw["components"][0]["pads"]
+                    pads[:] = [pad for pad in pads if pad["number"] != expected_number]
+                    pads.extend({"number": expected_number, "net": correct_net} for _ in range(count))
+                    accepted = handoff.normalize_kicad_snapshot_data(raw, normalized, False)
+                    self.assertEqual(handoff.parity_errors(accepted, normalized, augment), [])
+                    # Normalization retains repeated physical pads and sorts by
+                    # net. The old dict kept only the last value, hiding a blank
+                    # or lexically earlier wrong net behind the correct one.
+                    pads[-count]["net"] = incorrect_net
+                    rejected = handoff.normalize_kicad_snapshot_data(raw, normalized, False)
+                    self.assertEqual(
+                        sum(pad["number"] == expected_number for pad in rejected["source_owned"]["components"][0]["pads"]),
+                        count,
+                    )
+                    self.assertTrue(
+                        any(f"U1.{expected_number} net differs" in error for error in handoff.parity_errors(rejected, normalized, augment))
+                    )
+
+    def test_augmentation_assigns_every_shared_pad_and_clears_every_nc_pad(self) -> None:
+        raw = manifest()
+        shared = {"pcb03.u1": ("SH", 4), "pcb03.u2": ("29", 9)}
+        for component_data in raw["components"]:
+            number, _ = shared[component_data["stable_id"]]
+            component_data["footprint"]["pad_numbers"] = [number, "2", "3"]
+        for net in raw["nets"]:
+            for endpoint in net["endpoints"]:
+                if endpoint["pad"] == "1":
+                    endpoint["pad"] = shared[endpoint["component"]][0]
+        normalized = handoff.normalize_manifest(raw)
+        augment = handoff.validate_augmentation(augmentation(), normalized)
+        native = mock.Mock()
+        board = native.LoadBoard.return_value
+        drawing = mock.Mock()
+        drawing.GetStart.return_value = mock.Mock(x=-19.875, y=-10.5)
+        drawing.GetEnd.return_value = mock.Mock(x=19.875, y=10.5)
+        board.GetDrawings.return_value = [drawing]
+        board.GetLayerName.return_value = "Edge.Cuts"
+        board.Zones.return_value = []
+        native.ToMM.side_effect = lambda value: value
+        native.FromMM.side_effect = lambda value: value
+        native.VECTOR2I.side_effect = lambda x, y: mock.Mock(x=x, y=y)
+        ground, data = mock.Mock(), mock.Mock()
+        board.GetNetsByName.return_value = {"AGND": ground, "DATA": data}
+        old, replacements, observed = [], [], []
+        for component_data in normalized["components"]:
+            previous = mock.Mock()
+            previous.GetReference.return_value = component_data["ref"]
+            old.append(previous)
+            number, count = shared[component_data["stable_id"]]
+            pads = []
+            for pad_number in [number] * count + ["2"] + ["3"] * 3 + [""]:
+                pad = mock.Mock()
+                pad.GetNumber.return_value = pad_number
+                pads.append(pad)
+                observed.append((pad_number, pad))
+            replacement = mock.Mock()
+            replacement.Pads.return_value = pads
+            replacements.append(replacement)
+        board.GetFootprints.return_value = old
+        native.FootprintLoad.side_effect = replacements
+        with tempfile.TemporaryDirectory(prefix="shared-pad-stage-") as directory:
+            stage = Path(directory)
+            with mock.patch.dict(sys.modules, {"pcbnew": native}), mock.patch.dict(
+                os.environ, {"STILLAIR_HANDOFF_STAGE": str(stage)}
+            ):
+                handoff.augment_staged_board(stage / "review.kicad_pcb", normalized, augment, stage)
+            native.SaveBoard.assert_called_once_with(str((stage / "review.kicad_pcb").resolve()), board)
+        for number, pad in observed:
+            if number in {"SH", "29"}:
+                pad.SetNet.assert_called_once_with(ground)
+                pad.SetNetCode.assert_not_called()
+            elif number == "2":
+                pad.SetNet.assert_called_once_with(data)
+                pad.SetNetCode.assert_not_called()
+            elif number == "3":
+                pad.SetNetCode.assert_called_once_with(0)
+                pad.SetNet.assert_not_called()
+            else:
+                pad.SetNet.assert_not_called()
+                pad.SetNetCode.assert_not_called()
+
     def test_schematic_hierarchy_and_netlist_parity_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory(prefix="stillair-schematic-test-") as raw_dir:
             root = Path(raw_dir)

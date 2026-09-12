@@ -27,6 +27,13 @@ holes, positions, sides, rotations, and connector direction. Missing schematic s
 footprint-property, MPN, and datasheet metadata is an explicit cleanup augmentation, not silent
 parity. KiCad must parse the complete project and produce reviewable renders.
 
+Logical pin numbers may occur on several physical pads, such as USB shell tabs,
+split exposed pads or two-tail headers. Native footprint augmentation assigns
+every matching pad, and parity checks every physical pad's net. Unique pin-set
+equality alone cannot establish those connections. The shared Crystal Shim port
+added regressions for four/nine repeated pads, incorrect/blank nets and NC clearing;
+native KiCad verification also exercised all four USB shell tabs.
+
 The pinned exporter currently omits hierarchical child sheets and mishandles repeated power/ground
 rail symbols. The repository wrapper uses the exporter's public multi-file API and converts those
 rails to same-named global labels in memory before export. The tscircuit source is unchanged. A

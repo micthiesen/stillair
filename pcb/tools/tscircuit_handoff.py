@@ -777,20 +777,25 @@ def parity_errors(
             errors.append(f"{expected['ref']} value differs")
         if expected["footprint"]["kicad"] != actual["footprint"]:
             errors.append(f"{expected['ref']} footprint differs")
-        actual_pads = {
-            pad["number"]: _normalized_net_name(pad["net"], source_aliases)
-            for pad in actual["pads"]
-        }
+        # A logical pin can occupy multiple physical pads (USB shield tabs,
+        # split exposed pads). Retain every net instead of checking only the
+        # last physical pad with that number.
+        actual_pads: dict[str, list[str]] = {}
+        for pad in actual["pads"]:
+            actual_pads.setdefault(pad["number"], []).append(
+                _normalized_net_name(pad["net"], source_aliases)
+            )
         expected_pads = set(expected["footprint"]["pad_numbers"])
         if expected_pads != set(actual_pads):
             errors.append(f"{expected['ref']} pad set differs")
         for pad_number in sorted(expected_pads & set(actual_pads)):
             expected_net = expected_pad_nets.get((stable_id, pad_number), "")
-            if actual_pads[pad_number] != expected_net:
-                errors.append(
-                    f"{expected['ref']}.{pad_number} net differs: "
-                    f"expected={expected_net!r}, actual={actual_pads[pad_number]!r}"
-                )
+            for actual_net in actual_pads[pad_number]:
+                if actual_net != expected_net:
+                    errors.append(
+                        f"{expected['ref']}.{pad_number} net differs: "
+                        f"expected={expected_net!r}, actual={actual_net!r}"
+                    )
 
         expected_position = source_to_kicad_xy(
             expected["placement"]["x_mm"],
@@ -1491,14 +1496,18 @@ def augment_staged_board(
         board.Add(replacement)
         if component["placement"]["side"] == "back":
             replacement.Flip(replacement.GetPosition(), False)
-        actual_pads = {str(pad.GetNumber()): pad for pad in replacement.Pads() if str(pad.GetNumber())}
+        actual_pads = [pad for pad in replacement.Pads() if str(pad.GetNumber())]
+        actual_pad_numbers = {str(pad.GetNumber()) for pad in actual_pads}
         expected_pads = set(component["footprint"]["pad_numbers"])
-        if set(actual_pads) != expected_pads:
+        if actual_pad_numbers != expected_pads:
             raise HandoffError(
                 f"official footprint pad set differs for {component['ref']}: "
-                f"expected={sorted(expected_pads)}, actual={sorted(actual_pads)}"
+                f"expected={sorted(expected_pads)}, actual={sorted(actual_pad_numbers)}"
             )
-        for pad_number, pad in actual_pads.items():
+        # Assign every physical land sharing the logical number. A dict keyed
+        # by number silently leaves all but one replacement land unconnected.
+        for pad in actual_pads:
+            pad_number = str(pad.GetNumber())
             net_name = pad_nets.get((component["stable_id"], pad_number), "")
             if net_name:
                 pad.SetNet(get_net(net_name))

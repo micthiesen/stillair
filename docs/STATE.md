@@ -1,6 +1,6 @@
 # State
 
-Last updated: **2026-09-07** (PCB file confirmed; PCBA placement/polarity review passes).
+Last updated: **2026-09-12** (shared handoff pad preservation; hardware status unchanged).
 
 ## Now
 
@@ -47,6 +47,10 @@ requires the delivered boards.
 
 ## Learned Recently
 
+- Crystal Shim's shared handoff review corrected repeated physical-pad net assignment
+  and parity checking. All 30 handoff tests pass, and native USB augmentation preserves
+  all four shell connections. Existing released boards were not changed. See
+  [pcb-workflow.md](pcb-workflow.md).
 - CAM evidence, checks and their limits, download recovery, and submitted POFV request:
   [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md).
 - Revised three-section USB calculations and copper/reference confirmation:
