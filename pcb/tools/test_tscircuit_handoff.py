@@ -995,6 +995,30 @@ class PlanTests(unittest.TestCase):
                               preservation_report(plan, before, after)["errors"])
 
 
+class ProtectedTreeTests(unittest.TestCase):
+    def test_local_history_is_excluded_without_hiding_project_or_library_files(self):
+        with tempfile.TemporaryDirectory(prefix="stillair-protected-tree-") as raw:
+            root = Path(raw)
+            native = root / "board.kicad_pcb"
+            library = root / ".libraries" / "parts.kicad_sym"
+            history = root / ".history" / "snapshot.kicad_pcb"
+            nested_history = root / "project" / ".history" / "snapshot.kicad_sch"
+            for path in (native, library, history, nested_history):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("original")
+            before = handoff.hash_protected_tree(root)
+            self.assertEqual(set(before), {str(native.resolve()), str(library.resolve())})
+            for path in (history, nested_history):
+                path.write_text("new local snapshot")
+            self.assertEqual(handoff.hash_protected_tree(root), before)
+            native.write_text("changed project")
+            changed = handoff.hash_protected_tree(root)
+            self.assertNotEqual(changed[str(native.resolve())], before[str(native.resolve())])
+            library.write_text("changed hidden library")
+            self.assertNotEqual(handoff.hash_protected_tree(root)[str(library.resolve())],
+                                before[str(library.resolve())])
+
+
 class CliTests(unittest.TestCase):
     def setUp(self) -> None:
         # These CLI fixtures use fake native tools. Exercise their validation on

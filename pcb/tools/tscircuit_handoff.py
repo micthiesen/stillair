@@ -1654,6 +1654,10 @@ def hash_protected_tree(
     result = {}
     excluded = [path.resolve() for path in excluded_roots]
     for path in sorted(root.rglob("*")):
+        # KiCad local history is workstation state, not a portable native input.
+        # Do not exclude other hidden directories containing project libraries.
+        if ".history" in path.relative_to(root).parts[:-1]:
+            continue
         resolved = path.resolve()
         if any(resolved.is_relative_to(exclusion) for exclusion in excluded):
             continue
