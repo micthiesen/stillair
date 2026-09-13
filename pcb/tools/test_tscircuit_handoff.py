@@ -930,6 +930,70 @@ class PlanTests(unittest.TestCase):
         )
         self.assertEqual(plan["authorized_kicad_owned_changes"], ["zones"])
 
+    def test_via_augmentation_requires_a_known_net(self) -> None:
+        normalized = handoff.normalize_manifest(manifest())
+        augment = augmentation()
+        augment["operations"].append({
+            "id": "pcb03.kicad.thermal-vias", "kind": "via", "target": {},
+            "params": {"positions_mm": [[-4, 0]], "diameter_mm": 0.6, "drill_mm": 0.3},
+        })
+        with self.assertRaisesRegex(handoff.HandoffError, "via requires target.net_stable_id"):
+            handoff.validate_augmentation(augment, normalized)
+        augment["operations"][-1]["target"]["net_stable_id"] = "missing"
+        with self.assertRaisesRegex(handoff.HandoffError, "unknown net"):
+            handoff.validate_augmentation(augment, normalized)
+
+    def test_via_preservation_requires_changed_explicit_via_operation(self) -> None:
+        # Exercise the public CLI on peers without the newer extracted helper.
+        def preservation_report(plan, before, after):
+            with tempfile.TemporaryDirectory(prefix="stillair-via-preservation-") as raw:
+                root = Path(raw)
+                for name, value in (("plan", plan), ("before", before), ("after", after)):
+                    (root / (name + ".json")).write_text(json.dumps(value))
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    handoff.main(["verify-preservation", "--plan", str(root / "plan.json"),
+                                  "--before-snapshot", str(root / "before.json"),
+                                  "--after-snapshot", str(root / "after.json")])
+                return json.loads(output.getvalue())
+
+        normalized = handoff.normalize_manifest(manifest())
+        augment = augmentation()
+        augment["operations"].append({
+            "id": "pcb03.kicad.thermal-vias", "kind": "via",
+            "target": {"net_stable_id": "pcb03.net.ground"},
+            "params": {"positions_mm": [[-4, 0]], "diameter_mm": 0.6, "drill_mm": 0.3},
+        })
+        validated = handoff.validate_augmentation(augment, normalized)
+        before = snapshot()
+        after = copy.deepcopy(before)
+        after["routed"] = True
+        after["kicad_owned"]["vias"] = "new-thermal-vias-sha"
+        plan = handoff.build_plan(
+            normalized, validated, lock_for(manifest()), before, False, False
+        )
+        self.assertEqual(plan["authorized_kicad_owned_changes"], ["vias"])
+        self.assertTrue(preservation_report(plan, before, after)["passed"])
+        after["kicad_owned"]["tracks"] = "unexpected-tracks-sha"
+        self.assertIn("unauthorized KiCad-owned tracks change",
+                      preservation_report(plan, before, after)["errors"])
+        after["kicad_owned"]["tracks"] = before["kicad_owned"]["tracks"]
+
+        # An unchanged declaration, or only a changed zone declaration, cannot
+        # authorize subsequent via edits.
+        for change_zone in (False, True):
+            with self.subTest(change_zone=change_zone):
+                target = copy.deepcopy(augment)
+                if change_zone:
+                    target["operations"][1]["params"]["clearance_mm"] = 0.3
+                plan = handoff.build_plan(
+                    normalized, handoff.validate_augmentation(target, normalized),
+                    lock_for(manifest(), augment=augment), before, False, False,
+                )
+                self.assertNotIn("vias", plan["authorized_kicad_owned_changes"])
+                self.assertIn("unauthorized KiCad-owned vias change",
+                              preservation_report(plan, before, after)["errors"])
+
 
 class CliTests(unittest.TestCase):
     def setUp(self) -> None:

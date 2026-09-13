@@ -76,6 +76,7 @@ ALLOWED_AUGMENTATIONS = {
     "schematic_cleanup",
     "silkscreen",
     "stackup",
+    "via",
     "zone",
 }
 ALLOWED_INITIAL_SCHEMATIC_DIFFERENCES = {
@@ -456,8 +457,8 @@ def validate_augmentation(raw: Any, manifest: dict[str, Any]) -> dict[str, Any]:
             for key in ("copper_weight_oz", "thickness_mm"):
                 if finite_number(params.get(key), f"{where}.params.{key}") <= 0:
                     raise HandoffError(f"{where}.params.{key} must be positive")
-        elif kind == "zone" and net_id is None:
-            raise HandoffError(f"{where} zone requires target.net_stable_id")
+        elif kind in {"via", "zone"} and net_id is None:
+            raise HandoffError(f"{where} {kind} requires target.net_stable_id")
         elif kind == "schematic_cleanup":
             categories = require_list(
                 params.get("allowed_initial_erc_types"),
@@ -1587,6 +1588,8 @@ def build_plan(
         }
         if operation_kinds & {"zone", "keepout"}:
             authorized_kicad_owned_changes.add("zones")
+        if "via" in operation_kinds:
+            authorized_kicad_owned_changes.add("vias")
         if operation_kinds & {"custom_rule", "impedance", "net_class", "stackup"}:
             authorized_kicad_owned_changes.add("rules")
         if operation_kinds & {
