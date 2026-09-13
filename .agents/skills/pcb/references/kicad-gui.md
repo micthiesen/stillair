@@ -2,7 +2,10 @@
 
 Read this reference when downstream KiCad work needs project launch, Board Setup, ECO application,
 or window cleanup. It records the reliable automation path after a tscircuit handoff. It does not
-authorize direct edits to protected KiCad files.
+authorize direct edits to protected KiCad files. Prefer verified native/schematic
+helpers first; the [capability rules](../../konnect/SKILL.md) record supported field
+updates, known Konnect defects and remaining GUI requirements. Use this reference
+when an operation actually needs the GUI or visual inspection.
 
 ## Open the project without stray editors
 
@@ -51,7 +54,8 @@ The tscircuit handoff tool creates the initial project, schematic/netlist, outli
 placement in a staging directory. Validate and adopt that seed once. Do not manually recreate those
 source-owned domains in KiCad.
 
-Use KiCad's Board Setup and Schematic Setup dialogs only for items declared in
+Use verified native helpers where supported. Use KiCad's Board Setup and Schematic Setup
+dialogs for remaining items declared in
 `design/kicad-augment.json`, such as project metadata, stackup/copper weights, impedance settings,
 net classes, custom rules, and fabrication constraints unsupported by the exporter. Do not use
 Konnect's `add_layer`, `set_design_rules`, `create_netclass`, or `assign_net_to_class` on KiCad 10.

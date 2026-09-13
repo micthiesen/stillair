@@ -116,12 +116,83 @@
       "mode": "exact"
     },
     {
+      "path": "pcb/tools/kicad_native.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_kicad_native.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_kicad_native_integration.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/kicad_schematic.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_kicad_schematic.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/pcb_readiness.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_pcb_readiness.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/pcb_workflow.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/test_pcb_workflow.py",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "exact"
+    },
+    {
+      "path": "pcb/tools/README.md",
+      "peers": [
+        "crystal-shim"
+      ],
+      "mode": "judgment",
+      "notes": "Shared verified-helper capabilities, complete preparation lifecycle and content-addressed evidence guidance. Runtime examples, board commands and current configuration remain project-specific. pcb/workflow.json and pcb/tools/readiness-profiles.json are project-owned and are never exact copies."
+    },
+    {
       "path": ".agents/skills/pcb/",
       "peers": [
         "crystal-shim"
       ],
       "mode": "judgment",
-      "notes": "Shared tscircuit authority, checked initial handoff, guarded ECO, native KiCad writes and review gates. Crystal Shim owns three water-level controller boards and a separate tooling fixture; Stillair has fan-controller boards and PCB-03 workflow commands. Board source, commands and release evidence stay project-specific."
+      "notes": "Shared visual/dimensional contract before placement, tscircuit authority, checked initial handoff, guarded ECO, verified native batches, full preparation and one final acceptance. Crystal Shim owns three water-level controller boards and configured workflow/readiness profiles; Stillair retains its fan boards and PCB-03 commands. Board source, profiles, commands and release evidence stay project-specific."
     },
     {
       "path": ".agents/skills/kicad-manufacture/",
@@ -129,7 +200,7 @@
         "crystal-shim"
       ],
       "mode": "judgment",
-      "notes": "Shared downstream fabrication checks and exclusion of unreliable Konnect manufacturing output. Crystal Shim defers board-specific profiles until a reviewed board exists; Stillair has released profiles."
+      "notes": "Shared downstream fabrication checks and exclusion of unreliable Konnect manufacturing output. Crystal Shim has a project-specific three-board output profile in docs/design/manufacturing-output.md for the accepted compact boards; Stillair has its own released board profiles. Neither project ports board selections or release evidence."
     },
     {
       "path": ".agents/skills/next/",

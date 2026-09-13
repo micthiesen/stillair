@@ -36,6 +36,9 @@ through the initial KiCad handoff boundary.
 ## New-board procedure
 
 1. Read the board requirements, relevant safety invariants, BOM rows, and current project state.
+   Establish the visual direction before detailed placement, then put exact dimensions,
+   mounting, connector exits, layer roles and assembly limits in the canonical specification.
+   Retain useful images as references; generated component details are not circuit requirements.
 2. Create `pcb/<board>/design/` from the PCB-03 pattern. Pin the tscircuit version in
    `pcb/package.json` and `bun.lock`; never depend on `latest`.
 3. Define exact parts and pin maps. Give every part an immutable `stable_id`, fixed ref, exact
@@ -56,6 +59,40 @@ Read [tscircuit-authoring.md](references/tscircuit-authoring.md) while authoring
 [kicad-handoff.md](references/kicad-handoff.md) before export or any later update. Read
 [review.md](references/review.md) before declaring a design or handoff complete.
 
+## Complete preparation, then accept once
+
+The shared [PCB tools](../../../pcb/tools/README.md) provide capability discovery,
+native transactions, verified schematic-field batches, preparation audits and the
+`begin` → `plan` → `apply` → `validate` → `review` → `accept` lifecycle. The coordinator
+requires a project-owned workflow and readiness profile. Stillair's released boards
+remain KiCad-authoritative, and no new profile is implied by installing these tools.
+Keep using the established board-specific commands until a profile is deliberately
+configured for a compatible adopted source handoff. Never copy another project's
+geometry, routing limits or release evidence to make a profile pass.
+
+Before assigning implementation, enumerate the entire routing-preparation result:
+schematic fields and exclusions, source/native parity, physical stack, planes and
+pours, vias, trunk and bounded escape widths, native DRC, paste/stencil provisions,
+service labels and export settings. Put project facts in the readiness profile and
+augmentation declaration. Do not add circuits or standards through a generic
+checklist. Machine checks cannot prove physical calibration or visual inspection.
+
+Prefer verified `kicad_native.py` and `kicad_schematic.py` operations over repeated
+GUI actions or board-specific scripts. Inspect actual installed capabilities before
+selecting a write path. Use scratch projects for capability probes and verify saved
+results; a schema advertising a feature is not proof it works. Unsupported operations
+remain explicit and use an established native/GUI path while independent work
+continues. Existing authorization applies; a tool limitation is not a new approval
+requirement.
+
+Run the full preparation audit before final review and acceptance. Review current
+renders and evidence through the agreed design, schematic, placement/copper and
+assembly/process scopes. Focus on correctness within the authorized design. Use one
+final acceptance after all required checks and findings close. Keep the small run
+index with its content-addressed evidence; source, native, profile or checker changes
+invalidate stale validation/review. Canonical specs describe the current target;
+STATE points to the current receipt.
+
 ## Post-handoff updates
 
 Tscircuit remains authoritative, but a routed production board is never overwritten by a fresh
@@ -65,9 +102,10 @@ export.
 2. Compare it with `design/handoff.lock.json` and generate an ECO plan.
 3. Review adds, removals, ref/value changes, net endpoint changes, footprint changes, moves,
    rotations, holes, outline, and board-spec changes.
-4. Treat a component move or rotation after routing as guarded. Treat footprint, layer, hole, or
-   outline changes as destructive. Require explicit acknowledgement before applying either class.
-5. Apply an accepted ECO through KiCad GUI, Konnect, or KiCad's native API. Never patch a
+4. Review preservation for component moves/rotations after routing and footprint, layer, hole
+   or outline changes. Existing user authorization governs reversible repository changes;
+   do not reopen an already authorized change merely because it needs a guarded operation.
+5. Apply an accepted ECO through KiCad GUI, verified Konnect, or KiCad's native API. Never patch a
    production `.kicad_*` file as text.
 6. Snapshot the KiCad board before and after. Prove unrelated track, via, zone, rule, graphic,
    and UUID-bound waiver state is unchanged.

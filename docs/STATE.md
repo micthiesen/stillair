@@ -1,6 +1,6 @@
 # State
 
-Last updated: **2026-09-12** (shared handoff thickness readback; hardware status unchanged).
+Last updated: **2026-09-13** (shared PCB workflow tooling; hardware status unchanged).
 
 ## Now
 
@@ -47,6 +47,14 @@ requires the delivered boards.
 
 ## Learned Recently
 
+- Crystal Shim's PCB retrospective produced shared native transaction, guarded
+  schematic-field, preparation-audit and lifecycle helpers with failure tests.
+  They now prefer visual/dimensional agreement first, a full preparation review
+  and one final acceptance. See [tool capabilities](../pcb/tools/README.md).
+  Stillair has no `pcb/workflow.json` or readiness profile for this new coordinator;
+  existing PCB-03 commands remain the active project workflow. No board geometry,
+  output profile or release evidence was imported. Physical stack, custom-rule
+  installation and persisted GUI router-preference writes remain explicit gaps.
 - Crystal Shim's native review found that KiCad 10 exposes board thickness on
   design settings rather than the board object. The shared snapshot now records
   it and fails closed if unavailable. Both new regressions fail against the old
