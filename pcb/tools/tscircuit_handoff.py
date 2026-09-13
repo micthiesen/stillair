@@ -74,6 +74,8 @@ ALLOWED_AUGMENTATIONS = {
     "paste_override",
     "pofv",
     "schematic_cleanup",
+    "routing_clear",
+    "routing_add",
     "silkscreen",
     "stackup",
     "via",
@@ -433,7 +435,51 @@ def validate_augmentation(raw: Any, manifest: dict[str, Any]) -> dict[str, Any]:
             raise HandoffError(
                 f"{where} attempts to override tscircuit-owned fields: {sorted(forbidden)}"
             )
-        if kind == "net_alias":
+        if kind == "routing_clear":
+            if target:
+                raise HandoffError(f"{where} routing_clear target must be empty")
+            checksum = require_string(params.get("before_snapshot_sha256"), f"{where}.params.before_snapshot_sha256")
+            if not re.fullmatch(r"[0-9a-f]{64}", checksum):
+                raise HandoffError(f"{where} routing_clear requires a snapshot SHA-256")
+            uuids = require_list(params.get("track_uuids"), f"{where}.params.track_uuids")
+            if not uuids or not all(isinstance(uid, str) and uid for uid in uuids) or len(set(uuids)) != len(uuids):
+                raise HandoffError(f"{where} routing_clear requires unique nonempty track UUIDs")
+            require_string(params.get("reason"), f"{where}.params.reason")
+        elif kind == "routing_add":
+            if target:
+                raise HandoffError(f"{where} routing_add target must be empty")
+            checksum = require_string(params.get("before_snapshot_sha256"), f"{where}.params.before_snapshot_sha256")
+            if not re.fullmatch(r"[0-9a-f]{64}", checksum):
+                raise HandoffError(f"{where} routing_add requires a snapshot SHA-256")
+            tracks = require_list(params.get("tracks"), f"{where}.params.tracks")
+            if not tracks or params.get("tracks_sha256") != digest(tracks):
+                raise HandoffError(f"{where} routing_add requires nonempty, checksum-bound tracks")
+            uuids = set()
+            copper = {"F.Cu", "B.Cu"} | {f"In{i}.Cu" for i in range(1, manifest["board"]["layer_count"] - 1)}
+            for track in tracks:
+                track = require_object(track, f"{where}.track")
+                if set(track) != {"uuid", "layer", "net", "width_mm", "position_mm", "start_mm", "end_mm"}:
+                    raise HandoffError(f"{where} routing_add accepts exact straight-track records only")
+                uid = require_string(track.get("uuid"), f"{where}.track.uuid")
+                if uid in uuids:
+                    raise HandoffError(f"{where} routing_add has duplicate track UUIDs")
+                uuids.add(uid)
+                require_string(track["net"], f"{where}.track.net")
+                require_string(track["layer"], f"{where}.track.layer")
+                if track["net"] not in {net["name"] for net in manifest["nets"]} or track["layer"] not in copper:
+                    raise HandoffError(f"{where} routing_add track has unknown net or copper layer")
+                if finite_number(track["width_mm"], f"{where}.track.width_mm") <= 0:
+                    raise HandoffError(f"{where} routing_add track width must be positive")
+                for key in ("position_mm", "start_mm", "end_mm"):
+                    point = require_list(track[key], f"{where}.track.{key}")
+                    if len(point) != 2:
+                        raise HandoffError(f"{where} routing_add track points must be two-dimensional")
+                    for number in point:
+                        finite_number(number, f"{where}.track.{key}")
+                if track["position_mm"] != track["start_mm"] or track["start_mm"] == track["end_mm"]:
+                    raise HandoffError(f"{where} routing_add requires nonzero straight tracks at their start datum")
+            require_string(params.get("reason"), f"{where}.params.reason")
+        elif kind == "net_alias":
             if net_id is None:
                 raise HandoffError(f"{where} net_alias requires target.net_stable_id")
             require_string(params.get("source_name"), f"{where}.params.source_name")
@@ -602,6 +648,37 @@ def normalize_snapshot(raw: Any, board_id: str) -> dict[str, Any]:
     return result
 
 
+def canonical_source_nc_nets(source_owned: dict[str, Any], manifest: dict[str, Any]) -> dict[str, Any]:
+    """Treat KiCad's unique NC bookkeeping net as the source's empty NC net."""
+    result = ensure_json_value(source_owned, "snapshot.source_owned")
+    refs = {item["stable_id"]: item["ref"] for item in manifest["components"]}
+    connected = {
+        (refs[end["component"]], end["pad"])
+        for net in manifest["nets"] for end in net["endpoints"]
+    }
+    declared_pads = {
+        (item["ref"], pad)
+        for item in manifest["components"] for pad in item["footprint"]["pad_numbers"]
+    }
+    source_names = {net["name"] for net in manifest["nets"]}
+    members: dict[str, set[tuple[str, str]]] = {}
+    for component in result.get("components", []):
+        for pad in component["pads"]:
+            members.setdefault(pad["net"], set()).add((component["ref"], pad["number"]))
+    for component in result.get("components", []):
+        for pad in component["pads"]:
+            name = pad["net"]
+            endpoint = (component["ref"], pad["number"])
+            # Never erase a real source net, shared net, wrong-pin identifier or
+            # a connection on a pin that the source assigns to a logical net.
+            if (endpoint in declared_pads and endpoint not in connected
+                    and name not in source_names and members[name] == {endpoint}
+                    and name.startswith(f"unconnected-({endpoint[0]}-")
+                    and name.endswith(f"-Pad{endpoint[1]})")):
+                pad["net"] = ""
+    return result
+
+
 def normalize_kicad_snapshot_data(
     raw: Any,
     manifest: dict[str, Any],
@@ -690,6 +767,7 @@ def normalize_kicad_snapshot_data(
         "holes": sorted(holes, key=canonical_json),
         "outline": sorted(outline, key=canonical_json),
     }
+    source_owned = canonical_source_nc_nets(source_owned, manifest)
     kicad_owned = {}
     for key in ("tracks", "vias", "zones", "graphics", "rules"):
         details = ensure_json_value(extracted.get(key, []), f"extracted.{key}")
@@ -737,7 +815,7 @@ def _close(left: float, right: float, tolerance_mm: float = 0.002) -> bool:
 
 
 def _normalized_net_name(name: str, aliases: dict[str, str]) -> str:
-    if not name or name.startswith("unconnected-("):
+    if not name:
         return ""
     normalized = name.lstrip("/")
     return aliases.get(normalized, normalized)
@@ -768,7 +846,8 @@ def parity_errors(
 
     expected_components = by_id(manifest["components"])
     actual_components = {
-        item["stable_id"]: item for item in snapshot["source_owned"]["components"]
+        item["stable_id"]: item
+        for item in canonical_source_nc_nets(snapshot["source_owned"], manifest)["components"]
     }
     if set(expected_components) != set(actual_components):
         errors.append(
@@ -1301,6 +1380,10 @@ def extract_kicad_data(
                     "end_mm": _point_mm(pcbnew, item.GetEnd()),
                 }
             )
+            # Arc curvature must remain observable: a declared straight segment
+            # cannot be replaced by an arc sharing endpoints and width.
+            if isinstance(item, getattr(pcbnew, "PCB_ARC", ())):
+                common["mid_mm"] = _point_mm(pcbnew, item.GetMid())
             tracks.append(common)
 
     zones = []
@@ -1568,6 +1651,8 @@ def build_plan(
         changes.append(change("augmentation", manifest["board"]["stable_id"], old_augmentation, augmentation, "high", "changes KiCad-owned augmentation instructions"))
 
     authorized_kicad_owned_changes: set[str] = set()
+    authorized_track_removals = []
+    authorized_track_additions = []
     if {item["kind"] for item in changes} & {
         "component_add", "component_remove", "footprint", "placement", "reference", "value"
     }:
@@ -1586,6 +1671,28 @@ def build_plan(
             for operation in (old_operations.get(operation_id), new_operations.get(operation_id))
             if operation is not None
         }
+        for operation_id in sorted(changed_operation_ids):
+            operation = new_operations.get(operation_id)
+            if operation is not None and operation["kind"] == "routing_clear":
+                params = operation["params"]
+                if snapshot is None or digest(snapshot) != params["before_snapshot_sha256"]:
+                    raise HandoffError("routing_clear before snapshot does not match its declaration")
+                tracks = routing_clear_tracks(snapshot)
+                if not set(params["track_uuids"]) <= tracks.keys():
+                    raise HandoffError("routing_clear names tracks absent from the before snapshot")
+                if set(params["track_uuids"]) & {uid for prior in authorized_track_removals for uid in prior["track_uuids"]}:
+                    raise HandoffError("routing_clear authorizes a track UUID twice")
+                authorized_track_removals.append({"operation_id": operation_id, **params})
+            if operation is not None and operation["kind"] == "routing_add":
+                params = operation["params"]
+                if snapshot is None or digest(snapshot) != params["before_snapshot_sha256"]:
+                    raise HandoffError("routing_add before snapshot does not match its declaration")
+                tracks = routing_clear_tracks(snapshot)
+                if {track["uuid"] for track in params["tracks"]} & snapshot_uuids(snapshot):
+                    raise HandoffError("routing_add UUID collides with an existing snapshot item")
+                if {track["uuid"] for track in params["tracks"]} & {track["uuid"] for prior in authorized_track_additions for track in prior["tracks"]}:
+                    raise HandoffError("routing_add authorizes a track UUID twice")
+                authorized_track_additions.append({"operation_id": operation_id, **params})
         if operation_kinds & {"zone", "keepout"}:
             authorized_kicad_owned_changes.add("zones")
         if "via" in operation_kinds:
@@ -1601,8 +1708,11 @@ def build_plan(
     drift: list[dict[str, Any]] = []
     if snapshot is not None:
         routed = snapshot["routed"]
-        accepted_source_owned = lock.get("snapshot", {}).get("source_owned", {})
-        if snapshot["source_owned"] != accepted_source_owned:
+        accepted_source_owned = canonical_source_nc_nets(
+            lock.get("snapshot", {}).get("source_owned", {}), old_manifest
+        )
+        current_source_owned = canonical_source_nc_nets(snapshot["source_owned"], old_manifest)
+        if current_source_owned != accepted_source_owned:
             drift.append({
                 "accepted": accepted_source_owned,
                 "current": snapshot["source_owned"],
@@ -1630,6 +1740,8 @@ def build_plan(
     return {
         "augmentation_sha256": digest(augmentation),
         "authorized_kicad_owned_changes": sorted(authorized_kicad_owned_changes),
+        **({"authorized_track_removals": authorized_track_removals} if authorized_track_removals else {}),
+        **({"authorized_track_additions": authorized_track_additions} if authorized_track_additions else {}),
         "blocked": bool(blockers),
         "blockers": blockers,
         "board_id": manifest["board"]["stable_id"],
@@ -2301,6 +2413,110 @@ def command_accept(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_accept_eco(args: argparse.Namespace) -> int:
+    """Advance an existing lock after a preserved, strictly checked native ECO."""
+    require_native_handoff_platform()
+    manifest = load_manifest(args.manifest)
+    augmentation = load_augmentation(args.augmentation, manifest)
+    lock = require_object(read_json(args.lock), "handoff lock")
+    board_id = manifest["board"]["stable_id"]
+    before = normalize_snapshot(read_json(args.before_snapshot), board_id)
+    after = normalize_snapshot(read_json(args.after_snapshot), board_id)
+    plan = require_object(read_json(args.plan), "ECO plan")
+    expected_plan = build_plan(
+        manifest, augmentation, lock, before,
+        args.allow_routed_eco, args.allow_routed_placement,
+    )
+    if plan != expected_plan or expected_plan["blocked"]:
+        raise HandoffError("ECO plan must exactly match the reconstructed unblocked plan")
+    initial_receipt = require_string(
+        lock.get("initial_handoff_receipt_sha256"), "lock.initial_handoff_receipt_sha256"
+    )
+    if len(initial_receipt) != 64 or any(c not in "0123456789abcdef" for c in initial_receipt):
+        raise HandoffError("initial handoff provenance checksum is invalid")
+    inputs = [args.manifest, args.augmentation, args.plan, args.before_snapshot,
+              args.after_snapshot, args.cleanup_receipt, args.board, args.schematic,
+              *args.rules, *args.render]
+    input_paths = {path.resolve() for path in inputs}
+    if (args.receipt.resolve() == args.lock.resolve()
+            or args.receipt.resolve() in input_paths or args.lock.resolve() in input_paths
+            or is_protected_path(args.receipt) or is_protected_path(args.lock)):
+        raise HandoffError("ECO outputs must be distinct non-native files, separate from inputs")
+
+    board = args.board.resolve()
+    schematic = args.schematic.resolve()
+    project = schematic.with_suffix(".kicad_pro")
+    if (not board.is_file() or board.suffix != ".kicad_pcb"
+            or not schematic.is_file() or schematic.suffix != ".kicad_sch"
+            or board.parent != schematic.parent or board.stem != schematic.stem
+            or not project.is_file()):
+        raise HandoffError("ECO requires matching saved board, schematic and project files")
+    validate_schematic_hierarchy(schematic, schematic.parent)
+    native_files = hash_protected_tree(schematic.parent)
+    cleanup = require_object(read_json(args.cleanup_receipt), "schematic cleanup receipt")
+    if (cleanup.get("schema_version") != SCHEMA_VERSION
+            or cleanup.get("board_id") != board_id
+            or cleanup.get("manifest_sha256") != digest(manifest)
+            or cleanup.get("augmentation_sha256") != digest(augmentation)
+            or cleanup.get("root_schematic") != str(schematic)
+            or cleanup.get("root_schematic_sha256") != hashlib.sha256(schematic.read_bytes()).hexdigest()
+            or cleanup.get("native_files") != native_files
+            or cleanup.get("passed") is not True or cleanup.get("errors") != []):
+        raise HandoffError("cleanup receipt does not bind the current native files and target design")
+    erc = require_object(cleanup.get("erc_report"), "cleanup ERC report")
+    check = validate_initial_check_report(
+        erc, augmentation, schematic=True, allow_declared_ignored=False,
+    )
+    if not check["clean"] or "exclusion" not in erc["included_severities"]:
+        raise HandoffError("ECO requires strict clean ERC including excluded findings")
+    project_erc = require_object(read_json(project).get("erc"), "project.erc")
+    severities = require_object(project_erc.get("rule_severities"), "project ERC severities")
+    if not severities or any(value not in ("error", "warning") for value in severities.values()):
+        raise HandoffError("saved project must enable every configured ERC check")
+    if require_list(project_erc.get("erc_exclusions"), "project ERC exclusions"):
+        raise HandoffError("saved project must not exclude ERC findings")
+    schematic_owned = require_object(cleanup.get("schematic_owned"), "cleanup schematic semantics")
+    if after.get("schematic_owned") != schematic_owned:
+        raise HandoffError("after snapshot schematic differs from the checked native schematic")
+    rules = list(args.rules)
+    for suffix in (".kicad_pro", ".kicad_dru"):
+        candidate = board.with_suffix(suffix)
+        if candidate.is_file() and candidate not in rules:
+            rules.append(candidate)
+    extracted = extract_kicad_data(board, rules)
+    actual = normalize_kicad_snapshot_data(
+        extracted, manifest, derive_routed_state(extracted, after["routed"])
+    )
+    actual["schematic_owned"] = schematic_owned
+    if actual != after:
+        raise HandoffError("after snapshot differs from the saved native board")
+    preservation = preservation_report(plan, before, after)
+    if not preservation["passed"]:
+        raise HandoffError("ECO preservation failed: " + "; ".join(preservation["errors"]))
+    renders = require_render_files(args.render, schematic.parent) if args.render else []
+    if hash_protected_tree(schematic.parent) != native_files or read_json(args.lock) != lock:
+        raise HandoffError("native files or comparison lock changed during ECO acceptance")
+    receipt = {
+        "schema_version": SCHEMA_VERSION, "kind": "native_eco", "board_id": board_id,
+        "previous_lock_sha256": digest(lock), "plan_sha256": digest(plan),
+        "manifest_sha256": digest(manifest), "augmentation_sha256": digest(augmentation),
+        "before_snapshot_sha256": digest(before), "after_snapshot_sha256": digest(after),
+        "cleanup_receipt_sha256": digest(cleanup), "native_files": native_files,
+        "review_renders": renders, "review_render_root": str(schematic.parent),
+        "preservation": preservation, "passed": True,
+    }
+    updated = {
+        **lock, "manifest": manifest, "manifest_sha256": digest(manifest),
+        "augmentation": augmentation, "augmentation_sha256": digest(augmentation),
+        "snapshot": after, "snapshot_sha256": digest(after),
+        "eco_receipt_sha256": digest(receipt),
+    }
+    atomic_write_json(args.receipt, receipt)
+    atomic_write_json(args.lock, updated)
+    print(f"accepted {board_id} native ECO -> {args.lock}")
+    return 0
+
+
 def command_snapshot_kicad(args: argparse.Namespace) -> int:
     require_native_handoff_platform()
     manifest = load_manifest(args.manifest)
@@ -2361,10 +2577,49 @@ def command_plan(args: argparse.Namespace) -> int:
     return 2 if plan["blocked"] else 0
 
 
-def command_verify_preservation(args: argparse.Namespace) -> int:
-    plan = require_object(read_json(args.plan), "plan")
-    before = normalize_snapshot(read_json(args.before_snapshot), require_string(plan.get("board_id"), "plan.board_id"))
-    after = normalize_snapshot(read_json(args.after_snapshot), plan["board_id"])
+def snapshot_uuids(snapshot: dict[str, Any], *, include_tracks: bool = True) -> set[str]:
+    """Collect recorded identities across source, copper, graphics and schematics."""
+    identities: set[str] = set()
+
+    def collect(value: Any) -> None:
+        if isinstance(value, dict):
+            uid = value.get("uuid")
+            if isinstance(uid, str) and uid:
+                identities.add(uid)
+            for child in value.values():
+                collect(child)
+        elif isinstance(value, list):
+            for child in value:
+                collect(child)
+
+    collect(snapshot.get("source_owned", {}))
+    collect(snapshot.get("schematic_owned", {}))
+    collect({key: value for key, value in snapshot.get("kicad_owned", {}).items()
+             if include_tracks or key != "tracks"})
+    identities.update(uid for uid in snapshot.get("uuid_map", {}).values()
+                      if isinstance(uid, str) and uid)
+    return identities
+
+
+def routing_clear_tracks(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Require content-bound track details for a narrowly authorized deletion."""
+    category = require_object(snapshot["kicad_owned"].get("tracks"), "snapshot tracks")
+    details = require_list(category.get("details"), "snapshot track details")
+    if category.get("sha256") != digest(details):
+        raise HandoffError("routing_clear track details checksum mismatch")
+    tracks = {}
+    for item in details:
+        item = require_object(item, "snapshot track")
+        uid = require_string(item.get("uuid"), "snapshot track UUID")
+        if uid in tracks:
+            raise HandoffError("routing_clear duplicate track UUID in snapshot")
+        tracks[uid] = item
+    return tracks
+
+
+def preservation_report(
+    plan: dict[str, Any], before: dict[str, Any], after: dict[str, Any]
+) -> dict[str, Any]:
     errors = []
     target_manifest = normalize_manifest(plan.get("target_manifest"))
     target_augmentation = validate_augmentation(
@@ -2397,7 +2652,46 @@ def command_verify_preservation(args: argparse.Namespace) -> int:
             "plan.authorized_kicad_owned_changes",
         )
     )
+    clearances = plan.get("authorized_track_removals", [])
+    additions = plan.get("authorized_track_additions", [])
+    if clearances or additions:
+        try:
+            old_tracks = routing_clear_tracks(before)
+            new_tracks = routing_clear_tracks(after)
+            removed = set()
+            operations = {op["id"]: op for op in target_augmentation["operations"]}
+            for clearance in require_list(clearances, "plan.authorized_track_removals"):
+                clearance = require_object(clearance, "plan track removal")
+                operation = operations.get(clearance.get("operation_id"))
+                if operation is None or operation["kind"] != "routing_clear" or operation["params"] != {k: v for k, v in clearance.items() if k != "operation_id"}:
+                    raise HandoffError("routing_clear authorization differs from declared operation")
+                if digest(before) != clearance["before_snapshot_sha256"]:
+                    raise HandoffError("routing_clear before snapshot does not match its declaration")
+                names = set(clearance["track_uuids"])
+                if not names <= old_tracks.keys() or removed & names:
+                    raise HandoffError("routing_clear track UUIDs are missing or authorized twice")
+                removed.update(names)
+            expected = {uid: item for uid, item in old_tracks.items() if uid not in removed}
+            reserved_uuids = snapshot_uuids(before) | snapshot_uuids(after, include_tracks=False)
+            for addition in require_list(additions, "plan.authorized_track_additions"):
+                addition = require_object(addition, "plan track addition")
+                operation = operations.get(addition.get("operation_id"))
+                if operation is None or operation["kind"] != "routing_add" or operation["params"] != {k: v for k, v in addition.items() if k != "operation_id"}:
+                    raise HandoffError("routing_add authorization differs from declared operation")
+                if digest(before) != addition["before_snapshot_sha256"]:
+                    raise HandoffError("routing_add before snapshot does not match its declaration")
+                for track in addition["tracks"]:
+                    uid = track["uuid"]
+                    if uid in reserved_uuids or uid in expected:
+                        raise HandoffError("routing_add UUID collides with a snapshot item or is authorized twice")
+                    expected[uid] = track
+            if new_tracks != expected:
+                errors.append("routing change permits only the exact declared track additions and deletions")
+        except HandoffError as exc:
+            errors.append(str(exc))
     for category in sorted(set(before["kicad_owned"]) | set(after["kicad_owned"])):
+        if category == "tracks" and (clearances or additions):
+            continue
         if category not in authorized and before["kicad_owned"].get(category) != after["kicad_owned"].get(category):
             errors.append(f"unauthorized KiCad-owned {category} change")
     if plan.get("blocked"):
@@ -2410,10 +2704,18 @@ def command_verify_preservation(args: argparse.Namespace) -> int:
         "passed": not errors,
         "schema_version": SCHEMA_VERSION,
     }
+    return report
+
+
+def command_verify_preservation(args: argparse.Namespace) -> int:
+    plan = require_object(read_json(args.plan), "plan")
+    before = normalize_snapshot(read_json(args.before_snapshot), require_string(plan.get("board_id"), "plan.board_id"))
+    after = normalize_snapshot(read_json(args.after_snapshot), plan["board_id"])
+    report = preservation_report(plan, before, after)
     if args.output:
         atomic_write_json(args.output, report)
     print(json.dumps(report, indent=2, sort_keys=True))
-    return 0 if not errors else 1
+    return 0 if report["passed"] else 1
 
 
 def command_verify_schematic_cleanup(args: argparse.Namespace) -> int:
@@ -2483,6 +2785,11 @@ def command_verify_schematic_cleanup(args: argparse.Namespace) -> int:
         "errors": errors,
         "passed": not errors,
         "schema_version": SCHEMA_VERSION,
+        "manifest_sha256": digest(manifest),
+        "augmentation_sha256": digest(augmentation),
+        "native_files": source_before,
+        "schematic_owned": schematic,
+        "erc_report": erc_report,
         "root_schematic": str(root_schematic),
         "root_schematic_sha256": hashlib.sha256(root_schematic.read_bytes()).hexdigest(),
         "schematic_netlist_sha256": netlist_sha256,
@@ -2526,6 +2833,17 @@ def build_parser() -> argparse.ArgumentParser:
     accept.add_argument("--receipt", type=Path, required=True)
     accept.add_argument("--lock", type=Path, required=True)
     accept.set_defaults(function=command_accept)
+
+    eco = subparsers.add_parser("accept-eco", help="advance an existing lock after a verified native ECO")
+    eco.add_argument("manifest", type=Path)
+    eco.add_argument("--augmentation", type=Path, required=True)
+    for option in ("lock", "plan", "before-snapshot", "after-snapshot", "board", "schematic", "cleanup-receipt", "receipt"):
+        eco.add_argument("--" + option, type=Path, required=True)
+    eco.add_argument("--rules", type=Path, action="append", default=[])
+    eco.add_argument("--render", type=Path, action="append", default=[])
+    eco.add_argument("--allow-routed-eco", action="store_true")
+    eco.add_argument("--allow-routed-placement", action="store_true")
+    eco.set_defaults(function=command_accept_eco)
 
     snapshot = subparsers.add_parser(
         "snapshot-kicad",
