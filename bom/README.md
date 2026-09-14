@@ -156,8 +156,11 @@ is feasible; coverage is limited to soldering abnormalities or component replace
 functional/design problems. No repair or pickup has been accepted. With V2 already in production,
 Michael considers V1 superseded and prefers a credit or discount against V2 order
 **W2026083117295494**, without returning V1. He also reports substantial recent spending and
-additional JLCPCB orders for two other projects. A reply requesting credit for the affected
-assembled board's cost against V2 was drafted only; it has not been sent and no credit is agreed.
+additional JLCPCB orders for two other projects. Michael approved a reply requesting credit for
+the affected assembled board's cost, including components and assembly, as a discount or partial
+refund against V2. The [approved draft](../docs/jlcpcb-v1-credit-request.md) was copied to his
+clipboard and verified with `pbpaste` on 2026-09-14. The agent did not send it; Michael has not
+reported sending it. No fixed dollar amount or percentage was proposed, and no credit is agreed.
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),

@@ -1,6 +1,6 @@
 # State
 
-Last updated: **2026-09-14** (V2 production reported; V1 credit-request draft).
+Last updated: **2026-09-14** (V1 credit-request draft approved and copied; session wrapped).
 
 ## Now
 
@@ -12,7 +12,8 @@ Last updated: **2026-09-14** (V2 production reported; V1 credit-request draft).
   [production review](../pcb/pcb-01-v2/fab/production-review/README.md).
 - **V1's USB complaint remains open.** Paul is checking repair feasibility and offered covered
   repair/shipping/duties if feasible. Michael prefers credit or a discount against V2 without
-  returning V1. A response was drafted only; no reply was sent, repair accepted, or credit agreed.
+  returning V1. Michael approved the [reply draft](jlcpcb-v1-credit-request.md), which was copied
+  to his clipboard and verified. Sending is not confirmed; no repair or credit is agreed.
   Complaint evidence and the latest offer are in [bom/README.md](../bom/README.md).
 - **PCB-03 boards and stencil have shipped; parts and display remain pending.** Shipping and the
   accepted paste-layer addition are in [PCB-03 ORDERING.md](../pcb/pcb-03/fab/ORDERING.md).
@@ -32,7 +33,9 @@ Await V2 delivery, then perform hand population and first-article qualification 
 commissioning plan now that Michael reports production is underway.
 
 Factory process and placement evidence is retained. Hardware qualification requires delivered
-boards; the V1 complaint can proceed separately through the drafted credit request.
+boards; the V1 complaint can proceed separately through the approved credit-request draft.
+Michael has the draft on his clipboard; await his send confirmation or JLCPCB response before
+recording further complaint progress.
 
 ## Candidates Not Chosen
 
@@ -45,8 +48,8 @@ boards; the V1 complaint can proceed separately through the drafted credit reque
 
 ## Learned Recently
 
-- V1's conditional repair offer, missing U2 X-ray inspection, and preferred credit resolution:
-  [bom/README.md](../bom/README.md).
+- V1's conditional repair offer and missing U2 X-ray inspection: [bom/README.md](../bom/README.md).
+- Exact approved credit request and verified clipboard handoff: [reply draft](jlcpcb-v1-credit-request.md).
 - Owner-reported V2 production: [PCB-01 V2 ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
 - Shared native transactions, guarded schematic fields, preparation audits, and lifecycle helpers:
   [PCB tools](../pcb/tools/README.md); project adoption limits in [pcb-workflow.md](pcb-workflow.md).
