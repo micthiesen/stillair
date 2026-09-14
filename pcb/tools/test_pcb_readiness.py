@@ -249,6 +249,65 @@ class NativeTests(unittest.TestCase):
         z.SetPadConnection(pcbnew.ZONE_CONNECTION_NONE)
         self.assert_rejects(a, 'planes')
 
+    def test_declared_extra_pour_rejects_semantic_changes(self):
+        for change in ('missing_declaration', 'duplicate_declaration', 'uuid', 'net', 'outline',
+                       'clearance_mm', 'minimum_thickness_mm', 'pad_connection',
+                       'thermal_gap_mm', 'thermal_spoke_mm', 'island', 'fill', 'layer'):
+            with self.subTest(change=change):
+                a = self.load('mains')
+                spec = a.operation(a.profile['checks']['planes']['operation'])['planes']
+                extras = spec.get('extra_pours', [])
+                if not extras:
+                    self.skipTest('No extra pour installed in this peer')
+                a.planes()
+                self.assertEqual(a.findings, [])
+                extra = extras[0]
+                z = next(z for z in a.board.Zones() if z.m_Uuid.AsString() == extra['uuid'])
+                if change == 'missing_declaration':
+                    spec['extra_pours'] = []
+                elif change == 'duplicate_declaration':
+                    extras.append(copy.deepcopy(extra))
+                    with self.assertRaises(ValueError):
+                        a.planes()
+                    continue
+                elif change == 'uuid':
+                    extra['uuid'] = 'not-the-zone'
+                elif change == 'net':
+                    extra['net'] = 'V5_PSU'
+                elif change == 'outline':
+                    extra['outline'][0][0] += .1
+                elif change == 'pad_connection':
+                    extra[change] = 'tht_thermal'
+                elif change == 'island':
+                    z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_NEVER)
+                elif change == 'fill':
+                    z.SetIsFilled(False)
+                elif change == 'layer':
+                    extra['layer'] = 'B.Cu'
+                else:
+                    extra[change] += .1
+                a.planes()
+                self.assertTrue(a.findings)
+
+    def test_corridor_area_rejects_geometry_layer_and_keepout_changes(self):
+        for change in ('bounds', 'layer', 'keepout'):
+            with self.subTest(change=change):
+                a = self.load('mains')
+                corridors = a.policy['nets']['V5_PSU'].get('corridors', [])
+                if not corridors:
+                    self.skipTest('No corridor installed in this peer')
+                a.rules()
+                self.assertEqual(a.findings, [])
+                z = next(z for z in a.board.Zones() if z.GetZoneName() == corridors[0]['name'])
+                if change == 'bounds':
+                    z.Move(pcbnew.VECTOR2I(pcbnew.FromMM(.1), 0))
+                elif change == 'layer':
+                    z.SetLayer(pcbnew.B_Cu)
+                else:
+                    z.SetDoNotAllowTracks(True)
+                a.rules()
+                self.assertTrue(a.findings)
+
     def test_moved_mount_and_outline_fail(self):
         a = self.load()
         a.footprints['H1'].Move(pcbnew.VECTOR2I(pcbnew.FromMM(1), 0))

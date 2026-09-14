@@ -222,7 +222,14 @@ class Audit:
         c = self.config('planes', {'operation', 'clearance_mm', 'minimum_thickness_mm', 'pad_connection', 'thermal_gap_mm', 'thermal_spoke_mm'})
         spec = self.operation(c['operation'])['planes']
         zones = [z for z in self.board.Zones() if not z.GetIsRuleArea()]
-        self.require('planes', len(zones) == len(spec['layers']), 'Missing or undeclared copper pours')
+        extras = spec.get('extra_pours', [])
+        required = {'uuid', 'net', 'layer', 'outline', 'clearance_mm', 'minimum_thickness_mm',
+                    'pad_connection', 'thermal_gap_mm', 'thermal_spoke_mm', 'island_removal', 'filled'}
+        if not isinstance(extras, list) or any(not isinstance(e, dict) or set(e) != required for e in extras):
+            raise ValueError('Extra pours require exact geometry and settings declarations')
+        if len({e['uuid'] for e in extras}) != len(extras):
+            raise ValueError('Duplicate extra pour UUID')
+        self.require('planes', len(zones) == len(spec['layers']) + len(extras), 'Missing or undeclared copper pours')
         facts = []
         for layer in spec['layers']:
             lid = self.board.GetLayerID(layer)
@@ -242,6 +249,34 @@ class Audit:
             filled = z.IsFilled() and z.HasFilledPolysForLayer(lid) and z.GetFilledPolysList(lid).TotalVertices() > 0
             self.require('planes', filled, f'{layer}: saved zone fill is absent')
             facts.append({'net': z.GetNetname(), 'layer': layer, 'filled': bool(filled), 'filled_area_mm2': round(z.GetFilledArea()/1e12, 4)})
+        for extra in extras:
+            if extra['island_removal'] != 'always' or extra['filled'] is not True:
+                raise ValueError('Extra pours require island removal and saved fill')
+            matches = [z for z in zones if z.m_Uuid.AsString() == extra['uuid']]
+            label = 'Extra pour ' + extra['uuid']
+            self.require('planes', len(matches) == 1, label + ': missing or duplicate UUID')
+            if len(matches) != 1:
+                continue
+            z = matches[0]
+            lid = self.board.GetLayerID(extra['layer'])
+            self.require('planes', z.GetNetname() == extra['net'] and
+                         set(z.GetLayerSet().Seq()) == {lid}, label + ': net or layer differs')
+            self.require('planes', not (extra['net'] == spec['net'] and extra['layer'] in spec['layers']),
+                         label + ': duplicates a ground plane declaration')
+            points = [self.xy(z.Outline().CVertex(i)) for i in range(z.Outline().TotalVertices())]
+            self.require('planes', close(points, extra['outline']), label + ': boundary differs')
+            connection = {'solid': self.pcbnew.ZONE_CONNECTION_FULL,
+                          'tht_thermal': self.pcbnew.ZONE_CONNECTION_THT_THERMAL}[extra['pad_connection']]
+            self.require('planes', z.GetPadConnection() == connection, label + ': pad connection differs')
+            for getter, key in [('GetLocalClearance', 'clearance_mm'), ('GetMinThickness', 'minimum_thickness_mm'),
+                                ('GetThermalReliefGap', 'thermal_gap_mm'), ('GetThermalReliefSpokeWidth', 'thermal_spoke_mm')]:
+                self.require('planes', close(self.mm(getattr(z, getter)()), extra[key]), label + ': ' + key + ' differs')
+            self.require('planes', z.GetIslandRemovalMode() == self.pcbnew.ISLAND_REMOVAL_MODE_ALWAYS,
+                         label + ': floating island removal disabled')
+            filled = z.IsFilled() and z.HasFilledPolysForLayer(lid) and z.GetFilledPolysList(lid).TotalVertices() > 0
+            self.require('planes', filled, label + ': saved zone fill is absent')
+            facts.append({'uuid': extra['uuid'], 'net': z.GetNetname(), 'layer': extra['layer'],
+                          'filled': bool(filled), 'filled_area_mm2': round(z.GetFilledArea()/1e12, 4)})
         self.facts['planes'] = facts
 
     def vias(self):
@@ -306,6 +341,27 @@ class Audit:
                         expected_points = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
                         self.require('rules', close(points, expected_points), label + ': rule area has moved or expanded')
                         self.require('rules', set(matches[0].GetLayerSet().Seq()) == {self.pcbnew.F_Cu, self.pcbnew.B_Cu}, label + ': escape layer set differs')
+            for corridor in policy.get('corridors', []):
+                label = corridor['name']
+                rule = by_name.get(label)
+                if rule is None:
+                    self.fail('rules', 'Missing bounded corridor rule ' + label)
+                    continue
+                expected = f"A.NetName == '{net}' && A.Layer == '{corridor['layer']}' && A.enclosedByArea('{label}')"
+                self.require('rules', value(rule, 'condition') == expected, label + ': corridor condition differs')
+                width = next((x for x in children(rule, 'constraint') if x[1] == 'track_width'), [])
+                self.require('rules', close(number(value(width, 'min')), corridor['minimum_width_mm']) and
+                             close(number(value(width, 'opt')), policy['minimum_width_mm']), label + ': corridor width differs')
+                matches = [z for z in self.board.Zones() if z.GetZoneName() == label]
+                self.require('rules', len(matches) == 1 and matches[0].GetIsRuleArea(), label + ': missing named rule area')
+                if len(matches) == 1:
+                    z = matches[0]
+                    x0, y0, x1, y1 = corridor['bounds_mm']
+                    points = [self.xy(z.Outline().CVertex(j)) for j in range(z.Outline().TotalVertices())]
+                    self.require('rules', close(points, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]), label + ': rule area differs')
+                    self.require('rules', set(z.GetLayerSet().Seq()) == {self.board.GetLayerID(corridor['layer'])}, label + ': layer differs')
+                    self.require('rules', not any(getattr(z, 'GetDoNotAllow' + kind)() for kind in
+                                                 ['Tracks', 'Vias', 'Pads', 'Footprints', 'ZoneFills']), label + ': rule area blocks copper or components')
         self.facts['rules'] = {'sha256': digest_bytes(native), 'native_rule_count': len(by_name)}
 
     def routing(self):
