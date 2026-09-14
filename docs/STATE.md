@@ -1,74 +1,55 @@
 # State
 
-Last updated: **2026-09-13** (shared PCB workflow tooling; hardware status unchanged).
+Last updated: **2026-09-14** (V2 production reported; V1 credit-request draft).
 
 ## Now
 
-- **PCB-01 V2's PCB file is confirmed; the assembly DFM passes review.** The live order page
-  confirms PCB approval. All 119 factory parts match the release, and IC pin 1, diode bands,
-  transistor orientation, connector direction, and placement pass. Library-origin differences
-  for U2/U3/J4 were resolved geometrically. Michael may confirm assembly; that approval is not
-  yet reported. See [placement-review/README.md](../pcb/pcb-01-v2/fab/placement-review/README.md).
-  Chian's explicit U1 POFV confirmation and CAM checks remain in
-  [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md).
-- **PCB-01 V2 and hand-population parts are ordered.** Five boards and two top-side Standard PCBAs
-  are on JLCPCB W2026083117295494; hand parts are on DigiKey 101316601. Release and approval
-  requirements remain in [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
+- **PCB-01 V2 is in production, per Michael's 2026-09-14 report.** Five boards and two top-side
+  Standard PCBAs are on JLCPCB W2026083117295494; hand parts are on DigiKey 101316601.
+  The prior assembly DFM passed review, and the factory's POFV confirmation is retained.
+  See [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md),
+  [placement review](../pcb/pcb-01-v2/fab/placement-review/README.md), and
+  [production review](../pcb/pcb-01-v2/fab/production-review/README.md).
+- **V1's USB complaint remains open.** Paul is checking repair feasibility and offered covered
+  repair/shipping/duties if feasible. Michael prefers credit or a discount against V2 without
+  returning V1. A response was drafted only; no reply was sent, repair accepted, or credit agreed.
+  Complaint evidence and the latest offer are in [bom/README.md](../bom/README.md).
 - **PCB-03 boards and stencil have shipped; parts and display remain pending.** Shipping and the
   accepted paste-layer addition are in [PCB-03 ORDERING.md](../pcb/pcb-03/fab/ORDERING.md).
   DigiKey 101388939 includes the backordered SC18IS606PWJ; AliExpress display order is
-  8213753300045333. Retain exact display-revision, split-write chip-select, and reset-recovery
-  first-article gates in [pcb-03.md](pcb-03.md).
+  8213753300045333. Retain the first-article gates in [pcb-03.md](pcb-03.md).
 - **New boards use the validated tscircuit-to-KiCad workflow.** Existing released boards remain
   KiCad-authoritative. The PCB-03 fixture is an initial handoff with declared downstream cleanup
   and routing work, not a fabrication-ready replacement. See [pcb-workflow.md](pcb-workflow.md).
-- **V1's USB complaint remains open; V2 commissioning awaits delivery and hand population.**
-  Complaint history is in [bom/README.md](../bom/README.md). Native USB, ROM download, flash,
+- **V2 commissioning awaits delivery and hand population.** Native USB, ROM download, flash,
   reboot, runtime CLI, and commissioning checks precede installation and loaded tuning; see
   [controls.md](controls.md#commissioning-interface-and-build-policy).
 
 ## Next
 
-Michael may reply to JLCPCB confirming the reviewed polarity/placement DFM for
-`SMT026083161536_Y8`. Then await production/delivery and perform hand population and first-article
-qualification under [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
+Await V2 delivery, then perform hand population and first-article qualification under
+[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). This carries forward the existing delivery and
+commissioning plan now that Michael reports production is underway.
 
-Both the factory's POFV process confirmation and intended assembly placement now have retained
-evidence. Recheck only if a later revision changes the reviewed data; hardware qualification still
-requires the delivered boards.
+Factory process and placement evidence is retained. Hardware qualification requires delivered
+boards; the V1 complaint can proceed separately through the drafted credit request.
 
 ## Candidates Not Chosen
 
 - **Repeat the impedance clarification:** answered by revised calculations and CAM metadata;
   revisit only if the relevant geometry, copper, or stack changes.
 - **Repeat the POFV request:** Chian explicitly confirmed all three requested process details.
+- **Return V1 for repair:** Michael prefers credit toward V2; no return is authorized.
 - **Begin V2 commissioning or resume loaded tuning now:** delivery, hand population, and a
   communicating qualified V2 controller are prerequisites.
 
 ## Learned Recently
 
-- Crystal Shim's PCB retrospective produced shared native transaction, guarded
-  schematic-field, preparation-audit and lifecycle helpers with failure tests.
-  They now prefer visual/dimensional agreement first, a full preparation review
-  and one final acceptance. See [tool capabilities](../pcb/tools/README.md).
-  Stillair has no `pcb/workflow.json` or readiness profile for this new coordinator;
-  existing PCB-03 commands remain the active project workflow. No board geometry,
-  output profile or release evidence was imported. Physical stack, custom-rule
-  installation and persisted GUI router-preference writes remain explicit gaps.
-- Crystal Shim's native review found that KiCad 10 exposes board thickness on
-  design settings rather than the board object. The shared snapshot now records
-  it and fails closed if unavailable. Both new regressions fail against the old
-  implementation; all 38 handoff tests pass in both projects. Crystal Shim's
-  native readback reports its actual 1.6062 mm stack. No Stillair board changed.
-- Crystal Shim's shared handoff review corrected repeated-pad nets, distinct hole
-  identity and native footprint replacement lifetime, and added source-exported
-  staged libraries. All 35 handoff tests pass in both projects; actual native
-  round-trip parity passes. Existing released boards were not changed. See
-  [pcb-workflow.md](pcb-workflow.md).
-- CAM evidence, checks and their limits, download recovery, and submitted POFV request:
-  [production-review/README.md](../pcb/pcb-01-v2/fab/production-review/README.md).
-- Revised three-section USB calculations and copper/reference confirmation:
-  [PCB-01 V2 ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
-- PCB-03 shipment and stencil status: [PCB-03 ORDERING.md](../pcb/pcb-03/fab/ORDERING.md).
-- PCB authority, handoff and ECO rules: [pcb-workflow.md](pcb-workflow.md).
+- V1's conditional repair offer, missing U2 X-ray inspection, and preferred credit resolution:
+  [bom/README.md](../bom/README.md).
+- Owner-reported V2 production: [PCB-01 V2 ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md).
+- Shared native transactions, guarded schematic fields, preparation audits, and lifecycle helpers:
+  [PCB tools](../pcb/tools/README.md); project adoption limits in [pcb-workflow.md](pcb-workflow.md).
+- CAM and placement evidence: [production review](../pcb/pcb-01-v2/fab/production-review/README.md)
+  and [placement review](../pcb/pcb-01-v2/fab/placement-review/README.md).
 - Orders, backorders, and inventory: [bom.csv](../bom/bom.csv) and [bom/README.md](../bom/README.md).

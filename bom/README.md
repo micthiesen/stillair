@@ -125,6 +125,9 @@ automated preliminary version; engineering is regenerating the final DFM, and no
 until its Confirm button activates. Their acknowledgment is not acceptance of the three technical
 requirements, so explicit final confirmation remains mandatory.
 
+On 2026-09-14 Michael reported that PCB-01 V2 is in production. This supersedes the earlier
+awaiting-approval status above; no new factory files were reviewed in this session.
+
 Arrivals 2026-08-01: the GL100 motor (RobotShop), the complete Accu fastener order, the
 ohcanadasupply.ca Titen HD anchors, and DigiKey 374750597 (salesorder 100668200 on the
 packing slip). Arrivals 2026-08-14: DigiKey 100888768, PCB-01, PCB-02, all JLCCNC parts
@@ -144,6 +147,17 @@ which isolates the failure to the affected board rather than the schematic or PC
 asked for short/solder checks, removal of U2, and the schematic; Michael replied with the completed
 electrical checks and schematic package and declined destructive removal because U2 has hidden LGA
 pads. The likely fault remains a hidden U2 USB-pad joint or U2 itself.
+
+In the follow-up email supplied by Michael on 2026-09-14, Paul apologized for the delayed
+response and confirmed that `C6553337` had not received X-ray inspection during production.
+JLCPCB therefore could not confirm the condition of its hidden solder joints. Paul is checking
+repair feasibility and offered free repair, round-trip shipping, and applicable duties if repair
+is feasible; coverage is limited to soldering abnormalities or component replacement, excluding
+functional/design problems. No repair or pickup has been accepted. With V2 already in production,
+Michael considers V1 superseded and prefers a credit or discount against V2 order
+**W2026083117295494**, without returning V1. He also reports substantial recent spending and
+additional JLCPCB orders for two other projects. A reply requesting credit for the affected
+assembled board's cost against V2 was drafted only; it has not been sent and no credit is agreed.
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),

@@ -86,6 +86,9 @@ shasum -a 256 -c fab/release-manifest.sha256
   The shown placement passes; no correction is required. Evidence and package-origin differences
   are documented in [placement-review/README.md](placement-review/README.md). Michael may confirm
   assembly to JLCPCB; no assembly approval has been submitted by the agent or reported by Michael.
+- On 2026-09-14, Michael reported that V2 is in production. This supersedes the earlier
+  awaiting-assembly-approval status; this update is an owner report, without a new live order-page
+  check. Await delivery, then perform hand population and first-article qualification below.
 
 ## Recommended order
 
