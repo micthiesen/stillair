@@ -159,8 +159,20 @@ Michael considers V1 superseded and prefers a credit or discount against V2 orde
 additional JLCPCB orders for two other projects. Michael approved a reply requesting credit for
 the affected assembled board's cost, including components and assembly, as a discount or partial
 refund against V2. The [approved draft](../docs/jlcpcb-v1-credit-request.md) was copied to his
-clipboard and verified with `pbpaste` on 2026-09-14. The agent did not send it; Michael has not
-reported sending it. No fixed dollar amount or percentage was proposed, and no credit is agreed.
+clipboard and verified with `pbpaste` on 2026-09-14. Paul's subsequent response confirms receipt
+of the credit request; the agent did not send it. No fixed dollar amount or percentage was
+proposed in that request, and no credit is agreed.
+
+The thread supplied on 2026-09-15 records JLCPCB declining credit or partial refund against an
+already-placed order. Paul instead offered to try to obtain a USD 30 future-order coupon or
+free expedite service for V2 (`SMT026083161536`), quoting a normal expedite fee of USD 45–80.
+Michael asked to expedite both current orders, **W2026083117295494** and the newly placed
+**W2026091502305469**; the latter's project and contents are unspecified. Paul limited the
+offer to one order and asked whether to apply it to V2, which he confirmed was in production.
+Michael is dissatisfied and now wants to reject the offer and say this support interaction will
+factor into future purchasing decisions. The [rejection draft and reply history](../docs/jlcpcb-v1-credit-request.md)
+are retained; the rejection has not been sent by the agent or reported sent by Michael.
+No coupon or expedite service is confirmed, and the complaint remains unresolved.
 
 The motor-gated CNC batch went out 2026-08-02 as JLCCNC **W2026080301372216** ($204.44
 shipped): SP-100 $82.76 (SUS304 — JLCCNC stocks no 17-4PH; margin math in parts.md),
