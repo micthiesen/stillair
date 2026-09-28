@@ -1,0 +1,24 @@
+U7 Pro wifi0ap0 capture; AP local time 2026-09-27 PDT.
+Only target-board advertisements, address-resolution requests, and diagnostic query retained.
+
+19:18:48.806283 fc:b2:14:8f:f4:13 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 82: (tos 0x0, ttl 1, id 64978, offset 0, flags [none], proto UDP (17), length 68)
+    10.10.1.90.55817 > 224.0.0.251.5353: [udp sum ok] 29557 ANY (QM)? 206EF112A5B00000.local. (40)
+19:18:50.592331 8c:30:66:6c:79:bc > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.95, length 28
+19:18:51.604976 8c:30:66:6c:79:bc > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.95, length 28
+19:18:51.865408 fc:b2:14:8f:f4:13 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.90, length 28
+19:18:52.644966 8c:30:66:6c:79:bc > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.95, length 28
+19:18:52.819760 fc:b2:14:8f:f4:13 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.90, length 28
+19:18:53.825438 fc:b2:14:8f:f4:13 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.90, length 28
+19:18:58.757614 1c:69:7a:af:53:20 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 60: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.100, length 46
+19:18:59.767077 1c:69:7a:af:53:20 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 60: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.100, length 46
+19:19:00.786541 1c:69:7a:af:53:20 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 60: Ethernet (len 6), IPv4 (len 4), Request who-has 10.10.1.21 tell 10.10.1.100, length 46
+19:19:01.962952 20:6e:f1:12:a5:b0 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 762: (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto UDP (17), length 748)
+    10.10.1.21.5353 > 224.0.0.251.5353: [udp sum ok] 0*- [0q] 10/0/0 206EF112A5B00000.local. (Cache flush) A 10.10.1.21, 206EF112A5B00000.local. (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, A4FB579E31261945._matterc._udp.local. (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, _matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _services._dns-sd._udp.local. PTR _matterc._udp.local., _L3840._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _S15._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _V65521._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _CM._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., A4FB579E31261945._matterc._udp.local. (Cache flush) TXT "D=3840" "CM=1" "VP=65521+32769" "DN=Stillair" "PH=0" (720)
+19:19:01.963837 20:6e:f1:12:a5:b0 > 33:33:00:00:00:fb, ethertype IPv6 (0x86dd), length 782: (hlim 64, next-header UDP (17) payload length: 728) fe80::226e:f1ff:fe12:a5b0.5353 > ff02::fb.5353: [udp sum ok] 0*- [0q] 10/0/0 206EF112A5B00000.local. (Cache flush) A 10.10.1.21, 206EF112A5B00000.local. (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, A4FB579E31261945._matterc._udp.local. (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, _matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _services._dns-sd._udp.local. PTR _matterc._udp.local., _L3840._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _S15._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _V65521._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., _CM._sub._matterc._udp.local. PTR A4FB579E31261945._matterc._udp.local., A4FB579E31261945._matterc._udp.local. (Cache flush) TXT "D=3840" "CM=1" "VP=65521+32769" "DN=Stillair" "PH=0" (720)
+
+
+AP unicast ping with temporary neighbor entry (removed afterward):
+PING 10.10.1.21 (10.10.1.21): 56 data bytes
+
+--- 10.10.1.21 ping statistics ---
+4 packets transmitted, 0 packets received, 100% packet loss

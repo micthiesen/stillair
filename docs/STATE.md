@@ -1,6 +1,6 @@
 # State
 
-Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved).
+Last updated: **2026-09-27** (V2 ready; AP fault resolved; automated Matter verified).
 
 ## Now
 
@@ -8,20 +8,15 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
   communication, and persistent configuration apply/readback succeeded with the motor disconnected.
   The board holds the existing loaded image and reports `idle_off`, no fault, `config=verified`.
   See the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for exact evidence and limits.
-- **Apple Home pairing failed after Wi-Fi joined.** Attestation and NOC installation succeeded,
-  but the final commissioning request did not arrive before timeout. A retry instead supplied
-  `SyNet` and failed with `NoAccessPointFound`; the first attempt had joined `SyNet-2G`.
-  Correct-network retries also joined without completing the final handshake. Michael reports
-  V1 worked on this network. The unchanged-source dev-profile retry also failed despite correct
-  SSID and excellent -48 dBm signal. Sequential BLE-then-Wi-Fi failed earlier with `InvalidAction`,
-  matching the pinned stack's unsupported commissioning scan. Concurrent mode is restored with
-  targeted transport diagnostics. The next capture showed successful BLE provisioning and Wi-Fi
-  association, live operational discovery, but no received Matter UDP handshake; direct LAN
-  probes also failed. Michael confirmed UniFi and authorized MCP/CLI access to inspect it.
-  The experiment exposed and fixed a separate pre-initialization RSSI-sampler crash. Product and
-  mDNS discovery names are now `Stillair`; the live `DN=Stillair` advertisement was verified.
-  The original timeout's cause remains unresolved. See the
-  [pairing follow-up](../testing/pcb-01-v2-bench-2026-09-27.md#apple-home-pairing-follow-up).
+- **The pairing network blocker is resolved.** The U7 Pro was failing to deliver inbound
+  broadcast/multicast traffic on SyNet-2G, affecting V2 and other clients. One AP restart restored
+  delivery without changing its settings. Automated Matter commissioning then completed over
+  IPv6, and a normal-release reboot restored its fabric/network and passed fresh secure reads.
+  The test fabric and Wi-Fi seed were removed; the final release advertises `Stillair`, identifies
+  as `PCB-01 V2`, and is back at `idle_off`, no fault, `config=verified`. Apple Home itself has not
+  been retried since the fix because Michael was away. The confirmed RSSI initialization guard
+  remains; experimental sequential mode and credential-seeded images are not installed.
+  See the [complete receipt and evidence](../testing/pcb-01-v2-bench-2026-09-27.md).
   Michael chose interim use with no additional intermediate motor tests; final tuning stays deferred.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
   and proposed a USD 30 future coupon or free expedite service for one order. Michael asked for
@@ -40,10 +35,11 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
 
 ## Next
 
-Inspect UniFi client/WLAN reachability for the operational-network pairing timeout on the new V2,
-then Michael installs it with the
-saved loaded configuration. Follow his explicit scope: no additional intermediate motor tests;
-respond to reported problems and resume final tuning when requested. See the
+Michael retries adding **Stillair** in Apple Home with **3497-0112-332**, then installs it with
+its saved loaded configuration. The shared network failure is fixed and automated commissioning
+passed; the remaining confirmation requires his Home app. If its commissioning window has expired,
+reopen it with an ESP reset over USB. Follow his explicit scope: no additional intermediate motor
+tests; respond to reported problems and resume final tuning when requested. See the
 [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 
 The V1 offer-rejection reply is drafted separately; await Michael's send confirmation
@@ -60,7 +56,7 @@ or a further JLCPCB response before recording a change in the complaint's status
 
 ## Learned Recently
 
-- V2 bench evidence, persistent image, and untested scope:
+- V2 AP diagnosis, successful Matter commissioning, final release, and untested scope:
   [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 - V2 map selection: [probing.md](probing.md). Rustup PATH and native USB reset behavior:
   [controls.md](controls.md#commissioning-interface-and-build-policy).

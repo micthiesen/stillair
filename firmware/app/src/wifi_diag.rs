@@ -32,12 +32,16 @@ static LAST_OK_MS: AtomicU64 = AtomicU64::new(0);
 extern "C" {
     fn esp_wifi_get_mode(mode: *mut u32) -> i32;
     fn esp_wifi_sta_get_rssi(rssi: *mut i32) -> i32;
+    #[cfg(feature = "matter-diagnostics")]
+    fn esp_wifi_get_mac(interface: u32, mac: *mut u8) -> i32;
 }
 
 #[embassy_executor::task]
 pub async fn sample_task() {
     Timer::after(FIRST_SAMPLE_DELAY).await;
     let mut reported_quality: Option<&'static str> = None;
+    #[cfg(feature = "matter-diagnostics")]
+    let mut reported_driver = false;
 
     loop {
         let mut mode = 0u32;
@@ -49,6 +53,23 @@ pub async fn sample_task() {
         let result = unsafe {
             if esp_wifi_get_mode(&mut mode) == 0 && matches!(mode, WIFI_MODE_STA | WIFI_MODE_APSTA)
             {
+                #[cfg(feature = "matter-diagnostics")]
+                if !reported_driver {
+                    // WIFI_IF_STA is 0; the vendor writes exactly six bytes. Read the actual
+                    // radio MAC separately from the eFuse value Embassy uses. Do not create
+                    // another Interface::station(): Matter already owns that singleton.
+                    let mut mac = [0u8; 6];
+                    let status = esp_wifi_get_mac(0, mac.as_mut_ptr());
+                    let expected = esp_hal::efuse::interface_mac_address(
+                        esp_hal::efuse::InterfaceMacAddress::Station,
+                    );
+                    log::info!(
+                        "Wi-Fi driver MAC status={status} actual={mac:02x?} expected={:02x?}; PHY calibration {:?}",
+                        expected.as_bytes(),
+                        esp_radio::last_calibration_result()
+                    );
+                    reported_driver = true;
+                }
                 esp_wifi_sta_get_rssi(&mut rssi)
             } else {
                 -1

@@ -1,0 +1,4 @@
+{"ok":true}
+{"type":"telemetry","t":52729,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":14}
+{"ok":true,"config":"verified","detail":null,"addr":0,"written":0,"unchanged":0}
+{"type":"telemetry","t":53023,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":14}

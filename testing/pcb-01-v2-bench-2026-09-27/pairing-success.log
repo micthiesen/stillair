@@ -1,0 +1,1161 @@
+[2026-09-28T02:42:44Z INFO ] 🚀 A new version of espflash is available: v4.6.0
+[2026-09-28T02:42:44Z INFO ] Serial port: '/dev/cu.usbmodem2101'
+[2026-09-28T02:42:44Z INFO ] Connecting...
+[2026-09-28T02:42:44Z INFO ] Using flash stub
+Chip type:         esp32c6 (revision v0.2)
+Crystal frequency: 40 MHz
+Flash size:        8MB
+Features:          WiFi 6, BT 5
+MAC address:       20:6e:f1:12:a5:b0
+App/part. size:    2,199,792/8,323,072 bytes, 26.43%
+[2026-09-28T02:42:56Z INFO ] Flashing has completed!
+ESP-ROM:esp32c6-20220919
+Build:Sep 19 2022
+rst:0x15 (USB_UART_HPSYS),boot:0x1c (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40800826
+SPIWP:0xee
+mode:DIO, clock div:2
+load:0x40875730,len:0x175c
+load:0x4086b910,len:0xec8
+load:0x4086e610,len:0x31c4
+entry 0x4086b91a
+I (23) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+I (23) boot: compile time Nov 27 2025 09:46:10
+I (24) boot: chip revision: v0.2
+I (24) boot: efuse block revision: v0.3
+I (28) boot.esp32c6: SPI Speed      : 80MHz
+I (32) boot.esp32c6: SPI Mode       : DIO
+I (36) boot.esp32c6: SPI Flash Size : 8MB
+I (39) boot: Enabling RNG early entropy source...
+I (44) boot: Partition Table:
+I (46) boot: ## Label            Usage          Type ST Offset   Length
+I (53) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (59) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (66) boot:  2 factory          factory app      00 00 00010000 007f0000
+I (72) boot: End of partition table
+I (76) esp_image: segment 0: paddr=00010020 vaddr=42000020 size=60744h (395076) map
+I (158) esp_image: segment 1: paddr=0007076c vaddr=40800000 size=0f8ach ( 63660) load
+I (173) esp_image: segment 2: paddr=00080020 vaddr=42070020 size=19dd94h (1695124) map
+ESP-ROM:esp32c6-20220919
+Build:Sep 19 2022
+rst:0x15 (USB_UART_HPSYS),boot:0x1c (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40870762
+SPIWP:0xee
+mode:DIO, clock div:2
+load:0x40875730,len:0x175c
+load:0x4086b910,len:0xec8
+load:0x4086e610,len:0x31c4
+entry 0x4086b91a
+I (23) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+I (23) boot: compile time Nov 27 2025 09:46:10
+I (24) boot: chip revision: v0.2
+I (24) boot: efuse block revision: v0.3
+I (28) boot.esp32c6: SPI Speed      : 80MHz
+I (32) boot.esp32c6: SPI Mode       : DIO
+I (36) boot.esp32c6: SPI Flash Size : 8MB
+I (39) boot: Enabling RNG early entropy source...
+I (44) boot: Partition Table:
+I (46) boot: ## Label            Usage          Type ST Offset   Length
+I (53) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (59) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (66) boot:  2 factory          factory app      00 00 00010000 007f0000
+I (72) boot: End of partition table
+I (76) esp_image: segment 0: paddr=00010020 vaddr=42000020 size=60744h (395076) map
+I (158) esp_image: segment 1: paddr=0007076c vaddr=40800000 size=0f8ach ( 63660) load
+I (173) esp_image: segment 2: paddr=00080020 vaddr=42070020 size=19dd94h (1695124) map
+I (496) esp_image: segment 3: paddr=0021ddbc vaddr=4080f8ac size=03e38h ( 15928) load
+I (501) esp_image: segment 4: paddr=00221bfc vaddr=408136e8 size=072ach ( 29356) load
+I (508) esp_image: segment 5: paddr=00228eb0 vaddr=4081a998 size=00210h (   528) load
+I (515) boot: Loaded app from partition at offset 0x10000
+I (515) boot: Disabling RNG early entropy source...
+[INFO] stillair supervisor boot
+[INFO] MCF8316D found at I2C target 0x01
+[INFO] MCF standby mode already active
+[INFO] MCF stored configuration verified
+[WARN] MCF fault status gate 0x00000000 controller 0x80000008 -> Some(McfWatchdog)
+[INFO] Matter state persists to NVS 0x9000..0xf000
+[INFO] Added network with ID Wifi SSID(SyNet-2G)
+[INFO] Scratch Wi-Fi seed loaded; normal Matter commissioning remains open
+[INFO] Loaded basic info settings from storage
+[INFO] Loaded events counter from storage
+[INFO] Device is not commissioned yet, opening commissioning window...
+[INFO] PASE Basic Commissioning Window opened
+[INFO] SetupQRCode: [MT:-24J042C00KA064IJ3P0WISA0DK5N1K8SQ1RYCU1O0]
+[INFO] PairingCode: [3497-0112-332]
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] ████ ▄▄▄▄▄ ██▀▄ ▀   ▀█▄███ ▄▄▄▄▄ ████[0m
+[INFO] ████ █   █ █ ▄▄ █▄▀ ██ ▀ █ █   █ ████[0m
+[INFO] ████ █▄▄▄█ █ ▄▀ ▄██▄▄▀▀▄▄█ █▄▄▄█ ████[0m
+[INFO] ████▄▄▄▄▄▄▄█ █▄█ █ █ █▄█ █▄▄▄▄▄▄▄████[0m
+[INFO] ████ █▄ ▄▄▄█▀█ ▀▀▀▀▀▄▀ ▀ ▀ ▄  ▄██████[0m
+[INFO] ████▀█▀▄▀▄▄▀▄█▀ ▀ ▄ ▄█▄█▄▀▀▄ ▄  ▀████[0m
+[INFO] ████ ▄▀██▄▄██▄█▄ █▄ ▀▄ ▄▀█▀▄ ▄▀ ▄████[0m
+[INFO] ████▄▄▄▀██▄█ ▄█▀ █▀█▀▀▀██  ▄ █ █ ████[0m
+[INFO] ████ ▄█ █ ▄▄▀  ▀▀▀▀▀█▄▀ ▄ ▀▀█▄ █ ████[0m
+[INFO] ████ █▄▀▀▄▄▄██▀▀▀ ▄ █▄█▀▀ ▄█ █▀▄ ████[0m
+[INFO] ████▄█▄█▄▄▄▄▀▄█▀▄█▄ █▀ █ ▄▄▄  ▄█ ████[0m
+[INFO] ████ ▄▄▄▄▄ █▀▄▄▀▄█▀ █▄ ▀ █▄█ ▀▄  ████[0m
+[INFO] ████ █   █ █ ▀█ ▀█▀▄█ ▄▀  ▄  ████████[0m
+[INFO] ████ █▄▄▄█ █▄▄█▀██▄▀█▄ ██ █▄ ▄  ▀████[0m
+[INFO] ████▄▄▄▄▄▄▄█▄▄█▄▄█▄███▄█████▄██▄█████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] Matter starting; commission via BLE (QR below)
+[INFO] Matter Stack memory: 78200b
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:121]: 2504b (U:0b/F:20000b)
+[INFO] IPv4: DOWN
+[INFO] Wifi and BLE drivers started
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:695]: 140b (U:2504b/F:17496b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:700]: 2768b (U:2644b/F:17356b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:702]: 0b (U:5412b/F:14588b)
+[INFO] BLE driver started
+[INFO] Running in concurrent commissioning mode (BLE and Wireless)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:573]: 3096b (U:5412b/F:14588b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:578]: 1632b (U:8508b/F:11492b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:589]: 3048b (U:10140b/F:9860b)
+[INFO] Starting advertising and GATT service
+[INFO] Random GATT address = [53, 176, 189, 160, 253, 235]
+[INFO] [host] using packet pool with MTU 251 capacity 16
+[INFO] [host] filter accept list size: 12
+[INFO] [host] setting txq to 24, fragmenting at 255
+[INFO] [host] configuring host buffers (1 packets of size 255)
+[INFO] [host] initialized
+[INFO] GATT: Advertising
+[INFO] Wifi state updated: false -> true
+[INFO] Wifi connected
+[INFO] link_up = true
+[INFO] IPv4: DOWN
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: ::, ipv4: 0.0.0.0, mac: [0, 0, 0, 0, 0, 0, 0, 0], operational: false, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[INFO] Wi-Fi driver MAC status=0 actual=[20, 6e, f1, 12, a5, b0] expected=[20, 6e, f1, 12, a5, b0]; PHY calibration Some(DataCheckFailed)
+[INFO] Wi-Fi connected at -61 dBm (good)
+[INFO] Wi-Fi signal good: -61 dBm
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(McfFault)
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, 
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S,SID:0,CTR:ddca84f,SRC:599d25437560c861][I|R,EID:23f6,PROTO:0,OP:20]
+      SC::PBKDFParamRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 0::0 [SID:0,RSID:0,EID:23f6]: Accepted
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [U,SID:0,CTR:88c34ac,DST:599d25437560c861][A|R,EID:23f6,PROTO:0,OP:21,ACTR:ddca84f]
+      SC::PBKDFParamResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S,SID:0,CTR:ddca850,SRC:599d25437560c861][I|A|R,EID:23f6,PROTO:0,OP:22,ACTR:88c34ac]
+      SC::PASEPake1
+      => Processing
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [U,SID:0,CTR:88c34ad,DST:599d25437560c861][A|R,EID:23f6,PROTO:0,OP:23,ACTR:ddca850]
+      SC::PASEPake2
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S,SID:0,CTR:ddca851,SRC:599d25437560c861][I|A|R,EID:23f6,PROTO:0,OP:24,ACTR:88c34ad]
+      SC::PASEPake3
+      => Processing
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [U,SID:0,CTR:88c34ae,DST:599d25437560c861][A|R,EID:23f6,PROTO:0,OP:40,ACTR:ddca851]
+      SC::StatusReport
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S,SID:0,CTR:ddca852,SRC:599d25437560c861][I|A,EID:23f6,PROTO:0,OP:10,ACTR:88c34ae]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c27,SRC:0,DST:0][I|R,EID:23f7,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:23f7]: Accepted
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8177][A|R,EID:23f7,PROTO:1,OP:5,ACTR:2ed3c27]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c28,SRC:0,DST:0][I|A,EID:23f7,PROTO:0,OP:10,ACTR:dae8177]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c29,SRC:0,DST:0][I|R,EID:23f8,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::1 [SID:1,RSID:9414,EID:23f8]: Accepted
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8178][A|R,EID:23f8,PROTO:1,OP:5,ACTR:2ed3c29]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2a,SRC:0,DST:0][I|A,EID:23f8,PROTO:0,OP:10,ACTR:dae8178]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2b,SRC:0,DST:0][I|R,EID:23f9,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::2 [SID:1,RSID:9414,EID:23f9]: Accepted
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8179][A|R,EID:23f9,PROTO:1,OP:5,ACTR:2ed3c2b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2c,SRC:0,DST:0][I|A,EID:23f9,PROTO:0,OP:10,ACTR:dae8179]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2d,SRC:0,DST:0][I|R,EID:23fa,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::3 [SID:1,RSID:9414,EID:23fa]: Accepted
+[INFO] Got Arm Fail Safe Request, expiry 120s
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817a][A|R,EID:23fa,PROTO:1,OP:9,ACTR:2ed3c2d]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2e,SRC:0,DST:0][I|A,EID:23fa,PROTO:0,OP:10,ACTR:dae817a]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c2f,SRC:0,DST:0][I|R,EID:23fb,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::4 [SID:1,RSID:9414,EID:23fb]: Accepted
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817b][A|R,EID:23fb,PROTO:1,OP:5,ACTR:2ed3c2f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c30,SRC:0,DST:0][I|A,EID:23fb,PROTO:0,OP:10,ACTR:dae817b]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c31,SRC:0,DST:0][I|R,EID:23fc,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:23fc]: Accepted
+[INFO] Got Set Regulatory Config Request
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817c][A|R,EID:23fc,PROTO:1,OP:9,ACTR:2ed3c31]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c32,SRC:0,DST:0][I|A,EID:23fc,PROTO:0,OP:10,ACTR:dae817c]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c33,SRC:0,DST:0][I|R,EID:23fd,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::1 [SID:1,RSID:9414,EID:23fd]: Accepted
+[INFO] Got Cert Chain Request
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817d][A|R,EID:23fd,PROTO:1,OP:9,ACTR:2ed3c33]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c34,SRC:0,DST:0][I|A,EID:23fd,PROTO:0,OP:10,ACTR:dae817d]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c35,SRC:0,DST:0][I|R,EID:23fe,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:23fe]: Accepted
+[INFO] Got Cert Chain Request
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817e][A|R,EID:23fe,PROTO:1,OP:9,ACTR:2ed3c35]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c36,SRC:0,DST:0][I|A,EID:23fe,PROTO:0,OP:10,ACTR:dae817e]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c37,SRC:0,DST:0][I|R,EID:23ff,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::1 [SID:1,RSID:9414,EID:23ff]: Accepted
+[INFO] Got Attestation Request
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c37,SRC:0,DST:0][I|R,EID:23ff,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8180][A,EID:23ff,PROTO:0,OP:10,ACTR:2ed3c37]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae817f][A|R,EID:23ff,PROTO:1,OP:9,ACTR:2ed3c37]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c38,SRC:0,DST:0][I|A,EID:23ff,PROTO:0,OP:10,ACTR:dae817f]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c39,SRC:0,DST:0][I|R,EID:2400,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:2400]: Accepted
+[INFO] Got CSR Request
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c39,SRC:0,DST:0][I|R,EID:2400,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8182][A,EID:2400,PROTO:0,OP:10,ACTR:2ed3c39]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c39,SRC:0,DST:0][I|R,EID:2400,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8183][A,EID:2400,PROTO:0,OP:10,ACTR:2ed3c39]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8181][A|R,EID:2400,PROTO:1,OP:9,ACTR:2ed3c39]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3a,SRC:0,DST:0][I|A,EID:2400,PROTO:0,OP:10,ACTR:dae8181]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3b,SRC:0,DST:0][I|R,EID:2401,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:2401]: Accepted
+[INFO] Got Add Trusted Root Cert Request
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3b,SRC:0,DST:0][I|R,EID:2401,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8185][A,EID:2401,PROTO:0,OP:10,ACTR:2ed3c3b]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8184][A|R,EID:2401,PROTO:1,OP:9,ACTR:2ed3c3b]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3c,SRC:0,DST:0][I|A,EID:2401,PROTO:0,OP:10,ACTR:dae8184]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3d,SRC:0,DST:0][I|R,EID:2402,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 1::1 [SID:1,RSID:9414,EID:2402]: Accepted
+[INFO] Got Add NOC Request
+[INFO] Added operational fabric with local index 1
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3d,SRC:0,DST:0][I|R,EID:2402,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8187][A,EID:2402,PROTO:0,OP:10,ACTR:2ed3c3d]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8186][A|R,EID:2402,PROTO:1,OP:9,ACTR:2ed3c3d]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3d,SRC:0,DST:0][I|R,EID:2402,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Duplicate, sending ACK
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8188][A,EID:2402,PROTO:0,OP:10,ACTR:2ed3c3d]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3e,SRC:0,DST:0][I|A,EID:2402,PROTO:0,OP:10,ACTR:dae8186]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c3f,SRC:0,DST:0][I|R,EID:2403,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8186][A|R,EID:2402,PROTO:1,OP:9,ACTR:2ed3c3d]
+      IM::InvokeResponse
+      => Re-sending
+[DEBUG] Exchange 1::0 [SID:1,RSID:9414,EID:2403]: Accepted
+[INFO] Got Arm Fail Safe Request, expiry 310s
+[DEBUG] 
+<<SND UDP 10.10.1.90:52346 [SID:9414,CTR:dae8189][A|R,EID:2403,PROTO:1,OP:9,ACTR:2ed3c3f]
+      IM::InvokeResponse
+      => Sending
+[WARN] 
+>>RCV UDP 10.10.1.90:52346 [SID:1,CTR:2ed3c40][A,EID:2402,PROTO:0,OP:10,ACTR:dae8186]
+      SC::MRPStandAloneAck
+      => No valid exchange found, dropping
+[DEBUG] 
+>>RCV UDP 10.10.1.90:52346 [S|U,SID:1,CTR:2ed3c41,SRC:0,DST:0][I|A,EID:2403,PROTO:0,OP:10,ACTR:dae8189]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S,SID:0,CTR:ddca853,SRC:dbaba84830caeee7][I|R,EID:2404,PROTO:0,OP:30]
+      SC::CASESigma1
+      => Processing (new exchange)
+[DEBUG] Exchange 2::0 [SID:0,RSID:0,EID:2404]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [U,SID:0,CTR:9675f4f,DST:dbaba84830caeee7][A|R,EID:2404,PROTO:0,OP:31,ACTR:ddca853]
+      SC::CASESigma2
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S,SID:0,CTR:ddca854,SRC:dbaba84830caeee7][I|A|R,EID:2404,PROTO:0,OP:32,ACTR:9675f4f]
+      SC::CASESigma3
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [U,SID:0,CTR:9675f50,DST:dbaba84830caeee7][A|R,EID:2404,PROTO:0,OP:40,ACTR:ddca854]
+      SC::StatusReport
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S,SID:0,CTR:ddca855,SRC:dbaba84830caeee7][I|A,EID:2404,PROTO:0,OP:10,ACTR:9675f50]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f842,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2405,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2405]: Accepted
+[INFO] Got Commissioning Complete Request
+[INFO] PASE Commissioning Window closed
+[INFO] Dropping PASE session with ID 1
+[INFO] Commissioning complete, fabric and network settings persisted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2c7][A|R,EID:2405,PROTO:1,OP:9,ACTR:b70f842]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f843,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2405,PROTO:0,OP:10,ACTR:7f9f2c7]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f844,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2406,PROTO:1,OP:8]
+      IM::InvokeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2406]: Accepted
+[INFO] Got Update Fabric Label Request: Ok("matter.js Shell")
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2c8][A|R,EID:2406,PROTO:1,OP:9,ACTR:b70f844]
+      IM::InvokeResponse
+      => Sending
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f845,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2406,PROTO:0,OP:10,ACTR:7f9f2c8]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f846,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2407,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::2 [SID:2,RSID:9415,EID:2407]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2c9][A|R,EID:2407,PROTO:1,OP:5,ACTR:b70f846]
+      IM::ReportData
+      => Sending
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f847,SRC:52cbea1f1888f932,DST:1388][I|A|R,EID:2407,PROTO:1,OP:1,ACTR:7f9f2c9]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ca][A|R,EID:2407,PROTO:1,OP:5,ACTR:b70f847]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f848,SRC:52cbea1f1888f932,DST:1388][I|A|R,EID:2407,PROTO:1,OP:1,ACTR:7f9f2ca]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2cb][A|R,EID:2407,PROTO:1,OP:5,ACTR:b70f848]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f849,SRC:52cbea1f1888f932,DST:1388][I|A|R,EID:2407,PROTO:1,OP:1,ACTR:7f9f2cb]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2cc][A|R,EID:2407,PROTO:1,OP:5,ACTR:b70f849]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84a,SRC:52cbea1f1888f932,DST:1388][I|A|R,EID:2407,PROTO:1,OP:1,ACTR:7f9f2cc]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2cd][A|R,EID:2407,PROTO:1,OP:5,ACTR:b70f84a]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84b,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2407,PROTO:0,OP:10,ACTR:7f9f2cd]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84c,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2408,PROTO:1,OP:3]
+      IM::SubscribeRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::3 [SID:2,RSID:9415,EID:2408]: Accepted
+[INFO] Added subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 5966119550658869554 }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ce][A|R,EID:2408,PROTO:1,OP:5,ACTR:b70f84c]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84d,SRC:52cbea1f1888f932,DST:1388][I|A|R,EID:2408,PROTO:1,OP:1,ACTR:7f9f2ce]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2cf][A|R,EID:2408,PROTO:1,OP:4,ACTR:b70f84d]
+      IM::SubscribeResponse
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2408,PROTO:0,OP:10,ACTR:7f9f2cf]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[INFO] Subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 5966119550658869554 } primed
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f84f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2409,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::4 [SID:2,RSID:9415,EID:2409]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d0][A|R,EID:2409,PROTO:1,OP:5,ACTR:b70f84f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f850,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2409,PROTO:0,OP:10,ACTR:7f9f2d0]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f851,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240a,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:240a]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d1][A|R,EID:240a,PROTO:1,OP:5,ACTR:b70f851]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f852,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240a,PROTO:0,OP:10,ACTR:7f9f2d1]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f853,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240b,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:240b]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d2][A|R,EID:240b,PROTO:1,OP:5,ACTR:b70f853]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f854,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240b,PROTO:0,OP:10,ACTR:7f9f2d2]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f855,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240c,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:240c]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d3][A|R,EID:240c,PROTO:1,OP:5,ACTR:b70f855]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f856,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240c,PROTO:0,OP:10,ACTR:7f9f2d3]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f857,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240d,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:240d]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d4][A|R,EID:240d,PROTO:1,OP:5,ACTR:b70f857]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f858,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240d,PROTO:0,OP:10,ACTR:7f9f2d4]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f859,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240e,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:240e]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d5][A|R,EID:240e,PROTO:1,OP:5,ACTR:b70f859]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85a,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240e,PROTO:0,OP:10,ACTR:7f9f2d5]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85b,SRC:52cbea1f1888f932,DST:1388][I|R,EID:240f,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:240f]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d6][A|R,EID:240f,PROTO:1,OP:5,ACTR:b70f85b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85c,SRC:52cbea1f1888f932,DST:1388][I|A,EID:240f,PROTO:0,OP:10,ACTR:7f9f2d6]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85d,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2410,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2410]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d7][A|R,EID:2410,PROTO:1,OP:5,ACTR:b70f85d]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2410,PROTO:0,OP:10,ACTR:7f9f2d7]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f85f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2411,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2411]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d8][A|R,EID:2411,PROTO:1,OP:5,ACTR:b70f85f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f860,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2411,PROTO:0,OP:10,ACTR:7f9f2d8]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f861,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2412,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2412]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2d9][A|R,EID:2412,PROTO:1,OP:5,ACTR:b70f861]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f862,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2412,PROTO:0,OP:10,ACTR:7f9f2d9]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f863,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2413,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2413]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2da][A|R,EID:2413,PROTO:1,OP:5,ACTR:b70f863]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f864,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2413,PROTO:0,OP:10,ACTR:7f9f2da]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f865,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2414,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2414]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2db][A|R,EID:2414,PROTO:1,OP:5,ACTR:b70f865]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f866,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2414,PROTO:0,OP:10,ACTR:7f9f2db]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f867,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2415,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2415]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2dc][A|R,EID:2415,PROTO:1,OP:5,ACTR:b70f867]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f868,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2415,PROTO:0,OP:10,ACTR:7f9f2dc]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f869,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2416,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2416]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2dd][A|R,EID:2416,PROTO:1,OP:5,ACTR:b70f869]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86a,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2416,PROTO:0,OP:10,ACTR:7f9f2dd]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86b,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2417,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2417]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2de][A|R,EID:2417,PROTO:1,OP:5,ACTR:b70f86b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86c,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2417,PROTO:0,OP:10,ACTR:7f9f2de]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86d,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2418,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2418]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2df][A|R,EID:2418,PROTO:1,OP:5,ACTR:b70f86d]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2418,PROTO:0,OP:10,ACTR:7f9f2df]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f86f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2419,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2419]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e0][A|R,EID:2419,PROTO:1,OP:5,ACTR:b70f86f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f870,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2419,PROTO:0,OP:10,ACTR:7f9f2e0]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f871,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241a,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:241a]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e1][A|R,EID:241a,PROTO:1,OP:5,ACTR:b70f871]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f872,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241a,PROTO:0,OP:10,ACTR:7f9f2e1]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f873,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241b,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:241b]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(40), attr: Some(17), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e2][A|R,EID:241b,PROTO:1,OP:5,ACTR:b70f873]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f874,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241b,PROTO:0,OP:10,ACTR:7f9f2e2]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f875,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241c,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:241c]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e3][A|R,EID:241c,PROTO:1,OP:5,ACTR:b70f875]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f876,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241c,PROTO:0,OP:10,ACTR:7f9f2e3]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f877,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241d,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:241d]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e4][A|R,EID:241d,PROTO:1,OP:5,ACTR:b70f877]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f878,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241d,PROTO:0,OP:10,ACTR:7f9f2e4]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f879,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241e,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:241e]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e5][A|R,EID:241e,PROTO:1,OP:5,ACTR:b70f879]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87a,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241e,PROTO:0,OP:10,ACTR:7f9f2e5]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87b,SRC:52cbea1f1888f932,DST:1388][I|R,EID:241f,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:241f]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e6][A|R,EID:241f,PROTO:1,OP:5,ACTR:b70f87b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87c,SRC:52cbea1f1888f932,DST:1388][I|A,EID:241f,PROTO:0,OP:10,ACTR:7f9f2e6]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87d,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2420,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2420]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2e7][A|R,EID:2420,PROTO:1,OP:5,ACTR:b70f87d]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2420,PROTO:0,OP:10,ACTR:7f9f2e7]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f87f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2421,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2421]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(40), attr: Some(24), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f880,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2421,PROTO:0,OP:10,ACTR:7f9f2e8]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f882,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2422,PROTO:0,OP:10,ACTR:7f9f2e9]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f883,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2423,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f884,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2423,PROTO:0,OP:10,ACTR:7f9f2ea]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2eb][A|R,EID:2424,PROTO:1,OP:5,ACTR:b70f885]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f886,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2424,PROTO:0,OP:10,ACTR:7f9f2eb]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f887,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2425,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2425]: Accepted
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f888,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2425,PROTO:0,OP:10,ACTR:7f9f2ec]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:1]: Initiated
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ed][I|R,EID:1,PROTO:1,OP:5]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:2,CTR:b70f889][A|R,EID:1,PROTO:1,OP:1,ACTR:7f9f2ed]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ee][I|A,EID:1,PROTO:0,OP:10,ACTR:b70f889]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2]: Initiated
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ef][I|R,EID:2,PROTO:1,OP:5]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:2,CTR:b70f88a][A|R,EID:2,PROTO:1,OP:1,ACTR:7f9f2ef]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f0][I|A,EID:2,PROTO:0,OP:10,ACTR:b70f88a]
+      SC::MRPStandAloneAck
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f88b,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2426,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2426]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f1][A|R,EID:2426,PROTO:1,OP:5,ACTR:b70f88b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f88c,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2426,PROTO:0,OP:10,ACTR:7f9f2f1]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f88d,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2427,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2427]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f2][A|R,EID:2427,PROTO:1,OP:5,ACTR:b70f88d]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f88e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2427,PROTO:0,OP:10,ACTR:7f9f2f2]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f88f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2428,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2428]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f3][A|R,EID:2428,PROTO:1,OP:5,ACTR:b70f88f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f890,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2428,PROTO:0,OP:10,ACTR:7f9f2f3]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f891,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2429,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2429]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f4][A|R,EID:2429,PROTO:1,OP:5,ACTR:b70f891]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f892,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2429,PROTO:0,OP:10,ACTR:7f9f2f4]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f893,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242a,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:242a]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f5][A|R,EID:242a,PROTO:1,OP:5,ACTR:b70f893]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f894,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242a,PROTO:0,OP:10,ACTR:7f9f2f5]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f895,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242b,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:242b]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f6][A|R,EID:242b,PROTO:1,OP:5,ACTR:b70f895]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f896,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242b,PROTO:0,OP:10,ACTR:7f9f2f6]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f897,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242c,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:242c]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(4), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f7][A|R,EID:242c,PROTO:1,OP:5,ACTR:b70f897]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f898,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242c,PROTO:0,OP:10,ACTR:7f9f2f7]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f899,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242d,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:242d]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(5), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f8][A|R,EID:242d,PROTO:1,OP:5,ACTR:b70f899]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89a,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242d,PROTO:0,OP:10,ACTR:7f9f2f8]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89b,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242e,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:242e]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(6), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2f9][A|R,EID:242e,PROTO:1,OP:5,ACTR:b70f89b]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89c,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242e,PROTO:0,OP:10,ACTR:7f9f2f9]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89d,SRC:52cbea1f1888f932,DST:1388][I|R,EID:242f,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:242f]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(7), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2fa][A|R,EID:242f,PROTO:1,OP:5,ACTR:b70f89d]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89e,SRC:52cbea1f1888f932,DST:1388][I|A,EID:242f,PROTO:0,OP:10,ACTR:7f9f2fa]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f89f,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2430,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2430]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(8), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2fb][A|R,EID:2430,PROTO:1,OP:5,ACTR:b70f89f]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a0,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2430,PROTO:0,OP:10,ACTR:7f9f2fb]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a1,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2431,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2431]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(9), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2fc][A|R,EID:2431,PROTO:1,OP:5,ACTR:b70f8a1]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a2,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2431,PROTO:0,OP:10,ACTR:7f9f2fc]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a3,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2432,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2432]: Accepted
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(1), cluster: Some(514), attr: Some(10), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2fd][A|R,EID:2432,PROTO:1,OP:5,ACTR:b70f8a3]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a4,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2432,PROTO:0,OP:10,ACTR:7f9f2fd]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a5,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2433,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2433]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2fe][A|R,EID:2433,PROTO:1,OP:5,ACTR:b70f8a5]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a6,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2433,PROTO:0,OP:10,ACTR:7f9f2fe]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a7,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2434,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2434]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f2ff][A|R,EID:2434,PROTO:1,OP:5,ACTR:b70f8a7]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a8,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2434,PROTO:0,OP:10,ACTR:7f9f2ff]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8a9,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2435,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::1 [SID:2,RSID:9415,EID:2435]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f300][A|R,EID:2435,PROTO:1,OP:5,ACTR:b70f8a9]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8aa,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2435,PROTO:0,OP:10,ACTR:7f9f300]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8ab,SRC:52cbea1f1888f932,DST:1388][I|R,EID:2436,PROTO:1,OP:2]
+      IM::ReadRequest
+      => Processing (new exchange)
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:2436]: Accepted
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f301][A|R,EID:2436,PROTO:1,OP:5,ACTR:b70f8ab]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [S|U,SID:2,CTR:b70f8ac,SRC:52cbea1f1888f932,DST:1388][I|A,EID:2436,PROTO:0,OP:10,ACTR:7f9f301]
+      SC::MRPStandAloneAck
+      => Standalone Ack, dropping
+[DEBUG] Broadcasting mDNS entry to 224.0.0.251:5353
+[DEBUG] Broadcasting mDNS entry to [ff02::fb]:5353
+[DEBUG] Exchange 3::0 [SID:2,RSID:9415,EID:3]: Initiated
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f302][I|R,EID:3,PROTO:1,OP:5]
+      IM::ReportData
+      => Sending
+[DEBUG] 
+>>RCV UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:2,CTR:b70f8ad][A|R,EID:3,PROTO:1,OP:1,ACTR:7f9f302]
+      IM::StatusResponse
+      => Processing
+[DEBUG] 
+<<SND UDP [fe80::4d1:137b:6384:d4af]:52346 [SID:9415,CTR:7f9f303][I|A,EID:3,PROTO:0,OP:10,ACTR:b70f8ad]
+      SC::MRPStandAloneAck
+      => Sending

@@ -79,7 +79,10 @@ impl log::Log for QueueLogger {
         !cfg!(feature = "matter-diagnostics")
             || metadata.level() <= log::Level::Info
             || (metadata.level() == log::Level::Debug
-                && metadata.target() == "rs_matter::transport")
+                && matches!(
+                    metadata.target(),
+                    "rs_matter::transport" | "rs_matter::transport::network::mdns::builtin"
+                ))
     }
 
     fn log(&self, record: &log::Record<'_>) {
@@ -101,7 +104,7 @@ static LOGGER: QueueLogger = QueueLogger;
 /// Install the queue logger. Call before anything logs.
 pub fn init(level: log::LevelFilter) {
     let _ = log::set_logger(&LOGGER);
-    // The commissioning feature exposes only transport headers at DEBUG. Other modules
+    // The commissioning feature exposes transport headers and mDNS queries at DEBUG. Other modules
     // retain INFO logging, and TRACE payload dumps remain disabled.
     let level = if cfg!(feature = "matter-diagnostics") {
         level.max(log::LevelFilter::Debug)

@@ -1,0 +1,60 @@
+Wi-Fi-only scratch image, same running binary across U7 Pro reboot.
+AP restart requested at 2026-09-28 02:33:49 UTC.
+Extracted header-class counters and association events; no packet payloads.
+
+[INFO] Wi-Fi baseline boot: BLE off; DHCP and automatic ICMP echo replies enabled
+[INFO] Wi-Fi baseline boot: BLE off; DHCP and automatic ICMP echo replies enabled
+[INFO] Station MAC [20, 6e, f1, 12, a5, b0]; PHY calibration Some(DataCheckFailed)
+[INFO] Ethernet RX cumulative: total=0 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=0 (unicast_arp=0) other_group=0 short=0
+[INFO] link_up = true
+[INFO] Wi-Fi associated; RSSI Ok(-50)
+[INFO] Ethernet RX cumulative: total=1 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=1 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] link_up = false
+[INFO] Wi-Fi disconnected: Ok(DisconnectedInfo { ssid: "SyNet-2G", bssid: [140, 48, 102, 108, 121, 189], reason: AuthenticationLeave, rssi: -49 })
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] Ethernet RX cumulative: total=3 broadcast_arp=0 ipv4_multicast=0 ipv6_multicast=0 unicast=3 (unicast_arp=0) other_group=0 short=0
+[INFO] link_up = true
+[INFO] Wi-Fi associated; RSSI Ok(-60)
+[INFO] Ethernet RX cumulative: total=761 broadcast_arp=478 ipv4_multicast=87 ipv6_multicast=155 unicast=4 (unicast_arp=0) other_group=37 short=0
+[INFO] Ethernet RX cumulative: total=2013 broadcast_arp=1066 ipv4_multicast=362 ipv6_multicast=499 unicast=7 (unicast_arp=0) other_group=79 short=0
+[INFO] Ethernet RX cumulative: total=2485 broadcast_arp=1289 ipv4_multicast=465 ipv6_multicast=625 unicast=7 (unicast_arp=0) other_group=99 short=0
+[INFO] Ethernet RX cumulative: total=3275 broadcast_arp=1763 ipv4_multicast=566 ipv6_multicast=828 unicast=8 (unicast_arp=0) other_group=110 short=0
+[INFO] Ethernet RX cumulative: total=3624 broadcast_arp=1980 ipv4_multicast=609 ipv6_multicast=901 unicast=8 (unicast_arp=0) other_group=126 short=0
+[INFO] Ethernet RX cumulative: total=4154 broadcast_arp=2440 ipv4_multicast=623 ipv6_multicast=943 unicast=10 (unicast_arp=1) other_group=138 short=0
+[INFO] Ethernet RX cumulative: total=4478 broadcast_arp=2651 ipv4_multicast=677 ipv6_multicast=991 unicast=10 (unicast_arp=1) other_group=149 short=0
+[INFO] Ethernet RX cumulative: total=5035 broadcast_arp=3111 ipv4_multicast=729 ipv6_multicast=1020 unicast=11 (unicast_arp=1) other_group=164 short=0
+[INFO] Ethernet RX cumulative: total=5312 broadcast_arp=3305 ipv4_multicast=761 ipv6_multicast=1057 unicast=11 (unicast_arp=1) other_group=178 short=0
+[INFO] Ethernet RX cumulative: total=5794 broadcast_arp=3764 ipv4_multicast=767 ipv6_multicast=1061 unicast=13 (unicast_arp=2) other_group=189 short=0
+[INFO] Ethernet RX cumulative: total=6006 broadcast_arp=3957 ipv4_multicast=773 ipv6_multicast=1061 unicast=13 (unicast_arp=2) other_group=202 short=0
+[INFO] Ethernet RX cumulative: total=6479 broadcast_arp=4413 ipv4_multicast=777 ipv6_multicast=1061 unicast=14 (unicast_arp=2) other_group=214 short=0
+[INFO] Ethernet RX cumulative: total=6745 broadcast_arp=4606 ipv4_multicast=833 ipv6_multicast=1067 unicast=14 (unicast_arp=2) other_group=225 short=0
+[INFO] Ethernet RX cumulative: total=7285 broadcast_arp=5064 ipv4_multicast=881 ipv6_multicast=1086 unicast=18 (unicast_arp=3) other_group=236 short=0
+[INFO] Ethernet RX cumulative: total=7516 broadcast_arp=5257 ipv4_multicast=889 ipv6_multicast=1099 unicast=18 (unicast_arp=3) other_group=253 short=0
+[INFO] Ethernet RX cumulative: total=7859 broadcast_arp=5570 ipv4_multicast=899 ipv6_multicast=1107 unicast=19 (unicast_arp=3) other_group=264 short=0
+[INFO] Ethernet RX cumulative: total=8223 broadcast_arp=5913 ipv4_multicast=905 ipv6_multicast=1111 unicast=19 (unicast_arp=3) other_group=275 short=0
+[INFO] Ethernet RX cumulative: total=8820 broadcast_arp=6382 ipv4_multicast=940 ipv6_multicast=1187 unicast=21 (unicast_arp=4) other_group=290 short=0
+[INFO] Ethernet RX cumulative: total=9087 broadcast_arp=6576 ipv4_multicast=997 ipv6_multicast=1192 unicast=21 (unicast_arp=4) other_group=301 short=0
+[INFO] Ethernet RX cumulative: total=9594 broadcast_arp=7025 ipv4_multicast=1041 ipv6_multicast=1195 unicast=22 (unicast_arp=4) other_group=311 short=0
+[INFO] Ethernet RX cumulative: total=9809 broadcast_arp=7218 ipv4_multicast=1049 ipv6_multicast=1195 unicast=22 (unicast_arp=4) other_group=325 short=0
+[INFO] Ethernet RX cumulative: total=10231 broadcast_arp=7622 ipv4_multicast=1053 ipv6_multicast=1196 unicast=24 (unicast_arp=5) other_group=336 short=0
+[INFO] Ethernet RX cumulative: total=10498 broadcast_arp=7868 ipv4_multicast=1055 ipv6_multicast=1204 unicast=24 (unicast_arp=5) other_group=347 short=0
+[INFO] Ethernet RX cumulative: total=10831 broadcast_arp=8171 ipv4_multicast=1063 ipv6_multicast=1213 unicast=25 (unicast_arp=5) other_group=359 short=0
+[INFO] Ethernet RX cumulative: total=11242 broadcast_arp=8509 ipv4_multicast=1116 ipv6_multicast=1221 unicast=25 (unicast_arp=5) other_group=371 short=0
+[INFO] Ethernet RX cumulative: total=11793 broadcast_arp=8963 ipv4_multicast=1174 ipv6_multicast=1249 unicast=27 (unicast_arp=6) other_group=380 short=0
+[INFO] Ethernet RX cumulative: total=12020 broadcast_arp=9156 ipv4_multicast=1185 ipv6_multicast=1258 unicast=27 (unicast_arp=6) other_group=394 short=0
+[INFO] Ethernet RX cumulative: total=12510 broadcast_arp=9611 ipv4_multicast=1190 ipv6_multicast=1276 unicast=28 (unicast_arp=6) other_group=405 short=0
+[INFO] Ethernet RX cumulative: total=12729 broadcast_arp=9804 ipv4_multicast=1194 ipv6_multicast=1287 unicast=28 (unicast_arp=6) other_group=416 short=0
+[INFO] Ethernet RX cumulative: total=13194 broadcast_arp=10253 ipv4_multicast=1196 ipv6_multicast=1287 unicast=30 (unicast_arp=7) other_group=428 short=0
+[INFO] Ethernet RX cumulative: total=13458 broadcast_arp=10447 ipv4_multicast=1254 ipv6_multicast=1288 unicast=30 (unicast_arp=7) other_group=439 short=0
+[INFO] Ethernet RX cumulative: total=13969 broadcast_arp=10896 ipv4_multicast=1298 ipv6_multicast=1294 unicast=31 (unicast_arp=7) other_group=450 short=0
+[INFO] Ethernet RX cumulative: total=14222 broadcast_arp=11089 ipv4_multicast=1320 ipv6_multicast=1319 unicast=31 (unicast_arp=7) other_group=463 short=0
+[INFO] Ethernet RX cumulative: total=14730 broadcast_arp=11546 ipv4_multicast=1341 ipv6_multicast=1336 unicast=33 (unicast_arp=8) other_group=474 short=0

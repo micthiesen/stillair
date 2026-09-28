@@ -353,8 +353,8 @@ const DEVICE: BasicInfoConfig<'static> = BasicInfoConfig {
     vendor_name: "Stillair",
     product_name: "Stillair",
     device_name: "Stillair",
-    hw_ver: 1,
-    hw_ver_str: "V1",
+    hw_ver: 2,
+    hw_ver_str: "PCB-01 V2",
     sw_ver: 1,
     sw_ver_str: env!("CARGO_PKG_VERSION"),
     ..TEST_DEV_DET

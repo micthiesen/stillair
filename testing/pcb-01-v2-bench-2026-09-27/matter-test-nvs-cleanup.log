@@ -1,0 +1,5 @@
+[2026-09-28T02:47:04Z INFO ] 🚀 A new version of espflash is available: v4.6.0
+[2026-09-28T02:47:04Z INFO ] Serial port: '/dev/cu.usbmodem2101'
+[2026-09-28T02:47:04Z INFO ] Connecting...
+[2026-09-28T02:47:04Z INFO ] Using flash stub
+[2026-09-28T02:47:04Z INFO ] Erasing region at 0x00009000 (24576 bytes)

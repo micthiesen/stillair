@@ -172,8 +172,8 @@ Keep these properties when changing anything; they come from the safety architec
   bumping one entry. `rustcrypto` (the default), never `mbedtls`: mbedtls drives CMake at a
   riscv32 C cross-compiler and does not build on macOS at all. Details and the Apple Home
   mapping: docs/controls.md > "Home integration" and "Matter implementation notes".
-- **Stable** Rust, target `riscv32imac-unknown-none-elf` (ESP32-C6 only — the
-  ESP32-C6-MINI-1-H4 in the BOM; never other chips). Toolchain pinned in
+- **Stable** Rust, target `riscv32imac-unknown-none-elf` (ESP32-C6 only: MINI-1-H4 on
+  PCB-01 V1 and WROOM-1-N8 on V2 use the same target). Toolchain pinned in
   `firmware/rust-toolchain.toml`.
 - Runner is `espflash flash --monitor` via `firmware/.cargo/config.toml`. No secrets are
   committed; when Wi-Fi credentials become real, add them via `[env]` in an uncommitted

@@ -1,0 +1,75 @@
+Temporary matter.js 0.17.9 controller; on-network commissioning succeeded 2026-09-28 02:43:26 UTC.
+Board serial independently reports Commissioning complete, fabric and network settings persisted.
+
+Normal release image after reboot, fresh controller process, remote reads:
+attributes basicinformation read all 5000 0 --remote
+stateInformationCallback Node 5000 reconnecting
+Attribute values for cluster BasicInformation (5000/0/40):
+    clusterRevision (65533): 5
+    dataModelRevision (0): 19
+    vendorName (1): "Stillair"
+    vendorId (2): 65521
+    productName (3): "Stillair"
+    productId (4): 32769
+    nodeLabel (5): ""
+stateInformationCallback Node 5000 connected
+    location (6): "XX"
+    hardwareVersion (7): 2
+    hardwareVersionString (8): "PCB-01 V2"
+    softwareVersion (9): 1
+    softwareVersionString (10): "0.1.0"
+    manufacturingDate (11): ""
+    partNumber (12): ""
+    productUrl (13): ""
+    productLabel (14): ""
+    serialNumber (15): "123456789"
+    localConfigDisabled (16): false
+    reachable (17): "undefined"
+    uniqueId (18): ""
+    capabilityMinima (19): {"caseSessionsPerFabric":3,"subscriptionsPerFabric":3}
+    productAppearance (20): {"finish":0,"primaryColor":null}
+    specificationVersion (21): 17105152
+    maxPathsPerInvoke (22): 5
+    configurationVersion (24): "undefined"
+    featureMap (65532): {}
+    attributeList (65531): [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,65528,65529,65531,65532,65533]
+    acceptedCommandList (65529): []
+    generatedCommandList (65528): []
+Done.
+
+attributes fancontrol read all 5000 1 --remote
+Attribute values for cluster FanControl (5000/1/514):
+    clusterRevision (65533): 5
+    featureMap (65532): {"multiSpeed":false,"auto":false,"rocking":false,"wind":false,"step":false,"airflowDirection":true}
+    fanMode (0): 0
+    fanModeSequence (1): 0
+    percentSetting (2): 0
+    percentCurrent (3): 0
+    speedMax (4): "undefined"
+    speedSetting (5): "undefined"
+    speedCurrent (6): "undefined"
+    rockSupport (7): "undefined"
+    rockSetting (8): "undefined"
+    windSupport (9): "undefined"
+    windSetting (10): "undefined"
+    airflowDirection (11): 0
+    attributeList (65531): [0,1,2,3,11,65528,65529,65531,65532,65533]
+    acceptedCommandList (65529): []
+    generatedCommandList (65528): []
+Done.
+
+Test fabric removal:
+commission unpair 5000
+2026-09-27 19:46:41.858 INFO   ClientNode           shell-927.@1:1388 decommissioning
+2026-09-27 19:46:41.859 INFO   ClientInteraction    Invoke » @1:1388•439a⇵009b 0.operationalCredentials.removeFabric with fabricIndex: 1
+2026-09-27 19:46:41.898 INFO   ClientInteraction    Invoke « @1:1388•439a⇵009b 0.operationalCredentials.removeFabric statusCode: 0 fabricIndex: 1
+2026-09-27 19:46:41.900 INFO   ClientNode           shell-927.@1:1388 is offline
+stateInformationCallback Node 5000 reconnecting
+2026-09-27 19:46:41.900 INFO   Session              @1:1388•439a Session ended
+stateInformationCallback Node 5000 decommissioned
+stateInformationCallback Node 5000 disconnected
+2026-09-27 19:46:41.904 INFO   CommissioningClient  Decommissioned peer1 formerly @1:1388
+2026-09-27 19:46:41.904 INFO   ClientNode           shell-927.peer1 going offline
+Done.
+matter> 
+

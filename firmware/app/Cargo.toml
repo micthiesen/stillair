@@ -17,7 +17,7 @@ test = false
 bench = false
 
 [features]
-# USB-only packet headers for commissioning diagnosis. Payloads and keys stay disabled.
+# USB-only packet headers, mDNS queries and radio identity. Payloads and keys stay disabled.
 matter-diagnostics = []
 
 [dependencies]

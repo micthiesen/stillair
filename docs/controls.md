@@ -525,9 +525,17 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   `EspWifiDriver::new(WIFI, BT)`, `stack.run_coex(...)` with an `EmptyHandler.chain(EpClMatcher…)`
   per cluster plus a `DescHandler` per endpoint, and `TrngSource` feeding a reseeding CSPRNG.
 - For commissioning packet diagnosis, build with `cargo build --locked --features matter-diagnostics`.
-  This opts into DEBUG logs only for `rs_matter::transport`: packet headers, peer addresses,
-  exchanges, and retries. Other modules retain INFO logging, TRACE remains disabled, and the
+  This opts into DEBUG logs for `rs_matter::transport` and its built-in mDNS module: packet
+  headers, peer addresses, exchanges, retries, and discovery queries/replies. It also reports the
+  vendor station MAC against the expected eFuse MAC and the PHY calibration result once.
+  Other modules retain INFO logging, TRACE remains disabled, and the
   dependency feature `debug-tlv-payload` must remain absent. The normal build has no extra logging.
+- The V2 bench timeout was an AP group-delivery failure: unicast worked, but broadcast ARP and
+  multicast discovery failed on several WLAN clients. Restarting the U7 Pro restored traffic,
+  then automated Matter commissioning and normal-release persistence passed. An mDNS
+  advertisement or DHCP lease alone does not prove inbound discovery works. This build does
+  not enable smoltcp's `auto-icmp-echo-reply`, so ping silence alone is also inconclusive. Use
+  fresh ARP/NDP and directed mDNS evidence. See the [V2 bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 
 ### Fault reporting and bus health (2026-07-27)
 
