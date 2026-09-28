@@ -80,8 +80,8 @@ Do not substitute `config stage`: that is the unloaded volatile image and disapp
 
 For the working macOS build, put rustup's shims first with `export PATH="$HOME/.cargo/bin:$PATH"`
 before `cargo build --locked` in `firmware/app`. This is the dev profile used by the successful V1
-bench workflow. The initial V2 release-profile image built and booted, but its pairing failed;
-the dev-profile comparison is pending and no profile-specific defect is established.
+bench workflow. Both release and dev profiles joined Wi-Fi but failed to complete V2 pairing;
+the dev retry had excellent -48 dBm signal. No profile-specific defect is established.
 Homebrew Rust can shadow rustup and
 report a missing RISC-V `core` even when `rustup target list --installed` includes the target.
 The bench flash succeeded with `espflash flash --port /dev/cu.usbmodem2101 --non-interactive
@@ -96,7 +96,10 @@ changes. The command is intentionally available only over the physical USB conso
 does not add an unauthenticated LAN listener. It also omits SSID, credentials, and nearby-network
 scans so saved commissioning logs do not disclose them. Interpret the bands as excellent at
 −55 dBm or better, good through −67 dBm, usable through −75 dBm, and weak below −75 dBm; retain
-the raw dBm number when comparing enclosure or antenna changes.
+the raw dBm number when comparing enclosure or antenna changes. Before the vendor RSSI call,
+the sampler checks `esp_wifi_get_mode` for initialized STA/APSTA mode, matching the pinned
+driver's safe wrapper. An unguarded RSSI call during BLE-only commissioning was observed to
+panic with a load access fault; it does not safely report "not initialized."
 
 **Headroom check during tuning**: at 170 RPM the BEMF is roughly 17 V against the 24 V bus —
 the tightest margin in the system with flux weakening disabled. A 20% error in the Ke
@@ -481,6 +484,10 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   the whole binary down, control loop included, and stops a fan that was running perfectly
   well — the opposite of the network-loss row. Losing Matter must lose only Matter.
 - Test attestation credentials, so Apple Home shows "Uncertified Accessory" and adds it anyway.
+- The Matter product name and mDNS commissioning `DN` are both `Stillair`. These are static
+  device details, separate from the controller-managed persisted node label. The pinned stack's
+  BLE local name is internally fixed to `BT`, so the initial Apple Home discovery tile may still
+  use a generic type; the advertised product information becomes available during commissioning.
 - **Commission with the phone joined to a 2.4 GHz SSID.** Apple Home has no network picker: it
   hands the device whatever network the phone is on, and the C6 has no 5 GHz radio. Handing it
   a 5 GHz-only SSID fails with `NoAccessPointFound` / `NoNetworkInterface` and surfaces in the
@@ -488,14 +495,15 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   phone can return to 5 GHz afterwards; the fan keeps its own credentials.
 - Apple writes `DefaultOTAProviders` (OTA Requestor, cluster 0x2A) during setup and is content
   with `UnsupportedCluster`, since rs-matter has no Matter OTA yet.
-- Measured on the C6 at first boot: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
+- Measured on the C6 with concurrent commissioning: Matter stack 78 KB, bump allocator 13.3 KB of 20 KB used,
   100 KB heap, 2.19 MB image (53% of the partition). `BUMP_SIZE` is the number to raise if the
   stack panics during initialisation.
-- **Coexistence scanning is unreliable.** Two consecutive commissioning attempts scanned 4 and
-  then 1 network. If a join ever fails with `NoAccessPointFound` against an SSID that
-  definitely exists on 2.4 GHz, the lever is non-concurrent commissioning — `stack.run()`
-  instead of `run_coex()`, which drops BLE before joining Wi-Fi. It costs a larger `BUMP_SIZE`
-  (bigger futures) and reportedly breaks Alexa, so it stays unused until something needs it.
+- **Keep concurrent commissioning for Apple Home on the pinned stack.** A V2 comparison using
+  sequential `stack.run()` failed immediately after AddNOC with `InvalidAction`. The pinned
+  `WirelessNetCtl::Commissioning::scan()` explicitly returns that error; Apple's earlier attempts
+  requested a scan at this stage. This is a strong source/log match, although command-path logging
+  was not enabled. `run_coex()` and the 20,000-byte arena were restored. The original post-join
+  timeout remains unresolved; see the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 
 ### Building the Matter firmware (2026-07-27)
 
@@ -516,6 +524,10 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 - The shape to copy from `light_wifi.rs`: a statically allocated `EmbassyWifiMatterStack`,
   `EspWifiDriver::new(WIFI, BT)`, `stack.run_coex(...)` with an `EmptyHandler.chain(EpClMatcher…)`
   per cluster plus a `DescHandler` per endpoint, and `TrngSource` feeding a reseeding CSPRNG.
+- For commissioning packet diagnosis, build with `cargo build --locked --features matter-diagnostics`.
+  This opts into DEBUG logs only for `rs_matter::transport`: packet headers, peer addresses,
+  exchanges, and retries. Other modules retain INFO logging, TRACE remains disabled, and the
+  dependency feature `debug-tlv-payload` must remain absent. The normal build has no extra logging.
 
 ### Fault reporting and bus health (2026-07-27)
 

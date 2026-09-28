@@ -13,6 +13,9 @@ use stillair_core::console::{wifi_quality, WifiDiagnostics};
 const UNAVAILABLE_RSSI: i32 = i32::MAX;
 const SAMPLE_INTERVAL: Duration = Duration::from_secs(10);
 const FIRST_SAMPLE_DELAY: Duration = Duration::from_secs(5);
+// `wifi_mode_t` values from the pinned esp-wifi-sys C6 bindings.
+const WIFI_MODE_STA: u32 = 1;
+const WIFI_MODE_APSTA: u32 = 3;
 
 static CONNECTED: AtomicBool = AtomicBool::new(false);
 static EVER_CONNECTED: AtomicBool = AtomicBool::new(false);
@@ -23,10 +26,11 @@ static SAMPLE_FAILURES: AtomicU32 = AtomicU32::new(0);
 static DISCONNECTS: AtomicU32 = AtomicU32::new(0);
 static LAST_OK_MS: AtomicU64 = AtomicU64::new(0);
 
-// `esp-radio::WifiController::rssi()` is a thin safe wrapper over this vendor ABI, but the
-// Matter integration owns that controller for its entire lifetime and does not expose it.
-// The function itself reads the station's last beacon and does not mutate configuration.
+// Mirror `esp-radio::WifiController::rssi()`'s mode check and vendor ABI. Matter owns that
+// controller and does not expose it. `wifi_mode_t` is C unsigned int (u32 on this target).
+// These functions only read driver state; `get_mode` reports NOT_INIT before Wi-Fi starts.
 extern "C" {
+    fn esp_wifi_get_mode(mode: *mut u32) -> i32;
     fn esp_wifi_sta_get_rssi(rssi: *mut i32) -> i32;
 }
 
@@ -36,11 +40,20 @@ pub async fn sample_task() {
     let mut reported_quality: Option<&'static str> = None;
 
     loop {
+        let mut mode = 0u32;
         let mut rssi = 0i32;
-        // SAFETY: `rssi` is a valid, aligned out-pointer for the duration of the call. The
-        // vendor API is designed to be queried while the station driver is running; a
-        // disconnected or not-yet-started station returns an error, handled below.
-        let result = unsafe { esp_wifi_sta_get_rssi(&mut rssi) };
+        // SAFETY: both outputs are valid and aligned. Unlike get_mode, the RSSI function
+        // can fault before initialization (sequential commissioning starts with BLE only).
+        // Match the driver's safe wrapper: require initialized station mode first. There
+        // is no await here, so Matter on this executor cannot drop the driver between calls.
+        let result = unsafe {
+            if esp_wifi_get_mode(&mut mode) == 0 && matches!(mode, WIFI_MODE_STA | WIFI_MODE_APSTA)
+            {
+                esp_wifi_sta_get_rssi(&mut rssi)
+            } else {
+                -1
+            }
+        };
         SAMPLES.fetch_add(1, Ordering::Relaxed);
 
         if result == 0 && i32::from(i8::MIN) <= rssi && rssi <= 0 {

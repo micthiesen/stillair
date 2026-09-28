@@ -12,9 +12,15 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
   but the final commissioning request did not arrive before timeout. A retry instead supplied
   `SyNet` and failed with `NoAccessPointFound`; the first attempt had joined `SyNet-2G`.
   Correct-network retries also joined without completing the final handshake. Michael reports
-  V1 worked on this network. The unchanged-source dev-profile firmware now replaces the initial
-  release-profile flash to match V1's bench workflow; its pairing result is pending, with logging
-  active. The timeout's cause remains unresolved. See the
+  V1 worked on this network. The unchanged-source dev-profile retry also failed despite correct
+  SSID and excellent -48 dBm signal. Sequential BLE-then-Wi-Fi failed earlier with `InvalidAction`,
+  matching the pinned stack's unsupported commissioning scan. Concurrent mode is restored with
+  targeted transport diagnostics. The next capture showed successful BLE provisioning and Wi-Fi
+  association, live operational discovery, but no received Matter UDP handshake; direct LAN
+  probes also failed. Michael confirmed UniFi and authorized MCP/CLI access to inspect it.
+  The experiment exposed and fixed a separate pre-initialization RSSI-sampler crash. Product and
+  mDNS discovery names are now `Stillair`; the live `DN=Stillair` advertisement was verified.
+  The original timeout's cause remains unresolved. See the
   [pairing follow-up](../testing/pcb-01-v2-bench-2026-09-27.md#apple-home-pairing-follow-up).
   Michael chose interim use with no additional intermediate motor tests; final tuning stays deferred.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
@@ -34,7 +40,8 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
 
 ## Next
 
-Diagnose the operational-network pairing timeout on the new V2, then Michael installs it with the
+Inspect UniFi client/WLAN reachability for the operational-network pairing timeout on the new V2,
+then Michael installs it with the
 saved loaded configuration. Follow his explicit scope: no additional intermediate motor tests;
 respond to reported problems and resume final tuning when requested. See the
 [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).

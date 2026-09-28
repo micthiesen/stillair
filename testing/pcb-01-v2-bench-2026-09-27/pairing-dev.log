@@ -1,0 +1,105 @@
+CAPTURE START 2026-09-28T01:28:15Z
+I (158) esp_image: segment 1: paddr=00070584 vaddr=40800000 size[INFO] MCF8316D found at I2C target 0x01
+[INFO] MCF standby mode already active
+[INFO] MCF stored configuration verified
+[WARN] MCF fault status gate 0x00000000 controller 0x80000008 -> Some(McfWatchdog)
+[INFO] Matter state persists to NVS 0x9000..0xf000
+[INFO] Loaded basic info settings from storage
+[INFO] Loaded events counter from storage
+[INFO] Device is not commissioned yet, opening commissioning window...
+[INFO] PASE Basic Commissioning Window opened
+[INFO] SetupQRCode: [MT:-24J042C00KA064IJ3P0WISA0DK5N1K8SQ1RYCU1O0]
+[INFO] PairingCode: [3497-0112-332]
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] ████ ▄▄▄▄▄ ██▀▄ ▀   ▀█▄███ ▄▄▄▄▄ ████[0m
+[INFO] ████ █   █ █ ▄▄ █▄▀ ██ ▀ █ █   █ ████[0m
+[INFO] ████ █▄▄▄█ █ ▄▀ ▄██▄▄▀▀▄▄█ █▄▄▄█ ████[0m
+[INFO] ████▄▄▄▄▄▄▄█ █▄█ █ █ █▄█ █▄▄▄▄▄▄▄████[0m
+[INFO] ████ █▄ ▄▄▄█▀█ ▀▀▀▀▀▄▀ ▀ ▀ ▄  ▄██████[0m
+[INFO] ████▀█▀▄▀▄▄▀▄█▀ ▀ ▄ ▄█▄█▄▀▀▄ ▄  ▀████[0m
+[INFO] ████ ▄▀██▄▄██▄█▄ █▄ ▀▄ ▄▀█▀▄ ▄▀ ▄████[0m
+[INFO] ████▄▄▄▀██▄█ ▄█▀ █▀█▀▀▀██  ▄ █ █ ████[0m
+[INFO] ████ ▄█ █ ▄▄▀  ▀▀▀▀▀█▄▀ ▄ ▀▀█▄ █ ████[0m
+[INFO] ████ █▄▀▀▄▄▄██▀▀▀ ▄ █▄█▀▀ ▄█ █▀▄ ████[0m
+[INFO] ████▄█▄█▄▄▄▄▀▄█▀▄█▄ █▀ █ ▄▄▄  ▄█ ████[0m
+[INFO] ████ ▄▄▄▄▄ █▀▄▄▀▄█▀ █▄ ▀ █▄█ ▀▄  ████[0m
+[INFO] ████ █   █ █ ▀█ ▀█▀▄█ ▄▀  ▄  ████████[0m
+[INFO] ████ █▄▄▄█ █▄▄█▀██▄▀█▄ ██ █▄ ▄  ▀████[0m
+[INFO] ████▄▄▄▄▄▄▄█▄▄█▄▄█▄███▄█████▄██▄█████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] Matter starting; commission via BLE (QR below)
+[INFO] Matter Stack memory: 78200b
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:121]: 2504b (U:0b/F:20000b)
+[INFO] IPv4: DOWN
+[INFO] Wifi and BLE drivers started
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:695]: 140b (U:2504b/F:17496b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:700]: 2768b (U:2644b/F:17356b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:702]: 0b (U:5412b/F:14588b)
+[INFO] BLE driver started
+[INFO] Running in concurrent commissioning mode (BLE and Wireless)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:573]: 3096b (U:5412b/F:14588b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:578]: 1632b (U:8508b/F:11492b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:589]: 3048b (U:10140b/F:9860b)
+[INFO] Starting advertising and GATT service
+[INFO] Random GATT address = [57, 240, 205, 151, 97, 216]
+[INFO] Running operational and commissioning networks
+[INFO] Running Matter transport
+[INFO] [host] using packet pool with MTU 251 capacity 16
+@{"type":"telemetry","t":8475,"state":"safe_boot","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":20}
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(McfFault)
+@{"ok":true}
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+[INFO] GATT: Connection established
+[INFO] [host] agreed att MTU of 247
+[INFO] GATT: Peer subscribed
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(48), attr: Some(12), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(323615744), attr: Some(1), list_index: None }, status: Status { status: UnsupportedCluster, cluster_status: None } }
+[INFO] Got Arm Fail Safe Request, expiry 120s
+[INFO] Got Set Regulatory Config Request
+[INFO] Got Cert Chain Request
+[INFO] Got Cert Chain Request
+[INFO] Got Attestation Request
+[INFO] Got CSR Request
+[INFO] Got Add Trusted Root Cert Request
+[INFO] Got Add NOC Request
+[INFO] Added operational fabric with local index 1
+[INFO] Wifi scan request
+[INFO] Wifi configuration updated for scanning
+[INFO] Wifi scan complete, reporting 3 results
+[INFO] Wifi scan complete
+[INFO] Added network with ID Wifi SSID(SyNet-2G)
+[INFO] Got Arm Fail Safe Request, expiry 177s
+[INFO] Wifi connect request for SSID SyNet-2G
+[INFO] Wifi configuration updated
+[INFO] link_up = true
+[INFO] IPv4: DOWN
+[INFO] Wifi state updated: false -> true
+[INFO] Wifi connected
+[INFO] Wi-Fi connected at -48 dBm (excellent)
+[INFO] Wi-Fi signal excellent: -48 dBm
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: ::, ipv4: 0.0.0.0, mac: [0, 0, 0, 0, 0, 0, 0, 0], operational: false, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, 
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[INFO] GATT: Peer unsubscribed
+[INFO] GATT: Events task finished
+[WARN] [link][pool_request_to_send] connection ConnHandle(0) not found
+[WARN] [host] unable to send data to disconnected host (ignored)
+[INFO] GATT: Advertising
+[WARN] [host] encountered error processing ACL data for ConnHandle(0): Disconnected
+[WARN] [host] requesting ConnHandle(0) to be disconnected
+[INFO] [host] disconnection event on handle 0, reason: Connection Terminated By Local Host
+[WARN] Fail-Safe timeout expired for fabric 1, disarming
+[INFO] Dropping PASE session with ID 1
+

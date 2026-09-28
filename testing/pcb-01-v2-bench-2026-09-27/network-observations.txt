@@ -1,0 +1,24 @@
+2026-09-27, during concurrent diagnostic pairing attempt
+Mac: 10.10.1.90, interface en0 (index 19)
+Board: station MAC 20:6e:f1:12:a5:b0
+
+18:55:39.818 operational service appeared:
+00A24DE50CF9BB3D-00000000489422F0._matter._tcp.local.
+18:56:04.848 service resolved to 206EF112A5B00000.local.:5540
+TXT: DUMMY=DUMMY
+
+18:56:15.538 commissionable service resolved:
+A9BFEC3B54CEB19B._matterc._udp.local.
+Target: 206EF112A5B00000.local.:5540
+TXT: D=3840 CM=1 VP=65521+32769 DN=Stillair PH=0
+
+18:56:15.534 AAAA resolved: fe80::226e:f1ff:fe12:a5b0%en0
+18:56:19.630 A resolved: 10.10.1.21
+
+IPv4 ping: 2 transmitted, 0 received; ARP incomplete on en0.
+IPv6 ping: 2 transmitted, 0 received.
+Legacy-unicast mDNS AAAA query for board hostname: no reply within 4 seconds.
+
+18:58:33.137 operational service removed after fail-safe timeout.
+Serial dropped count: 23 before provisioning and 23 at t=221584 ms.
+No received Matter UDP packet header in transport capture.

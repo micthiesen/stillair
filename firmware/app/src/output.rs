@@ -75,11 +75,17 @@ pub async fn writer_task(mut tx: ConsoleTx) {
 struct QueueLogger;
 
 impl log::Log for QueueLogger {
-    fn enabled(&self, _: &log::Metadata<'_>) -> bool {
-        true
+    fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
+        !cfg!(feature = "matter-diagnostics")
+            || metadata.level() <= log::Level::Info
+            || (metadata.level() == log::Level::Debug
+                && metadata.target() == "rs_matter::transport")
     }
 
     fn log(&self, record: &log::Record<'_>) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
         let mut text = Line::new();
         // A truncated log line is acceptable; a truncated protocol frame would not be, which
         // is why frames are sized to fit rather than trimmed.
@@ -95,5 +101,12 @@ static LOGGER: QueueLogger = QueueLogger;
 /// Install the queue logger. Call before anything logs.
 pub fn init(level: log::LevelFilter) {
     let _ = log::set_logger(&LOGGER);
+    // The commissioning feature exposes only transport headers at DEBUG. Other modules
+    // retain INFO logging, and TRACE payload dumps remain disabled.
+    let level = if cfg!(feature = "matter-diagnostics") {
+        level.max(log::LevelFilter::Debug)
+    } else {
+        level
+    };
     log::set_max_level(level);
 }

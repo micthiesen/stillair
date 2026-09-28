@@ -1,0 +1,119 @@
+CAPTURE START 2026-09-28T01:47:22Z
+[2026-09-28T01:47:22Z INFO ] 🚀 A new version of espflash is available: v4.6.0
+[2026-09-28T01:47:22Z INFO ] Serial port: '/dev/cu.usbmodem2101'
+[2026-09-28T01:47:22Z INFO ] Connecting...
+[2026-09-28T01:47:23Z INFO ] Using flash stub
+ESP-ROM:esp32c6-20220919
+Build:Sep 19 2022
+rst:0x15 (USB_UART_HPSYS),boot:0x1c (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40800822
+SPIWP:0xee
+mode:DIO, clock div:2
+load:0x40875730,len:0x175c
+load:0x4086b910,len:0xec8
+load:0x4086e610,len:0x31c4
+entry 0x4086b91a
+I (23) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+I (23) boot: compile time Nov 27 2025 09:46:10
+I (24) boot: chip revision: v0.2
+I (24) boot: efuse block revision: v0.3
+I (28) boot.esp32c6: SPI Speed      : 80MHz
+I (32) boot.esp32c6: SPI Mode       : DIO
+I (36) boot.esp32c6: SPI Flash Size : 8MB
+I (39) boot: Enabling RNG early entropy source...
+I (44) boot: Partition Table:
+I (46) boot: ## Label            Usage          Type ST Offset   Length
+I (53) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (59) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (66) boot:  2 factory          factory app      00 00 00010000 007f0000
+I (72) boot: End of partition table
+I (76) esp_image: segment 0: paddr=00010020 vaddr=42000020 size=61364h (398180) map
+I (159) esp_image: segment 1: paddr=0007138c vaddr=40800000 size=0ec8ch ( 60556) load
+I (173) esp_image: segment 2: paddr=00080020 vaddr=42070020 size=1c09f8h (1837560) map
+I (523) esp_image: segment 3: paddr=00240a20 vaddr=4080ec8c size=04a58h ( 19032) load
+I (528) esp_image: segment 4: paddr=00245480 vaddr=408136e8 size=072a4h ( 29348) load
+I (536) esp_image: segment 5: paddr=0024c72c vaddr=4081a990 size=00210h (   528) load
+I (542) boot: Loaded app from partition at offset 0x10000
+I (543) boot: Disabling RNG early entropy source...
+[INFO] stillair supervisor boot
+[INFO] MCF8316D found at I2C target 0x01
+[INFO] MCF standby mode already active
+[INFO] MCF stored configuration verified
+[WARN] MCF fault status gate 0x00000000 controller 0x80000008 -> Some(McfWatchdog)
+[INFO] Matter state persists to NVS 0x9000..0xf000
+[INFO] Loaded basic info settings from storage
+[INFO] Loaded events counter from storage
+[INFO] Device is not commissioned yet, opening commissioning window...
+[INFO] PASE Basic Commissioning Window opened
+[INFO] SetupQRCode: [MT:-24J042C00KA064IJ3P0WISA0DK5N1K8SQ1RYCU1O0]
+[INFO] PairingCode: [3497-0112-332]
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] ████ ▄▄▄▄▄ ██▀▄ ▀   ▀█▄███ ▄▄▄▄▄ ████[0m
+[INFO] ████ █   █ █ ▄▄ █▄▀ ██ ▀ █ █   █ ████[0m
+[INFO] ████ █▄▄▄█ █ ▄▀ ▄██▄▄▀▀▄▄█ █▄▄▄█ ████[0m
+[INFO] ████▄▄▄▄▄▄▄█ █▄█ █ █ █▄█ █▄▄▄▄▄▄▄████[0m
+[INFO] ████ █▄ ▄▄▄█▀█ ▀▀▀▀▀▄▀ ▀ ▀ ▄  ▄██████[0m
+[INFO] ████▀█▀▄▀▄▄▀▄█▀ ▀ ▄ ▄█▄█▄▀▀▄ ▄  ▀████[0m
+[INFO] ████ ▄▀██▄▄██▄█▄ █▄ ▀▄ ▄▀█▀▄ ▄▀ ▄████[0m
+[INFO] ████▄▄▄▀██▄█ ▄█▀ █▀█▀▀▀██  ▄ █ █ ████[0m
+[INFO] ████ ▄█ █ ▄▄▀  ▀▀▀▀▀█▄▀ ▄ ▀▀█▄ █ ████[0m
+[INFO] ████ █▄▀▀▄▄▄██▀▀▀ ▄ █▄█▀▀ ▄█ █▀▄ ████[0m
+[INFO] ████▄█▄█▄▄▄▄▀▄█▀▄█▄ █▀ █ ▄▄▄  ▄█ ████[0m
+[INFO] ████ ▄▄▄▄▄ █▀▄▄▀▄█▀ █▄ ▀ █▄█ ▀▄  ████[0m
+[INFO] ████ █   █ █ ▀█ ▀█▀▄█ ▄▀  ▄  ████████[0m
+[INFO] ████ █▄▄▄█ █▄▄█▀██▄▀█▄ ██ █▄ ▄  ▀████[0m
+[INFO] ████▄▄▄▄▄▄▄█▄▄█▄▄█▄███▄█████▄██▄█████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] █████████████████████████████████████[0m
+[INFO] Matter starting; commission via BLE (QR below)
+[INFO] Matter Stack memory: 90200b
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:164]: 21064b (U:0b/F:32000b)
+[INFO] BLE driver started
+[INFO] Running in non-concurrent commissioning mode (BLE only)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:613]: 3096b (U:21068b/F:10932b)
+[INFO] Starting advertising and GATT service
+[INFO] Random GATT address = [116, 60, 228, 131, 211, 210]
+[INFO] Running Matter transport
+[INFO] BasicInformation::StartUp emitted (sw_ver=1, event_number=70000)
+[INFO] Responder: Creating 4 handlers
+[INFO] Busy Responder: Creating 2 handlers
+@{"ok":true}
+[INFO] [host] using packet pool with MTU 251 capacity 16
+[INFO] [host] filter accept list size: 12
+[INFO] [host] setting txq to 24, fragmenting at 255
+[INFO] [host] configuring host buffers (1 packets of size 255)
+[INFO] [host] initialized
+[INFO] [host] Device Address 22:6E:F1:12:A5:B1
+[INFO] GATT: Advertising
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(McfFault)
+
+CAPTURE START 2026-09-28T01:48:31Z
+@{"type":"telemetry","t":67803,"state":"fault","fault":"mcf_fault","on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":0}
+@{"ok":true}
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+@{"ok":true,"type":"wifi","connected":false,"rssi_dbm":null,"quality":null,"weakest_rssi_dbm":null,"samples":9,"sample_failures":9,"disconnects":0,"last_ok_ms":null}
+[INFO] GATT: Connection established
+[INFO] [host] agreed att MTU of 247
+[INFO] GATT: Peer subscribed
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(48), attr: Some(12), list_index: None }, status: Status { status: UnsupportedAttribute, cluster_status: None } }
+[ERROR] Error processing attribute read: AttrStatus { path: AttrPath { tag_compression: None, node: None, endpoint: Some(0), cluster: Some(323615744), attr: Some(1), list_index: None }, status: Status { status: UnsupportedCluster, cluster_status: None } }
+[INFO] Got Arm Fail Safe Request, expiry 120s
+[INFO] Got Set Regulatory Config Request
+[INFO] Got Cert Chain Request
+[INFO] Got Cert Chain Request
+[INFO] Got Attestation Request
+[INFO] Got CSR Request
+[INFO] Got Add Trusted Root Cert Request
+[INFO] Got Add NOC Request
+[INFO] Added operational fabric with local index 1
+[ERROR] Error invoking command: InvalidAction
+[INFO] [host] disconnection event on handle 0, reason: Remote User Terminated Connection
+[INFO] GATT: Disconnect: Remote User Terminated Connection
+[INFO] GATT: Events task finished
+[INFO] GATT: Advertising
+[WARN] Fail-Safe timeout expired for fabric 1, disarming
+[INFO] Dropping PASE session with ID 1

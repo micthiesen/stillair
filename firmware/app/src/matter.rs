@@ -351,8 +351,8 @@ impl NonBlockingHandler for FanCluster {}
 /// that, and it is not worth it for a fan over one bed.
 const DEVICE: BasicInfoConfig<'static> = BasicInfoConfig {
     vendor_name: "Stillair",
-    product_name: "Stillair Ceiling Fan",
-    device_name: "Ceiling Fan",
+    product_name: "Stillair",
+    device_name: "Stillair",
     hw_ver: 1,
     hw_ver_str: "V1",
     sw_ver: 1,
@@ -458,8 +458,8 @@ pub async fn run(
 
     log::info!("Matter starting; commission via BLE (QR below)");
 
-    // `run_coex`: Wi-Fi and BLE concurrently, so commissioning does not require dropping the
-    // network. The future never completes.
+    // Apple requests ScanNetworks during commissioning. The pinned sequential path rejects
+    // that with InvalidAction, so keep Wi-Fi and BLE running concurrently.
     let result = stack
         .run_coex(
             EmbassyWifi::new(EspWifiDriver::new(wifi, bt), weak_rand, true, stack),

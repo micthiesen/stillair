@@ -1,0 +1,15 @@
+Browsing for _matter._tcp.local.
+DATE: ---Sun 27 Sep 2026---
+18:47:23.847  ...STARTING...
+Timestamp     A/R    Flags  if Domain               Service Type         Instance Name
+18:47:23.848  Add        3  19 local.               _matter._tcp.        00A24DE50CF9BB3D-000000006E04F75B
+18:47:23.848  Add        3  19 local.               _matter._tcp.        E38C120B0618E493-00000000BAAD8681
+18:47:23.848  Add        3  19 local.               _matter._tcp.        00A24DE50CF9BB3D-0000000025686B27
+18:47:23.848  Add        3  19 local.               _matter._tcp.        E38C120B0618E493-00000000005291D9
+18:47:23.848  Add        3  19 local.               _matter._tcp.        00A24DE50CF9BB3D-00000000120B3E61
+18:47:23.848  Add        3  19 local.               _matter._tcp.        E38C120B0618E493-000000002895B169
+18:47:23.848  Add        2  19 local.               _matter._tcp.        00A24DE50CF9BB3D-00000000C77DED03
+18:47:23.989  Add        3  19 local.               _matter._tcp.        00A24DE50CF9BB3D-00000000B32CCE23
+18:47:23.989  Add        2  19 local.               _matter._tcp.        E38C120B0618E493-000000005C5B2D4A
+18:55:39.818  Add        2  19 local.               _matter._tcp.        00A24DE50CF9BB3D-00000000489422F0
+18:58:33.137  Rmv        0  19 local.               _matter._tcp.        00A24DE50CF9BB3D-00000000489422F0
