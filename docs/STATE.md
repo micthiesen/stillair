@@ -8,9 +8,11 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
   communication, and persistent configuration apply/readback succeeded with the motor disconnected.
   The board holds the existing loaded image and reports `idle_off`, no fault, `config=verified`.
   See the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for exact evidence and limits.
-- **Apple Home pairing and installation are next.** The new ESP has opened BLE commissioning;
-  pairing has not yet been reported. Michael chose interim use of the saved loaded configuration
-  and no additional intermediate motor tests. Final tuning remains deferred until he is ready.
+- **Apple Home pairing failed after Wi-Fi joined.** Attestation and NOC installation succeeded,
+  but the final commissioning request did not arrive before timeout. Serial and Bonjour captures
+  are collecting a requested retry; exact cause remains unresolved. See the
+  [pairing follow-up](../testing/pcb-01-v2-bench-2026-09-27.md#apple-home-pairing-follow-up).
+  Michael chose interim use with no additional intermediate motor tests; final tuning stays deferred.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
   and proposed a USD 30 future coupon or free expedite service for one order. Michael asked for
   both current orders to be expedited; Paul declined that request. Michael now wants to reject
@@ -28,7 +30,7 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
 
 ## Next
 
-Complete Apple Home pairing of the new V2, then Michael installs it for interim use with the
+Diagnose the operational-network pairing timeout on the new V2, then Michael installs it with the
 saved loaded configuration. Follow his explicit scope: no additional intermediate motor tests;
 respond to reported problems and resume final tuning when requested. See the
 [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
