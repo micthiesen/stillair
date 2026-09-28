@@ -79,7 +79,10 @@ means the stored register image matches; it does not promote V2's open physical 
 Do not substitute `config stage`: that is the unloaded volatile image and disappears on power loss.
 
 For the working macOS build, put rustup's shims first with `export PATH="$HOME/.cargo/bin:$PATH"`
-before `cargo build --locked --release` in `firmware/app`. Homebrew Rust can shadow rustup and
+before `cargo build --locked` in `firmware/app`. This is the dev profile used by the successful V1
+bench workflow. The initial V2 release-profile image built and booted, but its pairing failed;
+the dev-profile comparison is pending and no profile-specific defect is established.
+Homebrew Rust can shadow rustup and
 report a missing RISC-V `core` even when `rustup target list --installed` includes the target.
 The bench flash succeeded with `espflash flash --port /dev/cu.usbmodem2101 --non-interactive
 --before usb-reset --after hard-reset <release-ELF>`. The ESP32-C6 does not support espflash's

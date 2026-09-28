@@ -11,8 +11,10 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
 - **Apple Home pairing failed after Wi-Fi joined.** Attestation and NOC installation succeeded,
   but the final commissioning request did not arrive before timeout. A retry instead supplied
   `SyNet` and failed with `NoAccessPointFound`; the first attempt had joined `SyNet-2G`.
-  The ESP has been reset and Michael instructed to keep the phone on `SyNet-2G` for the next try.
-  The first timeout's cause remains unresolved. See the
+  Correct-network retries also joined without completing the final handshake. Michael reports
+  V1 worked on this network. The unchanged-source dev-profile firmware now replaces the initial
+  release-profile flash to match V1's bench workflow; its pairing result is pending, with logging
+  active. The timeout's cause remains unresolved. See the
   [pairing follow-up](../testing/pcb-01-v2-bench-2026-09-27.md#apple-home-pairing-follow-up).
   Michael chose interim use with no additional intermediate motor tests; final tuning stays deferred.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
