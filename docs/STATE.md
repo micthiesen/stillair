@@ -9,8 +9,10 @@ Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved
   The board holds the existing loaded image and reports `idle_off`, no fault, `config=verified`.
   See the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for exact evidence and limits.
 - **Apple Home pairing failed after Wi-Fi joined.** Attestation and NOC installation succeeded,
-  but the final commissioning request did not arrive before timeout. Serial and Bonjour captures
-  are collecting a requested retry; exact cause remains unresolved. See the
+  but the final commissioning request did not arrive before timeout. A retry instead supplied
+  `SyNet` and failed with `NoAccessPointFound`; the first attempt had joined `SyNet-2G`.
+  The ESP has been reset and Michael instructed to keep the phone on `SyNet-2G` for the next try.
+  The first timeout's cause remains unresolved. See the
   [pairing follow-up](../testing/pcb-01-v2-bench-2026-09-27.md#apple-home-pairing-follow-up).
   Michael chose interim use with no additional intermediate motor tests; final tuning stays deferred.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
