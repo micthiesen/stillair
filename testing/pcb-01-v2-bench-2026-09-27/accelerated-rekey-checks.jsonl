@@ -1,0 +1,6 @@
+{"utc": "2026-09-28T04:26:35.044831+00:00", "sample": 1, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [128]}
+{"utc": "2026-09-28T04:27:33.331735+00:00", "sample": 2, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [128]}
+{"utc": "2026-09-28T04:28:33.308717+00:00", "sample": 3, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [128]}
+{"utc": "2026-09-28T04:29:38.149763+00:00", "sample": 4, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [-1, 128]}
+{"utc": "2026-09-28T04:30:33.324022+00:00", "sample": 5, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [128]}
+{"utc": "2026-09-28T04:31:33.337227+00:00", "sample": 6, "hardware": "PCB-01 V2", "fanMode": 0, "remote_reads": "pass", "multicast_mdns_response_bytes": 128, "multicast_probe_results": [128]}

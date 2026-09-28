@@ -1,0 +1,4 @@
+IPv6 unicast mDNS bytes sent	40
+IPv6 mDNS response bytes	128	errno	0
+IPv6 Stillair response identity	pass
+fe80::226e:f1ff:fe12:a5b0 lladdr 20:6e:f1:12:a5:b0 REACHABLE 

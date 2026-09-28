@@ -1,0 +1,160 @@
+CAPTURE START 2026-09-28T05:21:55Z
+[WARN] Got status response InvalidSubscription, aborting interaction
+[WARN] Subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 3158162417 } removed during reporting
+[WARN] Subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 3158162417 } removed during reporting
+[WARN] 
+>>RCV UDP [fe80::4ec:b668:f3ca:32cb]:63947 [SID:2,CTR:b3adfe2][A,EID:b,PROTO:0,OP:10,ACTR:a0a6c23]
+      SC::MRPStandAloneAck
+      => No valid exchange found, dropping
+@{"type":"telemetry","t":227596,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":19}
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 55 rpm measured 0 rpm fault None
+[WARN] MCF fault status gate 0x00000000 controller 0x80500000 -> Some(MotorLock)
+[INFO] state Fault cmd 0 rpm measured 14 rpm fault Some(Mcf(MotorLock))
+[INFO] state SafeBoot cmd 0 rpm measured 6 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 55 rpm measured 0 rpm fault None
+[INFO] state Fault cmd 0 rpm measured 17 rpm fault Some(McfFault)
+[WARN] MCF fault status gate 0x00000000 controller 0x80500000 -> Some(MotorLock)
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+
+CAPTURE START 2026-09-28T05:35:20Z
+I (135) esp_image: segment 1: paddr=0005314c vaddr=40800000 sizeI (457) esp_image: segment 3: paddr=001e5a6c vaddr=4080cecc size=068f0h ( 26864) load
+I (464) esp_image: segment 4: paddr=001ec364 vaddr=408137c0 size=06e34h ( 28212) load
+I (471) esp_image: segment 5: paddr=001f31a0 vaddr=4081a5f8 size=00210h (   528) load
+I (477) boot: Loaded app from partition at offset 0x10000
+I (478) boot: Disabling RNG early entropy source...
+[INFO] stillair supervisor boot
+[INFO] MCF8316D found at I2C target 0x01
+[INFO] MCF standby mode already active
+[INFO] MCF stored configuration verified
+[INFO] MCF status clean
+[INFO] Matter state persists to NVS 0x9000..0xf000
+[INFO] Loaded fabric 1 with ID a24de50cf9bb3d from storage
+[INFO] Loaded fabric 2 with ID e38c120b0618e493 from storage
+[WARN] MCF fault status gate 0x00000000 controller 0x80000008 -> Some(McfWatchdog)
+[INFO] Loaded basic info settings from storage
+[INFO] Loaded events counter from storage
+[INFO] Device is already commissioned
+[INFO] Matter starting; commission via BLE (QR below)
+[INFO] Matter Stack memory: 78200b
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:121]: 2504b (U:0b/F:20000b)
+[INFO] IPv4: DOWN
+[INFO] Wifi and BLE drivers started
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:695]: 140b (U:2504b/F:17496b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:700]: 2768b (U:2644b/F:17356b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless/wifi.rs:702]: 0b (U:5412b/F:14588b)
+[INFO] BLE driver started
+[INFO] Running in concurrent commissioning mode (BLE and Wireless)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:573]: 3096b (U:5412b/F:14588b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:578]: 1632b (U:8508b/F:11492b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/wireless.rs:589]: 3048b (U:10140b/F:9860b)
+[INFO] Starting advertising and GATT service
+[INFO] Random GATT address = [248, 66, 236, 48, 136, 216]
+[INFO] Running operational and commissioning networks
+[INFO] Running Matter transport
+[INFO] Netif down
+[INFO] BasicInformation::StartUp emitted (sw_ver=1, event_number=10000)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:689]: 96b (U:13188b/F:6812b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:750]: 60b (U:13284b/F:6716b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:754]: 44b (U:13344b/F:6656b)
+[INFO] Responder: Creating 4 handlers
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 1360b (U:13388b/F:6612b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 1360b (U:14748b/F:5252b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 1360b (U:16108b/F:3892b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 1360b (U:17468b/F:2532b)
+[INFO] Busy Responder: Creating 2 handlers
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 408b (U:18828b/F:1172b)
+[INFO] BUMP[/Users/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rs-matter-stack-0.1.0/src/lib.rs:781]: 408b (U:19236b/F:764b)
+[INFO] Wrapping over
+[INFO] Trying with first network - ID: Wifi SSID(SyNet-2G)
+[INFO] Connecting to network with ID SSID(SyNet-2G)
+[INFO] Wifi connect request for SSID SyNet-2G
+[INFO] Wifi configuration updated
+@{"ok":true}
+[INFO] [host] using packet pool with MTU 251 capacity 16
+[INFO] [host] filter accept list size: 12
+[INFO] [host] setting txq to 24, fragmenting at 255
+[INFO] [host] configuring host buffers (1 packets of size 255)
+[INFO] [host] initialized
+[INFO] [host] Device Address 22:6E:F1:12:A5:B1
+[INFO] Wifi state updated: false -> true
+[INFO] Wifi connected
+[INFO] GATT: Advertising
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: ::, ipv4: 0.0.0.0, mac: [0, 0, 0, 0, 0, 0, 0, 0], operational: false, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[INFO] Wi-Fi connected at -48 dBm (excellent)
+[INFO] Wi-Fi signal excellent: -48 dBm
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(McfFault)
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, 
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+@{"ok":true}
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+@{"ok":true,"config":"verified","detail":null,"addr":0,"written":0,"unchanged":0}
+@{"type":"telemetry","t":94112,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":3}
+[WARN] 
+>>RCV UDP [fe80::6b:a185:d85:c4ef]:53802 [SID:4,CTR:a464be0][(encoded)]
+      => No valid session found, replying with SessionNotFound
+[WARN] 
+>>RCV UDP [fe80::6b:a185:d85:c4ef]:53802 [SID:4,CTR:a464be0][(encoded)]
+      => No valid session found, replying with SessionNotFound
+[WARN] 
+>>RCV UDP [fe80::6b:a185:d85:c4ef]:53802 [SID:4,CTR:a464be0][(encoded)]
+      => No valid session found, replying with SessionNotFound
+[WARN] 
+>>RCV UDP [fe80::6b:a185:d85:c4ef]:53802 [SID:4,CTR:a464be0][(encoded)]
+      => No valid session found, replying with SessionNotFound
+[WARN] 
+>>RCV UDP [fe80::6b:a185:d85:c4ef]:53802 [SID:4,CTR:a464be0][(encoded)]
+      => No valid session found, replying with SessionNotFound
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 55 rpm measured 0 rpm fault None
+[INFO] state Fault cmd 0 rpm measured 17 rpm fault Some(HallImplausible)
+[WARN] MCF fault status gate 0x00000000 controller 0x80500000 -> Some(MotorLock)
+@{"ok":true}
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+@{"type":"telemetry","t":253816,"state":"safe_boot","fault":null,"on":false,"tgt_mrpm":170000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"rev","req_dir":"rev","min_mrpm":50000,"config":"verified","dropped":3}
+[INFO] CLR_FLT issued
+[INFO] MCF status clean
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+@{"ok":true}
+[INFO] Added subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 1845819227 }
+[INFO] Subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 1845819227 } primed
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 55 rpm measured 0 rpm fault None
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(HallImplausible)
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 53 rpm measured 0 rpm fault None
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(HallImplausible)
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+[INFO] state Starting cmd 0 rpm measured 0 rpm fault None
+[INFO] state Running cmd 55 rpm measured 0 rpm fault None
+[INFO] state Fault cmd 0 rpm measured 0 rpm fault Some(HallImplausible)
+@{"ok":true}
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+@{"ok":true,"config":"verified","detail":null,"addr":0,"written":0,"unchanged":0}
+@{"type":"telemetry","t":1820367,"state":"safe_boot","fault":null,"on":false,"tgt_mrpm":71818,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"rev","req_dir":"rev","min_mrpm":50000,"config":"verified","dropped":3}
+[INFO] CLR_FLT issued
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+@{"ok":true,"config":"verified","detail":null,"addr":0,"written":0,"unchanged":0}
+@{"type":"telemetry","t":2004491,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":71818,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"rev","req_dir":"rev","min_mrpm":50000,"config":"verified","dropped":3}

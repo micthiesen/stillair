@@ -1,0 +1,22 @@
+
+@{"type":"telemetry","t":428547,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":4}
+[INFO] Netif change detected.
+    Old: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 0.0.0.0, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+    New: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, 
+[INFO] Netif up: NetifState { ipv6: fe80::226e:f1ff:fe12:a5b0, ipv4: 10.10.1.21, mac: [32, 110, 241, 18, 165, 176, 0, 0], operational: true, netif_index: 0 }
+[INFO] Running mDNS
+[INFO] Marked in-flight subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 6946546759827512669 } for removal, reason: new subscription request
+[INFO] Added subscription SubscriptionIds { id: 2, fab_idx: 1, peer_node_id: 6946546759827512669 }
+[INFO] Subscription SubscriptionIds { id: 2, fab_idx: 1, peer_node_id: 6946546759827512669 } primed
+[INFO] In-flight subscription SubscriptionIds { id: 2, fab_idx: 1, peer_node_id: 6946546759827512669 } cancelled during reporting: new subscription request
+[ERROR] Packet SID:cc0,CTR:54fb804I|R,EID:b,PROTO:1,OP:5: Too many retransmissions. Giving up
+[ERROR] Error processing subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 6946546759827512669 }: Error::RxTimeout
+[WARN] Subscription SubscriptionIds { id: 1, fab_idx: 1, peer_node_id: 6946546759827512669 } removed during reporting
+[INFO] Added subscription SubscriptionIds { id: 3, fab_idx: 1, peer_node_id: 6946546759827512669 }
+[INFO] Subscription SubscriptionIds { id: 3, fab_idx: 1, peer_node_id: 6946546759827512669 } primed
+[INFO] Got Remove Fabric Request
+[INFO] Dropping session with ID 1 for fabric index 1 immediately
+[INFO] Dropping session with ID 3 for fabric index 1 immediately
+[INFO] Marking session with ID 5 as expired for fabric index 1
+[INFO] Removed operational fabric with local index 1
+[INFO] Removed subscription SubscriptionIds { id: 3, fab_idx: 1, peer_node_id: 6946546759827512669 }, reason: fabric removed

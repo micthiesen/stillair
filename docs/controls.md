@@ -484,6 +484,8 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   the whole binary down, control loop included, and stops a fan that was running perfectly
   well — the opposite of the network-loss row. Losing Matter must lose only Matter.
 - Test attestation credentials, so Apple Home shows "Uncertified Accessory" and adds it anyway.
+- An unpaired boot opens the pinned stack's 15-minute commissioning window. If a bench board
+  has been left powered longer before adding it, restart it to open a fresh window.
 - The Matter product name and mDNS commissioning `DN` are both `Stillair`. These are static
   device details, separate from the controller-managed persisted node label. The pinned stack's
   BLE local name is internally fixed to `BT`, so the initial Apple Home discovery tile may still
@@ -502,8 +504,8 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   sequential `stack.run()` failed immediately after AddNOC with `InvalidAction`. The pinned
   `WirelessNetCtl::Commissioning::scan()` explicitly returns that error; Apple's earlier attempts
   requested a scan at this stage. This is a strong source/log match, although command-path logging
-  was not enabled. `run_coex()` and the 20,000-byte arena were restored. The original post-join
-  timeout remains unresolved; see the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
+  was not enabled. `run_coex()` and the 20,000-byte arena were restored. The later group-delivery
+  investigation and successful Home retry are in the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 
 ### Building the Matter firmware (2026-07-27)
 
@@ -530,12 +532,23 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   vendor station MAC against the expected eFuse MAC and the PHY calibration result once.
   Other modules retain INFO logging, TRACE remains disabled, and the
   dependency feature `debug-tlv-payload` must remain absent. The normal build has no extra logging.
-- The V2 bench timeout was an AP group-delivery failure: unicast worked, but broadcast ARP and
-  multicast discovery failed on several WLAN clients. Restarting the U7 Pro restored traffic,
-  then automated Matter commissioning and normal-release persistence passed. An mDNS
-  advertisement or DHCP lease alone does not prove inbound discovery works. This build does
-  not enable smoltcp's `auto-icmp-echo-reply`, so ping silence alone is also inconclusive. Use
-  fresh ARP/NDP and directed mDNS evidence. See the [V2 bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
+- The V2 bench timeout coincided with missing inbound broadcast/multicast while unicast
+  worked. A U7 Pro restart initially recovered several affected clients, but the next Home
+  attempt reproduced the failure on Stillair while two other clients answered. Wi-Fi-only
+  scratch images reproduced it without BLE or Matter, with and without a preceding scan,
+  and with B/G-only protocols. The pinned normal driver already uses B/G/N, not AX.
+  Enabling UniFi multicast enhancement on SyNet-2G, verified as live AP driver mode 5, was
+  followed by passing automated checks and a successful Apple Home add confirmed by Michael.
+  The normal 3,600-second group-key interval was restored after the accelerated checks.
+  Home-paired discovery remained functional past the AP's one-hour interval; a subsequent
+  board-only reset restored both Home fabrics, fresh ARP/NDP, and Home control. Final bench
+  state was Off with no fault and the saved MCF configuration verified.
+  Retain this network workaround; verify application at the AP driver rather than assuming a
+  controller write has finished provisioning. The AP/C6 internal cause remains unproven.
+  An mDNS advertisement or DHCP lease alone does not prove inbound
+  discovery works. This build does not enable smoltcp's `auto-icmp-echo-reply`, so ping silence
+  alone is also inconclusive. Use fresh ARP/NDP and directed mDNS evidence. See the
+  [V2 bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for repeatability results.
 
 ### Fault reporting and bus health (2026-07-27)
 

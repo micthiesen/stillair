@@ -1,0 +1,12 @@
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on br0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+6 packets captured
+6 packets received by filter
+0 packets dropped by kernel
+2026-09-27 22:19:51.865655 20:6e:f1:12:a5:b0 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 396: 10.10.1.21.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/4 PTR 00A24DE50CF9BB3D-00000000067F1A06._matter._tcp.local. (354)
+2026-09-27 22:19:51.866058 20:6e:f1:12:a5:b0 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 396: 10.10.1.21.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/4 PTR E38C120B0618E493-000000006C6EDDC1._matter._tcp.local. (354)
+2026-09-27 22:20:13.728357 20:6e:f1:12:a5:b0 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 564: 10.10.1.21.5353 > 224.0.0.251.5353: 0*- [0q] 7/0/0 (Cache flush) A 10.10.1.21, (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, PTR 00A24DE50CF9BB3D-00000000067F1A06._matter._tcp.local., PTR _matter._tcp.local., PTR 00A24DE50CF9BB3D-00000000067F1A06._matter._tcp.local., (Cache flush) TXT "DUMMY=DUMMY" (522)
+2026-09-27 22:20:13.803798 20:6e:f1:12:a5:b0 > 33:33:00:00:00:fb, ethertype IPv6 (0x86dd), length 584: fe80::226e:f1ff:fe12:a5b0.5353 > ff02::fb.5353: 0*- [0q] 7/0/0 (Cache flush) A 10.10.1.21, (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, PTR 00A24DE50CF9BB3D-00000000067F1A06._matter._tcp.local., PTR _matter._tcp.local., PTR 00A24DE50CF9BB3D-00000000067F1A06._matter._tcp.local., (Cache flush) TXT "DUMMY=DUMMY" (522)
+2026-09-27 22:20:13.841551 20:6e:f1:12:a5:b0 > 01:00:5e:00:00:fb, ethertype IPv4 (0x0800), length 564: 10.10.1.21.5353 > 224.0.0.251.5353: 0*- [0q] 7/0/0 (Cache flush) A 10.10.1.21, (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, PTR E38C120B0618E493-000000006C6EDDC1._matter._tcp.local., PTR _matter._tcp.local., PTR E38C120B0618E493-000000006C6EDDC1._matter._tcp.local., (Cache flush) TXT "DUMMY=DUMMY" (522)
+2026-09-27 22:20:13.890559 20:6e:f1:12:a5:b0 > 33:33:00:00:00:fb, ethertype IPv6 (0x86dd), length 584: fe80::226e:f1ff:fe12:a5b0.5353 > ff02::fb.5353: 0*- [0q] 7/0/0 (Cache flush) A 10.10.1.21, (Cache flush) AAAA fe80::226e:f1ff:fe12:a5b0, (Cache flush) SRV 206EF112A5B00000.local.:5540 0 0, PTR E38C120B0618E493-000000006C6EDDC1._matter._tcp.local., PTR _matter._tcp.local., PTR E38C120B0618E493-000000006C6EDDC1._matter._tcp.local., (Cache flush) TXT "DUMMY=DUMMY" (522)
+

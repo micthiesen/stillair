@@ -1,0 +1,14 @@
+{"utc": "2026-09-28T05:22:14.405343+00:00", "sample": 1, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:23:14.383357+00:00", "sample": 2, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:24:14.399902+00:00", "sample": 3, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:25:14.309128+00:00", "sample": 4, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:26:14.431908+00:00", "sample": 5, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:27:14.547599+00:00", "sample": 6, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:28:14.483711+00:00", "sample": 7, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:29:14.452884+00:00", "sample": 8, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:30:14.452394+00:00", "sample": 9, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:31:14.356515+00:00", "sample": 10, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:32:14.384908+00:00", "sample": 11, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:33:14.495572+00:00", "sample": 12, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:34:18.993793+00:00", "sample": 13, "multicast_probe_results": [-1, 128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}
+{"utc": "2026-09-28T05:35:14.504773+00:00", "sample": 14, "multicast_probe_results": [128], "multicast_response_identity": "pass", "scope": "network discovery with Apple Home fabrics retained"}

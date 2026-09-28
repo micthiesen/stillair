@@ -1,0 +1,12 @@
+{"utc": "2026-09-28T04:31:38.709681+00:00", "ssid": "SyNet-2G", "group_rekey_before": 60, "group_rekey_after": 3600, "mcastenhance_enabled": true}
+
+Mon Sep 28 04:32:09 UTC 2026
+OK
+OK
+state=ENABLED
+wpa_group_rekey=3600
+wifi0ap0	g_mcastenhance:5
+
+wpa_group_rekey=3600
+wifi0ap0	g_mcastenhance:5
+10.10.1.21 lladdr 20:6e:f1:12:a5:b0 STALE 

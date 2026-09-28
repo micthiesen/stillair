@@ -1,0 +1,17 @@
+Mon Sep 28 05:35:37 UTC 2026
+ARPING 10.10.1.21 from 10.10.1.95 br0
+Unicast reply from 10.10.1.21 [20:6e:f1:12:a5:b0] 44.042ms
+Unicast reply from 10.10.1.21 [20:6e:f1:12:a5:b0] 69.533ms
+Unicast reply from 10.10.1.21 [20:6e:f1:12:a5:b0] 97.575ms
+Sent 3 probe(s) (0 broadcast(s))
+Received 3 response(s) (0 request(s), 0 broadcast(s))
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on br0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+2026-09-27 22:35:38.289530 8c:30:66:6c:79:bc > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 10.10.1.21 (ff:ff:ff:ff:ff:ff) tell 10.10.1.95, length 28
+2026-09-27 22:35:38.359157 20:6e:f1:12:a5:b0 > 8c:30:66:6c:79:bc, ethertype ARP (0x0806), length 42: Reply 10.10.1.21 is-at 20:6e:f1:12:a5:b0, length 28
+2026-09-27 22:35:39.289772 8c:30:66:6c:79:bc > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 10.10.1.21 (ff:ff:ff:ff:ff:ff) tell 10.10.1.95, length 28
+2026-09-27 22:35:39.387246 20:6e:f1:12:a5:b0 > 8c:30:66:6c:79:bc, ethertype ARP (0x0806), length 42: Reply 10.10.1.21 is-at 20:6e:f1:12:a5:b0, length 28
+
+4 packets captured
+4 packets received by filter
+0 packets dropped by kernel
