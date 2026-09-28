@@ -1,0 +1,44 @@
+# t=0.000s fault clear
+{"ok":true}
+# t=0.055s wait idle_off --for 20
+[INFO] state SafeBoot cmd 0 rpm measured 0 rpm fault None
+[INFO] CLR_FLT issued
+[INFO] state IdleOff cmd 0 rpm measured 0 rpm fault None
+{"type":"telemetry","t":68316,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":19}
+# t=10.159s config check
+{"ok":true,"config":"verified","detail":null,"addr":0,"written":0,"unchanged":0}
+# t=10.338s reg read VM_VOLTAGE
+{"ok":true,"addr":1148,"name":"VM_VOLTAGE","value":44171263}
+# t=10.447s reg read GATE_DRIVER_FAULT_STATUS
+{"ok":true,"addr":224,"name":"GATE_DRIVER_FAULT_STATUS","value":0}
+# t=10.552s reg read CONTROLLER_FAULT_STATUS
+{"ok":true,"addr":226,"name":"CONTROLLER_FAULT_STATUS","value":0}
+# t=10.663s state
+{"type":"telemetry","t":68935,"state":"idle_off","fault":null,"on":false,"tgt_mrpm":50000,"cmd_mrpm":0,"fg_mrpm":0,"hall_mrpm":0,"duty":0,"dir":"fwd","req_dir":"fwd","min_mrpm":50000,"config":"verified","dropped":19}
+# t=10.724s config capture
+pub const IMAGE: &[Setting] = &[
+    Setting::whole("ISD_CONFIG", 0x080, 0x64f34ca0),
+    Setting::whole("REV_DRIVE_CONFIG", 0x082, 0xa8200000),
+    Setting::whole("MOTOR_STARTUP1", 0x084, 0xa2e60000),
+    Setting::whole("MOTOR_STARTUP2", 0x086, 0x110128ab),
+    Setting::whole("CLOSED_LOOP1", 0x088, 0x3e01810c),
+    Setting::whole("CLOSED_LOOP2", 0x08a, 0x8000b1ae),
+    Setting::whole("CLOSED_LOOP3", 0x08c, 0xe0000004),
+    Setting::whole("CLOSED_LOOP4", 0x08e, 0xd0c20168),
+    Setting::whole("FAULT_CONFIG1", 0x090, 0x0aa84000),
+    Setting::whole("FAULT_CONFIG2", 0x092, 0xb1c047c0),
+    Setting::whole("REF_PROFILES1", 0x094, 0x00000000),
+    Setting::whole("REF_PROFILES2", 0x096, 0x00000000),
+    Setting::whole("REF_PROFILES3", 0x098, 0x80000002),
+    Setting::whole("REF_PROFILES4", 0x09a, 0x80068000),
+    Setting::whole("REF_PROFILES5", 0x09c, 0x80000010),
+    Setting::whole("REF_PROFILES6", 0x09e, 0x00000000),
+    Setting::whole("INT_ALGO_1", 0x0a0, 0x800e0000),
+    Setting::whole("INT_ALGO_2", 0x0a2, 0x00000000),
+    Setting::whole("PIN_CONFIG", 0x0a4, 0x80200041),
+    Setting::whole("DEVICE_CONFIG1", 0x0a6, 0x00100001),
+    Setting::whole("DEVICE_CONFIG2", 0x0a8, 0x8000001f),
+    Setting::whole("PERI_CONFIG1", 0x0aa, 0x00220000),
+    Setting::whole("GD_CONFIG1", 0x0ac, 0x80010003),
+    Setting::whole("GD_CONFIG2", 0x0ae, 0x00840000),
+];

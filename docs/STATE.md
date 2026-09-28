@@ -1,15 +1,16 @@
 # State
 
-Last updated: **2026-09-15** (V1 credit refused; offer-rejection reply drafted).
+Last updated: **2026-09-27** (V2 assembled, bench-flashed, loaded settings saved).
 
 ## Now
 
-- **PCB-01 V2 is in production, confirmed by Paul in the 2026-09-15 thread.** Five boards and two top-side
-  Standard PCBAs are on JLCPCB W2026083117295494; hand parts are on DigiKey 101316601.
-  The prior assembly DFM passed review, and the factory's POFV confirmation is retained.
-  See [ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md),
-  [placement review](../pcb/pcb-01-v2/fab/placement-review/README.md), and
-  [production review](../pcb/pcb-01-v2/fab/production-review/README.md).
+- **One PCB-01 V2 is assembled and bench-flashed.** Native USB, the runtime console, MCF
+  communication, and persistent configuration apply/readback succeeded with the motor disconnected.
+  The board holds the existing loaded image and reports `idle_off`, no fault, `config=verified`.
+  See the [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for exact evidence and limits.
+- **Apple Home pairing and installation are next.** The new ESP has opened BLE commissioning;
+  pairing has not yet been reported. Michael chose interim use of the saved loaded configuration
+  and no additional intermediate motor tests. Final tuning remains deferred until he is ready.
 - **V1's USB complaint remains unresolved.** JLCPCB refused credit against an existing order
   and proposed a USD 30 future coupon or free expedite service for one order. Michael asked for
   both current orders to be expedited; Paul declined that request. Michael now wants to reject
@@ -24,18 +25,15 @@ Last updated: **2026-09-15** (V1 credit refused; offer-rejection reply drafted).
 - **New boards use the validated tscircuit-to-KiCad workflow.** Existing released boards remain
   KiCad-authoritative. The PCB-03 fixture is an initial handoff with declared downstream cleanup
   and routing work, not a fabrication-ready replacement. See [pcb-workflow.md](pcb-workflow.md).
-- **V2 commissioning awaits delivery and hand population.** Native USB, ROM download, flash,
-  reboot, runtime CLI, and commissioning checks precede installation and loaded tuning; see
-  [controls.md](controls.md#commissioning-interface-and-build-policy).
 
 ## Next
 
-Await V2 delivery, then perform hand population and first-article qualification under
-[ORDERING.md](../pcb/pcb-01-v2/fab/ORDERING.md). This carries forward the existing delivery and
-commissioning plan now that production is confirmed.
+Complete Apple Home pairing of the new V2, then Michael installs it for interim use with the
+saved loaded configuration. Follow his explicit scope: no additional intermediate motor tests;
+respond to reported problems and resume final tuning when requested. See the
+[bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
 
-Factory process and placement evidence is retained. Hardware qualification requires delivered
-boards. The V1 offer-rejection reply is drafted separately; await Michael's send confirmation
+The V1 offer-rejection reply is drafted separately; await Michael's send confirmation
 or a further JLCPCB response before recording a change in the complaint's status.
 
 ## Candidates Not Chosen
@@ -44,11 +42,15 @@ or a further JLCPCB response before recording a change in the complaint's status
   revisit only if the relevant geometry, copper, or stack changes.
 - **Repeat the POFV request:** Chian explicitly confirmed all three requested process details.
 - **Return V1 for repair:** V1 is superseded and Michael does not want to return it.
-- **Begin V2 commissioning or resume loaded tuning now:** delivery, hand population, and a
-  communicating qualified V2 controller are prerequisites.
+- **Additional intermediate motor testing or final tuning now:** deferred by Michael; the selected
+  scope is bench flash/configuration followed by installation for interim use.
 
 ## Learned Recently
 
+- V2 bench evidence, persistent image, and untested scope:
+  [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
+- V2 map selection: [probing.md](probing.md). Rustup PATH and native USB reset behavior:
+  [controls.md](controls.md#commissioning-interface-and-build-policy).
 - V1 complaint evidence and supplier offers: [bom/README.md](../bom/README.md).
 - Credit refusal, one-order expedite limit, additional order reference, and rejection draft:
   [correspondence](jlcpcb-v1-credit-request.md).

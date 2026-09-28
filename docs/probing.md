@@ -2,8 +2,17 @@
 
 This is the canonical human workflow for locating and probing PCB-01. It supplements
 [`observability.md`](observability.md), which defines measurement authority and scope safety.
-The machine-readable location and pin data lives in
-[`pcb/pcb-01/probe-map.json`](../pcb/pcb-01/probe-map.json). Print an exact hookup with:
+Select the map for the actual board. **The default map and the physical-location tables below
+describe V1, not V2.** V2 changes connector orientation and test-point assignments and has no J8.
+Its retained map is [`pcb/pcb-01-v2/probe-map.json`](../pcb/pcb-01-v2/probe-map.json):
+
+```bash
+pcb/tools/probe_guide.py --map pcb/pcb-01-v2/probe-map.json J1
+pcb/tools/probe_guide.py --map pcb/pcb-01-v2/probe-map.json TP5
+pcb/tools/probe_guide.py --map pcb/pcb-01-v2/probe-map.json --verify-board
+```
+
+For V1, use [`pcb/pcb-01/probe-map.json`](../pcb/pcb-01/probe-map.json):
 
 ```bash
 pcb/tools/probe_guide.py map

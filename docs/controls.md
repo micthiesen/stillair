@@ -70,6 +70,21 @@ RTS/DTR, UART0, or a signal harness. Physical qualification must prove both norm
 enumeration and ROM-loader enumeration with two known-good data cables before autonomous hardware
 use.
 
+The first assembled V2 was bench-flashed on 2026-09-27 with the normal release firmware and the
+existing loaded `IMAGE`, saved through `config apply` for interim installed use. Michael explicitly
+chose bench communication/configuration checks followed by installation, with no additional
+intermediate motor tests; final tuning remains later work. The [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md)
+records the measured input, flash, EEPROM readback, and precise untested scope. `config=verified`
+means the stored register image matches; it does not promote V2's open physical qualification rows.
+Do not substitute `config stage`: that is the unloaded volatile image and disappears on power loss.
+
+For the working macOS build, put rustup's shims first with `export PATH="$HOME/.cargo/bin:$PATH"`
+before `cargo build --locked --release` in `firmware/app`. Homebrew Rust can shadow rustup and
+report a missing RISC-V `core` even when `rustup target list --installed` includes the target.
+The bench flash succeeded with `espflash flash --port /dev/cu.usbmodem2101 --non-interactive
+--before usb-reset --after hard-reset <release-ELF>`. The ESP32-C6 does not support espflash's
+`--after watchdog-reset`; that option can fail after the flash write has already completed.
+
 `stillair --port <device> wifi` reports the associated radio's current RSSI, a plain-language
 quality band, the weakest RSSI sampled since boot, sampling failures, observed disconnect
 transitions, and the last successful sample time. The application samples every 10 seconds on
