@@ -1,9 +1,10 @@
 # Installation
 
-> **Final integration resumed by explicit owner request on 2026-08-20.** MP-100 installation,
-> tether proof, and catcher proof remain accepted complete and must not be reopened. The active
-> work is mounting the remaining fan assembly and electronics from below, including permanent
-> 24 V, Hall, motor, and service-USB routing for ceiling-mounted loaded commissioning.
+> **Current owner status, 2026-09-30 America/Vancouver:** final tuning remains, followed by
+> the aesthetic housing with integrated Hall sensor holder and sound dampening cover.
+> The Hall harness is built and done. Source: Michael's procurement reconciliation
+> conversation. Earlier installation and test evidence below is preserved; no new tests
+> are claimed. MP-100 installation, tether proof, and catcher proof remain accepted complete.
 
 Site: 11-storey concrete condo, ceiling slab possibly post-tensioned (treat as PT until
 proven otherwise); existing bolts of unknown type in the slab. Anchor engineering basis:
@@ -42,7 +43,7 @@ installed state and proceed through the loaded commissioning sequence in `integr
 Loaded MPET and tuning follow this installation as a separate commissioning step. The installed
 ceiling position is the selected loaded-test location because it provides the final mechanical
 support, rotor load, cable lengths, ceiling interaction, and room acoustics. The USB oscilloscope
-is optional additional evidence if it arrives in time; its safe hookups are in
+is optional additional evidence if available; its safe hookups are in
 [`observability.md`](observability.md).
 
 **Historical tether note:** the original MP-100 clearance at X0, Y-82 was only

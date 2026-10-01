@@ -4,7 +4,16 @@ Order, assemble, prove, install. A gated sequence built around an instrumented c
 board. No TI evaluation module is required. Final loaded work happens on the installed plate,
 beginning at the lowest useful speed with continuous observation and a reachable cutoff.
 
-## Build sequence (five gated phases)
+## Current remaining work (owner confirmation, 2026-09-30)
+
+Michael's latest status in the procurement reconciliation conversation (America/Vancouver)
+is final tuning, followed by the aesthetic housing including the integrated Hall sensor
+holder and sound dampening cover. The Hall harness is built and done. This supersedes
+interim V2 installation as the primary pending step; it does not claim new commissioning
+or change the historical [September 27 bench evidence](../testing/pcb-01-v2-bench-2026-09-27.md).
+Retain the qualification criteria below and the [housing requirements](housing.md).
+
+## Build sequence (five gated phases, historical plan)
 
 1. **Build and bring up PCB V1** — buy the GL100 and order the roomy 78 × 58 mm V1 board.
    Verify rails and DRVOFF first, then measure the motor and tune sensorless startup through
@@ -17,9 +26,9 @@ beginning at the lowest useful speed with continuous observation and a reachable
    roots, and prepare four matched blades.
 4. **Assemble and inspect unpowered** — install the final mechanics, verify retention and hand
    clearance, and check balance and runout before applying motor power.
-5. **Ceiling integration and commissioning** — Michael has explicitly resumed project
-   assistance for mounting the remaining assembly and routing 24 V, motor, Hall, and long-USB
-   service connections on the installed plate. Loaded MPET, tuning, representative starts,
+5. **Ceiling integration and commissioning** — the earlier plan covered mounting and routing
+   24 V, motor, Hall, and long-USB service connections on the installed plate. Current remaining
+   work follows the owner status above. Loaded MPET, tuning, representative starts,
    normal-range speed and shutdown checks, and thermal verification then run in that final
    support/load/acoustic environment.
 

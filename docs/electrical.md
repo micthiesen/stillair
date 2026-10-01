@@ -405,6 +405,10 @@ capture: the side-entry JST courtyard plus two M2 holes don't fit in 18 mm; KiCa
   main board.
 - J1 **S3B-PH-K-S** (JST-PH side entry, settled 2026-07-30): 1 = 3V3, 2 = HALL_TACH,
   3 = AGND — mirrors J3 on PCB-01. Cable exits in the board plane away from the hub.
+- Owner confirmation (Michael, procurement reconciliation conversation, 2026-09-30
+  America/Vancouver): the PCB-01 J3 to PCB-02 J1 Hall sensor harness is built and done.
+  This completion report adds no new electrical test or commissioning evidence and is
+  separate from CrystalShim's external sensor cable.
 - Verified harness colors (2026-08-19): with PCB-01 viewed component-side and C1/C2 at the
   upper left, J3 is red/blue/green from left to right (3V3/HALL_TACH/AGND). With PCB-02
   viewed component-side and J1 at the top, the same straight-through harness appears

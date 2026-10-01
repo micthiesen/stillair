@@ -1,10 +1,14 @@
 # State
 
-Last updated: **2026-09-27** (V2 Home pairing and final bench validation complete).
+Last updated: **2026-09-30** (owner project status and procurement reconciliation, America/Vancouver).
 
 ## Now
 
-- **PCB-01 V2 is ready to connect for interim use.** The normal provisional firmware and saved
+- **Final tuning remains, then the aesthetic housing.** Michael's September 30 owner status
+  supersedes interim installation as the primary pending step. Housing includes the integrated
+  Hall sensor holder and sound dampening cover; the Hall harness is built and done. See
+  [build.md](build.md), [housing.md](housing.md), and [harness context](electrical.md).
+- **Retained V2 bench evidence:** the normal provisional firmware and saved
   loaded MCF image are installed and verified. Final bench state is Off, no fault, zero drive
   output. Native USB, flashing, console access, and EEPROM apply/readback passed with the motor
   disconnected. Scope, exact image hash, and evidence are in the
@@ -23,22 +27,23 @@ Last updated: **2026-09-27** (V2 Home pairing and final bench validation complet
   The [reply history and rejection draft](jlcpcb-v1-credit-request.md) are retained. The rejection
   is unsent; no coupon or expedite service is confirmed. Complaint evidence is in
   [bom/README.md](../bom/README.md).
-- **PCB-03 boards and stencil have shipped; parts and display remain pending.** Shipping and the
-  accepted paste-layer addition are in [PCB-03 ORDERING.md](../pcb/pcb-03/fab/ORDERING.md).
-  DigiKey 101388939 includes the backordered SC18IS606PWJ; AliExpress display order is
-  8213753300045333. Retain the first-article gates in [pcb-03.md](pcb-03.md).
+- **Reviewed orders are received except Mouser 40452969 and DigiKey 101388939.**
+  V2 boards/loose parts and PCB-03 boards/stencil/display are owner-confirmed received.
+  Optional e-ink is dropped; retain its design and received hardware. Entire DigiKey order
+  cancellation and removal of all six Mouser spacers were requested by sent emails, with
+  vendor confirmation pending. See [procurement reconciliation](../bom/README.md#owner-reconciliation-2026-09-30)
+  and [PCB-03 decision](pcb-03.md#owner-decision-and-procurement-2026-09-30).
 - **New boards use the validated tscircuit-to-KiCad workflow.** Existing released boards remain
   KiCad-authoritative. The PCB-03 fixture is an initial handoff with declared downstream cleanup
   and routing work, not a fabrication-ready replacement. See [pcb-workflow.md](pcb-workflow.md).
 
 ## Next
 
-Michael will connect/install V2 using the saved provisional configuration and existing Home
-pairing. Bench flashing and the requested final checks are complete; installation is the
-remaining part of his selected plan. Keep UniFi multicast enhancement enabled. Follow his
-explicit scope: no additional intermediate motor tests; final loaded tuning remains deferred
-until requested or a problem is reported. See the
-[bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md).
+Final tuning, followed by the aesthetic housing with integrated Hall sensor holder and
+sound dampening cover, is Michael's remaining-work sequence as of September 30. See
+[build.md](build.md) and [housing.md](housing.md). The existing bench qualification limits
+and historical evidence remain; no new test or commissioning result was recorded here.
+Keep UniFi multicast enhancement enabled.
 
 The V1 offer-rejection reply is drafted separately; await Michael's send confirmation
 or a further JLCPCB response before recording a change in the complaint's status.
@@ -49,10 +54,14 @@ or a further JLCPCB response before recording a change in the complaint's status
   revisit only if the relevant geometry, copper, or stack changes.
 - **Repeat the POFV request:** Chian explicitly confirmed all three requested process details.
 - **Return V1 for repair:** V1 is superseded and Michael does not want to return it.
-- **Additional intermediate motor testing or final tuning now:** deferred by Michael; the selected
-  scope is bench flash/configuration followed by installation for interim use.
+- **Repeat interim installation as the primary next step:** superseded by the September 30
+  remaining-work status.
+- **Optional e-ink addition or further display purchases:** dropped by Michael; design and
+  received boards/display retained, DigiKey cancellation awaiting vendor confirmation.
 
 ## Learned Recently
+
+- September 30 owner project/receipt confirmations and sent vendor requests: [procurement](../bom/README.md#owner-reconciliation-2026-09-30).
 
 - V2 group-traffic workaround, Home pairing/control, restart persistence, final stopped state,
   and qualification limits: [bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) and

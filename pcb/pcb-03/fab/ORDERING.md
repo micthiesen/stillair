@@ -4,7 +4,13 @@ Live order: `W2026090305011104`, five bare boards plus a top-side stencil, $17 s
 2026-09-02. JLCPCB support confirmed they would add the supplied top-side paste layer.
 
 On 2026-09-07, the authenticated order page showed this board/stencil order as **Shipped** by
-Global Standard Direct Line. Delivery and first-article testing remain pending.
+Global Standard Direct Line. Michael confirmed receipt of the boards and stencil in the
+procurement reconciliation conversation on **2026-09-30, America/Vancouver**, superseding
+that shipping status. He dropped the optional e-ink addition; retain the boards, stencil,
+display and design. The first-article gates below are deferred, with no new testing claimed.
+DigiKey 101388939 entire-order cancellation was requested by email sent to orders@digikey.com
+at 2026-10-01 01:41 UTC (September 30, 18:41 Vancouver), not vendor-confirmed. No J1/PHR-4
+purchase or SC18IS substitution is authorized. See [owner decision](../../../docs/pcb-03.md#owner-decision-and-procurement-2026-09-30).
 
 Regenerate immediately before upload:
 

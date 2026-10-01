@@ -7,7 +7,16 @@ For bench work, print `output/pdf/stillair-integration-field-guides.pdf`. It con
 the active electronics, mechanical integration, firmware, balance, proof-speed, start, and
 thermal sheets. A HOLD badge means an active prerequisite is unresolved.
 
-## Active dependency spine
+## Current remaining work
+
+Michael's procurement reconciliation conversation on 2026-09-30 (America/Vancouver)
+sets the remaining sequence: final tuning, then aesthetic housing including the integrated
+Hall sensor holder and sound dampening cover. The Hall harness is built and done. This
+supersedes interim installation as the primary next step and records no new commissioning.
+See [housing.md](housing.md), [build.md](build.md), and the retained
+[September 27 V2 bench evidence](../testing/pcb-01-v2-bench-2026-09-27.md).
+
+## Dependency spine (historical plan)
 
 1. **Complete PCB-01 and PCB-02**: hand-populate the omitted parts and make the power,
    motor, Hall, and programming cables.
@@ -27,8 +36,8 @@ thermal sheets. A HOLD badge means an active prerequisite is unresolved.
    and increase only after each step is smooth. The real 200 RPM analog-trip run remains
    restrained bare-motor work, never an overhead loaded test.
 
-Electronics is the immediate dependency. Mechanical dry-fit and firmware preparation can
-proceed in parallel, but powered motor work waits for the no-motor board checks.
+The historical sequence above retains its qualification requirements; current work follows
+the owner status and recorded evidence, without reopening completed steps.
 
 ## Final test locations and control path
 
@@ -81,19 +90,17 @@ disconnect, not a rotor brake.
 
 ## Current checkpoint
 
-> Install the finished motor, rotor, Hall board, and controller onto the existing ceiling plate;
-> establish permanent harness strain relief and a serviceable long-USB path; then perform the
-> unpowered clearance and continuity checks in [`install.md`](install.md).
+> Final tuning, followed by the aesthetic housing, integrated Hall sensor holder and sound
+> dampening cover, per Michael's September 30 status above.
 
 The ceiling plate, primary anchors, spacers, spindle, standoffs, tether proof, and central
-catcher proof remain accepted complete by owner report and are not reopened. Michael explicitly
-resumed project assistance for the remaining physical integration on 2026-08-20. He performs the
-physical steps while the agent guides one step at a time. Loaded MPET and tuning are the following
-checkpoint, on the installed ceiling assembly rather than an improvised loaded bench rig.
+catcher proof remain accepted complete by owner report and are not reopened. The August 20
+installation reports in [`install.md`](install.md) and September 27 V2 bench evidence remain
+historical records. The September 30 update adds no physical test results.
 
 ## Future only on explicit request
 
 Do not suggest, schedule, or use these as blockers unless Michael explicitly asks to resume
-one: ENC-100 cosmetic housing, V1 TEMP_SENSE firmware, intentional-imbalance testing,
+one: V1 TEMP_SENSE firmware, intentional-imbalance testing,
 exhaustive start matrices, exhaustive acoustic testing, network/Matter resilience testing,
 exhaustive fault permutations, tether rework, catcher rework, or PCB-bracket CAD.

@@ -4,6 +4,14 @@ Functional specification for the final cosmetic housing. Michael owns its aesthe
 surface language, proportions, seams, colors, and detailed CAD. This document fixes only the
 interfaces needed for acoustics, cooling, sensing, service, retention, and moving clearances.
 
+## Owner status, 2026-09-30
+
+Michael confirmed in the procurement reconciliation conversation (America/Vancouver) that
+final tuning remains, then the aesthetic housing including the integrated Hall sensor holder
+and sound dampening cover. He considers the sound dampening covering part of the housing.
+The Hall harness itself is built and done; the integrated holder remains housing work.
+This status records no new acoustic, thermal, or commissioning tests.
+
 ## Architecture
 
 The housing is two mechanically separate assemblies with no contact across their running gap:

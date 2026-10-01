@@ -46,6 +46,47 @@ Notes:
   commodity stock the owner already keeps on hand. Only project-specific or
   uncommon-spec hardware gets a BOM line.
 
+## Owner reconciliation, 2026-09-30
+
+Source: Michael's confirmations and latest project status in the procurement
+reconciliation conversation on **2026-09-30, America/Vancouver**. Owner receipt
+confirmation overrides older supplier shipping/delivery notices; it does not establish
+new inspection, tuning, or commissioning results.
+
+- Reviewed orders are received except **Mouser 40452969** and **DigiKey 101388939**.
+  Received: DigiKey **101316601** (V2 loose parts), JLCPCB **W2026083117295494**
+  (V2), JLCPCB **W2026090305011104** (PCB-03 boards/stencil), and AliExpress
+  **8213753300045333** (Waveshare display). Reviewed recent AliExpress ESP boards
+  and cables are also received; no unobserved counts, models, or cable specifications
+  are inferred. Existing display and boards are retained.
+- CrystalShim's DigiKey **101602605** (72 order lines) and JLCPCB
+  **W2026091502305469** boards/stencils are received. Their allocations live in
+  [CrystalShim's records](../../crystal-shim/bom/README.md), not this fan BOM.
+- **Mouser 40452969 / sales 282002229** is not received: 17 pieces total,
+  including six **M0599-4-N** spacers holding 11 in-stock electronics. Michael
+  requested removal of all six spacers, not split shipment. The approved email
+  was sent to canadasales@mouser.com at **2026-10-01 01:41 UTC**
+  (**2026-09-30 18:41 Vancouver**). Vendor confirmation is pending; spacer removal
+  is requested, not completed, and the remaining order awaits release.
+- **DigiKey 101388939**, seven order lines, is not received. Michael dropped the
+  optional e-ink addition and requested cancellation of the entire order. The
+  approved email was sent to orders@digikey.com at **2026-10-01 01:41 UTC**
+  (**2026-09-30 18:41 Vancouver**). Cancellation is requested, not vendor-confirmed.
+  Do not buy the remaining J1 **S4B-PH-K-S** or **PHR-4**, or substitute an SC18IS
+  chip. Retain the design and received display/boards; see [PCB-03](../docs/pcb-03.md).
+- Historical DigiKey **100668200 / 100888768** remain received, with their original
+  receipt dates below; **100616913 / 100723632** remain cancelled.
+- The Stillair **PCB-01 J3 to PCB-02 J1 Hall harness is built and done**, by owner
+  confirmation. Its retained wiring context is in [electrical.md](../docs/electrical.md).
+  This is separate from CrystalShim's external sensor cable, and adds no test claim.
+- Remaining fan work is **final tuning, then the aesthetic housing**, including the
+  integrated Hall sensor holder and sound dampening cover. Interim installation is
+  superseded as the primary next step. See [build.md](../docs/build.md) and
+  [housing.md](../docs/housing.md); historical bench evidence remains unchanged.
+
+BOM `Qty` is the design/allocation quantity. Purchase quantities stay in purchase-status
+notes; receipt confirmation does not establish the current unconsumed loose-bin count.
+
 ## 2026-08-09 DigiKey consolidated order
 
 DigiKey orders **100616913** and **100723632** were cancelled. Their cancellation invoices

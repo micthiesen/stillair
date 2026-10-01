@@ -88,7 +88,12 @@ shasum -a 256 -c fab/release-manifest.sha256
   assembly to JLCPCB; no assembly approval has been submitted by the agent or reported by Michael.
 - On 2026-09-14, Michael reported that V2 is in production. This supersedes the earlier
   awaiting-assembly-approval status; this update is an owner report, without a new live order-page
-  check. Await delivery, then perform hand population and first-article qualification below.
+  check. Historical hand-population and first-article requirements are retained below.
+- On 2026-09-30 (America/Vancouver), Michael confirmed receipt of this order and DigiKey
+  **101316601** in the procurement reconciliation conversation. The September 27
+  [bench receipt](../../../testing/pcb-01-v2-bench-2026-09-27.md) records completed bench
+  work and its qualification limits; receipt adds no new tests. Current remaining work is
+  final tuning, then housing including the integrated Hall holder and sound dampening cover.
 
 ## Recommended order
 
@@ -190,8 +195,7 @@ JLCPCB must leave only these six references unpopulated:
 
 The repository records the original V1 purchases, not the current loose-bin count. Both V1 PCBAs
 could have consumed all four capacitors, both J1 headers, both J2 headers, two J3 headers supplied
-through assembly, and two of the three LM2907 devices. Before submitting two V2 PCBAs, physically
-confirm this complete board-only stock set:
+through assembly, and two of the three LM2907 devices. The historical pre-order board-only stock requirement was:
 
 - 4 x Panasonic `EEU-FR1H471`
 - 2 x Molex `43045-0200`
@@ -199,13 +203,13 @@ confirm this complete board-only stock set:
 - 2 x JST `B3B-PH-K-S(LF)(SN)`
 - 2 x TI `LM2907M/NOPB`
 
-If the V1 builds consumed their planned parts, expect to buy all four capacitors and all six
-connectors, plus one LM2907 if the recorded single loose spare is still present. Physical count is
-the authority.
+This historical loose-bin uncertainty was resolved for V2 procurement by the complete order
+below; it is not a current purchase action. Physical count remains the authority for unused stock.
 
 The complete no-stock-assumption set was ordered from DigiKey on 2026-08-31 as **101316601**:
 4 x `EEU-FR1H471`, and 2 x each `43045-0200`, `43650-0300`, `B3B-PH-K-S(LF)(SN)`, and
-`LM2907M/NOPB`. Receipt of that order supersedes the loose-bin count as the board-completion gate.
+`LM2907M/NOPB`. Michael confirmed receipt on 2026-09-30 (America/Vancouver); that receipt
+supersedes the loose-bin count as the procurement gate, without claiming unused stock or new tests.
 
 Install U8 before the tall through-hole parts. Align its pin 1 with the front silkscreen dot and the
 back `U8 PIN 1` cue. Install C1/C2 with their positive leads at the front `+` marks. Confirm J1, J2,

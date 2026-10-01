@@ -6,7 +6,22 @@ ordinary absence, reset, cable failure, or firmware failure must not affect moto
 handling, temperature acquisition, USB recovery, or the analog overspeed chain. A device that
 physically holds the shared I2C lines low is the documented exception for temperature acquisition.
 
-## Selected architecture
+## Owner decision and procurement, 2026-09-30
+
+Michael dropped the optional e-ink addition in the procurement reconciliation conversation
+(2026-09-30, America/Vancouver). The design below is retained for reference; its assembly,
+firmware and first-article gates are deferred, not completed.
+
+DigiKey **101388939** has seven order lines. Cancellation of the entire order was requested;
+the approved email was sent to orders@digikey.com on **2026-10-01 01:41 UTC**
+(**2026-09-30 18:41 Vancouver**). Vendor confirmation is pending and the order is not received.
+Do not buy the remaining J1 `S4B-PH-K-S` or `PHR-4`, or substitute an SC18IS chip.
+
+Michael confirmed receipt of JLCPCB **W2026090305011104** boards/stencil and AliExpress
+**8213753300045333** display on September 30. These are retained, not discarded. Receipt is
+not validation of the display revision or interoperability. See [procurement](../bom/README.md#owner-reconciliation-2026-09-30).
+
+## Selected architecture (retained)
 
 - Host connection: PCB-01 V2 `TP5 3V3`, `TP4 AGND`, `TP30 TEMP_SDA`, and `TP31 TEMP_SCL`.
 - J1: JST `S4B-PH-K-S`, side-entry PH 2.0 mm header. Pin 1 `AGND`, pin 2 `3V3`, pin 3
@@ -132,8 +147,8 @@ power. PCB-03's two ICs add at most a few milliamps, leaving ample margin inside
 
 All SMD parts are deliberately hand-solderable: U1 is 0.65 mm-pitch TSSOP, U2 is 1.27 mm-pitch
 SOIC, and passives are 0603. J1 and J2 are through-hole. The PH family matches PCB-01/PCB-02 and
-uses the standard `SPH-002T-P0.5S` contacts already in stock. New PHR-4 and two PHR-8 housings are
-inexpensive; the headers and bridge ICs are board-specific purchases. The display harness uses
+uses the standard `SPH-002T-P0.5S` contacts already in stock. The retained design calls for PHR-4
+and two PHR-8 housings; procurement is stopped by the owner decision above. The display harness uses
 eight 24-30 AWG conductors and 16 stock contacts. It does not use the low-insertion-force contact.
 
 PCB-03 was ordered as five bare boards with a top-side stencil under JLCPCB order

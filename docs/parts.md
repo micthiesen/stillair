@@ -460,6 +460,11 @@ blade upper face and bridge the inner and outer tangential bolt pairs.
 
 ## EB-100 PCB bracket and ENC-100 housing
 
+Current remaining work, per Michael's procurement reconciliation conversation on
+2026-09-30 (America/Vancouver): final tuning, then aesthetic housing including the
+integrated Hall sensor holder and sound dampening cover. The covering is part of the
+housing; the Hall harness is already built and done. No new qualification is claimed.
+
 - PCB-01 V1 is 78 × 58 × 1.6 mm; PCB-01 V2 is 88 × 64 × 1.6 mm. Both are **mounted
   horizontally under the plate** (~Z12–35): the
   2026-07-27/28 raise leaves a 62 mm interior (Z6–Z68), which kills both vertical
