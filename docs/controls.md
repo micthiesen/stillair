@@ -555,7 +555,7 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 Updates use [esp-lan-ota](https://github.com/micthiesen/esp-lan-ota) at the revision pinned in
 `firmware/app/Cargo.toml`. The image arrives as Administer-privileged Matter commands to the
 manufacturer cluster `0xFFF1_FC70` on the fan endpoint (1), over the running stack: no new
-socket, about 400 bytes of static state. `esp-storage` now enables its `critical-section`
+socket, about 400 bytes of static state. Pinned rev: `9b6df67`. `esp-storage` now enables its `critical-section`
 feature (its default, previously switched off), so every flash erase/write runs with
 interrupts masked rather than letting a flash-resident interrupt handler fault mid-erase.
 
@@ -565,7 +565,7 @@ interrupts masked rather than letting a flash-resident interrupt handler fault m
 factory app; `phy_init` is dropped because esp-phy compiles its init data in. With `nvs` fixed,
 64 KiB slot alignment makes 1984 KiB the largest possible equal slot pair in 4 MiB.
 Measured 2026-10-12 with `espflash save-image --chip esp32c6`: the release image is
-1,982,144 bytes (OTA integration added 20,064), leaving **49,472 bytes (2.4%)** of the
+1,986,240 bytes (OTA integration added 24,160), leaving **45,376 bytes (2.2%)** of the
 2,031,616-byte slot. That is tight. The dev image (2,211,904 bytes) does not fit, so release is
 the only flashable profile. Measured levers if headroom runs out: release with `lto = "fat"`
 and `codegen-units = 1` is 1,780,864 bytes (250,752 free); adding `opt-level = "z"` gives
@@ -575,18 +575,30 @@ plus 308 bytes of RAM-resident flash code; boot also borrows a 3 KiB heap buffer
 
 **USB flashing.** `firmware/scripts/flash-app.sh` (also the cargo runner) is the only USB flash
 path: rollback bootloader from `firmware/bootloader/`, this table, image to `ota_0`,
-`--erase-parts otadata`. It refuses to run until the bootloader binary is vendored. Bare
+`--erase-parts otadata`. The bootloader is vendored from esp-lan-ota `9b6df67` (ESP-IDF
+v5.5.5-832-g2553c5ad432, SHA-256 in `firmware/bootloader/README.md`); the script refuses to run
+without it. Bare
 `espflash flash` restores espflash's own bootloader and factory table; the fan still runs but
 logs `OTA disabled`. Each board needs one migration flash through the wrapper, which leaves
-`nvs` untouched. The first boot after any USB flash opens a 15-minute commissioning window and
-prints `esp-lan-ota enroll passcode=... discriminator=...` every 5 s for `esp-ota enroll <name>`;
-then `esp-ota push <name> <release ELF>` updates over the LAN.
+`nvs` untouched. Boots after any USB flash open a 15-minute commissioning window and print
+`esp-lan-ota enroll passcode=... discriminator=...` every 5 s for `esp-ota enroll <name>`, until
+the 15 minutes run out or the first upload starts (a reset in between reopens it); then
+`esp-ota push <name> <release ELF>` updates over the LAN.
 
-**Fan behavior.** Policy is `stillair_core::ota`, host-tested. While an upload is in progress
-or staged the firmware commands `Off` (never in `Fault`, because any command acknowledges a
-fault) and Matter refuses drive-starting writes with `Busy`; a console start is stopped again
-within 250 ms. Flash erases begin with the first chunk, during the ramp-down; a tach glitch
-there can only fault toward a stop. After `Finish` the reset waits until the supervisor reports
+**Enrollment exposure.** Stillair still uses rs-matter's public test credentials
+(`TEST_DEV_COMM`, passcode `20202021`), so while that window is open anyone on the LAN can add
+a fabric to the fan. The window opens only after physical USB flashing and closes after
+15 minutes, but treat it as open access. Recommended follow-up, not yet implemented: a
+per-device random passcode and discriminator generated once and persisted in NVS, as Key
+Right does, which also means a new Home setup code for each board.
+
+**Fan behavior.** Policy is `stillair_core::ota`, host-tested. The firmware calls
+`set_accepting` so a new upload's `Begin` answers `Busy` unless the supervisor is `SafeBoot`,
+`IdleOff` or `Fault` with no On intent (any state in `Fault`). `esp-ota` retries for two
+minutes, so turn the fan off in Home before or during a push. From `wait_upload_started` until
+the reset, Matter refuses drive-starting writes with `Busy` and a console start is stopped
+again within 250 ms (never by commanding `Off` in `Fault`, because any command acknowledges a
+fault). Flash erases therefore never overlap a spinning or spinning-down motor. After `Finish` the reset waits until the supervisor reports
 `SafeBoot`, `IdleOff` or `Fault` (bounded at 60 s, after which the reset happens anyway, the ESP-only
 reset case the hardware already handles). The update therefore lands in off, like a power
 restoration; Home must turn the fan back on.

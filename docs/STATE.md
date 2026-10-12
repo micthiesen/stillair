@@ -37,8 +37,9 @@ Last updated: **2026-09-30** (owner project status and procurement reconciliatio
   KiCad-authoritative. The PCB-03 fixture is an initial handoff with declared downstream cleanup
   and routing work, not a fabrication-ready replacement. See [pcb-workflow.md](pcb-workflow.md).
 
-- **OTA via esp-lan-ota is integrated but unverified on hardware.** Each board needs one USB
-  migration once the rollback bootloader is vendored; see
+- **OTA via esp-lan-ota is integrated but unverified on hardware.** The rollback bootloader is
+  vendored; each board needs one USB migration flash. The post-flash enrollment window uses the
+  public test passcode (per-device passcode recommended). See
   [controls.md](controls.md#ota-updates-2026-10-12-hardware-verification-pending) and `CTL-17`.
 
 ## Next

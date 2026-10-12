@@ -4,9 +4,11 @@
 //! The fan-specific decisions (when to stand down, when a reset is safe, what proves a new
 //! image healthy) live in `stillair_core::ota`. This module wires them to the board:
 //!
-//! - While an upload is in progress or staged, the fan is stopped and Matter refuses drive
-//!   commands. The update ends in a reset, which lands in off anyway, and stopping first keeps
-//!   the upload's interrupt-masked flash erases away from a running motor.
+//! - New uploads are accepted only while the fan is stopped (or faulted) with no On intent;
+//!   otherwise `Begin` answers `Busy` and `esp-ota` retries for two minutes. Once an upload
+//!   starts, Matter refuses drive commands and the fan is held off until the reset, which
+//!   lands in off anyway. The upload's interrupt-masked flash erases never meet a spinning
+//!   motor.
 //! - A staged update resets only after the supervisor reports a reset-safe state (bounded).
 //! - An unconfirmed image confirms only on whole-product evidence, else it resets after
 //!   [`policy::CONFIRM_TIMEOUT_SECS`] and the rollback bootloader returns to the old slot.
@@ -35,10 +37,11 @@ use crate::{console, mcf, wifi_diag};
 pub type Service = OtaService<FlashStorage<'static>>;
 pub type Cluster = OtaCluster<'static, FlashStorage<'static>>;
 
-/// How often the stand-down and health checks look at the supervisor.
+/// How often the upload gate and health checks look at the supervisor.
 const POLL: Duration = Duration::from_millis(250);
 
-/// An upload is in progress or staged, or a reset is pending: refuse drive commands.
+/// An upload is in progress or staged, or a reset is pending: refuse drive commands. Set
+/// as soon as an upload starts; cleared only when one ends without staging.
 static UPDATE_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 /// Matter requests served on the fan endpoint since boot. Confirmation evidence.
@@ -144,25 +147,40 @@ impl NonBlockingHandler for OtaHandler {}
 /// Prints the line `esp-ota enroll` reads from the USB console while the post-USB-flash
 /// commissioning window is open.
 #[embassy_executor::task]
-pub async fn announce_task(enrollment: Enrollment) {
-    announce_enrollment(enrollment, |line| log::info!("{line}")).await;
+pub async fn announce_task(ota: &'static Service, enrollment: Enrollment) {
+    // Ends the enrollment period after the window's 15 minutes; the first upload also ends it.
+    announce_enrollment(ota, enrollment, |line| log::info!("{line}")).await;
 }
 
-/// Keeps the fan stopped while an upload is in progress or staged.
+/// Opens the upload gate only while the fan is stopped (or faulted) with no On intent.
 #[embassy_executor::task]
-pub async fn stand_down_task(ota: &'static Service) {
+pub async fn gate_task(ota: &'static Service) {
+    let mut accepting = None;
     loop {
-        let status = ota.status();
-        let active = status.upload.is_some() || status.staged.is_some();
-        if active && !UPDATE_ACTIVE.swap(true, Ordering::AcqRel) {
-            log::warn!("OTA upload in progress: stopping the fan and refusing drive commands");
-        } else if !active && UPDATE_ACTIVE.swap(false, Ordering::AcqRel) {
-            log::info!("OTA upload ended without staging; drive commands accepted again");
-        }
-        if active {
-            stand_down();
+        let ready = console::latest()
+            .is_some_and(|telemetry| policy::accepts_upload(telemetry.state, telemetry.on));
+        if accepting != Some(ready) {
+            ota.set_accepting(ready);
+            accepting = Some(ready);
         }
         Timer::after(POLL).await;
+    }
+}
+
+/// Holds the fan off from the start of each upload until it is staged (then the reboot task
+/// takes over) or dropped.
+#[embassy_executor::task]
+pub async fn upload_task(ota: &'static Service) {
+    loop {
+        ota.wait_upload_started().await;
+        UPDATE_ACTIVE.store(true, Ordering::Release);
+        log::warn!("OTA upload started: holding the fan off and refusing drive commands");
+        while ota.is_updating() {
+            stand_down();
+            Timer::after(POLL).await;
+        }
+        UPDATE_ACTIVE.store(false, Ordering::Release);
+        log::info!("OTA upload ended without staging; drive commands accepted again");
     }
 }
 

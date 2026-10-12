@@ -1,3 +1,4 @@
 *.pdf binary
 *.STEP binary
 *.stp binary
+*.bin binary

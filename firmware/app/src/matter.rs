@@ -443,7 +443,8 @@ pub async fn run(
     if let Some(service) = ota_service {
         // Spawned before startup can fail: an updated image whose Matter never comes up must
         // still time out and roll back.
-        spawner.spawn(ota::stand_down_task(service).unwrap());
+        spawner.spawn(ota::gate_task(service).unwrap());
+        spawner.spawn(ota::upload_task(service).unwrap());
         spawner.spawn(ota::reboot_task(service).unwrap());
         spawner.spawn(ota::confirm_task(service).unwrap());
     }
@@ -482,10 +483,12 @@ pub async fn run(
     let kv = stack.matter().kv(store);
 
     if let Some(service) = ota_service {
-        // Only the first boot after a USB flash opens this window: physical access is the
-        // consent for `esp-ota enroll` to add its own fabric. Existing fabrics are untouched.
+        // Only boots after a USB flash, until the window's 15 minutes run out or an upload
+        // starts, open this window: physical access is the consent for `esp-ota enroll` to add
+        // its own fabric. Existing fabrics are untouched. The window uses the public test
+        // passcode (TEST_DEV_COMM), so anyone on the LAN can commission during it.
         match open_enrollment_window(&service.boot_info(), stack.matter(), &crypto) {
-            Ok(Some(enrollment)) => spawner.spawn(ota::announce_task(enrollment).unwrap()),
+            Ok(Some(enrollment)) => spawner.spawn(ota::announce_task(service, enrollment).unwrap()),
             Ok(None) => {}
             Err(error) => log::error!("OTA enrollment window failed to open: {error:?}"),
         }

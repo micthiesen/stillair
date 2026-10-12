@@ -1428,7 +1428,7 @@ dependencies = [
 [[package]]
 name = "esp-lan-ota"
 version = "0.1.0"
-source = "git+https://github.com/micthiesen/esp-lan-ota?rev=4481dd34e45e3fd6272418b6220a1d1df9f9e5eb#4481dd34e45e3fd6272418b6220a1d1df9f9e5eb"
+source = "git+https://github.com/micthiesen/esp-lan-ota?rev=9b6df6712f2727ecdc7cce8045e39b347085340c#9b6df6712f2727ecdc7cce8045e39b347085340c"
 dependencies = [
  "embassy-time",
  "embedded-storage",

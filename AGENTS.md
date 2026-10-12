@@ -183,16 +183,19 @@ Keep these properties when changing anything; they come from the safety architec
 - **OTA updates** use [esp-lan-ota](https://github.com/micthiesen/esp-lan-ota) at the rev
   pinned in `app/Cargo.toml`: Matter commands to a manufacturer cluster on the fan endpoint,
   over the existing stack. Layout is `app/partitions.csv` (4 MiB for both boards; `nvs` stays
-  at 0x9000/0x6000, two 1984 KiB slots). Release leaves only ~48 KiB of slot headroom
+  at 0x9000/0x6000, two 1984 KiB slots). Release leaves only ~44 KiB of slot headroom
   (measured LTO levers in controls.md); check `espflash save-image` after growth. Each board
   needs one USB migration via `flash-app.sh` (rollback bootloader from `firmware/bootloader/`,
   new table, `ota_0`, `--erase-parts otadata`; nvs and Home fabrics untouched), then
   `esp-ota enroll <name>` from the first-boot console line and `esp-ota push <name>
-  firmware/app/target/riscv32imac-unknown-none-elf/release/stillair`. An upload stops the
-  fan and refuses drive commands; the update resets only once the supervisor is reset-safe
-  and lands in off. A new image confirms only after safe boot, MCF status, verified config,
+  firmware/app/target/riscv32imac-unknown-none-elf/release/stillair`. Uploads are refused
+  (`Busy`, retried 2 min) until the fan is off or faulted; during one, drive commands are
+  refused, and the update resets only once the supervisor is reset-safe and lands in off. A new image confirms only after safe boot, MCF status, verified config,
   Wi-Fi and a served Matter request, else it resets after 600 s and rolls back
   (`stillair_core::ota`). Hardware verification is pending: docs/controls.md > "OTA updates".
+  **Security:** Stillair uses the public test passcode (`TEST_DEV_COMM`, 20202021), so the
+  15-minute enrollment window after each USB flash lets anyone on the LAN commission the fan.
+  Recommended: a per-device random passcode persisted in NVS, like Key Right.
 - Strong types (enums per state, no boolean flags), no debug leftovers, small focused
   modules. Format with plain `cargo fmt`; lint with `cargo clippy`.
 - **Behavior goes in `stillair-core`, wiring goes in `app/`.** The core is sans-I/O: it takes

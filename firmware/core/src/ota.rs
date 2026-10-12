@@ -4,9 +4,10 @@
 //! The update transport and boot-slot bookkeeping live in `esp-lan-ota`; this module owns only
 //! the fan-specific decisions, so they are host-tested like the rest of the contract.
 //!
-//! An update ends in a software reset, and a reset lands in off (`docs/controls.md`), so the
-//! fan stops for the whole update rather than only at its end. That also keeps motor control
-//! clear of the flash erases an upload performs with interrupts masked.
+//! An update ends in a software reset, and a reset lands in off (`docs/controls.md`), so a new
+//! upload is accepted only while the fan is already stopped (or faulted) with no standing On
+//! intent, and the fan is held off until the reset. Flash erases, which run with interrupts
+//! masked, therefore never overlap a spinning or spinning-down motor.
 
 use crate::config;
 use crate::mcf_config::ConfigCheck;
@@ -38,6 +39,12 @@ pub const fn reset_safe(state: FanState) -> bool {
         state,
         FanState::SafeBoot | FanState::IdleOff | FanState::Fault
     )
+}
+
+/// May a new upload begin? Only once the fan is stopped or faulted and nobody asked for it to
+/// run; the host's `Begin` is answered `Busy` (and retried) until then.
+pub const fn accepts_upload(state: FanState, on: bool) -> bool {
+    matches!(state, FanState::Fault) || (reset_safe(state) && !on)
 }
 
 /// The command that moves the fan toward a reset-safe state, if one is needed.
@@ -268,6 +275,27 @@ mod tests {
             quiesce_command(FanState::Stopping, false),
             Some(Command::Off)
         );
+    }
+
+    #[test]
+    fn uploads_wait_for_a_stopped_fan_without_on_intent() {
+        assert!(accepts_upload(FanState::IdleOff, false));
+        assert!(accepts_upload(FanState::SafeBoot, false));
+        assert!(accepts_upload(FanState::Fault, false));
+        // Faulted drive is revoked; a stale On intent cannot restart it before the reset.
+        assert!(accepts_upload(FanState::Fault, true));
+        assert!(!accepts_upload(FanState::IdleOff, true));
+        assert!(!accepts_upload(FanState::SafeBoot, true));
+        for state in [
+            FanState::Starting,
+            FanState::Running,
+            FanState::MpetArming,
+            FanState::Mpet,
+            FanState::Stopping,
+            FanState::Reversing,
+        ] {
+            assert!(!accepts_upload(state, false), "{state:?}");
+        }
     }
 
     #[test]

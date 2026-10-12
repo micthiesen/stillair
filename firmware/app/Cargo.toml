@@ -47,7 +47,7 @@ esp-storage = { version = "0.9", default-features = false, features = [
 ] }
 # Verified, rollback-safe OTA updates delivered as Matter commands over the existing stack.
 # No esp-* dependencies of its own, so it stays outside the `[patch.crates-io]` lockstep.
-esp-lan-ota = { git = "https://github.com/micthiesen/esp-lan-ota", rev = "4481dd34e45e3fd6272418b6220a1d1df9f9e5eb", features = [
+esp-lan-ota = { git = "https://github.com/micthiesen/esp-lan-ota", rev = "9b6df6712f2727ecdc7cce8045e39b347085340c", features = [
   "rs-matter-0-2",
 ] }
 
