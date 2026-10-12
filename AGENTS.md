@@ -66,8 +66,8 @@ cargo test             # the tests that can actually fail for a behavioral reaso
 cargo fmt && cargo clippy --all-targets
 
 cd firmware/app        # the C6 binary: target/runner from app/.cargo/config.toml
-cargo build
-cargo run              # flash + monitor via espflash (needs the board)
+cargo build --release  # release is the shipped profile; the dev image exceeds the OTA slot
+cargo run --release    # flash + monitor via scripts/flash-app.sh (needs the board)
 ```
 
 ## Driving the fan (the tuning harness)
@@ -86,10 +86,12 @@ target/debug/stillair --port /dev/cu.usbmodem2101 mpet run --for 120
 target/debug/stillair --sim script scripts/04-loaded-speed-ladder.txt
 ```
 
-**Flashing the C6 dev board**: `espflash flash --port /dev/cu.usbmodem2101 --non-interactive
-firmware/app/target/riscv32imac-unknown-none-elf/debug/stillair`, then drive it with
-`--port`. The bare dev board **cannot leave `SafeBoot`**: GPIO22 (3.3 V PGOOD) floats low with
-nothing attached, and floating-means-bad is the correct fail-safe reading, so no internal
+**Flashing the C6 dev board**: `firmware/scripts/flash-app.sh --port /dev/cu.usbmodem2101
+--non-interactive --before usb-reset --after hard-reset
+firmware/app/target/riscv32imac-unknown-none-elf/release/stillair`, then drive it with
+`--port`. Never use bare `espflash flash`: it restores espflash's default bootloader and
+factory table, which disables OTA (see "OTA updates" below). The bare dev board **cannot
+leave `SafeBoot`**: GPIO22 (3.3 V PGOOD) floats low with nothing attached, and floating-means-bad is the correct fail-safe reading, so no internal
 pull-up is fitted. Jumper GPIO22 to 3V3 (and GPIO21 to 3V3 for nFAULT-idle-high, GPIO14 to GND
 for ALARM-idle-low) to exercise the state machine on bare silicon. Even then `Starting` faults
 with `NoRotation` after 15 s, because nothing generates FG edges — the simulator is still the
@@ -175,9 +177,22 @@ Keep these properties when changing anything; they come from the safety architec
 - **Stable** Rust, target `riscv32imac-unknown-none-elf` (ESP32-C6 only: MINI-1-H4 on
   PCB-01 V1 and WROOM-1-N8 on V2 use the same target). Toolchain pinned in
   `firmware/rust-toolchain.toml`.
-- Runner is `espflash flash --monitor` via `firmware/.cargo/config.toml`. No secrets are
-  committed; when Wi-Fi credentials become real, add them via `[env]` in an uncommitted
-  overlay and document the mechanism here.
+- Runner is `firmware/scripts/flash-app.sh --monitor` via `firmware/app/.cargo/config.toml`.
+  No secrets are committed; when Wi-Fi credentials become real, add them via `[env]` in an
+  uncommitted overlay and document the mechanism here.
+- **OTA updates** use [esp-lan-ota](https://github.com/micthiesen/esp-lan-ota) at the rev
+  pinned in `app/Cargo.toml`: Matter commands to a manufacturer cluster on the fan endpoint,
+  over the existing stack. Layout is `app/partitions.csv` (4 MiB for both boards; `nvs` stays
+  at 0x9000/0x6000, two 1984 KiB slots). Release leaves only ~48 KiB of slot headroom
+  (measured LTO levers in controls.md); check `espflash save-image` after growth. Each board
+  needs one USB migration via `flash-app.sh` (rollback bootloader from `firmware/bootloader/`,
+  new table, `ota_0`, `--erase-parts otadata`; nvs and Home fabrics untouched), then
+  `esp-ota enroll <name>` from the first-boot console line and `esp-ota push <name>
+  firmware/app/target/riscv32imac-unknown-none-elf/release/stillair`. An upload stops the
+  fan and refuses drive commands; the update resets only once the supervisor is reset-safe
+  and lands in off. A new image confirms only after safe boot, MCF status, verified config,
+  Wi-Fi and a served Matter request, else it resets after 600 s and rolls back
+  (`stillair_core::ota`). Hardware verification is pending: docs/controls.md > "OTA updates".
 - Strong types (enums per state, no boolean flags), no debug leftovers, small focused
   modules. Format with plain `cargo fmt`; lint with `cargo clippy`.
 - **Behavior goes in `stillair-core`, wiring goes in `app/`.** The core is sans-I/O: it takes

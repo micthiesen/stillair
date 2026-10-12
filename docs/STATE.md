@@ -37,6 +37,10 @@ Last updated: **2026-09-30** (owner project status and procurement reconciliatio
   KiCad-authoritative. The PCB-03 fixture is an initial handoff with declared downstream cleanup
   and routing work, not a fabrication-ready replacement. See [pcb-workflow.md](pcb-workflow.md).
 
+- **OTA via esp-lan-ota is integrated but unverified on hardware.** Each board needs one USB
+  migration once the rollback bootloader is vendored; see
+  [controls.md](controls.md#ota-updates-2026-10-12-hardware-verification-pending) and `CTL-17`.
+
 ## Next
 
 Final tuning, followed by the aesthetic housing with integrated Hall sensor holder and

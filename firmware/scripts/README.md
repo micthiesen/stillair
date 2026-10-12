@@ -40,7 +40,9 @@ while an external camera and power logger gather the continuous evidence.
 
 `08-flash-and-unloaded-profile.sh` is the common synchronized acquisition runner. Its default
 `STILLAIR_CONFIG_MODE=stage` preserves the unloaded workflow: it builds, flashes, power-cycles,
-stages the volatile image, and runs one of those profiles. `STILLAIR_CAMERA_URL` is required for
+stages the volatile image, and runs one of those profiles. It flashes the release image through
+`flash-app.sh`, the only supported USB flash path: it writes the rollback bootloader and OTA
+partition table, targets `ota_0`, and erases `otadata` while leaving Matter's `nvs` intact. `STILLAIR_CAMERA_URL` is required for
 synchronized recording and physical-motion analysis. The credential-bearing URL is fed to FFmpeg through a private
 file descriptor rather than exposed in its arguments or logs. The wrapper waits for a real
 camera frame and a live Utility Plug power sample, retains camera audio when the stream provides

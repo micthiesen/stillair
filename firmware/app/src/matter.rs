@@ -18,12 +18,14 @@
 //! therefore cannot block the supervisor, and a wedged supervisor cannot block Matter.
 
 use embassy_embedded_hal::adapter::BlockingAsync;
+use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp_bootloader_esp_idf::partitions::{
     read_partition_table, DataPartitionSubType, PartitionType, PARTITION_TABLE_MAX_LEN,
 };
 use esp_hal::peripherals::{ADC1, BT, FLASH, RNG, WIFI};
 use esp_hal::rng::{Trng, TrngSource};
+use esp_lan_ota::matter::open_enrollment_window;
 use esp_storage::FlashStorage;
 use rs_matter_embassy::matter::clusters;
 use rs_matter_embassy::matter::crypto::{default_crypto, Crypto};
@@ -56,7 +58,7 @@ use stillair_core::matter as mapping;
 use stillair_core::speed::MilliRpm;
 use stillair_core::state::Command;
 
-use crate::console;
+use crate::{console, ota};
 
 /// Statically allocate a `T` without putting it on the program stack on the way there.
 ///
@@ -137,10 +139,12 @@ impl FanHandler {
     /// is not draining it, and stalling the Matter stack on that would convert a control-loop
     /// problem into a network problem for no benefit.
     fn command(&self, command: Command) -> Result<(), Error> {
+        // An OTA upload keeps the fan stopped until it reboots; see `ota.rs`.
         if command.starts_drive()
-            && !console::latest()
-                .map(|telemetry| telemetry.config.permits_operation())
-                .unwrap_or(false)
+            && (ota::update_active()
+                || !console::latest()
+                    .map(|telemetry| telemetry.config.permits_operation())
+                    .unwrap_or(false))
         {
             return Err(Error::from(ErrorCode::Busy));
         }
@@ -178,15 +182,15 @@ impl FanCluster {
 
 impl Handler for FanCluster {
     fn read(&self, ctx: impl ReadContext, reply: impl ReadReply) -> Result<(), Error> {
-        self.0.read(ctx, reply)
+        ota::served(self.0.read(ctx, reply))
     }
 
     fn write(&self, ctx: impl WriteContext) -> Result<(), Error> {
-        self.0.write(ctx)
+        ota::served(self.0.write(ctx))
     }
 
     fn invoke(&self, ctx: impl InvokeContext, reply: impl InvokeReply) -> Result<(), Error> {
-        self.0.invoke(ctx, reply)
+        ota::served(self.0.invoke(ctx, reply))
     }
 
     fn bump_dataver(&self, ctx: impl MatchContext) {
@@ -380,7 +384,8 @@ const NODE: Node = Node {
             devices!(DEV_TYPE_FAN),
             clusters!(
                 desc::DescHandler::CLUSTER,
-                <FanHandler as fan_control::ClusterHandler>::CLUSTER
+                <FanHandler as fan_control::ClusterHandler>::CLUSTER,
+                ota::Cluster::CLUSTER
             ),
         ),
     ],
@@ -394,6 +399,7 @@ const NOTIFY_INTERVAL: Duration = Duration::from_secs(2);
 
 /// Run the Matter stack. Never returns.
 pub async fn run(
+    spawner: Spawner,
     rng: RNG<'static>,
     adc1: ADC1<'static>,
     wifi: WIFI<'static>,
@@ -427,7 +433,26 @@ pub async fn run(
     let fan = mk_static!(FanHandler).write(FanHandler::new(Dataver::new_rand(&mut weak_rand)));
     let descriptor = desc::DescHandler::new(Dataver::new_rand(&mut weak_rand));
 
+    // OTA state comes up before the stack so the cluster can be chained. A second flash
+    // handle is sound: esp-storage serialises every operation behind one lock, and both
+    // handles are only used from this thread-mode executor.
+    // SAFETY: see above; nothing else holds FLASH apart from the NVS store below.
+    let ota_service = ota::start(unsafe { FLASH::steal() });
+    let ota_cluster =
+        ota_service.map(|service| ota::Cluster::new(service, Dataver::new_rand(&mut weak_rand)));
+    if let Some(service) = ota_service {
+        // Spawned before startup can fail: an updated image whose Matter never comes up must
+        // still time out and roll back.
+        spawner.spawn(ota::stand_down_task(service).unwrap());
+        spawner.spawn(ota::reboot_task(service).unwrap());
+        spawner.spawn(ota::confirm_task(service).unwrap());
+    }
+
     let handler = EmptyHandler
+        .chain(
+            EpClMatcher::new(Some(FAN_ENDPOINT), Some(esp_lan_ota::matter::CLUSTER_ID)),
+            Async(ota::OtaHandler(ota_cluster)),
+        )
         .chain(
             EpClMatcher::new(
                 Some(FAN_ENDPOINT),
@@ -455,6 +480,16 @@ pub async fn run(
         return;
     }
     let kv = stack.matter().kv(store);
+
+    if let Some(service) = ota_service {
+        // Only the first boot after a USB flash opens this window: physical access is the
+        // consent for `esp-ota enroll` to add its own fabric. Existing fabrics are untouched.
+        match open_enrollment_window(&service.boot_info(), stack.matter(), &crypto) {
+            Ok(Some(enrollment)) => spawner.spawn(ota::announce_task(enrollment).unwrap()),
+            Ok(None) => {}
+            Err(error) => log::error!("OTA enrollment window failed to open: {error:?}"),
+        }
+    }
 
     log::info!("Matter starting; commission via BLE (QR below)");
 

@@ -32,6 +32,8 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use embassy_time::{Duration, Instant, Timer};
@@ -58,6 +60,7 @@ mod board;
 mod console;
 mod matter;
 mod mcf;
+mod ota;
 mod output;
 mod wifi_diag;
 
@@ -68,9 +71,8 @@ use mcf::{service_access, Mcf};
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
-/// Control-loop cadence. Fast enough that the ramp is smooth and a fault is acted on
-/// promptly, slow enough to be nowhere near the watchdog's 1.6 s window.
-const CONTROL_TICK: Duration = Duration::from_millis(50);
+/// Control-loop cadence; see [`config::CONTROL_TICK_MS`].
+const CONTROL_TICK: Duration = Duration::from_millis(config::CONTROL_TICK_MS);
 
 /// Incremented by the control loop on every completed poll. The heartbeat task refuses to
 /// toggle unless this has advanced, which is what makes the watchdog attest control-loop
@@ -286,6 +288,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     // fan needs to stay safe has already been spawned above and keeps running regardless of
     // what the network stack does, which is the network-loss row of the failure table.
     matter::run(
+        spawner,
         peripherals.RNG,
         peripherals.ADC1,
         peripherals.WIFI,
@@ -553,12 +556,15 @@ async fn mcf_task(mut mcf: Mcf) {
                     }
                 }
                 mcf::STATUS.signal(StatusRead::Fresh(status));
+                mcf::STATUS_READS_OK.fetch_add(1, Ordering::Relaxed);
+                mcf::STATUS_FAILING.store(false, Ordering::Relaxed);
             }
             Err(error) => {
                 if changed {
                     log::warn!("MCF status read failing: {error:?}");
                 }
                 mcf::STATUS.signal(StatusRead::BusError);
+                mcf::STATUS_FAILING.store(true, Ordering::Relaxed);
                 mcf.recover().await;
             }
         }

@@ -67,7 +67,8 @@ scope_ready="$run_dir/scope.ready"
 run_manifest="$run_dir/manifest.json"
 utility_plug="$script_dir/utility-plug.sh"
 stillair="$firmware_dir/target/debug/stillair"
-image="$firmware_dir/app/target/riscv32imac-unknown-none-elf/debug/stillair"
+# Release: the dev image does not fit the 1984 KiB OTA slot (app/partitions.csv).
+image="$firmware_dir/app/target/riscv32imac-unknown-none-elf/release/stillair"
 profile=${1:-"$script_dir/18-unloaded-startup-camera.txt"}
 if [[ "$profile" != /* ]]; then
     profile="$PWD/$profile"
@@ -310,14 +311,14 @@ case "$camera_url" in
 esac
 if [ "$skip_flash" -eq 0 ]; then
     cd "$firmware_dir/app"
-    cargo build
+    cargo build --release --locked
     "$utility_plug" on
     if ! wait_for_board_port; then
         echo "native USB port did not appear after enabling Utility Plug; hold BOOT, tap RESET, release BOOT, then retry" >&2
         exit 1
     fi
     cd "$repo_dir"
-    espflash flash --port "$board_port" --non-interactive "$image"
+    "$script_dir/flash-app.sh" --port "$board_port" --non-interactive "$image"
     "$utility_plug" cycle
     if [ "$board_port_explicit" -eq 0 ]; then
         board_port=

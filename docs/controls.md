@@ -550,6 +550,59 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
   alone is also inconclusive. Use fresh ARP/NDP and directed mDNS evidence. See the
   [V2 bench receipt](../testing/pcb-01-v2-bench-2026-09-27.md) for repeatability results.
 
+### OTA updates (2026-10-12, hardware verification pending)
+
+Updates use [esp-lan-ota](https://github.com/micthiesen/esp-lan-ota) at the revision pinned in
+`firmware/app/Cargo.toml`. The image arrives as Administer-privileged Matter commands to the
+manufacturer cluster `0xFFF1_FC70` on the fan endpoint (1), over the running stack: no new
+socket, about 400 bytes of static state. `esp-storage` now enables its `critical-section`
+feature (its default, previously switched off), so every flash erase/write runs with
+interrupts masked rather than letting a flash-resident interrupt handler fault mid-erase.
+
+**Layout.** `firmware/app/partitions.csv` is one 4 MiB table for both boards: `nvs` exactly at
+0x9000/0x6000 (espflash's default, which holds the paired Home fabrics), `otadata`
+0xF000/0x2000, `ota_0` 0x20000 and `ota_1` 0x210000, each 0x1F0000 (1984 KiB). There is no
+factory app; `phy_init` is dropped because esp-phy compiles its init data in. With `nvs` fixed,
+64 KiB slot alignment makes 1984 KiB the largest possible equal slot pair in 4 MiB.
+Measured 2026-10-12 with `espflash save-image --chip esp32c6`: the release image is
+1,982,144 bytes (OTA integration added 20,064), leaving **49,472 bytes (2.4%)** of the
+2,031,616-byte slot. That is tight. The dev image (2,211,904 bytes) does not fit, so release is
+the only flashable profile. Measured levers if headroom runs out: release with `lto = "fat"`
+and `codegen-units = 1` is 1,780,864 bytes (250,752 free); adding `opt-level = "z"` gives
+1,699,264 (332,352 free). Neither is adopted: each changes the hardware-validated release
+codegen and needs its own bench run. Static RAM grew 1,192 bytes (`.bss` +960, `.data` +232)
+plus 308 bytes of RAM-resident flash code; boot also borrows a 3 KiB heap buffer briefly.
+
+**USB flashing.** `firmware/scripts/flash-app.sh` (also the cargo runner) is the only USB flash
+path: rollback bootloader from `firmware/bootloader/`, this table, image to `ota_0`,
+`--erase-parts otadata`. It refuses to run until the bootloader binary is vendored. Bare
+`espflash flash` restores espflash's own bootloader and factory table; the fan still runs but
+logs `OTA disabled`. Each board needs one migration flash through the wrapper, which leaves
+`nvs` untouched. The first boot after any USB flash opens a 15-minute commissioning window and
+prints `esp-lan-ota enroll passcode=... discriminator=...` every 5 s for `esp-ota enroll <name>`;
+then `esp-ota push <name> <release ELF>` updates over the LAN.
+
+**Fan behavior.** Policy is `stillair_core::ota`, host-tested. While an upload is in progress
+or staged the firmware commands `Off` (never in `Fault`, because any command acknowledges a
+fault) and Matter refuses drive-starting writes with `Busy`; a console start is stopped again
+within 250 ms. Flash erases begin with the first chunk, during the ramp-down; a tach glitch
+there can only fault toward a stop. After `Finish` the reset waits until the supervisor reports
+`SafeBoot`, `IdleOff` or `Fault` (bounded at 60 s, after which the reset happens anyway, the ESP-only
+reset case the hardware already handles). The update therefore lands in off, like a power
+restoration; Home must turn the fan back on.
+
+**Confirmation.** A new image stays `PendingVerify` until it has run the control loop past the
+safe-boot hold, completed 50 clean MCF status reads with the latest one clean, left `SafeBoot`
+without a fault on a configuration that permits operation, associated Wi-Fi, and served at
+least one Matter request on the fan endpoint (an `esp-ota` status poll or a Home read). Otherwise
+it resets after 600 s and the bootloader returns to the previous slot. A board without a working
+MCF (a bare dev board) therefore always rolls back an OTA image.
+
+**Hardware verification owed** (testing matrix `CTL-17`): migration flash keeps both Home
+fabrics; enrollment line and `esp-ota enroll`; `esp-ota push` stops a running fan, reboots and
+confirms; `esp-ota status` reports `rollback supported`; a deliberately non-confirming build
+rolls back; Home control works after each step.
+
 ### Fault reporting and bus health (2026-07-27)
 
 - **A decoded status outranks the pins.** `nFAULT` and `ALARM` each say only "something"; the

@@ -33,6 +33,11 @@ use stillair_core::state::{CurrentProfile, StatusRead};
 /// re-reading an old verdict as if it were current.
 pub static STATUS: Signal<CriticalSectionRawMutex, StatusRead> = Signal::new();
 
+/// Successful fault-status reads since boot, and whether the latest read failed. Evidence
+/// for confirming an OTA image (`stillair_core::ota::check`), never control input.
+pub static STATUS_READS_OK: AtomicU32 = AtomicU32::new(0);
+pub static STATUS_FAILING: AtomicBool = AtomicBool::new(false);
+
 /// Raised by the control loop when the supervisor emits `ClearMcfFault`, serviced by the
 /// I²C task. Crossing tasks like this keeps the blocking-free control loop free of I²C.
 pub static CLEAR_FAULT_REQUEST: Signal<CriticalSectionRawMutex, ()> = Signal::new();

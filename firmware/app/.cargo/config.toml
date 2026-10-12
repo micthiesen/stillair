@@ -1,5 +1,7 @@
 [target.riscv32imac-unknown-none-elf]
-runner = "espflash flash --monitor"
+# Relative to `firmware/app`. Writes the rollback bootloader, the OTA partition table and
+# the app (ota_0), erasing otadata; see `scripts/flash-app.sh`.
+runner = "../scripts/flash-app.sh --monitor"
 rustflags = ["-C", "link-arg=-Tlinkall.x"]
 
 [build]

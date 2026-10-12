@@ -17,4 +17,5 @@ This repo is the canonical source for everything except the OnShape 3D model:
   routing and production outputs (requirements in [docs/electrical.md](docs/electrical.md))
 - [`cad/`](cad/README.md) — fabrication outputs (specs in [docs/parts.md](docs/parts.md))
 
-Firmware: `cd firmware && cargo build` (stable Rust; flashing via `cargo run` uses espflash).
+Firmware: `cd firmware && cargo build` (stable Rust). Flash the C6 with `cargo run --release` in
+`firmware/app` (USB, via `firmware/scripts/flash-app.sh`) or update over the LAN with `esp-ota push`.

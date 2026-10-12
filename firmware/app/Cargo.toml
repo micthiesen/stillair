@@ -37,7 +37,19 @@ tinyrlibc = { version = "0.5", default-features = false, features = [
   "utoa",
   "strtoul",
 ] }
-esp-storage = { version = "0.9", default-features = false, features = ["esp32c6"] }
+# `critical-section` (esp-storage's default, previously switched off) wraps every flash
+# erase/write with interrupts masked. Without it an interrupt whose handler runs from flash
+# while the cache is disabled for an erase crashes the chip; OTA uploads erase hundreds of
+# sectors with Wi-Fi and the control executor's interrupts live.
+esp-storage = { version = "0.9", default-features = false, features = [
+  "esp32c6",
+  "critical-section",
+] }
+# Verified, rollback-safe OTA updates delivered as Matter commands over the existing stack.
+# No esp-* dependencies of its own, so it stays outside the `[patch.crates-io]` lockstep.
+esp-lan-ota = { git = "https://github.com/micthiesen/esp-lan-ota", rev = "4481dd34e45e3fd6272418b6220a1d1df9f9e5eb", features = [
+  "rs-matter-0-2",
+] }
 
 log = { version = "0.4", default-features = false }
 esp-println = { version = "0.17", default-features = false, features = [

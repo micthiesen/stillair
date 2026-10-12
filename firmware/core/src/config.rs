@@ -128,6 +128,10 @@ pub const SPEED_ESTIMATE_WINDOW_MS: u64 = 1_000;
 /// interrogate. At the status-poll interval this is a little under a second.
 pub const BUS_FAILURES_BEFORE_FAULT: u32 = 5;
 
+/// Control-loop cadence. Fast enough that the ramp is smooth and a fault is acted on
+/// promptly, slow enough to be nowhere near the external watchdog's 1.6 s window.
+pub const CONTROL_TICK_MS: u64 = 50;
+
 /// How often the fault-status registers are read. Far slower than the pin sampling in the
 /// control loop, because the pins are the fast path and this is the diagnosis.
 pub const STATUS_POLL_MS: u64 = 200;

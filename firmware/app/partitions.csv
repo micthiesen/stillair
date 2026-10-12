@@ -1,0 +1,10 @@
+# Stillair OTA layout, 4 MiB so one image serves both PCB-01 V1 (ESP32-C6-MINI-1-H4, 4 MiB)
+# and V2 (ESP32-C6-WROOM-1-N8, 8 MiB). Two equal OTA slots, no factory app (esp-lan-ota).
+# nvs keeps espflash's default offset and size exactly: paired boards hold their Matter
+# fabrics there, so it must never move or resize. phy_init is dropped: esp-phy compiles its
+# init data in and nothing reads that partition. App slots are 64 KiB aligned (C6 MMU).
+# Name,   Type, SubType, Offset,   Size
+nvs,      data, nvs,     0x9000,   0x6000,
+otadata,  data, ota,     0xF000,   0x2000,
+ota_0,    app,  ota_0,   0x20000,  0x1F0000,
+ota_1,    app,  ota_1,   0x210000, 0x1F0000,
