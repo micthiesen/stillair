@@ -555,7 +555,7 @@ endpoint, `firmware/core/src/matter.rs` the mapping it delegates every decision 
 Updates use [esp-lan-ota](https://github.com/micthiesen/esp-lan-ota) at the revision pinned in
 `firmware/app/Cargo.toml`. The image arrives as Administer-privileged Matter commands to the
 manufacturer cluster `0xFFF1_FC70` on the fan endpoint (1), over the running stack: no new
-socket, about 400 bytes of static state. Pinned rev: `9b6df67`. `esp-storage` now enables its `critical-section`
+socket, about 400 bytes of static state. Pinned rev: `5e214ee`. `esp-storage` now enables its `critical-section`
 feature (its default, previously switched off), so every flash erase/write runs with
 interrupts masked rather than letting a flash-resident interrupt handler fault mid-erase.
 
@@ -607,7 +607,9 @@ restoration; Home must turn the fan back on.
 safe-boot hold, completed 50 clean MCF status reads with the latest one clean, left `SafeBoot`
 without a fault on a configuration that permits operation, associated Wi-Fi, and served at
 least one Matter request on the fan endpoint (an `esp-ota` status poll or a Home read). Otherwise
-it resets after 600 s and the bootloader returns to the previous slot. A board without a working
+it resets after 600 s and the bootloader returns to the previous slot (only when the bootloader
+reports rollback support; otherwise it keeps running and confirms once healthy rather than
+reset-looping). A board without a working
 MCF (a bare dev board) therefore always rolls back an OTA image.
 
 **Hardware verification owed** (testing matrix `CTL-17`): migration flash keeps both Home

@@ -204,6 +204,7 @@ pub async fn confirm_task(ota: &'static Service) {
     );
     let deadline = Instant::now() + Duration::from_secs(policy::CONFIRM_TIMEOUT_SECS);
     let mut reported = None;
+    let mut rollback_unavailable_logged = false;
     loop {
         match policy::check(&evidence()) {
             Ok(()) => match ota.confirm() {
@@ -219,13 +220,22 @@ pub async fn confirm_task(ota: &'static Service) {
             }
             Err(_) => {}
         }
-        if Instant::now() >= deadline {
+        if Instant::now() >= deadline && !rollback_unavailable_logged {
+            if ota.can_roll_back() {
+                log::error!(
+                    "OTA image unhealthy after {} s ({}); resetting to roll back",
+                    policy::CONFIRM_TIMEOUT_SECS,
+                    reported.map_or("confirm write failed", policy::Missing::as_str)
+                );
+                reset_when_safe().await;
+            }
+            // A bootloader that ignores image states would boot this image
+            // again; keep running and confirm once healthy instead of looping.
+            rollback_unavailable_logged = true;
             log::error!(
-                "OTA image unhealthy after {} s ({}); resetting to roll back",
-                policy::CONFIRM_TIMEOUT_SECS,
-                reported.map_or("confirm write failed", policy::Missing::as_str)
+                "OTA image unhealthy after {} s, but the bootloader cannot roll back; staying up",
+                policy::CONFIRM_TIMEOUT_SECS
             );
-            reset_when_safe().await;
         }
         Timer::after(POLL * 4).await;
     }
