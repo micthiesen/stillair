@@ -223,7 +223,7 @@ instead of writing a memory. STATE.md holds pointers and decisions, never the co
 ## Sibling projects
 
 When unsure about tooling or conventions, check sibling projects under `../`
-(`omni-notify` for AI-tooling conventions, `esp32` for the previous-generation firmware
+(`omni` for AI-tooling conventions, `esp32` for the previous-generation firmware
 patterns, `unseamless-coop` for the session-continuity system). Shared AI tooling syncs via
 `$sync` (`.agents/skills/sync/sync-map.json` lists peers).
 
